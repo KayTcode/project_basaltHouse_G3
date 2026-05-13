@@ -1,0 +1,68 @@
+#=================
+#BUILD
+#=================
+/basaltHouseSystem/build/
+/basaltHouseSystem/dist/
+/basaltHouseSystem/target/
+/basaltHouseSystem/out/
+basaltHouseSystem/config/app.properties
+
+#WAR FILE
+*.war
+
+#CLASS FILES
+*.class
+
+#LOGS
+logs/
+*.log
+
+#=================
+#NETBEANS
+#=================
+/nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# =========================
+# IDE
+# =========================
+.idea/
+.vscode/
+*.iml
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# ENV / SECRET
+# =========================
+.env
+.env.*
+
+# Secret properties
+secret.properties
+application-secret.properties
+private.properties
+
+# Database config
+db.properties
+
+# API KEY
+apikey.properties
+
+# SSL / KEYSTORE
+*.jks
+*.p12
+*.pem
+*.key
+
+# =========================
+# TEMP
+# =========================
+temp/
+tmp/

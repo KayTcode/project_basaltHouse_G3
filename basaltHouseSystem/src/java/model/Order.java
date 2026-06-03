@@ -1,0 +1,183 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package model;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+/**
+ *
+ * @author KayT
+ */
+public class Order {
+    private int orderId;
+    private Integer customerId;
+    private Integer cashierId;
+    private Integer shipperId;
+    private Integer tableSessionId;
+    private Integer orderAddressId;
+    private Integer discountId;
+    private String orderType;
+    private String orderStatus;
+    private String paymentMethod;
+    private String paymentStatus;
+    private BigDecimal totalAmount;
+    private BigDecimal discountAmount;
+    private BigDecimal finalAmount;
+    private LocalDateTime createdAt;
+    private boolean isDeleted;
+
+    public Order() {
+    }
+
+    public Order(int orderId, Integer customerId, Integer cashierId, Integer shipperId, Integer tableSessionId, Integer orderAddressId, Integer discountId, String orderType, String orderStatus, String paymentMethod, String paymentStatus, BigDecimal totalAmount, BigDecimal discountAmount, BigDecimal finalAmount, LocalDateTime createdAt, boolean isDeleted) {
+        this.orderId = orderId;
+        this.customerId = customerId;
+        this.cashierId = cashierId;
+        this.shipperId = shipperId;
+        this.tableSessionId = tableSessionId;
+        this.orderAddressId = orderAddressId;
+        this.discountId = discountId;
+        this.orderType = orderType;
+        this.orderStatus = orderStatus;
+        this.paymentMethod = paymentMethod;
+        this.paymentStatus = paymentStatus;
+        this.totalAmount = totalAmount;
+        this.discountAmount = discountAmount;
+        this.finalAmount = finalAmount;
+        this.createdAt = createdAt;
+        this.isDeleted = isDeleted;
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
+    }
+
+    public Integer getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
+    }
+
+    public Integer getCashierId() {
+        return cashierId;
+    }
+
+    public void setCashierId(Integer cashierId) {
+        this.cashierId = cashierId;
+    }
+
+    public Integer getShipperId() {
+        return shipperId;
+    }
+
+    public void setShipperId(Integer shipperId) {
+        this.shipperId = shipperId;
+    }
+
+    public Integer getTableSessionId() {
+        return tableSessionId;
+    }
+
+    public void setTableSessionId(Integer tableSessionId) {
+        this.tableSessionId = tableSessionId;
+    }
+
+    public Integer getOrderAddressId() {
+        return orderAddressId;
+    }
+
+    public void setOrderAddressId(Integer orderAddressId) {
+        this.orderAddressId = orderAddressId;
+    }
+
+    public Integer getDiscountId() {
+        return discountId;
+    }
+
+    public void setDiscountId(Integer discountId) {
+        this.discountId = discountId;
+    }
+
+    public String getOrderType() {
+        return orderType;
+    }
+
+    public void setOrderType(String orderType) {
+        this.orderType = orderType;
+    }
+
+    public String getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(String orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public BigDecimal getFinalAmount() {
+        return finalAmount;
+    }
+
+    public void setFinalAmount(BigDecimal finalAmount) {
+        this.finalAmount = finalAmount;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+    
+    
+}

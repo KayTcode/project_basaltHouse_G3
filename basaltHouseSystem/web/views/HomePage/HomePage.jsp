@@ -25,7 +25,7 @@
     <header class="sticky-top">
         <nav class="navbar navbar-expand-md navbar-light navbar-coffeely py-3">
             <div class="container">
-                <a class="navbar-brand navbar-brand-coffeely" href="#">BathHouse</a>
+                <a class="navbar-brand navbar-brand-coffeely" href="#">BasaltHouse</a>
                 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#coffeelyNav" aria-controls="coffeelyNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>

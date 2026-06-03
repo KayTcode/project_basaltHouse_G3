@@ -46,18 +46,19 @@ public class StockService {
                 int minCoc = Integer.MAX_VALUE;
                 for (Recipe recipe : ingredients) {
 
-                    BigDecimal stock = stockMap.getOrDefault(recipe.getIngredientId(),BigDecimal.ZERO);
+                    BigDecimal stock = stockMap.getOrDefault(recipe.getIngredientId(), BigDecimal.ZERO);
 
                     BigDecimal needed = recipe.getQuantityNeeded();
-                    if (needed == null|| needed.compareTo(BigDecimal.ZERO) <= 0) {
+                    if (needed == null || needed.compareTo(BigDecimal.ZERO) <= 0) {
                         minCoc = 0;
                         break;
                     }
-                    int coc = stock.divide(needed,0,RoundingMode.FLOOR ).intValue();
+                    int coc = stock.divide(needed, 0, RoundingMode.FLOOR).intValue();
+                    coc = (int)(coc*(1-0.15));
                     minCoc = Math.min(minCoc, coc);
                 }
 
-                sizeResult.put(sizeName,minCoc == Integer.MAX_VALUE ? 0 : minCoc );
+                sizeResult.put(sizeName, minCoc == Integer.MAX_VALUE ? 0 : minCoc);
             }
             result.put(productName, sizeResult);
         }

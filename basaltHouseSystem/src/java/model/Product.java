@@ -37,6 +37,12 @@ public class Product {
         this.isDeleted = isDeleted;
     }
 
+    public Product(int productId, String productName) {
+        this.productId = productId;
+        this.productName = productName;
+    }
+    
+
     public int getProductId() {
         return productId;
     }

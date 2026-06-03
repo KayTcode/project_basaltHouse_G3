@@ -1,29 +1,32 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package utils;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
-/**
- *
- * @author KayT
- */
 public class ConfigLoader {
 
     private static final Properties properties = new Properties();
 
     static {
         try {
-            FileInputStream fis = new FileInputStream("config/app.properties");
-            properties.load(fis);
+
+            InputStream is = ConfigLoader.class
+                    .getClassLoader()
+                    .getResourceAsStream("config/app.properties");
+
+            if (is == null) {
+                throw new RuntimeException("Cannot find app.properties");
+            }
+
+            properties.load(is);
+
             System.out.println("SUCCESS!");
-        } catch (IOException ex) {
+
+        } catch (Exception ex) {
+
             System.out.println("Cannot load app.properties");
             ex.printStackTrace();
+
         }
     }
 

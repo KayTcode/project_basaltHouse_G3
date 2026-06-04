@@ -4,10 +4,10 @@
  */
 package services;
 
-import dal.IngredientDAO;
-import dal.ProductDAO;
-import dal.RecipeDAO;
-import dal.SizeDAO;
+import dao.IngredientDAO;
+import dao.ProductDAO;
+import dao.RecipeDAO;
+import dao.SizeDAO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class StockService {
         SizeDAO s = new SizeDAO();
 
         HashMap<Product, HashMap<String, Integer>> result = new HashMap<>();
-        HashMap<Integer, Product> productMap = p.getProductWithImage();
+        HashMap<Integer, Product> productMap = p.getProduct();
         HashMap<Integer, String> sizeMap = s.getSize();
         HashMap<Integer, BigDecimal> stockMap = i.getIngredient();
         HashMap<Integer, HashMap<Integer, List<Recipe>>> recipeMap = r.getRecipeMap();

@@ -15,7 +15,7 @@ public class Product {
     private int productId;
     private String productName;
     private int categoryId;
-    private BigDecimal price; // Kiểu decimal trong DB ánh xạ sang BigDecimal trong Java
+    private BigDecimal price; 
     private String description;
     private String imageUrl;
     private boolean isActive;
@@ -37,11 +37,14 @@ public class Product {
         this.isDeleted = isDeleted;
     }
 
-    public Product(int productId, String productName) {
+    public Product(int productId, String productName, String description, String imageUrl) {
         this.productId = productId;
         this.productName = productName;
+        this.description = description;
+        this.imageUrl = imageUrl;
     }
-    
+
+ 
 
     public int getProductId() {
         return productId;

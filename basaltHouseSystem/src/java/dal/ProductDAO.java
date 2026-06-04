@@ -17,22 +17,25 @@ public class ProductDAO extends DBContext {
 
     PreparedStatement st;
     ResultSet rs;
-    public HashMap<Integer, String> getProduct(){
-        HashMap<Integer, String> product = new HashMap<>();
-          try {
-            String sql = """
-                         select ProductId , ProductName from Products
-                         """;
+
+    public HashMap<Integer, Product> getProductWithImage() {
+        HashMap<Integer, Product> productMap = new HashMap<>();
+        try {
+            String sql = "SELECT ProductId, ProductName,Description, ImageUrl FROM Products WHERE IsDeleted = 0";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
-              while (rs.next()) {                  
-                  Product ps = new Product(rs.getInt("ProductId"),
-                          rs.getString("ProductName"));
-                  product.put(ps.getProductId(), ps.getProductName());
-              }
+            while (rs.next()) {
+                Product p = new Product(
+                        rs.getInt("ProductId"),
+                        rs.getString("ProductName"),
+                        rs.getString("Description"),
+                        rs.getString("ImageUrl")
+                );
+                productMap.put(p.getProductId(), p);
+            }
         } catch (Exception e) {
-              System.err.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
-          return product;
+        return productMap;
     }
 }

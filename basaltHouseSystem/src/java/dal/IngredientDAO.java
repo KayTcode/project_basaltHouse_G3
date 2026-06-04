@@ -7,7 +7,9 @@ package dal;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import model.Ingredient;
 
 /**
@@ -38,25 +40,46 @@ public class IngredientDAO extends DBContext {
         return ingredient;
 
     }
-    public void updateIngredientQuantity(int id , BigDecimal quantityNeed ){
-            try {
 
-        String sql = """
+    public void updateIngredientQuantity(int id, BigDecimal quantityNeed) {
+        try {
+
+            String sql = """
             UPDATE Ingredients
             SET StockQuantity = StockQuantity - ?
             WHERE IngredientId = ?
         """;
 
-        st = connection.prepareStatement(sql);
+            st = connection.prepareStatement(sql);
 
-        st.setObject(1, quantityNeed);
-        st.setObject(2, id);
+            st.setObject(1, quantityNeed);
+            st.setObject(2, id);
 
-        st.executeUpdate();
+            st.executeUpdate();
 
-    } catch (Exception e) {
-                System.err.println(e.getMessage());
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
     }
-     
+
+    public List<String> getIngredientsBelowMin() {
+        List<String> warnings = new ArrayList<>();
+        try {
+            String sql = """
+                     SELECT IngredientName 
+                     FROM Ingredients 
+                     WHERE StockQuantity <= MinStockQuantity 
+                     AND IsDeleted = 0 AND IsActive = 1
+                     """;
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                warnings.add(rs.getString("IngredientName"));
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return warnings;
     }
 }

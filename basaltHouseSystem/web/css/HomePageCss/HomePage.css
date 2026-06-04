@@ -831,5 +831,309 @@ h1, h2, h3, h4, .font-display {
         height: 240px;
     }
 }
+/* ===================================================================
+   AUTH HEADER — JWT Login Integration
+   Tất cả class mới đều có prefix rõ ràng để tránh xung đột Bootstrap
+   =================================================================== */
+
+/* ── Cart link (thay <button> bằng <a> để dẫn đến /cart) ─────────── */
+.cart-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-muted);
+}
+
+.cart-link:hover {
+    color: var(--primary-color);
+}
+
+/* ── Nút Đăng nhập (trạng thái guest) ───────────────────────────── */
+.btn-login-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 18px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-family: var(--font-montserrat);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+    cursor: pointer;
+}
+
+.btn-login-header:hover {
+    background-color: var(--primary-hover);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-login-header .material-symbols-outlined {
+    font-size: 18px;
+}
+
+/* ── Wrapper bọc trigger + dropdown ─────────────────────────────── */
+.user-menu-wrapper {
+    position: relative;
+}
+
+/* ── Trigger button (pill avatar + tên + chevron) ────────────────── */
+.user-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 10px 0 4px;
+    background: transparent;
+    border: 1.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.user-trigger:hover {
+    background-color: rgba(0, 110, 47, 0.06);
+    border-color: rgba(0, 110, 47, 0.25);
+}
+
+/* ── Avatar: ảnh thật ────────────────────────────────────────────── */
+.user-avatar--img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+/* ── Avatar: chữ cái viết tắt (initials) ────────────────────────── */
+.user-avatar--initials {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-family: var(--font-montserrat);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* ── Text trong trigger (tên + role) ─────────────────────────────── */
+.user-trigger-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    text-align: left;
+}
+
+.user-trigger-name {
+    font-family: var(--font-montserrat);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.user-trigger-role {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.2;
+}
+
+/* ── Chevron xoay khi dropdown mở ───────────────────────────────── */
+.chevron-icon {
+    font-size: 20px !important;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.user-trigger[aria-expanded="true"] .chevron-icon {
+    transform: rotate(180deg);
+}
+
+/* ── Dropdown panel ──────────────────────────────────────────────── */
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 230px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    padding: 8px;
+    z-index: 1050;
+    /* Hiệu ứng xuất hiện */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+
+/* Trạng thái mở — toggle bằng JS .is-open */
+.user-dropdown.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* ── Header user trong dropdown ──────────────────────────────────── */
+.dropdown-user-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px 12px;
+}
+
+.dropdown-avatar--img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.dropdown-avatar--initials {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-family: var(--font-montserrat);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.dropdown-user-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.dropdown-fullname {
+    font-family: var(--font-montserrat);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-email {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Đường kẻ phân cách ──────────────────────────────────────────── */
+.dropdown-divider {
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.07);
+    margin: 4px 0;
+}
+
+/* ── Mỗi item trong menu ─────────────────────────────────────────── */
+.dropdown-item-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dark);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+    /* Reset button styles khi dùng trong <form logout> */
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-inter);
+}
+
+.dropdown-item-link:hover {
+    background-color: rgba(0, 110, 47, 0.07);
+    color: var(--primary-color);
+}
+
+.dropdown-item-link .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: color 0.12s ease;
+}
+
+.dropdown-item-link:hover .material-symbols-outlined {
+    color: var(--primary-color);
+}
+
+/* ── Item "Đăng xuất" — màu đỏ ──────────────────────────────────── */
+.dropdown-item-link--danger {
+    color: var(--accent-red) !important;
+}
+
+.dropdown-item-link--danger .material-symbols-outlined {
+    color: var(--accent-red) !important;
+}
+
+.dropdown-item-link--danger:hover {
+    background-color: rgba(186, 26, 26, 0.07) !important;
+    color: var(--accent-red) !important;
+}
+
+/* ── Mobile: ẩn text trong trigger, chỉ hiện avatar ─────────────── */
+@media (max-width: 767.98px) {
+    .user-trigger-info,
+    .chevron-icon,
+    .btn-login-text {
+        display: none;
+    }
+
+    .user-trigger {
+        padding: 4px;
+        border-radius: 50%;
+        width: 38px;
+        justify-content: center;
+    }
+
+    .btn-login-header {
+        padding: 0 12px;
+    }
+
+    /* Dropdown bám phải màn hình trên mobile */
+    .user-dropdown {
+        right: -8px;
+        min-width: 210px;
+    }
+}
 
 

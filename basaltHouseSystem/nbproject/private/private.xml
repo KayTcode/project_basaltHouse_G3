@@ -3,11 +3,19 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/web/WEB-INF/web.xml</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/HomePage/HomePage.jsp</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/nbproject/build-impl.xml</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/HomePageCss/HomePage.css</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/HomePageServlet.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/views/HomePage/HomePage.jsp</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/config/app.properties</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/utils/ConfigLoader.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/views/TableSession/CreateTableSession.jsp</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/index.html</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/css/HomePageCss/HomePage.css</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/dal/TableSessionDAO.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/dal/DBContext.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/HomePageServlet.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/TableSessionServlet.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/config/app.properties.example</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/dal/TableDAO.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/testdb.jsp</file>
         </group>
     </open-files>
 </project-private>

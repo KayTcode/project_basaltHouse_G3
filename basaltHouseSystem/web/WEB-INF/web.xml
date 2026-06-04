@@ -4,10 +4,14 @@
         <servlet-name>HomePageServlet</servlet-name>
         <servlet-class>controller.HomePageServlet</servlet-class>
     </servlet>
+    <!-- TableSessionServlet uses @WebServlet("/TableSession") annotation — no entry needed here -->
+    
     <servlet-mapping>
         <servlet-name>HomePageServlet</servlet-name>
         <url-pattern>/HomePageServlet</url-pattern>
     </servlet-mapping>
+    <!-- TableSession mapping handled by annotation -->
+    
     <welcome-file-list>
         <welcome-file>HomePageServlet</welcome-file>
     </welcome-file-list>

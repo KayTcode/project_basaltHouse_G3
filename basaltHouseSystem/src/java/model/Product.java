@@ -12,10 +12,11 @@ import java.time.LocalDateTime;
  * @author KayT
  */
 public class Product {
+
     private int productId;
     private String productName;
     private int categoryId;
-    private BigDecimal price; // Kiểu decimal trong DB ánh xạ sang BigDecimal trong Java
+    private BigDecimal price;
     private String description;
     private String imageUrl;
     private boolean isActive;
@@ -23,6 +24,14 @@ public class Product {
     private boolean isDeleted;
 
     public Product() {
+    }
+
+    public Product(int productId, String productName, String description, String imageUrl,boolean isActive) {
+        this.productId = productId;
+        this.productName = productName;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.isActive= isActive;
     }
 
     public Product(int productId, String productName, int categoryId, BigDecimal price, String description, String imageUrl, boolean isActive, LocalDateTime createdAt, boolean isDeleted) {
@@ -108,6 +117,5 @@ public class Product {
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
-    
-    
+
 }

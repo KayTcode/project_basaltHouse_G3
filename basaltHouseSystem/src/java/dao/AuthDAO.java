@@ -21,6 +21,9 @@ public class AuthDAO extends DBContext {
     private static PreparedStatement ps;
     private static ResultSet rs;
 
+    /*
+    Method for login
+     */
     public Account findByEmail(String email) {
         sql = """
               SELECT AccountId, RoleId, Email, PasswordHash, IsEmailVerified, IsActive, IsDeleted, CreatedAt, FailedAttempts, LockoutEnd
@@ -201,15 +204,13 @@ public class AuthDAO extends DBContext {
             throw new RuntimeException(e);
         }
     }
-
-    public static void main(String[] args) {
-        AuthDAO dao = new AuthDAO();
-        Account account = dao.findByEmail("kayt1206.js@gmail.com");
-        String roleName = dao.getRoleNameById(account.getRoleId());
-        if (account != null) {
-            System.out.println(account.getEmail());
-        }
-        System.out.println(account.getRoleId());
-    }
-
+//    public static void main(String[] args) {
+//        AuthDAO dao = new AuthDAO();
+//        Account account = dao.findByEmail("kayt1206.js@gmail.com");
+//        String roleName = dao.getRoleNameById(account.getRoleId());
+//        if (account != null) {
+//            System.out.println(account.getEmail());
+//        }
+//        System.out.println(account.getRoleId());
+//    }
 }

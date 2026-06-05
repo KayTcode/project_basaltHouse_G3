@@ -99,4 +99,21 @@ public class TableSessionDAO extends DBContext {
         }
         return list;
     }
+
+
+
+    public boolean closeSession(int sessionId) {
+        if (connection == null) {
+            System.err.println("[TableSessionDAO] closeSession: connection is NULL");
+            return false;
+        }
+        String sql = "UPDATE TableSessions SET Status = 'COMPLETED', ClosedAt = GETDATE() WHERE SessionId = ? AND Status IN ('ACTIVE', 'Open') AND IsDeleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, sessionId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
 }

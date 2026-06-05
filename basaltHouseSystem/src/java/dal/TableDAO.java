@@ -47,6 +47,7 @@ public class TableDAO extends DBContext {
     }
 
 
+
     public Table getTableById(int tableId) {
         if (connection == null) {
             System.err.println("[TableDAO] getTableById: connection is NULL");

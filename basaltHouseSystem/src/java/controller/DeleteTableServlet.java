@@ -1,6 +1,6 @@
 package controller;
 
-import dal.TableDAO;
+import services.TableService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,33 +14,30 @@ import java.nio.charset.StandardCharsets;
 @WebServlet(name = "DeleteTableServlet", urlPatterns = {"/DeleteTable"})
 public class DeleteTableServlet extends HttpServlet {
 
+    private final TableService tableService = new TableService();
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String base      = request.getContextPath() + "/TableSession";
+        String base       = request.getContextPath() + "/TableSession";
         String tableIdStr = request.getParameter("tableId");
         String tableCode  = request.getParameter("tableCode");
 
-        if (tableIdStr == null || tableIdStr.isBlank()) {
-            response.sendRedirect(base + "?err=" + enc("Thiếu ID bàn cần xóa."));
-            return;
-        }
+
         int tableId;
         try {
-            tableId = Integer.parseInt(tableIdStr.trim());
+            tableId = Integer.parseInt(tableIdStr == null ? "" : tableIdStr.trim());
         } catch (NumberFormatException e) {
             response.sendRedirect(base + "?err=" + enc("ID bàn không hợp lệ."));
             return;
         }
 
-        TableDAO tableDAO = new TableDAO();
-        int result = tableDAO.deleteTable(tableId);
-        if (result == 1) {
-            response.sendRedirect(base + "?delOk=1&code=" + enc(tableCode != null ? tableCode : ""));
-        } else if (result == 0) {
-            response.sendRedirect(base + "?err=" + enc("Không thể xóa: bàn \"" + tableCode + "\" đang có khách."));
-        } else {
-            response.sendRedirect(base + "?err=" + enc("Xóa bàn thất bại. Vui lòng thử lại."));
+   
+        int result = tableService.deleteTable(tableId);
+        switch (result) {
+            case 1  -> response.sendRedirect(base + "?delOk=1&code=" + enc(tableCode != null ? tableCode : ""));
+            case 0  -> response.sendRedirect(base + "?err=" + enc("Không thể xóa: bàn \"" + tableCode + "\" đang có khách."));
+            default -> response.sendRedirect(base + "?err=" + enc("Xóa bàn thất bại. Vui lòng thử lại."));
         }
     }
 

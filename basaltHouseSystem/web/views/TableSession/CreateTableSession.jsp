@@ -105,7 +105,8 @@
                                     <% String errorMsg=(String) request.getAttribute("errorMsg"); String
                                         successMsg=(String) request.getAttribute("successMsg"); String
                                         addTableMsg=(String) request.getAttribute("addTableMsg"); String
-                                        delTableMsg=(String) request.getAttribute("delTableMsg"); List<Table> tables =
+                                        delTableMsg=(String) request.getAttribute("delTableMsg"); String
+                                        checkoutSuccessMsg=(String) request.getAttribute("checkoutSuccessMsg"); List<Table> tables =
                                         (List<Table>) request.getAttribute("tables");
                                             List<TableSession> activeSessions = (List<TableSession>)
                                                     request.getAttribute("activeSessions");
@@ -234,6 +235,10 @@
                                                                                         style="font-size:14px;vertical-align:middle">person</span>
                                                                                     <%= s.getGuestCount() %> khách
                                                                                 </span>
+                                                                                <button type="button" class="btn-checkout-session"
+                                                                                    onclick="openCheckoutModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
+                                                                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">payments</span>Thanh toán
+                                                                                </button>
                                                                             </li>
                                                                             <% } %>
                                                                     </ul>
@@ -368,9 +373,10 @@
                             </div>
                         </main>
 
-                        <!-- ── Modals: Thêm & Xóa Bàn (Tách riêng) ── -->
+                        <!-- ── Modals: Thêm, Xóa Bàn & Thanh toán (Tách riêng) ── -->
                         <jsp:include page="AddTableModal.jsp" />
                         <jsp:include page="DeleteTableModal.jsp" />
+                        <jsp:include page="CheckoutSessionModal.jsp" />
 
                         <!-- Bootstrap JS -->
                         <script
@@ -535,6 +541,9 @@
 <% } %>
 <% if (delTableMsg != null && !delTableMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('success', 'Bàn đã xóa', '<%= delTableMsg.replace("'","\\'") %>'));
+<% } %>
+<% if (checkoutSuccessMsg != null && !checkoutSuccessMsg.isEmpty()) { %>
+                                window.addEventListener('load', () => showToast('success', 'Thanh toán', '<%= checkoutSuccessMsg.replace("'","\\'") %>'));
 <% } %>
 
                             // Add & Delete Table Modal scripts have been extracted to AddTableModal.jsp and DeleteTableModal.jsp

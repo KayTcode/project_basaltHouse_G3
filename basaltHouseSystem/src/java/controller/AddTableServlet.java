@@ -1,6 +1,6 @@
 package controller;
 
-import dal.TableDAO;
+import services.TableService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 @WebServlet(name = "AddTableServlet", urlPatterns = {"/AddTable"})
 public class AddTableServlet extends HttpServlet {
 
+    private final TableService tableService = new TableService();
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -22,42 +24,21 @@ public class AddTableServlet extends HttpServlet {
         String area      = request.getParameter("area");
         String capStr    = request.getParameter("capacity");
 
-        // Validate
-        if (tableCode == null || tableCode.isBlank()) {
-            response.sendRedirect(base + "?err=" + enc("Mã bàn không được để trống."));
-            return;
-        }
-        if (area == null || area.isBlank()) {
-            response.sendRedirect(base + "?err=" + enc("Khu vực không hợp lệ."));
-            return;
-        }
-        if (capStr == null || capStr.isBlank()) {
-            response.sendRedirect(base + "?err=" + enc("Sức chứa không được để trống."));
-            return;
-        }
+       
         int capacity;
         try {
-            capacity = Integer.parseInt(capStr.trim());
+            capacity = Integer.parseInt(capStr == null ? "" : capStr.trim());
         } catch (NumberFormatException e) {
             response.sendRedirect(base + "?err=" + enc("Sức chứa phải là số nguyên."));
             return;
         }
-        if (capacity < 1 || capacity > 20) {
-            response.sendRedirect(base + "?err=" + enc("Sức chứa phải từ 1 đến 20."));
-            return;
-        }
 
-        TableDAO dao = new TableDAO();
-        if (dao.isTableCodeExists(tableCode.trim())) {
-            response.sendRedirect(base + "?err=" + enc("Mã bàn \"" + tableCode.trim() + "\" đã tồn tại."));
-            return;
-        }
-
-        boolean ok = dao.addTable(tableCode.trim(), area.trim(), capacity);
-        if (ok) {
+        // Giao toàn bộ validate + persist cho Service
+        String error = tableService.addTable(tableCode, area, capacity);
+        if (error == null) {
             response.sendRedirect(base + "?addOk=1&code=" + enc(tableCode.trim()));
         } else {
-            response.sendRedirect(base + "?err=" + enc("Thêm bàn thất bại. Vui lòng thử lại."));
+            response.sendRedirect(base + "?err=" + enc(error));
         }
     }
 

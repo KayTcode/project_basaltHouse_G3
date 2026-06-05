@@ -32,6 +32,11 @@ public class Order {
     public Order() {
     }
 
+    public Order(int orderId, String orderStatus) {
+        this.orderId = orderId;
+        this.orderStatus = orderStatus;
+    }
+
     public Order(int orderId, Integer customerId, Integer cashierId, Integer shipperId, Integer tableSessionId, Integer orderAddressId, Integer discountId, String orderType, String orderStatus, String paymentMethod, String paymentStatus, BigDecimal totalAmount, BigDecimal discountAmount, BigDecimal finalAmount, LocalDateTime createdAt, boolean isDeleted) {
         this.orderId = orderId;
         this.customerId = customerId;

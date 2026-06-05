@@ -34,6 +34,13 @@ public class Ingredient {
         this.isDeleted = isDeleted;
     }
 
+    public Ingredient(int ingredientId, BigDecimal stockQuantity) {
+        this.ingredientId = ingredientId;
+        this.stockQuantity = stockQuantity;
+    }
+
+
+    
     public int getIngredientId() {
         return ingredientId;
     }

@@ -22,6 +22,12 @@ public class Size {
         this.isDeleted = isDeleted;
     }
 
+    public Size(int sizeId, String sizeName) {
+        this.sizeId = sizeId;
+        this.sizeName = sizeName;
+    }
+    
+
     public int getSizeId() {
         return sizeId;
     }

@@ -1,0 +1,36 @@
+*   [33m059f9d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;31morigin/20-implement-ingredient-inventory-checking[m[33m)[m Merge pull request #37 from KayTcode/develop
+[31m|[m[32m\[m  
+[31m|[m * [33m956792c[m[33m ([m[1;31morigin/develop[m[33m, [m[1;32mdevelop[m[33m)[m chore: commit after merge
+* [32m|[m [33mad72049[m Merge pull request #36 from KayTcode/develop
+[33m|[m[32m\[m[32m|[m 
+[33m|[m *   [33mc9716b3[m Merge pull request #35 from KayTcode/19-implement-order-information-validation
+[33m|[m [35m|[m[36m\[m  
+[33m|[m [35m|[m * [33m74816e5[m fix function
+[33m|[m [35m|[m *   [33m463c4f1[m Merge main into 19-implement-order-information-validation
+[33m|[m [35m|[m [1;31m|[m[33m\[m  
+[33m|[m [35m|[m[33m_[m[1;31m|[m[33m/[m  
+[33m|[m[33m/[m[35m|[m [1;31m|[m   
+* [35m|[m [1;31m|[m [33md3cc284[m[33m ([m[1;31morigin/2-implement-register-function[m[33m, [m[1;32m2-implement-register-function[m[33m)[m Merge pull request #34 from KayTcode/develop
+[1;33m|[m[35m\[m[35m|[m [1;31m|[m 
+[1;33m|[m * [1;31m|[m [33m6aa1855[m fix: fix gitignore
+[1;33m|[m * [1;31m|[m [33mff0e3dd[m fix: fix gitignore
+[1;33m|[m * [1;31m|[m   [33md91d0bd[m Merge pull request #33 from KayTcode/1-implement-login-function
+[1;33m|[m [1;35m|[m[1;36m\[m [1;31m\[m  
+[1;33m|[m [1;35m|[m * [1;31m|[m [33m56fb1c6[m[33m ([m[1;32m1-implement-login-function[m[33m)[m feat: completed login with email and password
+[1;33m|[m [1;35m|[m[1;33m/[m [1;31m/[m  
+[1;33m|[m[1;33m/[m[1;35m|[m [1;31m|[m   
+[1;33m|[m [1;35m|[m * [33m67e0284[m refactor implement order information validation
+[1;33m|[m [1;35m|[m * [33mb7ae896[m refactor implement order information validation
+[1;33m|[m [1;35m|[m * [33mbd4cfe5[m feat implement order information validation
+[1;33m|[m [1;35m|[m[1;33m/[m  
+[1;33m|[m[1;33m/[m[1;35m|[m   
+* [1;35m|[m [33mc4c8208[m[33m ([m[1;31morigin/28-implement-payment-confirmation-workflow-ver2[m[33m, [m[1;31morigin/14-implement-table-selection-and-table-session-creation[m[33m)[m chore: update more model
+* [1;35m|[m [33m64c8934[m feat: create model
+* [1;35m|[m [33m7a2f22c[m chore: update homepage to branch
+* [1;35m|[m [33m263a0d4[m Add web-inf and view HomePage
+* [1;35m|[m [33m0ec0a40[m chore: add bootstrap v5.3
+* [1;35m|[m [33me47c28f[m --Update lib for project
+[1;35m|[m[1;35m/[m  
+* [33m89ad013[m Inital(LoadConfig): add ConfigLoader to read file config
+* [33m143dbf0[m Inital commit
+* [33m84cda62[m Initial commit

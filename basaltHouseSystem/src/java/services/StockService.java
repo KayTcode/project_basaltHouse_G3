@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import model.Ingredient;
+import model.OrderDetail;
 import model.Product;
 import model.Recipe;
 
@@ -69,54 +70,34 @@ public class StockService {
         return result;
     }
 
-    public List<String> updateStockQuantity(int productId, int sizeId, int quantity) {
+    public List<Ingredient> getWarnings() {
+        IngredientDAO i = new IngredientDAO();
+        return i.getIngredientsBelowWarning();
+    }
+
+    public void updateStockForOrder(List<OrderDetail> details) {
         RecipeDAO r = new RecipeDAO();
         IngredientDAO i = new IngredientDAO();
 
         HashMap<Integer, HashMap<Integer, List<Recipe>>> recipeMap = r.getRecipeMap();
-        if (!recipeMap.containsKey(productId)) {
-            return new ArrayList<>();
-        }
 
-        HashMap<Integer, List<Recipe>> bySize = recipeMap.get(productId);
-        if (!bySize.containsKey(sizeId)) {
-            return new ArrayList<>();
-        }
+        for (OrderDetail detail : details) {
+            HashMap<Integer, List<Recipe>> bySize = recipeMap.get(detail.getProductId());
+            if (bySize == null) {
+                continue;
+            }
 
-        for (Recipe recipe : bySize.get(sizeId)) {
-            BigDecimal quantityNeed = recipe.getQuantityNeeded()
-                    .multiply(BigDecimal.valueOf(quantity));
-            i.updateIngredientQuantity(recipe.getIngredientId(), quantityNeed);
-        }
+            List<Recipe> recipes = bySize.get(detail.getSizeId());
+            if (recipes == null) {
+                continue;
+            }
 
-        return i.getIngredientsBelowMin();
+            for (Recipe recipe : recipes) {
+                BigDecimal quantityNeed = recipe.getQuantityNeeded()
+                        .multiply(BigDecimal.valueOf(detail.getQuantity()));
+                i.updateIngredientQuantity(recipe.getIngredientId(), quantityNeed);
+            }
+        }
     }
 
-    public List<String> processOrder(int orderId) {
-        OrderValidationService os = new OrderValidationService();
-        OrderDAO o = new OrderDAO();
-        List<String> errors = os.validate(orderId);
-        OrderValidationService validationService = new OrderValidationService();
-        errors = validationService.validate(orderId);
-        if (!errors.isEmpty()) {
-            return errors;
-        }
-
-        IngredientCheckService checkService = new IngredientCheckService();
-        errors = checkService.check(orderId);
-        if (!errors.isEmpty()) {
-            return errors;
-        }
-
-        List<model.OrderDetail> details = o.getOrderDetailsByOrderId(orderId);
-        List<String> warnings = new ArrayList<>();
-        for (model.OrderDetail detail : details) {
-            warnings.addAll(updateStockQuantity(
-                    detail.getProductId(),
-                    detail.getSizeId(),
-                    detail.getQuantity()
-            ));
-        }
-        return warnings;
-    }
 }

@@ -66,33 +66,28 @@ public class TableSessionDAO extends DBContext {
     }
 
 
-    public List<TableSession> getActiveSessions(int tableId) {
+    public List<TableSession> getAllActiveSessions() {
         List<TableSession> list = new ArrayList<>();
         if (connection == null) {
-            System.err.println("[TableSessionDAO] getActiveSessions: connection is NULL");
+            System.err.println("[TableSessionDAO] getAllActiveSessions: connection is NULL");
             return list;
         }
-        String sql = tableId > 0
-            ? "SELECT * FROM TableSessions WHERE Status IN ('ACTIVE', 'Open') AND IsDeleted = 0 AND TableId = ? ORDER BY OpenedAt DESC"
-            : "SELECT * FROM TableSessions WHERE Status IN ('ACTIVE', 'Open') AND IsDeleted = 0 ORDER BY OpenedAt DESC";
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            if (tableId > 0) ps.setInt(1, tableId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    TableSession s = new TableSession();
-                    s.setSessionId(rs.getInt("SessionId"));
-                    s.setSessionCode(rs.getString("SessionCode"));
-                    s.setTableId(rs.getInt("TableId"));
-                    Object cid = rs.getObject("CashierId");
-                    s.setCashierId(cid != null ? (Integer) cid : null);
-                    s.setGuestCount(rs.getInt("GuestCount"));
-                    s.setStatus(rs.getString("Status"));
-                    Timestamp opened = rs.getTimestamp("OpenedAt");
-                    if (opened != null) s.setOpenedAt(opened.toLocalDateTime());
-                    s.setIsDeleted(rs.getBoolean("IsDeleted"));
-                    list.add(s);
-                }
+        String sql = "SELECT * FROM TableSessions WHERE Status IN ('ACTIVE', 'Open') AND IsDeleted = 0 ORDER BY OpenedAt DESC";
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                TableSession s = new TableSession();
+                s.setSessionId(rs.getInt("SessionId"));
+                s.setSessionCode(rs.getString("SessionCode"));
+                s.setTableId(rs.getInt("TableId"));
+                Object cid = rs.getObject("CashierId");
+                s.setCashierId(cid != null ? (Integer) cid : null);
+                s.setGuestCount(rs.getInt("GuestCount"));
+                s.setStatus(rs.getString("Status"));
+                Timestamp opened = rs.getTimestamp("OpenedAt");
+                if (opened != null) s.setOpenedAt(opened.toLocalDateTime());
+                s.setIsDeleted(rs.getBoolean("IsDeleted"));
+                list.add(s);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();

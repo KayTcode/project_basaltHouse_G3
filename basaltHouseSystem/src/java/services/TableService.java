@@ -59,7 +59,7 @@ public class TableService {
 
     public HashMap<Integer, TableSession> getActiveSessionsMap() {
         HashMap<Integer, TableSession> map = new HashMap<>();
-        for (TableSession s : sessionDAO.getActiveSessions(0)) {
+        for (TableSession s : sessionDAO.getAllActiveSessions()) {
             map.put(s.getSessionId(), s);
         }
         return map;

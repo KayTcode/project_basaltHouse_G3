@@ -1,8 +1,9 @@
 <%-- Document : CreateTableSession Author : BasaltHouse Team --%>
     <%@page contentType="text/html" pageEncoding="UTF-8" %>
-        <%@page import="java.util.List" %>
-            <%@page import="model.Table" %>
-                <%@page import="model.TableSession" %>
+        <%@page import="java.util.Collection" %>
+            <%@page import="java.util.HashMap" %>
+                <%@page import="model.Table" %>
+                    <%@page import="model.TableSession" %>
                     <!DOCTYPE html>
                     <html lang="vi">
 
@@ -102,15 +103,18 @@
                             <div class="container">
 
                                 <%-- Alert from server --%>
-                                    <% String errorMsg=(String) request.getAttribute("errorMsg"); String
-                                        successMsg=(String) request.getAttribute("successMsg"); String
-                                        addTableMsg=(String) request.getAttribute("addTableMsg"); String
-                                        delTableMsg=(String) request.getAttribute("delTableMsg"); String
-                                        checkoutSuccessMsg=(String) request.getAttribute("checkoutSuccessMsg"); List<Table> tables =
-                                        (List<Table>) request.getAttribute("tables");
-                                            List<TableSession> activeSessions = (List<TableSession>)
-                                                    request.getAttribute("activeSessions");
-                                                    %>
+                                    <%
+                                        String errorMsg          = (String) request.getAttribute("errorMsg");
+                                        String successMsg        = (String) request.getAttribute("successMsg");
+                                        String addTableMsg       = (String) request.getAttribute("addTableMsg");
+                                        String delTableMsg       = (String) request.getAttribute("delTableMsg");
+                                        String checkoutSuccessMsg = (String) request.getAttribute("checkoutSuccessMsg");
+
+                                        HashMap<Integer, Table>        tablesMap   = (HashMap<Integer, Table>)        request.getAttribute("tablesMap");
+                                        HashMap<Integer, TableSession>  sessionsMap = (HashMap<Integer, TableSession>) request.getAttribute("sessionsMap");
+                                        Collection<Table>        tables         = tablesMap   != null ? tablesMap.values()   : new java.util.ArrayList<>();
+                                        Collection<TableSession> activeSessions = sessionsMap != null ? sessionsMap.values() : new java.util.ArrayList<>();
+                                    %>
 
                                                     <div class="row g-4">
                                                         <!-- ── Left: Table Grid ── -->

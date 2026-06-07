@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -53,10 +52,6 @@ public class TableSessionServlet extends HttpServlet {
 
         request.setAttribute("tablesMap",   tablesMap);
         request.setAttribute("sessionsMap", sessionsMap);
-
-        // Wrap thành ArrayList để JSP có thể cast sang List<Table> / List<TableSession>
-        request.setAttribute("tables",         new ArrayList<>(tablesMap.values()));
-        request.setAttribute("activeSessions", new ArrayList<>(sessionsMap.values()));
 
         request.getRequestDispatcher("views/TableSession/CreateTableSession.jsp")
                .forward(request, response);

@@ -16,7 +16,8 @@
                 </button>
             </div>
             <div class="modal-body p-4">
-                <form id="addTableForm" method="POST" action="${pageContext.request.contextPath}/AddTable" novalidate>
+                <form id="addTableForm" method="POST" action="${pageContext.request.contextPath}/TableSession" novalidate>
+                    <input type="hidden" name="action" value="addTable">
                     <div class="mb-3">
                         <label class="at-label" for="atCode">Mã bàn <span class="at-required">*</span></label>
                         <div class="at-input-wrap" id="wrapAtCode">

@@ -13,14 +13,12 @@
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/services/TableService.java</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/index.html</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/css/HomePageCss/HomePage.css</file>
-            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/AddTableServlet.java</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/dal/TableSessionDAO.java</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/DeleteTableServlet.java</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/dal/DBContext.java</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/HomePageServlet.java</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/CheckoutSessionServlet.java</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/TableSessionServlet.java</file>
-            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/config/app.properties.example</file>
             <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/dal/TableDAO.java</file>
         </group>
     </open-files>

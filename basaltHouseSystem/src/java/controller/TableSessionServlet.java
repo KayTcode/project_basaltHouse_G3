@@ -89,8 +89,6 @@ public class TableSessionServlet extends HttpServlet {
             redirect(request, response, "err", null, "Dữ liệu không hợp lệ.");
             return;
         }
-
-
         Integer cashierId  = getCashierId(request);
         String  result     = tableService.createSession(tableId, guestCount, cashierId);
 

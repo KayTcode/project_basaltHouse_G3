@@ -100,6 +100,7 @@ public class RegisterDAO extends DBContext {
         try {
             ps = connection.prepareStatement(sql);
             ps.setObject(1, email);
+            rs = ps.executeQuery();
             if (rs.next()) {
                 Map<String, Object> pending = new HashMap<>();
                 pending.put("pendingId", rs.getInt("PendingId"));

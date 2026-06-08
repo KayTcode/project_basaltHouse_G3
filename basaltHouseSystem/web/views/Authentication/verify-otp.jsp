@@ -14,7 +14,7 @@
     <title>Xác thực OTP - Coffeely</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <link>
+    <link href="css/auth/verify-otp.css" rel="stylesheet">
 </head>
 <body>
 

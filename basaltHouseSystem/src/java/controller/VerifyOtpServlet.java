@@ -19,7 +19,7 @@ import services.RegisterService;
  * @author KayT
  */
 public class VerifyOtpServlet extends HttpServlet {
-    
+
     private final RegisterService registerService = new RegisterService();
 
     /**
@@ -83,13 +83,15 @@ public class VerifyOtpServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession(false);
-        
-        if (session == null || session.getAttribute("pendindEmail") == null) {
+
+        if (session == null || session.getAttribute("pendingEmail") == null) {
             response.sendRedirect(request.getContextPath() + "/register");
             return;
         }
         String email = (String) session.getAttribute("pendingEmail");
-        String action = request.getParameter("action").trim();
+        String action = request.getParameter("action") != null
+                ? request.getParameter("action").trim()
+                : "";
         if ("resend".equals(action)) {
             Map<String, Object> resendResult = registerService.resendOtp(email);
             if (!(boolean) resendResult.get("success")) {
@@ -148,5 +150,5 @@ public class VerifyOtpServlet extends HttpServlet {
         String masked = local.substring(0, 2) + "*".repeat(Math.max(0, local.length() - 3)) + local.charAt(local.length() - 1);
         return masked + "@" + domain;
     }
-    
+
 }

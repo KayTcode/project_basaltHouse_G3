@@ -18,7 +18,7 @@ import java.util.Base64;
  */
 public class EmailService {
 
-    private static final String SMTP_HOST = "smtp.gmail.com";
+private static final String SMTP_HOST = "smtp.gmail.com";
     private static final int SMTP_PORT = 587;
     private static final String SMTP_USERNAME = ConfigLoader.get("email.username");
     private static final String SMTP_PASSWORD = ConfigLoader.get("email.password");
@@ -26,8 +26,8 @@ public class EmailService {
 
     public void sendOtp(String toEmail, String otpCode) {
         Properties props = new Properties();
-        props.put("mail.smpt.host", SMTP_HOST);
-        props.put("mail.smtp.port", String.valueOf(SMTP_PORT));
+        props.put("mail.smtp.host", SMTP_HOST);
+        props.put("mail.smtp.port", 587 );
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.ssl.trust", SMTP_HOST);

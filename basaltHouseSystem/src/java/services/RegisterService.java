@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.sql.SQLException;
 
 /**
  *
@@ -21,33 +22,43 @@ public class RegisterService {
 
     public Map<String, Object> processRegister(String email, String password, String fullName, String phone) {
         Map<String, Object> result = new HashMap<>();
-        try {
-            if (registerDao.isEmailExitsed(email)) {
-                result.put("success", false);
-                result.put("error", "Email này đã được sử dụng. Vui lòng email khác hoặc đăng nhập.");
-                return result;
-            }
-            String passwordHash = registerDao.hashSHA256(password);
-            String otpCode = generateOtp();
-
-            LocalDateTime OtpExpiredAt = LocalDateTime.now();
-
-            int pendingId = registerDao.savePendingRegistration(email, passwordHash, fullName, phone, otpCode, OtpExpiredAt);
-            if (pendingId == -1) {
-                result.put("success", false);
-                result.put("error", "Có lỗi xảy ra khi lưu thông tin đăng kí. Vui lòng thử lại.");
-                return result;
-            }
-            emailService.sendOtp(email, otpCode);
-            result.put("success", true);
-            result.put("pendingId", pendingId);
-            result.put("email", email);
-
-        } catch (Exception e) {
+        result.put("success", false);
+        if (registerDao.isEmailExitsed(email)) {
             result.put("success", false);
-            result.put("error", "Không thể gửi email xác thực.Vui lòng kiểm tra địa chỉ email và thử lại.");
-            e.printStackTrace();
+            result.put("error", "Email này đã được sử dụng. Vui lòng email khác hoặc đăng nhập.");
+            return result;
         }
+        String passwordHash = registerDao.hashSHA256(password);
+        String otpCode = generateOtp();
+        LocalDateTime OtpExpiredAt = LocalDateTime.now().plusMinutes(5);
+        int pendingId = registerDao.savePendingRegistration(email, passwordHash, fullName, phone, otpCode, OtpExpiredAt);
+        if (pendingId == -1) {
+            result.put("success", false);
+            result.put("error", "Có lỗi xảy ra khi lưu thông tin đăng kí. Vui lòng thử lại.");
+            return result;
+        }
+        try {
+            emailService.sendOtp(email, otpCode);
+        } catch (Exception exEmail) {
+            System.err.println("======= LỖI GỬI EMAIL =======");
+            System.err.println("Class  : " + exEmail.getClass().getName());
+            System.err.println("Message: " + exEmail.getMessage());
+            Throwable cause = exEmail.getCause();
+            while (cause != null) {
+                System.err.println("Cause  : " + cause.getMessage());
+                cause = cause.getCause();
+                exEmail.printStackTrace();
+                System.err.println("==============================");
+                
+                result.put("success", false);
+                result.put("error", "Lỗi gửi email: " + exEmail.getClass().getSimpleName()
+                        + " - " + exEmail.getMessage());
+                return result;
+            }
+        }
+        result.put("success", true);
+        result.put("pendingId", pendingId);
+        result.put("email", email);
         return result;
     }
 
@@ -87,6 +98,7 @@ public class RegisterService {
 
     public Map<String, Object> resendOtp(String email) {
         Map<String, Object> result = new HashMap<>();
+        result.put("success", false);
         try {
             Map<String, Object> pending = registerDao.getPendingByEmail(email);
             if (pending == null) {

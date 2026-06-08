@@ -25,6 +25,15 @@ public class OrderDetail {
     public OrderDetail() {
     }
 
+    public OrderDetail(int orderDetailId, int orderId, int productId, int sizeId, int quantity) {
+        this.orderDetailId = orderDetailId;
+        this.orderId = orderId;
+        this.productId = productId;
+        this.sizeId = sizeId;
+        this.quantity = quantity;
+    }
+    
+
     public OrderDetail(int orderDetailId, int orderId, int productId, int sizeId, int quantity, BigDecimal unitPrice, String note, LocalDateTime createdAt, boolean isDeleted) {
         this.orderDetailId = orderDetailId;
         this.orderId = orderId;

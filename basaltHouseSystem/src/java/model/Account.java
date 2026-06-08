@@ -19,11 +19,13 @@ public class Account {
     private boolean isActive;
     private LocalDateTime createdAt;
     private boolean isDeleted;
+    private int failedAttempts;
+    private LocalDateTime lockoutEnd;
 
     public Account() {
     }
 
-    public Account(int accountId, int roleId, String email, String passwordHash, boolean isEmailVerified, boolean isActive, LocalDateTime createdAt, boolean isDeleted) {
+    public Account(int accountId, int roleId, String email, String passwordHash, boolean isEmailVerified, boolean isActive, LocalDateTime createdAt, boolean isDeleted, int failedAttempts, LocalDateTime lockoutEnd) {
         this.accountId = accountId;
         this.roleId = roleId;
         this.email = email;
@@ -32,7 +34,27 @@ public class Account {
         this.isActive = isActive;
         this.createdAt = createdAt;
         this.isDeleted = isDeleted;
+        this.failedAttempts = failedAttempts;
+        this.lockoutEnd = lockoutEnd;
     }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
+    }
+
+    public LocalDateTime getLockoutEnd() {
+        return lockoutEnd;
+    }
+
+    public void setLockoutEnd(LocalDateTime lockoutEnd) {
+        this.lockoutEnd = lockoutEnd;
+    }
+
+    
 
     public int getAccountId() {
         return accountId;

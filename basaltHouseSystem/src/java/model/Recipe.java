@@ -33,6 +33,14 @@ public class Recipe {
         this.isDeleted = isDeleted;
     }
 
+    public Recipe(int productId, int ingredientId, int sizeId, BigDecimal quantityNeeded) {
+        this.productId = productId;
+        this.ingredientId = ingredientId;
+        this.sizeId = sizeId;
+        this.quantityNeeded = quantityNeeded;
+    }
+
+  
     public int getRecipeId() {
         return recipeId;
     }

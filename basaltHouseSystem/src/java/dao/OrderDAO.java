@@ -15,10 +15,11 @@ import model.OrderDetail;
  *
  * @author admin
  */
-public class OrderDAO extends DBContext{
+public class OrderDAO extends DBContext {
+
     PreparedStatement st;
     ResultSet rs;
-    
+
     public Order getOrderById(int orderId) {
         try {
             String sql = """
@@ -27,12 +28,12 @@ public class OrderDAO extends DBContext{
                          WHERE OrderId = ? AND IsDeleted = 0
                          """;
             st = connection.prepareStatement(sql);
-            st.setInt(1, orderId);
+            st.setObject(1, orderId);
             rs = st.executeQuery();
             if (rs.next()) {
                 return new Order(
-                    rs.getInt("OrderId"),
-                    rs.getString("OrderStatus")
+                        rs.getInt("OrderId"),
+                        rs.getString("OrderStatus")
                 );
             }
         } catch (Exception e) {
@@ -40,8 +41,8 @@ public class OrderDAO extends DBContext{
         }
         return null;
     }
-    
-     public List<OrderDetail> getOrderDetailsByOrderId(int orderId) {
+
+    public List<OrderDetail> getOrderDetailsByOrderId(int orderId) {
         List<OrderDetail> details = new ArrayList<>();
         try {
             String sql = """
@@ -50,15 +51,15 @@ public class OrderDAO extends DBContext{
                          WHERE OrderId = ? AND IsDeleted = 0
                          """;
             st = connection.prepareStatement(sql);
-            st.setInt(1, orderId);
+            st.setObject(1, orderId);
             rs = st.executeQuery();
             while (rs.next()) {
                 details.add(new OrderDetail(
-                    rs.getInt("OrderDetailId"),
-                    rs.getInt("OrderId"),
-                    rs.getInt("ProductId"),
-                    rs.getInt("SizeId"),
-                    rs.getInt("Quantity")
+                        rs.getInt("OrderDetailId"),
+                        rs.getInt("OrderId"),
+                        rs.getInt("ProductId"),
+                        rs.getInt("SizeId"),
+                        rs.getInt("Quantity")
                 ));
             }
         } catch (Exception e) {
@@ -67,4 +68,18 @@ public class OrderDAO extends DBContext{
         return details;
     }
 
+    public void updateOrderStatus(int orderId, String status) {
+        try {
+            String sql = """
+                     UPDATE Orders SET OrderStatus = ?
+                     WHERE OrderId = ?
+                     """;
+            st = connection.prepareStatement(sql);
+            st.setObject(1, status);
+            st.setObject(2, orderId);
+            st.executeUpdate();
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+    }
 }

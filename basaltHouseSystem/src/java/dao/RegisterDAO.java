@@ -4,6 +4,9 @@
  */
 package dao;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,8 +44,7 @@ public class RegisterDAO extends DBContext {
         return false;
     }
 
-    public int savePendingRegistration(String email, String passwordHash, String fullName, String phone, String registerRole,
-            String otpCode, LocalDateTime otpExpiredAt) {
+    public int savePendingRegistration(String email, String passwordHash, String fullName, String phone, String otpCode, LocalDateTime otpExpiredAt) {
         String deleteSql = """
                            UPDATE PendingRegistrations
                            SET IsDeleted = 1
@@ -66,27 +68,37 @@ public class RegisterDAO extends DBContext {
                            """;
         try {
             connection.setAutoCommit(false);
-            PreparedStatement psDelete = connection.prepareStatement(deleteSql);
-            psDelete.setObject(1, email);
-            psDelete.executeUpdate();
-
-            PreparedStatement psInsert = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS);
-            psInsert.setObject(1, email);
-            psInsert.setObject(2, passwordHash);
-            psInsert.setObject(3, fullName);
-            psInsert.setObject(4, phone);
-            psInsert.setObject(5, otpCode);
-            psInsert.setObject(6, Timestamp.valueOf(otpExpiredAt));
-            psInsert.setObject(7, Timestamp.valueOf(LocalDateTime.now()));
-            psInsert.executeUpdate();
-            connection.commit();
-            if (rs.next()) {
-                return rs.getInt(1);
+            try (PreparedStatement psDelete = connection.prepareStatement(deleteSql)) {
+                psDelete.setObject(1, email);
+                psDelete.executeUpdate();
             }
+            try (PreparedStatement psInsert = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS);) {
+                psInsert.setObject(1, email);
+                psInsert.setObject(2, passwordHash);
+                psInsert.setObject(3, fullName);
+                psInsert.setObject(4, phone);
+                psInsert.setObject(5, otpCode);
+                psInsert.setObject(6, Timestamp.valueOf(otpExpiredAt));
+                psInsert.setObject(7, Timestamp.valueOf(LocalDateTime.now()));
+                psInsert.executeUpdate();
+                connection.commit();
+                try (ResultSet rs = psInsert.getGeneratedKeys()) {
+                    boolean hasKey = rs.next();
+                    if (hasKey) {
+                        int id = rs.getInt(1);
+                        System.out.println("[DEBUG] Generated PendingId = " + id);
+                        return id;
+                    } else {
+                        System.err.println("[DEBUG] WARN: executeUpdate thành công nhưng getGeneratedKeys() rỗng!");
+                        // Fallback: Truy vấn lại PendingId vừa insert
+                        return getLastPendingId(connection, email);
+                    }
+                }
+            }
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return -1;
     }
 
     public Map<String, Object> getPendingByEmail(String email) {
@@ -137,7 +149,7 @@ public class RegisterDAO extends DBContext {
         }
     }
 
-    private void markPendingAsUsed(int pendingId) {
+    private void markPendingAsUsed(int pendingId, Connection connection) {
         sql = """
               UPDATE PendingRegistration
               SET IsUsed = 1
@@ -146,10 +158,116 @@ public class RegisterDAO extends DBContext {
         try {
             ps = connection.prepareStatement(sql);
             ps.setObject(1, pendingId);
-            ps.executeQuery();
+            rs = ps.executeQuery();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
-    
+
+    public void completeRegistration(Map<String, Object> pendingData) throws SQLException {
+        int pendingId = (int) pendingData.get("pendingId");
+        String email = (String) pendingData.get("email");
+        String passwordHash = (String) pendingData.get("passwordHash");
+        String fullName = (String) pendingData.get("fullName");
+        String phone = (String) pendingData.get("phone");
+
+        String sqlRole = """
+                         SELECT RoleId
+                         FROM Roles
+                         WHERE RoleName = 'Customer' AND IsDeleted = 0
+                         """;
+        String sqlAccount = """
+                            INSERT INTO [dbo].[Accounts]
+                                       ([RoleId]
+                                       ,[Email]
+                                       ,[PasswordHash]
+                                       ,[IsEmailVerified]
+                                       ,[IsActive]
+                                       ,[CreatedAt]
+                                       ,[IsDeleted]
+                                 VALUES
+                                       (?,?,?,1,1,?,0)
+                            """;
+        String sqlCustomer = """
+                             INSERT INTO [dbo].[Customers]
+                                        ([AccountId]
+                                        ,[FullName]
+                                        ,[Phone]
+                                        ,[CreatedAt]
+                                        ,[IsDeleted])
+                                  VALUES
+                                        (?,?,?,?,0)
+                             """;
+        try {
+            connection.setAutoCommit(false);
+            int roleId = -1;
+            ps = connection.prepareStatement(sqlRole);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                roleId = rs.getInt("RoleId");
+            }
+            if (roleId == -1) {
+                throw new SQLException("Không tìm thấy role Customer trong hệ thống");
+            }
+            int newAccountId;
+            PreparedStatement psAccount = connection.prepareStatement(sqlAccount, Statement.RETURN_GENERATED_KEYS);
+            psAccount.setObject(1, roleId);
+            psAccount.setObject(2, email);
+            psAccount.setObject(3, passwordHash);
+            psAccount.setObject(4, Timestamp.valueOf(LocalDateTime.now()));
+            rs = psAccount.getGeneratedKeys();
+            if (rs.next()) {
+                newAccountId = rs.getInt(1);
+            } else {
+                throw new SQLException("Không lấy được AccountId sau khi INSERT vào Accounts");
+            }
+
+            PreparedStatement psCustomer = connection.prepareStatement(sqlCustomer);
+            ps.setObject(1, newAccountId);
+            ps.setObject(2, fullName);
+            ps.setObject(3, phone);
+            ps.setObject(4, Timestamp.valueOf(LocalDateTime.now()));
+            markPendingAsUsed(pendingId, connection);
+            connection.commit();
+        } catch (SQLException e) {
+            connection.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String hashSHA256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexStr = new StringBuilder();
+            for (byte b : hashBytes) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexStr.append(0);
+                    hexStr.append(hex);
+                }
+            }
+            return hexStr.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private int getLastPendingId(Connection connection, String email) {
+        sql = "SELECT TOP 1 PendingId FROM [PendingRegistrations] "
+                + "WHERE Email = ? AND IsDeleted = 0 ORDER BY CreatedAt DESC";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int id = rs.getInt("PendingId");
+                    System.out.println("[DEBUG] Fallback PendingId = " + id);
+                    return id;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return -1;
+    }
 }

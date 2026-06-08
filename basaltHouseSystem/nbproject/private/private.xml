@@ -3,14 +3,23 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/OrderValidationService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/ProductDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/IngredientCheckService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/RecipeDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/StockService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/IngredientDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/OrderDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/RegisterDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/services/AuthService.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/HomePage/HomePage.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/VerifyOtpServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/RegisterDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/LoginServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/services/RegisterService.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/config/app.properties</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/Authentication/verify-otp.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/RegisterServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/Authentication/login.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/HomePageServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/css/auth/verify-otp.css</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/css/auth/register.css</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/AuthDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/services/EmailService.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/utils/ConfigLoader.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/Authentication/register.jsp</file>
         </group>
     </open-files>
 </project-private>

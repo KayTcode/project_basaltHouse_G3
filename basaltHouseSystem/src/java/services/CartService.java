@@ -51,9 +51,6 @@ public class CartService {
         // Tạo mã đơn hàng mẫu để hiển thị
         String orderCode = "BH-" + System.currentTimeMillis() % 1000000;
 
-        // Lưu ý: Nơi này có thể gọi OrderDAO lưu vào CSDL trong tương lai.
-        
-        // Đặt hàng thành công thì xoá giỏ hàng
         cart.clear();
         return orderCode;
     }

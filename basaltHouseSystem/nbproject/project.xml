@@ -22,7 +22,7 @@
                     <file>${file.reference.jackson-annotations-2.15.2.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>
-https://github.com/KayTcode/project_basaltHouse_G3/pull/41/conflict?name=basaltHouseSystem%252Fsrc%252Fjava%252Futils%252FConfigLoader.java&ancestor_oid=035ad19e3c1cda22d5d52dfc1336a055358077a3&base_oid=3ad18a07608f59f46dcc0498e84b416e2e22ffda&head_oid=2b7effb02b842bdbc5d94137b16f3072bfb3e4c0                <library dirs="200">
+                <library dirs="200">
                     <file>${file.reference.jackson-core-2.15.2.jar}</file>
                     <path-in-war>WEB-INF/lib</path-in-war>
                 </library>

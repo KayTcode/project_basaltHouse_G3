@@ -3,14 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/OrderValidationService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/ProductDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/IngredientCheckService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/RecipeDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/StockService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/IngredientDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/OrderDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/RegisterDAO.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/CartServlet.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/config/app.properties</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/OnlineOrderServlet.java</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/views/Order/Cart.jsp</file>
+            <file>file:/D:/SU26/project_basaltHouse_G3/basaltHouseSystem/web/views/Order/OnlineOrder.jsp</file>
         </group>
     </open-files>
 </project-private>

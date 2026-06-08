@@ -8,7 +8,7 @@ import model.OrderDetail;
 public class PaymentService {
 
     private final PaymentDAO paymentDAO = new PaymentDAO();
-    private final PreparationService preparationService = new PreparationService();
+    //private final PreparationService preparationService = new PreparationService();
 
     public boolean confirmPayment(int orderId) {
         try {
@@ -31,7 +31,7 @@ public class PaymentService {
             List<OrderDetail> details = paymentDAO.findDetailsByOrderId(orderId);
             if (details.isEmpty()) return false;
 
-            preparationService.enqueueItems(details);
+           // preparationService.enqueueItems(details);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

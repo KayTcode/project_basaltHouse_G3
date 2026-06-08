@@ -48,7 +48,7 @@
                                             <li class="nav-item"><a class="nav-link nav-link-coffeely active"
                                                     href="#">Bàn & Session</a></li>
                                             <li class="nav-item"><a class="nav-link nav-link-coffeely"
-                                                    href="#">Order</a></li>
+                                                    href="${pageContext.request.contextPath}/Order">Order</a></li>
                                             <li class="nav-item"><a class="nav-link nav-link-coffeely" href="#">Báo
                                                     cáo</a></li>
                                         </ul>

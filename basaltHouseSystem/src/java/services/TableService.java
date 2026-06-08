@@ -1,7 +1,7 @@
 package services;
 
-import dal.TableDAO;
-import dal.TableSessionDAO;
+import dao.TableDAO;
+import dao.TableSessionDAO;
 import model.Table;
 import model.TableSession;
 

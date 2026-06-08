@@ -1,4 +1,4 @@
-package dal;
+package dao;
 
 import model.Table;
 import java.sql.*;

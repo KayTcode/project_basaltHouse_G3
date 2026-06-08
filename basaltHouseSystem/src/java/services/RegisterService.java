@@ -5,11 +5,13 @@
 package services;
 
 import dao.RegisterDAO;
+import java.io.Console;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.sql.SQLException;
+import java.util.Scanner;
 
 /**
  *
@@ -49,7 +51,7 @@ public class RegisterService {
                 cause = cause.getCause();
                 exEmail.printStackTrace();
                 System.err.println("==============================");
-                
+
                 result.put("success", false);
                 result.put("error", "Lỗi gửi email: " + exEmail.getClass().getSimpleName()
                         + " - " + exEmail.getMessage());

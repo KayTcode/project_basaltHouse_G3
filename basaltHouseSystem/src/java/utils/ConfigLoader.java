@@ -29,6 +29,7 @@ public class ConfigLoader {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
     }
 
     public static String get(String key) {

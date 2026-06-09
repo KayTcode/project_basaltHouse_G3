@@ -7,6 +7,7 @@ package dao;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import model.Product;
 
@@ -35,7 +36,7 @@ public class ProductDAO extends DBContext {
                 );
                 productMap.put(p.getProductId(), p);
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
         return productMap;

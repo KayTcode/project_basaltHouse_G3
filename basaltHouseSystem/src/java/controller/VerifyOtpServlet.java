@@ -114,11 +114,14 @@ public class VerifyOtpServlet extends HttpServlet {
             return;
         }
         Map<String, Object> verifyResult = registerService.verifyOtp(email, inputOtp);
-        if (!(boolean) verifyResult.get("success")) {
+        System.err.println("[DEBUG verifyResult] = " + verifyResult);
+        Object successObj = verifyResult.get("success");
+
+        if (successObj == null || !(Boolean) successObj) {
             request.setAttribute("error", verifyResult.get("error"));
             request.setAttribute("errorType", verifyResult.get("errorType"));
             request.setAttribute("maskedEmail", maskEmail(email));
-            request.getRequestDispatcher("views/Authentication/verify-otp").forward(request, response);
+            request.getRequestDispatcher("views/Authentication/verify-otp.jsp").forward(request, response);
             return;
         }
         session.removeAttribute("pendingEmail");

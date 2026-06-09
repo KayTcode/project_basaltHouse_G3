@@ -6,23 +6,23 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     Created on : Jun 7, 2026, 2:24:44 AM
     Author     : KayT
 */:root {
-    --coffee-dark:   #1e0f05;
-    --coffee-rich:   #3b1f0a;
-    --coffee-warm:   #6b3a1f;
-    --coffee-mid:    #a0622a;
-    --coffee-light:  #c8966a;
-    --cream:         #f5ede0;
-    --cream-light:   #fdf8f2;
-    --border:        #dfc9b0;
+    --coffee-dark:   #002b12;
+    --coffee-rich:   #005c25;
+    --coffee-warm:   #007a32;
+    --coffee-mid:    #009940;
+    --coffee-light:  #4caf78;
+    --cream:         #f0f9f3;
+    --cream-light:   #f7fcf9;
+    --border:        #b2dfc4;
+    --text-primary:  #002b12;
+    --text-secondary:#3a6b4f;
     --error-bg:      #fff4f0;
     --error-border:  #e07a5f;
     --error-text:    #8b2500;
     --success-bg:    #f0faf4;
     --success-border:#52b788;
     --success-text:  #1b4332;
-    --info-bg:       #f0f7ff;
-    --info-border:   #6ea8d4;
-    --info-text:     #0c3557;
+    --shadow-warm:   0 8px 40px rgba(0, 92, 37, 0.12);
 }
 
 * {

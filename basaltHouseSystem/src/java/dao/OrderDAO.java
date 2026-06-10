@@ -273,6 +273,22 @@ public class OrderDAO extends DBContext {
         }
         return false;
     }
+
+    public boolean updateOrderType(int orderId, String orderType) {
+        String sql = """
+                     UPDATE Orders
+                     SET OrderType = ?
+                     WHERE OrderId = ? AND IsDeleted = 0
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, orderType);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating order type: " + e.getMessage());
+        }
+        return false;
+    }
 }
 
 

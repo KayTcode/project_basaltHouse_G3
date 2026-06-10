@@ -1,0 +1,368 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 7, 2026, 2:24:44 AM
+    Author     : KayT
+*/:root {
+    --coffee-dark:   #002b12;
+    --coffee-rich:   #005c25;
+    --coffee-warm:   #007a32;
+    --coffee-mid:    #009940;
+    --coffee-light:  #4caf78;
+    --cream:         #f0f9f3;
+    --cream-light:   #f7fcf9;
+    --border:        #b2dfc4;
+    --text-primary:  #002b12;
+    --text-secondary:#3a6b4f;
+    --error-bg:      #fff4f0;
+    --error-border:  #e07a5f;
+    --error-text:    #8b2500;
+    --success-bg:    #f0faf4;
+    --success-border:#52b788;
+    --success-text:  #1b4332;
+    --shadow-warm:   0 8px 40px rgba(0, 92, 37, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+/* Decorative background circles */
+body::before {
+    content: '';
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(160,98,42,0.07) 0%, transparent 70%);
+    top: -150px;
+    right: -150px;
+    pointer-events: none;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(58,31,10,0.06) 0%, transparent 70%);
+    bottom: -100px;
+    left: -100px;
+    pointer-events: none;
+}
+
+/* ===== CARD ===== */
+.card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 12px 60px rgba(58,31,10,0.12);
+    width: 100%;
+    max-width: 460px;
+    overflow: hidden;
+    position: relative;
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to   {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card top accent bar */
+.card-accent {
+    height: 4px;
+    background: linear-gradient(90deg, var(--coffee-rich), var(--coffee-light), var(--coffee-rich));
+}
+
+.card-body {
+    padding: 44px 48px;
+}
+
+/* ===== HEADER ===== */
+.card-logo {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.logo-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--coffee-rich);
+    letter-spacing: 2px;
+}
+
+.logo-dot {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--coffee-light);
+    margin: 0 6px;
+    vertical-align: middle;
+}
+
+.otp-icon-wrapper {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.otp-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fdf0e6, #f5dfc0);
+    border: 2px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+}
+
+.card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    text-align: center;
+    color: var(--coffee-dark);
+    margin-bottom: 10px;
+}
+
+.card-subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #8d6e63;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.email-chip {
+    display: inline-block;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--coffee-warm);
+    margin-top: 6px;
+}
+
+/* ===== ALERTS ===== */
+.alert {
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+}
+.alert-error   {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    color: var(--error-text);
+}
+.alert-success {
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+    color: var(--success-text);
+}
+.alert-info    {
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    color: var(--info-text);
+}
+.alert-icon {
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* ===== OTP INPUT BOXES ===== */
+.otp-input-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 28px;
+}
+
+.otp-digit {
+    width: 54px;
+    height: 62px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--coffee-dark);
+    background: var(--cream-light);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    caret-color: var(--coffee-mid);
+}
+
+.otp-digit:focus {
+    border-color: var(--coffee-mid);
+    box-shadow: 0 0 0 3px rgba(160,98,42,0.12);
+    background: #fff;
+    transform: translateY(-2px);
+}
+
+/* Ô đã điền */
+.otp-digit.filled {
+    border-color: var(--coffee-light);
+    background: #fff;
+}
+
+/* Ô lỗi */
+.otp-digit.error {
+    border-color: var(--error-border);
+    background: var(--error-bg);
+    animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25%       {
+        transform: translateX(-4px);
+    }
+    75%       {
+        transform: translateX(4px);
+    }
+}
+
+/* Hidden actual input (để submit form) */
+.otp-hidden-input {
+    display: none;
+}
+
+/* ===== TIMER ===== */
+.otp-timer {
+    text-align: center;
+    font-size: 13px;
+    color: #8d6e63;
+    margin-bottom: 24px;
+}
+
+.timer-count {
+    font-weight: 600;
+    color: var(--coffee-warm);
+    font-variant-numeric: tabular-nums;
+}
+
+.timer-count.urgent {
+    color: var(--error-border);
+}
+
+/* ===== SUBMIT BUTTON ===== */
+.btn-verify {
+    width: 100%;
+    height: 52px;
+    background: var(--coffee-rich);
+    color: #e8c99a;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+}
+.btn-verify:hover:not(:disabled) {
+    background: var(--coffee-warm);
+    transform: translateY(-1px);
+}
+.btn-verify:disabled {
+    background: #c4b0a0;
+    cursor: not-allowed;
+}
+.btn-verify::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.4s;
+}
+.btn-verify:hover:not(:disabled)::after {
+    left: 150%;
+}
+
+/* ===== RESEND SECTION ===== */
+.resend-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.resend-section p {
+    font-size: 13px;
+    color: #8d6e63;
+    margin-bottom: 8px;
+}
+
+.btn-resend {
+    background: none;
+    border: none;
+    color: var(--coffee-warm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 0;
+    transition: color 0.2s;
+}
+.btn-resend:hover:not(:disabled) {
+    color: var(--coffee-dark);
+}
+.btn-resend:disabled {
+    color: #bba898;
+    text-decoration: none;
+    cursor: not-allowed;
+}
+
+/* ===== BACK LINK ===== */
+.back-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #a09080;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.back-link:hover {
+    color: var(--coffee-warm);
+}
+

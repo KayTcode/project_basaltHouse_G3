@@ -97,6 +97,38 @@ public class TableSessionDAO extends DBContext {
 
 
 
+    public TableSession getSessionById(int sessionId) {
+        if (connection == null) {
+            System.err.println("[TableSessionDAO] getSessionById: connection is NULL");
+            return null;
+        }
+        String sql = "SELECT * FROM TableSessions WHERE SessionId = ? AND IsDeleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, sessionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    TableSession s = new TableSession();
+                    s.setSessionId(rs.getInt("SessionId"));
+                    s.setSessionCode(rs.getString("SessionCode"));
+                    s.setTableId(rs.getInt("TableId"));
+                    Object cid = rs.getObject("CashierId");
+                    s.setCashierId(cid != null ? (Integer) cid : null);
+                    s.setGuestCount(rs.getInt("GuestCount"));
+                    s.setStatus(rs.getString("Status"));
+                    Timestamp opened = rs.getTimestamp("OpenedAt");
+                    if (opened != null) s.setOpenedAt(opened.toLocalDateTime());
+                    Timestamp closed = rs.getTimestamp("ClosedAt");
+                    if (closed != null) s.setClosedAt(closed.toLocalDateTime());
+                    s.setIsDeleted(rs.getBoolean("IsDeleted"));
+                    return s;
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean closeSession(int sessionId) {
         if (connection == null) {
             System.err.println("[TableSessionDAO] closeSession: connection is NULL");

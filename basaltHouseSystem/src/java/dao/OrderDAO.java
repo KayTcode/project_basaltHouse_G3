@@ -87,9 +87,9 @@ public class OrderDAO extends DBContext {
         }
     }
 
-    // ==========================================
-    // OFFLINE ORDER FLOW METHODS (DO NOT AFFECT ONLINE CODE)
-    // ==========================================
+
+    // OFFLINE ORDER FLOW METHODS
+
 
     public int createOfflineOrder(Order order) {
         String sql = """
@@ -121,7 +121,7 @@ public class OrderDAO extends DBContext {
     public List<Order> getOfflineOrdersBySessionId(int sessionId) {
         List<Order> list = new ArrayList<>();
         String sql = """
-                     SELECT OrderId, TableSessionId, OrderStatus, TotalAmount, CreatedAt
+                     SELECT OrderId, TableSessionId, OrderStatus, TotalAmount, CreatedAt, PaymentStatus
                      FROM Orders
                      WHERE TableSessionId = ? AND IsDeleted = 0
                      ORDER BY CreatedAt DESC
@@ -135,6 +135,7 @@ public class OrderDAO extends DBContext {
                     o.setTableSessionId(rs2.getInt("TableSessionId"));
                     o.setOrderStatus(rs2.getString("OrderStatus"));
                     o.setTotalAmount(rs2.getBigDecimal("TotalAmount"));
+                    o.setPaymentStatus(rs2.getString("PaymentStatus"));
                     Timestamp ts = rs2.getTimestamp("CreatedAt");
                     if (ts != null) {
                         o.setCreatedAt(ts.toLocalDateTime());

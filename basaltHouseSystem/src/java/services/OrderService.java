@@ -1,14 +1,17 @@
 package services;
 
 import dao.OrderDAO;
+import dao.TableSessionDAO;
 import model.Order;
 import model.OrderDetail;
+import model.TableSession;
 import java.math.BigDecimal;
 import java.util.List;
 
 public class OrderService {
 
     private final OrderDAO orderDAO = new OrderDAO();
+    private final TableSessionDAO sessionDAO = new TableSessionDAO();
 
     public List<Order> getOfflineOrdersBySessionId(int sessionId) {
         return orderDAO.getOfflineOrdersBySessionId(sessionId);
@@ -23,6 +26,18 @@ public class OrderService {
     }
 
     public int createOfflineOrderForSession(int sessionId) {
+        // Validate: session phải tồn tại và đang ACTIVE
+        TableSession session = sessionDAO.getSessionById(sessionId);
+        if (session == null) {
+            System.err.println("[OrderService] Session " + sessionId + " không tồn tại.");
+            return -1;
+        }
+        String status = session.getStatus();
+        if (!"ACTIVE".equalsIgnoreCase(status) && !"Open".equalsIgnoreCase(status)) {
+            System.err.println("[OrderService] Session " + sessionId + " đã đóng (status=" + status + "), không thể tạo đơn mới.");
+            return -1;
+        }
+
         Order order = new Order();
         order.setTableSessionId(sessionId);
         order.setOrderStatus("Pending");
@@ -31,6 +46,11 @@ public class OrderService {
         order.setOrderType("Dine-In");
         order.setPaymentStatus("Unpaid");
         return orderDAO.createOfflineOrder(order);
+    }
+
+    public boolean updateOfflineOrderStatus(int orderId, String status) {
+        orderDAO.updateOrderStatus(orderId, status);
+        return true;
     }
 
     public boolean addOfflineProductToOrder(int orderId, int productId, int sizeId, int quantity, BigDecimal unitPrice) {

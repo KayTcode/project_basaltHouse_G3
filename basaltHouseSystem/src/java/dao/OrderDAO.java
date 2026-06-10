@@ -82,4 +82,69 @@ public class OrderDAO extends DBContext {
             System.err.println(e.getMessage());
         }
     }
+     // ===== THÊM MỚI CHO BARTENDER MODULE =====
+
+    // Lấy danh sách đơn đã Paid + đang chờ bartender nhận (Preparing)
+    // Dùng cho preparation queue — issue 29
+    public List<Order> getPaidPreparingOrders() {
+        List<Order> list = new ArrayList<>();
+        try {
+            String sql = """
+                         SELECT OrderId, OrderStatus, PaymentStatus, CreatedAt
+                         FROM Orders
+                         WHERE PaymentStatus = 'Paid'
+                           AND OrderStatus = 'Preparing'
+                           AND IsDeleted = 0
+                         ORDER BY CreatedAt ASC
+                         """;
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                Order o = new Order();
+                o.setOrderId(rs.getInt("OrderId"));
+                o.setOrderStatus(rs.getString("OrderStatus"));
+                o.setPaymentStatus(rs.getString("PaymentStatus"));
+                java.sql.Timestamp ts = rs.getTimestamp("CreatedAt");
+                if (ts != null) {
+                    o.setCreatedAt(ts.toLocalDateTime());
+                }
+                list.add(o);
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return list;
+    }
+
+    // Lấy danh sách đơn bartender đang pha chế (In_Progress)
+    // Dùng cho preparation tracking — issue 30
+    public List<Order> getInProgressOrders() {
+        List<Order> list = new ArrayList<>();
+        try {
+            String sql = """
+                         SELECT OrderId, OrderStatus, PaymentStatus, CreatedAt
+                         FROM Orders
+                         WHERE PaymentStatus = 'Paid'
+                           AND OrderStatus = 'In_Progress'
+                           AND IsDeleted = 0
+                         ORDER BY CreatedAt ASC
+                         """;
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                Order o = new Order();
+                o.setOrderId(rs.getInt("OrderId"));
+                o.setOrderStatus(rs.getString("OrderStatus"));
+                o.setPaymentStatus(rs.getString("PaymentStatus"));
+                java.sql.Timestamp ts = rs.getTimestamp("CreatedAt");
+                if (ts != null) {
+                    o.setCreatedAt(ts.toLocalDateTime());
+                }
+                list.add(o);
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return list;
+    }
 }

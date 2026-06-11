@@ -3,14 +3,9 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/OrderValidationService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/ProductDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/IngredientCheckService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/RecipeDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/StockService.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/IngredientDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/OrderDAO.java</file>
-            <file>file:/C:/Users/admin/Desktop/BathHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/RegisterDAO.java</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/Cashier/dashboard.jsp</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/cashier/cashier.css</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/Cashier/pos.jsp</file>
         </group>
     </open-files>
 </project-private>

@@ -19,7 +19,7 @@ import services.AuthService;
  * @author KayT
  */
 public class ResetPasswordServlet extends HttpServlet {
-    
+
     private final AuthService authService = new AuthService();
 
     /**
@@ -61,7 +61,7 @@ public class ResetPasswordServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("fpEmail") == null || !Boolean.TRUE.equals("otpVerified")) {
+        if (session == null || session.getAttribute("fpEmail") == null || !Boolean.TRUE.equals(session.getAttribute("otpVerified"))) {
             response.sendRedirect(request.getContextPath() + "/forgot-password");
             return;
         }
@@ -81,15 +81,15 @@ public class ResetPasswordServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("fpEmail") == null || !Boolean.TRUE.equals("otpVerified")) {
+        if (session == null || session.getAttribute("fpEmail") == null || !Boolean.TRUE.equals(session.getAttribute("otpVerified"))) {
             response.sendRedirect(request.getContextPath() + "/forgot-password");
             return;
         }
         String email = (String) session.getAttribute("fpEmail");
-        int accountId = (int) session.getAttribute("accountId");
+        int accountId = ((Number) session.getAttribute("fpAccountId")).intValue();
         String newPassword = request.getParameter("newPassword") != null ? request.getParameter("newPassword").trim() : "";
         String confirmPassword = request.getParameter("confirmPassword") != null ? request.getParameter("confirmPassword").trim() : "";
-        
+
         if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
             request.setAttribute("error", "Vui lòng điền đầy đủ cả hai thông tin mật khẩu");
             request.getRequestDispatcher("views/Authentication/reset-password.jsp").forward(request, response);
@@ -105,7 +105,7 @@ public class ResetPasswordServlet extends HttpServlet {
             request.getRequestDispatcher("views/Authentication/reset-password.jsp").forward(request, response);
             return;
         }
-        
+
         Map<String, Object> result = authService.resetPassword(accountId, newPassword);
         Boolean success = (Boolean) result.get("success");
         if (success == null || !success) {
@@ -116,7 +116,7 @@ public class ResetPasswordServlet extends HttpServlet {
         session.removeAttribute("fpEmail");
         session.removeAttribute("fpAccountId");
         session.removeAttribute("otpVerified");
-        
+
         session.setAttribute("loginSuccess", "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
         response.sendRedirect(request.getContextPath() + "/login");
     }

@@ -125,7 +125,7 @@ public class VerifyOtpServlet extends HttpServlet {
             request.getRequestDispatcher("views/Authentication/verify-otp.jsp").forward(request, response);
             return;
         }
-        if ("FOTGOT_PASSWORD".equals(purpose)) {
+        if ("FORGOT_PASSWORD".equals(purpose)) {
             handleForgotPasswordVerify(request, response, session, email, inputOtp);
         } else {
             handleRegisterVerify(request, response, session, email, inputOtp);

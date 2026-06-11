@@ -155,18 +155,6 @@ public class AuthService {
         return result;
     }
 
-    public static void main(String[] args) {
-        AuthService service = new AuthService();
-        String email = "anhiuemmatrui@gmail.com";
-        Map<String, Object> result = service.sendForgotPasswordOtp(email);
-        Boolean success = (Boolean) result.get("success");
-        if (success) {
-            System.out.println(success);
-        } else {
-            System.out.println(success);
-        }
-    }
-
     public Map<String, Object> verifyOtp(int accountId, String inputOtp) {
         Map<String, Object> result = new HashMap<>();
         result.put("success", false);
@@ -177,7 +165,7 @@ public class AuthService {
                 result.put("error", "Không tìm thấy mã OTP. Vui lòng thử lại.");
                 return result;
             }
-            String storedCode = (String) otp.get("otpCoce");
+            String storedCode = (String) otp.get("otpCode");
             LocalDateTime expiredAt = (LocalDateTime) otp.get("expiredAt");
             int otpId = (int) otp.get("otpId");
             if (!storedCode.equals((inputOtp.trim()))) {
@@ -210,6 +198,14 @@ public class AuthService {
             result.put("error", "Lỗi hệ thống. Vui lòng thử lại");
         }
         return result;
+    }
+
+    public static void main(String[] args) {
+        AuthService ser = new AuthService();
+        int accountId = 4;
+        String input = "thanhedo123";
+        Map<String, Object> result = ser.resetPassword(accountId, input);
+        System.out.println(result);
     }
 
     public Map<String, Object> resendOtp(String email) {

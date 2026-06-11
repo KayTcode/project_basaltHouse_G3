@@ -241,9 +241,9 @@ public class AuthDAO extends DBContext {
 //    }
     public void updatePassword(int accountId, String newPasswordHash) {
         sql = """
-              UPDATE Accounts 
-              SET PasswordHash = ?
-              WHERE AccountId = ? AND IsDelete = 0
+             UPDATE [dbo].[Accounts]
+                 SET [PasswordHash] = ?
+               WHERE [AccountId] = ? AND [IsDeleted] = 0
               """;
         try {
             ps = connection.prepareStatement(sql);
@@ -296,8 +296,9 @@ public class AuthDAO extends DBContext {
 
     public Map<String, Object> getLastOtp(int accountId, String purpose) {
         sql = """
-        SELECT TOP 1 OtpId, OtpCode
-        , ExpiredAt FROM EmailOtps WHERE AccountId =  ? AND  Purpose =  ? AND  IsDeleted = 0
+        SELECT TOP 1 OtpId, OtpCode, ExpiredAt
+        FROM EmailOtps
+        WHERE AccountId = ? AND Purpose = ? AND IsDeleted = 0
         ORDER BY CreatedAt DESC
         """;
         try {
@@ -309,7 +310,7 @@ public class AuthDAO extends DBContext {
                 Map<String, Object> otp = new HashMap<>();
                 otp.put("otpId", rs.getInt("OtpId"));
                 otp.put("otpCode", rs.getString("OtpCode"));
-                otp.put("purpose", rs.getString("Purpose"));
+                otp.put("purpose", purpose);
                 Timestamp ts = rs.getTimestamp("ExpiredAt");
                 otp.put("expiredAt", ts != null ? ts.toLocalDateTime() : null);
                 return otp;
@@ -319,6 +320,13 @@ public class AuthDAO extends DBContext {
         }
         return null;
     }
+//    public static void main(String[] args) {
+//        AuthDAO dao = new AuthDAO();
+//        int accountId = 4;
+//        String purpose = "FORGOT_PASSWORD";
+//        Map<String, Object> rs = dao.getLastOtp(accountId, purpose);
+//        System.out.println(rs);
+//    }
 
     public void markOtpUsed(int otpId) {
         sql = """

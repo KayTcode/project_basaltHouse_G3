@@ -77,7 +77,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         String email = request.getParameter("email") != null ? request.getParameter("email").trim() : "";
         if (email.isEmpty() || !email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
             request.setAttribute("error", "Vui lòng nhập địa chỉ email hợp lệ");
-            request.setAttribute(email, email);
+            request.setAttribute("email", email);
             request.getRequestDispatcher("views/Authentication/forgot-password.jsp").forward(request, response);
             return;
         }
@@ -85,7 +85,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         Boolean success = (Boolean) result.get("success");
         if (success == null || !success) {
             request.setAttribute("error", result.get("error"));
-            request.setAttribute(email, email);
+            request.setAttribute("email", email);
             request.getRequestDispatcher("views/Authentication/forgot-password.jsp").forward(request, response);
             return;
         }

@@ -68,12 +68,17 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         HttpSession existingSession = request.getSession(false);
-        if(existingSession != null && existingSession.getAttribute(authService.JWT_SESSION_KEY)!= null){
+
+        if (existingSession != null
+                && existingSession.getAttribute("currentUser") != null) {
             response.sendRedirect(request.getContextPath() + "/home");
             return;
         }
-        request.getRequestDispatcher("views/Authentication/login.jsp").forward(request, response);
+
+        request.getRequestDispatcher("views/Authentication/login.jsp")
+                .forward(request, response);
     }
 
     /**
@@ -133,11 +138,15 @@ public class LoginServlet extends HttpServlet {
         if (oldSession != null) {
             oldSession.invalidate();
         }
+         
         HttpSession session = request.getSession(true);
         session.setMaxInactiveInterval(7 * 24 * 60 * 60);
-        session.setAttribute(AuthService.JWT_SESSION_KEY, result.getJwtToken());
 
+        session.setAttribute(AuthService.JWT_SESSION_KEY, result.getJwtToken());
         session.setAttribute(AuthService.USER_SESSION_KEY, result);
+
+        // Dòng này để HomePage.jsp dùng được sessionScope.currentUser
+        session.setAttribute("currentUser", result);
 
         Cookie jwtCookie = new Cookie(AuthService.JWT_COOKIE_NAME, result.getJwtToken());
         jwtCookie.setMaxAge(7 * 24 * 60 * 60);

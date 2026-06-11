@@ -73,7 +73,6 @@
         <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
-<<<<<<< HEAD
     <servlet>
         <servlet-name>OnlineOrderServlet</servlet-name>
         <servlet-class>controller.OnlineOrderServlet</servlet-class>
@@ -89,7 +88,7 @@
     <servlet-mapping>
         <servlet-name>CartServlet</servlet-name>
         <url-pattern>/Cart</url-pattern>
-=======
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>CashierDashboardServlet</servlet-name>
         <url-pattern>/cashier/dashbroad</url-pattern>
@@ -137,7 +136,6 @@
     <servlet-mapping>
         <servlet-name>ResetPasswordServlet</servlet-name>
         <url-pattern>/reset-password</url-pattern>
->>>>>>> origin/main
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

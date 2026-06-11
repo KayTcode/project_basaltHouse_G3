@@ -171,7 +171,7 @@ public class LoginServlet extends HttpServlet {
             case "shipper":
                 return contextPath + "/shipper/dashboard";
             case "cashier":
-                return contextPath + "/cashier/dashboard";
+                return contextPath + "/cashier/dashbroad";
             case "customer":
             default:
                 return contextPath + "/home";

@@ -8,7 +8,7 @@
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>controller.LoginServlet</servlet-class>
     </servlet>
-    <!--Session timeout-->
+    
     <servlet>
         <servlet-name>LogoutServlet</servlet-name>
         <servlet-class>controller.LogoutServlet</servlet-class>
@@ -20,6 +20,12 @@
     <servlet>
         <servlet-name>CashierPOSServlet</servlet-name>
         <servlet-class>controller.CashierPOSServlet</servlet-class>
+        <servlet-name>RegisterServlet</servlet-name>
+        <servlet-class>controller.RegisterServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VerifyOtpServlet</servlet-name>
+        <servlet-class>controller.VerifyOtpServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -40,11 +46,17 @@
     <servlet-mapping>
         <servlet-name>CashierPOSServlet</servlet-name>
         <url-pattern>/cashier/pos</url-pattern>
+        <servlet-name>RegisterServlet</servlet-name>
+        <url-pattern>/register</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VerifyOtpServlet</servlet-name>
+        <url-pattern>/verify-otp</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>HomePageServlet</welcome-file>
+        <welcome-file>home</welcome-file>
     </welcome-file-list>
 </web-app>

@@ -1,0 +1,11 @@
+# DATABASE
+url=jdbc:sqlserver://localhost:1433;databaseName=YOUR_DATABASE;trustServerCertificate=true
+userID=root
+password=YOUR_PASSWORD
+
+
+# JWT
+jwt.secret=YOUR_SECRET
+
+# API KEY
+google.apikey=YOUR_API_KEY

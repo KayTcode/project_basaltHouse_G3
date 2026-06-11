@@ -4,25 +4,19 @@
  */
 package controller;
 
-import dao.CategoryDAO;
-import dao.DiscountCodeDAO;
-import dao.ProductDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.List;
-import model.Category;
-import model.DiscountCode;
-import model.Product;
+import services.StockService;
 
 /**
  *
  * @author admin
  */
-public class HomePageServlet extends HttpServlet {
+public class BuyProductServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -41,10 +35,10 @@ public class HomePageServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet HomePageServlet</title>");            
+            out.println("<title>Servlet BuyProductServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet HomePageServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet BuyProductServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -62,16 +56,7 @@ public class HomePageServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        ProductDAO productDAO = new ProductDAO();
-        CategoryDAO cate = new CategoryDAO();
-        DiscountCodeDAO discound = new DiscountCodeDAO();
-        List<DiscountCode>listD = discound.getDiscountCode();
-        List<Category> list = cate.getCategory();
-        List<Product> featuredProducts = productDAO.getBestSellingProducts(5);
-        request.setAttribute("Listd", listD);
-        request.setAttribute("ListP", list);
-        request.setAttribute("featuredProducts", featuredProducts);
-        request.getRequestDispatcher("views/HomePage/HomePage.jsp").forward(request, response);
+        processRequest(request, response);
     }
 
     /**
@@ -85,7 +70,7 @@ public class HomePageServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+     
     }
 
     /**

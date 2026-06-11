@@ -99,6 +99,28 @@ public class OrderService {
         return deleted;
     }
 
+    public String updateOrderType(int orderId, String newType) {
+        // 1. Kiểm tra order tồn tại
+        Order order = orderDAO.getOfflineOrderById(orderId);
+        if (order == null) {
+            return "ERR:Order không tồn tại.";
+        }
+
+        // 2. Chỉ cho phép đổi khi chưa confirm (Pending)
+        if (!"Pending".equalsIgnoreCase(order.getOrderStatus())) {
+            return "ERR:Chỉ có thể thay đổi loại đơn khi đơn hàng chưa được xác nhận.";
+        }
+
+        // 3. Kiểm tra order có sản phẩm (products & quantities preserved)
+        List<OrderDetail> details = orderDAO.getOfflineOrderDetailsByOrderId(orderId);
+        if (details.isEmpty()) {
+            return "ERR:Đơn hàng chưa có sản phẩm.";
+        }
+
+        boolean ok = orderDAO.updateOrderType(orderId, newType);
+        return ok ? "OK" : "ERR:Không thể cập nhật loại đơn hàng.";
+    }
+
     public boolean recalculateOfflineOrderTotal(int orderId) {
         List<OrderDetail> details = orderDAO.getOfflineOrderDetailsByOrderId(orderId);
         BigDecimal total = BigDecimal.ZERO;

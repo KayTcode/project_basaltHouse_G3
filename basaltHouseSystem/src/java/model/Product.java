@@ -22,11 +22,22 @@ public class Product {
     private boolean isActive;
     private LocalDateTime createdAt;
     private boolean isDeleted;
+    private int totalSold;
+    private double averageRating;
+    private int reviewCount;
 
     public Product() {
     }
 
-    public Product(int productId, String productName, String description, String imageUrl,boolean isActive) {
+    public Product(int productId, String productName, String description,BigDecimal price, String imageUrl,boolean isActive) {
+        this.productId = productId;
+        this.productName = productName;
+        this.description = description;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.isActive= isActive;
+    }
+       public Product(int productId, String productName, String description,String imageUrl,boolean isActive) {
         this.productId = productId;
         this.productName = productName;
         this.description = description;
@@ -44,6 +55,18 @@ public class Product {
         this.isActive = isActive;
         this.createdAt = createdAt;
         this.isDeleted = isDeleted;
+    }
+
+    public Product(int productId, String productName, String description, BigDecimal price, String imageUrl, boolean isActive, int totalSold, double averageRating, int reviewCount) {
+        this.productId = productId;
+        this.productName = productName;
+        this.description = description;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.isActive = isActive;
+        this.totalSold = totalSold;
+        this.averageRating = averageRating;
+        this.reviewCount = reviewCount;
     }
 
     public int getProductId() {
@@ -116,6 +139,30 @@ public class Product {
 
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
+    }
+
+    public int getTotalSold() {
+        return totalSold;
+    }
+
+    public void setTotalSold(int totalSold) {
+        this.totalSold = totalSold;
+    }
+
+    public double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(double averageRating) {
+        this.averageRating = averageRating;
+    }
+
+    public int getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(int reviewCount) {
+        this.reviewCount = reviewCount;
     }
 
 }

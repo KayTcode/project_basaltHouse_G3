@@ -8,10 +8,58 @@
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>controller.LoginServlet</servlet-class>
     </servlet>
-    <!--Session timeout-->
     <servlet>
         <servlet-name>LogoutServlet</servlet-name>
         <servlet-class>controller.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet>
+
+        <servlet-name>CashierDashboardServlet</servlet-name>
+        <servlet-class>controller.CashierDashboardServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>CashierPOSServlet</servlet-name>
+        <servlet-class>controller.CashierPOSServlet</servlet-class>
+        <servlet-name>RegisterServlet</servlet-name>
+        <servlet-class>controller.RegisterServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VerifyOtpServlet</servlet-name>
+        <servlet-class>controller.VerifyOtpServlet</servlet-class>
+        <servlet-name>CategorieServlet</servlet-name>
+        <servlet-class>controller.CategorieServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ProductDetailServlet</servlet-name>
+        <servlet-class>controller.ProductDetailServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>BuyProductServlet</servlet-name>
+        <servlet-class>controller.BuyProductServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ContactServlet</servlet-name>
+        <servlet-class>controller.ContactServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AccountServlet</servlet-name>
+        <servlet-class>controller.AccountServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VoucherServlet</servlet-name>
+        <servlet-class>controller.VoucherServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>MembershipRankServlet</servlet-name>
+        <servlet-class>controller.MembershipRankServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ForgotPasswordServlet</servlet-name>
+        <servlet-class>controller.ForgotPasswordServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ResetPasswordServlet</servlet-name>
+        <servlet-class>controller.ResetPasswordServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -25,6 +73,7 @@
         <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
+<<<<<<< HEAD
     <servlet>
         <servlet-name>OnlineOrderServlet</servlet-name>
         <servlet-class>controller.OnlineOrderServlet</servlet-class>
@@ -40,11 +89,60 @@
     <servlet-mapping>
         <servlet-name>CartServlet</servlet-name>
         <url-pattern>/Cart</url-pattern>
+=======
+    <servlet-mapping>
+        <servlet-name>CashierDashboardServlet</servlet-name>
+        <url-pattern>/cashier/dashbroad</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CashierPOSServlet</servlet-name>
+        <url-pattern>/cashier/pos</url-pattern>
+        <servlet-name>RegisterServlet</servlet-name>
+        <url-pattern>/register</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VerifyOtpServlet</servlet-name>
+        <url-pattern>/verify-otp</url-pattern>
+        <servlet-name>CategorieServlet</servlet-name>
+        <url-pattern>/category</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProductDetailServlet</servlet-name>
+        <url-pattern>/productdetail</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>BuyProductServlet</servlet-name>
+        <url-pattern>/checkout</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ContactServlet</servlet-name>
+        <url-pattern>/contact</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AccountServlet</servlet-name>
+        <url-pattern>/profile</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VoucherServlet</servlet-name>
+        <url-pattern>/voucher</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MembershipRankServlet</servlet-name>
+        <url-pattern>/membership</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ForgotPasswordServlet</servlet-name>
+        <url-pattern>/forgot-password</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ResetPasswordServlet</servlet-name>
+        <url-pattern>/reset-password</url-pattern>
+>>>>>>> origin/main
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>HomePageServlet</welcome-file>
+        <welcome-file>home</welcome-file>
     </welcome-file-list>
 </web-app>

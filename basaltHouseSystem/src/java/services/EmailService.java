@@ -72,7 +72,7 @@ private static final String SMTP_HOST = "smtp.gmail.com";
                 + "      <tr><td style='padding:40px 44px 32px;'>"
                 + "        <p style='font-size:17px;color:#3b1f0a;margin:0 0 12px;'>Xin chào,</p>"
                 + "        <p style='font-size:15px;color:#5c4033;line-height:1.7;margin:0 0 28px;'>"
-                + "          Cảm ơn bạn đã đăng ký tài khoản tại <strong>BasaltHouse</strong>. "
+                + "          Cảm ơn bạn đã sử dụng dịch vụ của <strong>BasaltHouse</strong>. "
                 + "          Đây là mã xác thực OTP của bạn:</p>"
                 // OTP Box
                 + "        <div style='background:#fdf6ee;border:2px dashed #c8966a;border-radius:10px;"

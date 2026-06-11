@@ -237,24 +237,6 @@ public class RegisterDAO extends DBContext {
         }
     }
 
-    public static String hashSHA256(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexStr = new StringBuilder();
-            for (byte b : hashBytes) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexStr.append(0);
-                }
-                hexStr.append(hex);
-            }
-            return hexStr.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private int getLastPendingId(Connection connection, String email) {
         sql = "SELECT TOP 1 PendingId FROM [PendingRegistrations] "
                 + "WHERE Email = ? AND IsDeleted = 0 ORDER BY CreatedAt DESC";

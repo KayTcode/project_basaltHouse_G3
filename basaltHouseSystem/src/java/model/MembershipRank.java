@@ -14,19 +14,26 @@ public class MembershipRank {
     private int rankId;
     private String rankName;
     private BigDecimal minTotalSpent;
-    private BigDecimal discountValue;
+    private int discountValue;
     private boolean isDeleted;
 
     public MembershipRank() {
     }
 
-    public MembershipRank(int rankId, String rankName, BigDecimal minTotalSpent, BigDecimal discountValue, boolean isDeleted) {
+    public MembershipRank(int rankId, String rankName, BigDecimal minTotalSpent, int discountValue, boolean isDeleted) {
         this.rankId = rankId;
         this.rankName = rankName;
         this.minTotalSpent = minTotalSpent;
         this.discountValue = discountValue;
         this.isDeleted = isDeleted;
     }
+
+    public MembershipRank(String rankName, BigDecimal minTotalSpent, int discountValue) {
+        this.rankName = rankName;
+        this.minTotalSpent = minTotalSpent;
+        this.discountValue = discountValue;
+    }
+    
 
     public int getRankId() {
         return rankId;
@@ -52,11 +59,11 @@ public class MembershipRank {
         this.minTotalSpent = minTotalSpent;
     }
 
-    public BigDecimal getDiscountValue() {
+    public int getDiscountValue() {
         return discountValue;
     }
 
-    public void setDiscountValue(BigDecimal discountValue) {
+    public void setDiscountValue(int discountValue) {
         this.discountValue = discountValue;
     }
 

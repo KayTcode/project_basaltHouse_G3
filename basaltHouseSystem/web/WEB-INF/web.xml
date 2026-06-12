@@ -33,10 +33,7 @@
         <servlet-name>ProductDetailServlet</servlet-name>
         <servlet-class>controller.ProductDetailServlet</servlet-class>
     </servlet>
-    <servlet>
-        <servlet-name>BuyProductServlet</servlet-name>
-        <servlet-class>controller.BuyProductServlet</servlet-class>
-    </servlet>
+
     <servlet>
         <servlet-name>ContactServlet</servlet-name>
         <servlet-class>controller.ContactServlet</servlet-class>
@@ -109,10 +106,8 @@
         <servlet-name>ProductDetailServlet</servlet-name>
         <url-pattern>/productdetail</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>BuyProductServlet</servlet-name>
-        <url-pattern>/checkout</url-pattern>
-    </servlet-mapping>
+
+
     <servlet-mapping>
         <servlet-name>ContactServlet</servlet-name>
         <url-pattern>/contact</url-pattern>

@@ -12,7 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/OrderCss/Order.css" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/CartCss/Cart.css" rel="stylesheet">
 </head>
 <body>
 
@@ -29,7 +29,7 @@
             </button>
             <div class="collapse navbar-collapse justify-content-between" id="mainNav">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link nav-link-coffeely" href="${pageContext.request.contextPath}/Order">Thực Đơn</a></li>
+                    <li class="nav-item"><a class="nav-link nav-link-coffeely" href="${pageContext.request.contextPath}/category">Menu</a></li>
                     <li class="nav-item"><a class="nav-link nav-link-coffeely active" href="${pageContext.request.contextPath}/Cart">Giỏ Hàng</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-2">
@@ -63,7 +63,7 @@
                     <span class="material-symbols-outlined">event</span>
                     <span id="currentDateTime">--</span>
                 </div>
-                <button class="meta-chip" style="cursor:pointer;border:none;" onclick="window.location='${pageContext.request.contextPath}/Order'">
+                <button class="meta-chip" style="cursor:pointer;border:none;" onclick="window.location='${pageContext.request.contextPath}/category'">
                     <span class="material-symbols-outlined">arrow_back</span>
                     <span>Tiếp tục mua</span>
                 </button>
@@ -85,7 +85,7 @@
                     <div style="background:var(--secondary-bg);border-radius:var(--radius-sm);padding:12px;font-weight:700;color:var(--primary-color);font-family:var(--font-montserrat);margin-bottom:24px;font-size:16px;">
                         Mã đơn hàng: <c:out value="${param.code}"/>
                     </div>
-                    <a href="${pageContext.request.contextPath}/Order" class="btn-checkout" style="text-decoration:none;display:inline-flex;width:auto;padding:12px 32px;justify-content:center;align-items:center;margin:0 auto;">
+                    <a href="${pageContext.request.contextPath}/category" class="btn-checkout" style="text-decoration:none;display:inline-flex;width:auto;padding:12px 32px;justify-content:center;align-items:center;margin:0 auto;">
                         <span class="material-symbols-outlined">storefront</span>Quay lại Thực đơn
                     </a>
                 </div>
@@ -96,7 +96,7 @@
                     <span class="material-symbols-outlined" style="font-size:64px;display:block;margin-bottom:14px;color:#d1d5db;">shopping_cart</span>
                     <h3 style="font-family:var(--font-montserrat);font-weight:700;margin-bottom:8px;color:var(--text-dark);">Giỏ hàng trống</h3>
                     <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;">Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
-                    <a class="btn-checkout" style="width:auto;padding:12px 28px;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;margin:0 auto;" href="${pageContext.request.contextPath}/Order">
+                    <a class="btn-checkout" style="width:auto;padding:12px 28px;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;margin:0 auto;" href="${pageContext.request.contextPath}/category">
                         <span class="material-symbols-outlined">storefront</span>
                         Xem thực đơn
                     </a>
@@ -156,12 +156,27 @@
                                     </table>
                                 </div>
 
-                                <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
-                                    <a href="${pageContext.request.contextPath}/Cart?action=clear" class="btn-clear-cart" style="width:auto;padding:9px 20px;text-decoration:none;">
-                                        <span class="material-symbols-outlined" style="font-size:16px">delete_sweep</span>Xóa tất cả
+                                <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;align-items:stretch;">
+                                    <a href="${pageContext.request.contextPath}/Cart?action=clear"
+                                       style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
+                                              border:1.5px solid #ef4444;color:#ef4444;
+                                              border-radius:8px;font-size:13px;font-weight:600;
+                                              text-decoration:none;background:#fff;
+                                              transition:background .2s,color .2s;"
+                                       onmouseover="this.style.background='#ef4444';this.style.color='#fff';"
+                                       onmouseout="this.style.background='#fff';this.style.color='#ef4444';">
+                                        <span class="material-symbols-outlined" style="font-size:16px">delete_sweep</span>
+                                        Xóa tất cả
                                     </a>
-                                    <a href="${pageContext.request.contextPath}/Order" class="cat-btn" style="border-color:var(--primary-color);color:var(--primary-color);text-decoration:none;">
-                                        <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">add</span>
+                                    <a href="${pageContext.request.contextPath}/category"
+                                       style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
+                                              border:1.5px solid var(--primary-color);color:var(--primary-color);
+                                              border-radius:8px;font-size:13px;font-weight:600;
+                                              text-decoration:none;background:#fff;
+                                              transition:background .2s,color .2s;"
+                                       onmouseover="this.style.background='var(--primary-color)';this.style.color='#fff';"
+                                       onmouseout="this.style.background='#fff';this.style.color='var(--primary-color)';">
+                                        <span class="material-symbols-outlined" style="font-size:16px">add</span>
                                         Thêm sản phẩm
                                     </a>
                                 </div>

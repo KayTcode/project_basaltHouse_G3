@@ -25,7 +25,7 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        // Bình thường: Hiển thị giỏ hàng
+        
         HttpSession session = request.getSession();
         @SuppressWarnings("unchecked")
         Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
@@ -34,7 +34,7 @@ public class CartServlet extends HttpServlet {
             session.setAttribute("cart", cart);
         }
 
-        // Tính tổng tiền & số lượng sản phẩm để JSP hiển thị cho dễ
+        
         int totalAmount = 0;
         int totalQty = 0;
         for (CartItem item : cart.values()) {
@@ -80,17 +80,26 @@ public class CartServlet extends HttpServlet {
                 String priceStr = request.getParameter("price");
                 int price = 0;
                 try {
-                    price = Integer.parseInt(priceStr);
-                } catch (NumberFormatException ignored) {}
+                    
+                    price = new java.math.BigDecimal(priceStr.trim()).intValue();
+                } catch (Exception ignored) {}
 
                 cartService.addProduct(cart, productId, productName, price);
-                
-                // Redirect về trang trước đó (hoặc mặc định là Order)
-                String referer = request.getHeader("referer");
-                if (referer != null && referer.contains("Cart")) {
+
+               
+                String redirectTarget = request.getParameter("redirect");
+                if ("cart".equals(redirectTarget)) {
                     response.sendRedirect(request.getContextPath() + "/Cart");
+                    return;
+                }
+
+                // Redirect về trang trước đó, thêm param addSuccess để hiển thị toast
+                String referer = request.getHeader("referer");
+                if (referer != null && !referer.isEmpty()) {
+                    String sep = referer.contains("?") ? "&" : "?";
+                    response.sendRedirect(referer + sep + "addSuccess=1");
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/Order?addSuccess=1");
+                    response.sendRedirect(request.getContextPath() + "/category?addSuccess=1");
                 }
                 return;
             }
@@ -111,10 +120,10 @@ public class CartServlet extends HttpServlet {
             }
         }
 
-        // Redirect thông minh dựa trên referer để giữ chân người dùng ở đúng trang hiện tại
+        
         String referer = request.getHeader("referer");
-        if (referer != null && referer.contains("Order")) {
-            response.sendRedirect(request.getContextPath() + "/Order");
+        if (referer != null && referer.contains("/Cart")) {
+            response.sendRedirect(request.getContextPath() + "/Cart");
         } else {
             response.sendRedirect(request.getContextPath() + "/Cart");
         }

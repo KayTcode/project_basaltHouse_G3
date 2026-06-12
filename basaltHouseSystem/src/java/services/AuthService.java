@@ -46,7 +46,7 @@ public class AuthService {
 
         String hashInputPassword = hashSHA256(password);
 
-        if (password.equalsIgnoreCase(account.getPasswordHash())) {
+        if (hashInputPassword.equalsIgnoreCase(account.getPasswordHash())) {
 
             authDAO.resetFailedAttempts(account.getAccountId());
 

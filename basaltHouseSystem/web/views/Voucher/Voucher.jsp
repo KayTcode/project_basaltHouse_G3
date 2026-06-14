@@ -36,16 +36,14 @@
                         BasaltHouse Voucher
                     </div>
                     <h1>Mã giảm giá của bạn</h1>
-                    <p>
-                        Lưu lại các ưu đãi phù hợp, áp dụng khi đặt món và tận hưởng cà phê ngon với chi phí nhẹ hơn.
-                    </p>
+                    <p>Danh sách gồm voucher toàn hệ thống và voucher riêng của tài khoản.</p>
                 </div>
 
                 <div class="voucher-hero-card">
                     <span class="material-symbols-outlined">redeem</span>
                     <small>Đang khả dụng</small>
-                    <strong>3 mã</strong>
-                    <p>Ưu đãi mới được cập nhật cho khách hàng BasaltHouse.</p>
+                    <strong>0 mã</strong>
+                    <p>Dùng ngay mã phù hợp để chuyển sang menu và chọn sản phẩm.</p>
                 </div>
             </div>
         </div>
@@ -71,9 +69,47 @@
                     </div>
 
                     <div class="voucher-list">
+                        <c:if test="${empty publicVouchers and empty listP}">
+                            <p>Chưa có voucher nào để hiển thị.</p>
+                        </c:if>
+
+                        <c:forEach var="p" items="${publicVouchers}">
+                            <article class="voucher-card voucher-card--featured" data-status="${publicVoucherStatus[p.discountId]}">
+                                <div class="voucher-ticket-edge" aria-hidden="true"></div>
+                                <div class="voucher-card-main">
+                                    <div class="voucher-card-icon">
+                                        <span class="material-symbols-outlined">percent</span>
+                                    </div>
+                                    <div class="voucher-card-content">
+                                        <div class="voucher-card-top">
+                                            <span class="voucher-status ${publicVoucherStatusClass[p.discountId]}">${publicVoucherStatusText[p.discountId]}</span>
+                                            <span class="voucher-expire">${p.endDateFormatted}</span>
+                                        </div>
+                                        <h3><c:out value="${p.description}"/></h3>
+                                        <p>Áp dụng cho tất cả khách hàng BasaltHouse.</p>
+                                        <div class="voucher-meta">
+                                            <span>
+                                                <span class="material-symbols-outlined">payments</span>
+                                                Giảm ${p.discountValueFormatted}
+                                            </span>
+                                            <span>
+                                                <span class="material-symbols-outlined">event_available</span>
+                                                Còn ${p.totalDay} ngày
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="voucher-code-box">
+                                    <strong><c:out value="${p.code}"/></strong>
+                                    <a href="${pageContext.request.contextPath}/category" class="voucher-use-btn">
+                                        <span class="material-symbols-outlined">shopping_cart_checkout</span>
+                                        Dùng ngay
+                                    </a>
+                                </div>
+                            </article>
+                        </c:forEach>
+
                         <c:forEach var="c" items="${listP}">
-
-
                             <article class="voucher-card voucher-card--featured" data-status="${voucherStatus[c.customerDiscountId]}">
                                 <div class="voucher-ticket-edge" aria-hidden="true"></div>
                                 <div class="voucher-card-main">
@@ -85,27 +121,27 @@
                                             <span class="voucher-status ${voucherStatusClass[c.customerDiscountId]}">${voucherStatusText[c.customerDiscountId]}</span>
                                             <span class="voucher-expire">${c.endDateFormatted}</span>
                                         </div>
-                                        <h3>${c.description}</h3>
-                                        <p>Áp dụng cho đồ uống và bánh ngọt trong menu BasaltHouse.</p>
+                                        <h3><c:out value="${c.description}"/></h3>
+                                        <p>Áp dụng cho tài khoản của bạn tại BasaltHouse.</p>
                                         <div class="voucher-meta">
                                             <span>
                                                 <span class="material-symbols-outlined">payments</span>
-                                                 Giảm ${c.discountPercentFormatted}
+                                                Giảm ${c.discountValueFormatted}
                                             </span>
                                             <span>
                                                 <span class="material-symbols-outlined">event_available</span>
                                                 Còn ${c.dayTotal} ngày
                                             </span>
                                         </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="voucher-code-box">
-                                <small>Thao tác</small>
-                                <a href="${pageContext.request.contextPath}/category" class="voucher-use-btn">
-                                    <span class="material-symbols-outlined">shopping_cart_checkout</span>
-                                    Sử dụng
-                                </a>
-                            </div>
+                                <div class="voucher-code-box">
+                                    <strong><c:out value="${c.code}"/></strong>
+                                    <a href="${pageContext.request.contextPath}/category" class="voucher-use-btn">
+                                        <span class="material-symbols-outlined">shopping_cart_checkout</span>
+                                        Dùng ngay
+                                    </a>
+                                </div>
                             </article>
                         </c:forEach>
                     </div>
@@ -120,7 +156,7 @@
                                 <h2>Kiểm tra ưu đãi</h2>
                             </div>
                         </div>
-                        <form class="voucher-apply-form" action="voucher" method="post">
+                        <form class="voucher-apply-form" action="${pageContext.request.contextPath}/voucher" method="post">
                             <label for="voucherCodeInput">Mã giảm giá</label>
                             <div class="voucher-apply-row">
                                 <input id="voucherCodeInput" type="text" name="voucherCode" placeholder="Nhập mã voucher">
@@ -139,17 +175,9 @@
                         <h3>Điều kiện sử dụng</h3>
                         <ul>
                             <li>Mỗi đơn hàng chỉ áp dụng một mã giảm giá.</li>
-                            <li>Mã có thể hết lượt trước thời hạn hiển thị.</li>
+                            <li>Mã có thể hết hạn trước khi được sử dụng.</li>
                             <li>Ưu đãi không quy đổi thành tiền mặt.</li>
                         </ul>
-                    </div>
-
-                    <div class="voucher-summary-card">
-                        <div>
-                            <span class="material-symbols-outlined">verified</span>
-                            <strong>Ưu đãi thành viên</strong>
-                        </div>
-                        <p>Đăng nhập thường xuyên để nhận thêm mã dành riêng cho tài khoản của bạn.</p>
                     </div>
                 </aside>
             </div>
@@ -206,24 +234,6 @@
 
             setTimeout(closeSuccessModal, 2600);
         }
-
-        document.querySelectorAll(".voucher-code-box button[data-code]").forEach(function (button) {
-            button.addEventListener("click", function () {
-                const code = button.getAttribute("data-code");
-
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(code);
-                }
-
-                button.classList.add("is-copied");
-                button.innerHTML = '<span class="material-symbols-outlined">check</span>Đã sao chép';
-
-                setTimeout(function () {
-                    button.classList.remove("is-copied");
-                    button.innerHTML = '<span class="material-symbols-outlined">content_copy</span>Sao chép';
-                }, 1600);
-            });
-        });
     });
 </script>
 

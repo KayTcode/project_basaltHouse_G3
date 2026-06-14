@@ -94,7 +94,6 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
-
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
@@ -138,7 +137,7 @@ public class LoginServlet extends HttpServlet {
         if (oldSession != null) {
             oldSession.invalidate();
         }
-         
+
         HttpSession session = request.getSession(true);
         session.setMaxInactiveInterval(7 * 24 * 60 * 60);
 

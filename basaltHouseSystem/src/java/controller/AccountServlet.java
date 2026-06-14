@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.CustomerProfile;
 import services.AuthService;
+import utils.PasswordUtils;
 
 /**
  *
@@ -85,6 +86,7 @@ public class AccountServlet extends HttpServlet {
         }
         request.getRequestDispatcher("views/AccountProfile/AccountProfile.jsp").forward(request, response);
     }
+
     /**
      * Handles the HTTP <code>POST</code> method.
      *
@@ -110,8 +112,8 @@ public class AccountServlet extends HttpServlet {
 
         AuthService authen = new AuthService();
         AccountDAO dao = new AccountDAO();
-        String passOld = authen.hashSHA256(request.getParameter("oldPassword"));
-        String PasNew = authen.hashSHA256(request.getParameter("newPassword"));
+        String passOld = PasswordUtils.hashSHA256(request.getParameter("oldPassword"));
+        String PasNew = PasswordUtils.hashSHA256(request.getParameter("newPassword"));
         String passHard = dao.getPassordById(user1.getAccountId());
 
         if (passOld.equals(passHard) && !passOld.equals(PasNew)) {

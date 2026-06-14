@@ -2,6 +2,7 @@ package dao;
 
 import model.Account;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -210,6 +211,144 @@ public class AuthDAO extends DBContext {
             ps.setInt(1, accountId);
             ps.executeUpdate();
 
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /*
+    Method for forgot-password
+     */
+    public Map<String, Object> findActiveAccountByEmail(String email) {
+        sql = """
+              SELECT [AccountId]
+                    ,[Email]
+                FROM [dbo].[Accounts]
+              WHERE Email = ? AND IsActive = 1 AND IsDeleted = 0
+              """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, email);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Map<String, Object> account = new HashMap<>();
+                account.put("accountId", rs.getInt("AccountId"));
+                account.put("email", rs.getString("Email"));
+                return account;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException();
+        }
+        return null;
+    }
+
+//    public static void main(String[] args) {
+//        AuthDAO dao = new AuthDAO();
+//        String email = "anhiuemmatrui@gmail.com";
+//        Map<String, Object> result = dao.findActiveAccountByEmail(email);
+//        int accountId = (int) result.get("accountId");
+//        String emailoutput = (String) result.get("email");
+//        System.out.println(accountId + " " +emailoutput);
+//    }
+    public void updatePassword(int accountId, String newPasswordHash) {
+        sql = """
+             UPDATE [dbo].[Accounts]
+                 SET [PasswordHash] = ?
+               WHERE [AccountId] = ? AND [IsDeleted] = 0
+              """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, newPasswordHash);
+            ps.setObject(2, accountId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void saveEmailOtp(int accountId, String otpCode, String purpose, LocalDateTime expiredAt) {
+        String deleteSql = """
+                           UPDATE [dbo].[EmailOtps]
+                              SET [IsDeleted] = 1
+                            WHERE AccountId = ? AND Purpose = ? AND IsDeleted = 0
+                           """;
+        String insertSql = """
+                           INSERT INTO [dbo].[EmailOtps]
+                                      ([AccountId]
+                                      ,[OtpCode]
+                                      ,[Purpose]
+                                      ,[ExpiredAt]
+                                      ,[CreatedAt]
+                                      ,[IsDeleted])
+                                VALUES
+                                      (?,?,?,?,?,0)
+                            """;
+        try {
+            connection.setAutoCommit(false);
+            try (PreparedStatement psDelete = connection.prepareStatement(deleteSql)) {
+                psDelete.setObject(1, accountId);
+                psDelete.setObject(2, purpose);
+                psDelete.executeUpdate();
+            }
+            try (PreparedStatement psInsert = connection.prepareCall(insertSql)) {
+                psInsert.setObject(1, accountId);
+                psInsert.setObject(2, otpCode);
+                psInsert.setObject(3, purpose);
+                psInsert.setObject(4, Timestamp.valueOf(expiredAt));
+                psInsert.setObject(5, Timestamp.valueOf(LocalDateTime.now()));
+                psInsert.executeUpdate();
+            }
+            connection.commit();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Map<String, Object> getLastOtp(int accountId, String purpose) {
+        sql = """
+        SELECT TOP 1 OtpId, OtpCode, ExpiredAt
+        FROM EmailOtps
+        WHERE AccountId = ? AND Purpose = ? AND IsDeleted = 0
+        ORDER BY CreatedAt DESC
+        """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, accountId);
+            ps.setObject(2, purpose);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Map<String, Object> otp = new HashMap<>();
+                otp.put("otpId", rs.getInt("OtpId"));
+                otp.put("otpCode", rs.getString("OtpCode"));
+                otp.put("purpose", purpose);
+                Timestamp ts = rs.getTimestamp("ExpiredAt");
+                otp.put("expiredAt", ts != null ? ts.toLocalDateTime() : null);
+                return otp;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+//    public static void main(String[] args) {
+//        AuthDAO dao = new AuthDAO();
+//        int accountId = 4;
+//        String purpose = "FORGOT_PASSWORD";
+//        Map<String, Object> rs = dao.getLastOtp(accountId, purpose);
+//        System.out.println(rs);
+//    }
+
+    public void markOtpUsed(int otpId) {
+        sql = """
+              UPDATE EmailOtps 
+              SET IsDeleted = 1
+              WHERE OtpId = ?  AND IsDeleted = 0
+              """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, otpId);
+            ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

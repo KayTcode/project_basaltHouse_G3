@@ -6,13 +6,15 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import javax.crypto.SecretKey;
 import model.Account;
 import utils.ConfigLoader;
+import utils.PasswordUtils;
 
 public class AuthService {
 
@@ -27,6 +29,9 @@ public class AuthService {
     public static final String USER_SESSION_KEY = "currentUser";
 
     private final AuthDAO authDAO;
+    private final EmailService emailService = new EmailService();
+    private final RegisterService registerService = new RegisterService();
+    private static final String PURPOSE = "FORGOT_PASSWORD";
 
     public AuthService() {
         this.authDAO = new AuthDAO();
@@ -43,11 +48,8 @@ public class AuthService {
         if (!account.isIsActive() || account.isIsLocked()) {
             return UserLoginDTO.failure("Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
         }
-
-        String hashInputPassword = hashSHA256(password);
-
+        String hashInputPassword = PasswordUtils.hashSHA256(password);
         if (hashInputPassword.equalsIgnoreCase(account.getPasswordHash())) {
-
             authDAO.resetFailedAttempts(account.getAccountId());
 
             String roleName = authDAO.getRoleNameById(account.getRoleId());
@@ -96,33 +98,7 @@ public class AuthService {
         }
     }
 
-    public String hashSHA256(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes =
-                    digest.digest(password.getBytes(StandardCharsets.UTF_8));
-
-            StringBuilder hexString = new StringBuilder();
-
-            for (byte b : hashBytes) {
-                hexString.append(String.format("%02x", b & 0xff));
-            }
-
-            return hexString.toString();
-
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(
-                    "SHA-256 algorithm không tìm thấy - lỗi JVM nghiêm trọng.",
-                    e
-            );
-        }
-    }
-
-    private String generateJwtToken(int accountId,
-                                    String email,
-                                    String roleName,
-                                    String fullName) {
-
+    private String generateJwtToken(int accountId, String email, String roleName, String fullName) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + JWT_EXPIRATION_MS);
 
@@ -149,6 +125,98 @@ public class AuthService {
             System.err.println("JWT không hợp lệ: " + e.getMessage());
             return null;
         }
+    }
+
+    public Map<String, Object> sendForgotPasswordOtp(String email) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", false);
+        try {
+            Map<String, Object> account = authDAO.findActiveAccountByEmail(email);
+            if (account == null) {
+                result.put("error", "Email này chưa được đăng kí trong hệ thống");
+                return result;
+            }
+            int accountId = (int) account.get("accountId");
+            String otpCode = generateOtp();
+            LocalDateTime exp = LocalDateTime.now().plusMinutes(5);
+            authDAO.saveEmailOtp(accountId, otpCode, PURPOSE, exp);
+            try {
+                emailService.sendOtp(email, otpCode);
+            } catch (Exception mailEx) {
+                System.err.println("[AuthService] Mail error: " + mailEx.getMessage());
+                mailEx.printStackTrace();
+                result.put("error", "Không thể gửi email. Vui lòng thử lại.");
+                return result;
+            }
+            result.put("success", true);
+            result.put("accountId", accountId);
+        } catch (Exception e) {
+            result.put("error", "Lỗi hệ thống vui lòng thử lại sau");
+        }
+        return result;
+    }
+
+    public Map<String, Object> verifyOtp(int accountId, String inputOtp) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", false);
+        try {
+            Map<String, Object> otp = authDAO.getLastOtp(accountId, PURPOSE);
+            if (otp == null) {
+                result.put("errorType", "NOT_FOUND");
+                result.put("error", "Không tìm thấy mã OTP. Vui lòng thử lại.");
+                return result;
+            }
+            String storedCode = (String) otp.get("otpCode");
+            LocalDateTime expiredAt = (LocalDateTime) otp.get("expiredAt");
+            int otpId = (int) otp.get("otpId");
+            if (!storedCode.equals((inputOtp.trim()))) {
+                result.put("errorType", "WRONG_OTP");
+                result.put("error", "Mã OTP không chính xác. Vui lòng thử lại");
+                return result;
+            }
+            if (LocalDateTime.now().isAfter(expiredAt)) {
+                result.put("errorType", "EXPIRED_OTP");
+                result.put("error", "Mã OTP đã hết hạn. Vui lòng bấn \"Gửi lại mã\".");
+                return result;
+            }
+            authDAO.markOtpUsed(otpId);
+            result.put("success", true);
+        } catch (Exception e) {
+            result.put("errorType", "DB_ERROR");
+            result.put("error", "Lỗi hệ thống. Vui lòng thử lại.");
+        }
+        return result;
+    }
+
+    public Map<String, Object> resetPassword(int accountId, String newPassword) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", false);
+        try {
+            String passwordHash = PasswordUtils.hashSHA256(newPassword);
+            authDAO.updatePassword(accountId, passwordHash);
+            result.put("success", true);
+        } catch (Exception e) {
+            result.put("error", "Lỗi hệ thống. Vui lòng thử lại");
+        }
+        return result;
+    }
+
+    public static void main(String[] args) {
+        AuthService ser = new AuthService();
+        int accountId = 4;
+        String input = "thanhedo123";
+        Map<String, Object> result = ser.resetPassword(accountId, input);
+        System.out.println(result);
+    }
+
+    public Map<String, Object> resendOtp(String email) {
+        return sendForgotPasswordOtp(email);
+    }
+
+    private String generateOtp() {
+        Random random = new Random();
+        int otpNumber = random.nextInt(900000) + 100000;
+        return String.valueOf(otpNumber);
     }
 
     public static String getJwtCookieName() {

@@ -4,8 +4,6 @@
  */
 package controller;
 
-import dao.AuthDAO;
-import dao.CustomerMembershipDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,16 +12,15 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
-import model.Account;
-import services.RegisterService;
+import services.AuthService;
 
 /**
  *
  * @author KayT
  */
-public class RegisterServlet extends HttpServlet {
+public class ResetPasswordServlet extends HttpServlet {
 
-    private final RegisterService registerService = new RegisterService();
+    private final AuthService authService = new AuthService();
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -42,10 +39,10 @@ public class RegisterServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet RegisterServlet</title>");
+            out.println("<title>Servlet ResetPasswordServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet RegisterServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet ResetPasswordServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -64,10 +61,11 @@ public class RegisterServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("currentUser") != null) {
-            response.sendRedirect(request.getContextPath() + "/home");
+        if (session == null || session.getAttribute("fpEmail") == null || !Boolean.TRUE.equals(session.getAttribute("otpVerified"))) {
+            response.sendRedirect(request.getContextPath() + "/forgot-password");
+            return;
         }
-        request.getRequestDispatcher("views/Authentication/register.jsp").forward(request, response);
+        request.getRequestDispatcher("views/Authentication/reset-password.jsp").forward(request, response);
     }
 
     /**
@@ -82,38 +80,45 @@ public class RegisterServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("fpEmail") == null || !Boolean.TRUE.equals(session.getAttribute("otpVerified"))) {
+            response.sendRedirect(request.getContextPath() + "/forgot-password");
+            return;
+        }
+        String email = (String) session.getAttribute("fpEmail");
+        int accountId = ((Number) session.getAttribute("fpAccountId")).intValue();
+        String newPassword = request.getParameter("newPassword") != null ? request.getParameter("newPassword").trim() : "";
+        String confirmPassword = request.getParameter("confirmPassword") != null ? request.getParameter("confirmPassword").trim() : "";
 
-        String email = request.getParameter("email").trim();
-        String password = request.getParameter("password").trim();
-        String fullName = request.getParameter("fullName").trim();
-        String phone = request.getParameter("phone").trim();
-
-        //Validate data
-        String validationError = validateInputs(email, password, fullName, phone);
-        if (validationError != null) {
-            request.setAttribute("error", validationError);
-            request.setAttribute("email", email);
-            request.setAttribute("fullName", fullName);
-            request.setAttribute("phone", phone);
-            request.getRequestDispatcher("views/Authentication/register.jsp").forward(request, response);
+        if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
+            request.setAttribute("error", "Vui lòng điền đầy đủ cả hai thông tin mật khẩu");
+            request.getRequestDispatcher("views/Authentication/reset-password.jsp").forward(request, response);
+            return;
+        }
+        if (newPassword.length() < 8) {
+            request.setAttribute("error", "Mật khẩu phải có tối thiểu 8 kí tự.");
+            request.getRequestDispatcher("views/Authentication/reset-password.jsp").forward(request, response);
+            return;
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            request.setAttribute("error", "Mật khẩu xác nhận không trùng khớp");
+            request.getRequestDispatcher("views/Authentication/reset-password.jsp").forward(request, response);
             return;
         }
 
-        Map<String, Object> result = registerService.processRegister(email, password, fullName, phone);
-        if (!(boolean) result.get("success")) {
+        Map<String, Object> result = authService.resetPassword(accountId, newPassword);
+        Boolean success = (Boolean) result.get("success");
+        if (success == null || !success) {
             request.setAttribute("error", result.get("error"));
-            request.setAttribute("email", email);
-            request.setAttribute("fullName", fullName);
-            request.setAttribute("phone", phone);
-            request.getRequestDispatcher("views/Authentication/register.jsp").forward(request, response);
+            request.getRequestDispatcher("views/Authentication/reset-password.jsp").forward(request, response);
             return;
         }
-       
-        HttpSession session = request.getSession(true);
-        session.setAttribute("pendingEmail", email);
-        session.setAttribute("pendingId", result.get("pendingId"));
-        session.setAttribute("otpPurpose", "REGISTER");
-        response.sendRedirect(request.getContextPath() + "/verify-otp");
+        session.removeAttribute("fpEmail");
+        session.removeAttribute("fpAccountId");
+        session.removeAttribute("otpVerified");
+
+        session.setAttribute("loginSuccess", "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+        response.sendRedirect(request.getContextPath() + "/login");
     }
 
     /**
@@ -125,21 +130,5 @@ public class RegisterServlet extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-
-    private String validateInputs(String email, String password, String fullName, String phone) {
-        if (email.isEmpty() || password.isEmpty() || fullName.isEmpty() || phone.isEmpty()) {
-            return "Vui lòng điền đầy đủ tất cả các trường thông tin.";
-        }
-        if (!email.matches("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
-            return "Địa chỉ email không hợp lệ.";
-        }
-        if (password.length() < 8) {
-            return "Mật khẩu có ít nhất 8 ký tự";
-        }
-        if (!phone.matches("0[0-9]{9}$")) {
-            return "Số điện thoại không hợp lệ (phải 10 chữ số, bắt đầu bằng 0).";
-        }
-        return null;
-    }
 
 }

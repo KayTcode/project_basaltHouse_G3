@@ -1,15 +1,19 @@
 package controller;
 
+import dao.SizeDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import model.CartItem;
+import model.Product;
 import services.CartService;
+import services.StockService;
 
 public class CartServlet extends HttpServlet {
 
@@ -40,6 +44,20 @@ public class CartServlet extends HttpServlet {
         for (CartItem item : cart.values()) {
             totalAmount += item.getSubtotal();
             totalQty += item.getQuantity();
+        }
+
+        // ── Tính stock hiện tại theo từng productId-size ──
+
+        try {
+            StockService stockSvc = new StockService();
+            HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
+            HashMap<Integer, HashMap<String, Integer>> stockMap = new HashMap<>();
+            for (Map.Entry<Product, HashMap<String, Integer>> e : rawStock.entrySet()) {
+                stockMap.put(e.getKey().getProductId(), e.getValue());
+            }
+            request.setAttribute("stockMap", stockMap);
+        } catch (Exception ignored) {
+            // nếu DB lỗi, stockMap sẽ null — JSP kiểm tra cũng được
         }
 
         request.setAttribute("cartItems", cart.values());
@@ -77,23 +95,61 @@ public class CartServlet extends HttpServlet {
         switch (action) {
             case "add" -> {
                 String productName = request.getParameter("productName");
-                String priceStr = request.getParameter("price");
+                String priceStr   = request.getParameter("price");
+                String sizeIdStr  = request.getParameter("sizeId");
                 int price = 0;
                 try {
-                    
                     price = new java.math.BigDecimal(priceStr.trim()).intValue();
                 } catch (Exception ignored) {}
 
-                cartService.addProduct(cart, productId, productName, price);
+                
+                String sizeName = "";
+                if (sizeIdStr != null && !sizeIdStr.isBlank()) {
+                    try {
+                        int sizeId = Integer.parseInt(sizeIdStr.trim());
+                        SizeDAO sizeDAO = new SizeDAO();
+                        HashMap<Integer, String> sizeMap = sizeDAO.getSize();
+                        sizeName = sizeMap.getOrDefault(sizeId, "");
+                    } catch (Exception ignored) {}
+                }
 
-               
+                // ── Tính stock cho sản phẩm + size này ──
+                int stock = 0;
+                if (!sizeName.isEmpty()) {
+                    try {
+                        int pId = Integer.parseInt(productId.trim());
+                        StockService stockSvc = new StockService();
+                        HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
+                        for (Map.Entry<Product, HashMap<String, Integer>> e : rawStock.entrySet()) {
+                            if (e.getKey().getProductId() == pId) {
+                                stock = e.getValue().getOrDefault(sizeName, 0);
+                                break;
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+
+                
+                String key = productId;
+                CartItem existing = cart.get(key);
+                if (existing == null) {
+                    cart.put(key, new CartItem(productId, productName, price, 1, sizeName, stock));
+                } else {
+                    existing.setQuantity(existing.getQuantity() + 1);
+                    
+                    if (!sizeName.isEmpty()) {
+                        existing.setSizeName(sizeName);
+                        existing.setStock(stock);
+                    }
+                }
+
                 String redirectTarget = request.getParameter("redirect");
                 if ("cart".equals(redirectTarget)) {
                     response.sendRedirect(request.getContextPath() + "/Cart");
                     return;
                 }
 
-                // Redirect về trang trước đó, thêm param addSuccess để hiển thị toast
+                
                 String referer = request.getHeader("referer");
                 if (referer != null && !referer.isEmpty()) {
                     String sep = referer.contains("?") ? "&" : "?";

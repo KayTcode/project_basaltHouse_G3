@@ -132,7 +132,26 @@
                                                             <div class="ct-icon"><span class="material-symbols-outlined">fastfood</span></div>
                                                             <div>
                                                                 <div class="ct-name"><c:out value="${item.productName}"/></div>
-                                                                <div class="ct-cat">Sản phẩm</div>
+                                                                <div class="ct-cat" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
+                                                                    <c:if test="${not empty item.sizeName}">
+                                                                        <span style="display:inline-flex;align-items:center;gap:3px;background:#f0f4ff;color:#4f46e5;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;">
+                                                                            <span class="material-symbols-outlined" style="font-size:12px;">straighten</span>
+                                                                            Size ${item.sizeName}
+                                                                        </span>
+                                                                    </c:if>
+                                                                    <c:if test="${item.stock > 0}">
+                                                                        <span style="display:inline-flex;align-items:center;gap:3px;background:#f0fdf4;color:#16a34a;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;">
+                                                                            <span class="material-symbols-outlined" style="font-size:12px;">coffee</span>
+                                                                            ${item.stock} cốc
+                                                                        </span>
+                                                                    </c:if>
+                                                                    <c:if test="${item.stock <= 0 and not empty item.sizeName}">
+                                                                        <span style="display:inline-flex;align-items:center;gap:3px;background:#fef2f2;color:#dc2626;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;">
+                                                                            <span class="material-symbols-outlined" style="font-size:12px;">coffee</span>
+                                                                            Hết hàng
+                                                                        </span>
+                                                                    </c:if>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </td>

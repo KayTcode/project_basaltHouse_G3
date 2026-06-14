@@ -9,12 +9,28 @@ package model;
  * @author KayT
  */
 public class Category {
+
     private int categoryId;
     private String categoryName;
     private String description;
     private boolean isDeleted;
+    private String image;
 
     public Category() {
+    }
+
+    public Category(int categoryId, String categoryName, String description, boolean isDeleted, String image) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+        this.description = description;
+        this.isDeleted = isDeleted;
+        this.image = image;
+    }
+
+    public Category(int categoryId, String categoryName, String image) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+        this.image = image;
     }
 
     public Category(int categoryId, String categoryName, String description, boolean isDeleted) {
@@ -55,6 +71,13 @@ public class Category {
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
-    
-    
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
 }

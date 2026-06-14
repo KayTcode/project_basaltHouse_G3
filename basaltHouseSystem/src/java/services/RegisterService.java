@@ -5,11 +5,14 @@
 package services;
 
 import dao.RegisterDAO;
+import java.io.Console;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.sql.SQLException;
+import java.util.Scanner;
+import utils.PasswordUtils;
 
 /**
  *
@@ -28,7 +31,7 @@ public class RegisterService {
             result.put("error", "Email này đã được sử dụng. Vui lòng email khác hoặc đăng nhập.");
             return result;
         }
-        String passwordHash = registerDao.hashSHA256(password);
+        String passwordHash = PasswordUtils.hashSHA256(password);
         String otpCode = generateOtp();
         LocalDateTime OtpExpiredAt = LocalDateTime.now().plusMinutes(5);
         int pendingId = registerDao.savePendingRegistration(email, passwordHash, fullName, phone, otpCode, OtpExpiredAt);
@@ -49,7 +52,7 @@ public class RegisterService {
                 cause = cause.getCause();
                 exEmail.printStackTrace();
                 System.err.println("==============================");
-                
+
                 result.put("success", false);
                 result.put("error", "Lỗi gửi email: " + exEmail.getClass().getSimpleName()
                         + " - " + exEmail.getMessage());

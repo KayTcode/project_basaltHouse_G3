@@ -5,7 +5,8 @@
 /basaltHouseSystem/dist/
 /basaltHouseSystem/target/
 /basaltHouseSystem/out/
-basaltHouseSystem/src/java/config/app.properties
+/basaltHouseSystem/src/java/config/app.properties
+/basaltHouseSystem/nbproject/private/
 
 #WAR FILE
 *.war

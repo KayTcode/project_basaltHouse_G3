@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
+import services.AuthService;
 import services.RegisterService;
 
 /**
@@ -21,6 +22,7 @@ import services.RegisterService;
 public class VerifyOtpServlet extends HttpServlet {
 
     private final RegisterService registerService = new RegisterService();
+    private final AuthService authService = new AuthService();
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -61,12 +63,13 @@ public class VerifyOtpServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("pendingEmail") == null) {
+        String purpose = getPurpose(session);
+        if (!isSessionValid(session, purpose)) {
             response.sendRedirect(request.getContextPath() + "/register");
             return;
         }
-        String email = (String) session.getAttribute("pendingEmail");
-        request.setAttribute("maskedEmail", maskEmail(email));
+        request.setAttribute("maskedEmail", maskEmail(getEmail(session, purpose)));
+        request.setAttribute("otpPurpose", purpose);
         request.getRequestDispatcher("views/Authentication/verify-otp.jsp").forward(request, response);
     }
 
@@ -83,48 +86,50 @@ public class VerifyOtpServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
         HttpSession session = request.getSession(false);
-
-        if (session == null || session.getAttribute("pendingEmail") == null) {
+        String purpose = getPurpose(session);
+        if (!isSessionValid(session, purpose)) {
             response.sendRedirect(request.getContextPath() + "/register");
             return;
         }
-        String email = (String) session.getAttribute("pendingEmail");
-        String action = request.getParameter("action") != null
-                ? request.getParameter("action").trim()
-                : "";
+        String email = getEmail(session, purpose);
+        String action = trimParam(request.getParameter("action"));
         if ("resend".equals(action)) {
-            Map<String, Object> resendResult = registerService.resendOtp(email);
-            if (!(boolean) resendResult.get("success")) {
-                request.setAttribute("error", resendResult.get("error"));
-                request.setAttribute("maskedEmail", maskEmail(email));
-                request.getRequestDispatcher("views/Authentication/verify-otp.jsp").forward(request, response);
-                return;
+            Map<String, Object> resendResult;
+            if ("FORGOT_PASSWORD".equals(purpose)) {
+                resendResult = authService.resendOtp(email);
+                if (Boolean.TRUE.equals(resendResult.get("success"))) {
+                    session.setAttribute("fpAccountId", resendResult.get("accountId"));
+                }
+            } else {
+                resendResult = registerService.resendOtp(email);
+                if (Boolean.TRUE.equals(resendResult.get("success"))) {
+                    session.setAttribute("pendingId", resendResult.get("pendingId"));
+                }
             }
-            session.setAttribute("pendingId", resendResult.get("pendingId"));
-            request.setAttribute("success", "Mã OTP mới đã được gửi về mail của bạn.");
+            Boolean ok = (Boolean) resendResult.get("success");
+            if (ok == null) {
+                request.setAttribute("error", resendResult.get("error"));
+            } else {
+                request.setAttribute("success", "Mã OTP mới đã được gửi về mail của bạn");
+            }
             request.setAttribute("maskedEmail", maskEmail(email));
+            request.setAttribute("otpPurpose", purpose);
             request.getRequestDispatcher("views/Authentication/verify-otp.jsp").forward(request, response);
             return;
         }
-        String inputOtp = request.getParameter("otp");
+        String inputOtp = trimParam(request.getParameter("otp"));
         if (inputOtp.isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập mã OTP");
             request.setAttribute("maskedEmail", maskEmail(email));
+            request.setAttribute("otpPurpose", purpose);
             request.getRequestDispatcher("views/Authentication/verify-otp.jsp").forward(request, response);
             return;
         }
-        Map<String, Object> verifyResult = registerService.verifyOtp(email, inputOtp);
-        if (!(boolean) verifyResult.get("success")) {
-            request.setAttribute("error", verifyResult.get("error"));
-            request.setAttribute("errorType", verifyResult.get("errorType"));
-            request.setAttribute("maskedEmail", maskEmail(email));
-            request.getRequestDispatcher("views/Authentication/verify-otp").forward(request, response);
-            return;
+        if ("FORGOT_PASSWORD".equals(purpose)) {
+            handleForgotPasswordVerify(request, response, session, email, inputOtp);
+        } else {
+            handleRegisterVerify(request, response, session, email, inputOtp);
         }
-        session.removeAttribute("pendingEmail");
-        session.removeAttribute("pendingId");
-        session.setAttribute("registerSuccess", "Đăng kí thành công! Chào mừng bạn đến với BasaltHouse Cafe. Hãy đăng nhập để tiếp tục.");
-        response.sendRedirect(request.getContextPath() + "/login");
     }
 
     /**
@@ -149,6 +154,71 @@ public class VerifyOtpServlet extends HttpServlet {
         }
         String masked = local.substring(0, 2) + "*".repeat(Math.max(0, local.length() - 3)) + local.charAt(local.length() - 1);
         return masked + "@" + domain;
+    }
+
+    private String getPurpose(HttpSession session) {
+        if (session == null) {
+            return "REGISTER";
+        }
+        String p = (String) session.getAttribute("otpPurpose");
+        return p != null ? p : "REGISTER";
+    }
+
+    private boolean isSessionValid(HttpSession session, String purpose) {
+        if (session == null) {
+            return false;
+        }
+        if ("FORGOT_PASSWORD".equals(purpose)) {
+            return session.getAttribute("fpEmail") != null
+                    && session.getAttribute("fpAccountId") != null;
+        }
+        return session.getAttribute("pendingEmail") != null;
+    }
+
+    private String getEmail(HttpSession session, String purpose) {
+        if (purpose.equals("FORGOT_PASSWORD")) {
+            return (String) session.getAttribute("fpEmail");
+        }
+        return (String) session.getAttribute("pendingEmail");
+    }
+
+    private String trimParam(String parameter) {
+        return (parameter != null) ? parameter.trim() : "";
+    }
+
+    private void handleForgotPasswordVerify(HttpServletRequest request, HttpServletResponse response, HttpSession session, String email, String inputOtp) throws ServletException, IOException {
+        int accountId = (int) session.getAttribute("fpAccountId");
+        Map<String, Object> result = authService.verifyOtp(accountId, inputOtp);
+        Boolean success = (Boolean) result.get("success");
+        if (success == null || !success) {
+            request.setAttribute("error", result.get("error"));
+            request.setAttribute("errorType", result.get("errorType"));
+            request.setAttribute("maskedEmail", maskEmail(email));
+            request.setAttribute("otpPurpose", "FORGOT_PASSWORD");
+            request.getRequestDispatcher("views/Authentication/verify-otp.jsp").forward(request, response);
+            return;
+        }
+        session.setAttribute("otpVerified", true);
+        response.sendRedirect(request.getContextPath() + "/reset-password");
+
+    }
+
+    private void handleRegisterVerify(HttpServletRequest request, HttpServletResponse response, HttpSession session, String email, String inputOtp) throws IOException, ServletException {
+        Map<String, Object> result = registerService.verifyOtp(email, inputOtp);
+        Boolean success = (Boolean) result.get("success");
+        if (success == null || !success) {
+            request.setAttribute("error", result.get("error"));
+            request.setAttribute("errorType", result.get("errorType"));
+            request.setAttribute("maskedEmail", maskEmail(email));
+            request.setAttribute("otpPurpose", "REGISTER");
+            request.getRequestDispatcher("views/Authentication/verify-otp.jsp").forward(request, response);
+            return;
+        }
+        session.removeAttribute("pendingEmail");
+        session.removeAttribute("pendingId");
+        session.removeAttribute("otpPurpose");
+        session.setAttribute("registerSuccess", "Đăng kí thành công! Chào mừng bạn đến với BasaltHouse. Hãy đăng nhập.");
+        response.sendRedirect(request.getContextPath() + "/login");
     }
 
 }

@@ -1,16 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 import java.time.LocalDateTime;
 
-/**
- *
- * @author KayT
- */
 public class Account {
+
     private int accountId;
     private int roleId;
     private String email;
@@ -20,12 +13,19 @@ public class Account {
     private LocalDateTime createdAt;
     private boolean isDeleted;
     private int failedAttempts;
-    private LocalDateTime lockoutEnd;
+    private boolean isLocked;
 
     public Account() {
     }
 
-    public Account(int accountId, int roleId, String email, String passwordHash, boolean isEmailVerified, boolean isActive, LocalDateTime createdAt, boolean isDeleted, int failedAttempts, LocalDateTime lockoutEnd) {
+    public Account(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public Account(int accountId, int roleId, String email, String passwordHash,
+                   boolean isEmailVerified, boolean isActive,
+                   LocalDateTime createdAt, boolean isDeleted,
+                   int failedAttempts, boolean isLocked) {
         this.accountId = accountId;
         this.roleId = roleId;
         this.email = email;
@@ -35,26 +35,8 @@ public class Account {
         this.createdAt = createdAt;
         this.isDeleted = isDeleted;
         this.failedAttempts = failedAttempts;
-        this.lockoutEnd = lockoutEnd;
+        this.isLocked = isLocked;
     }
-
-    public int getFailedAttempts() {
-        return failedAttempts;
-    }
-
-    public void setFailedAttempts(int failedAttempts) {
-        this.failedAttempts = failedAttempts;
-    }
-
-    public LocalDateTime getLockoutEnd() {
-        return lockoutEnd;
-    }
-
-    public void setLockoutEnd(LocalDateTime lockoutEnd) {
-        this.lockoutEnd = lockoutEnd;
-    }
-
-    
 
     public int getAccountId() {
         return accountId;
@@ -119,6 +101,20 @@ public class Account {
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
-    
-    
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
+    }
+
+    public boolean isIsLocked() {
+        return isLocked;
+    }
+
+    public void setIsLocked(boolean isLocked) {
+        this.isLocked = isLocked;
+    }
 }

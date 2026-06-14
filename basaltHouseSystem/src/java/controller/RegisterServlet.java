@@ -107,6 +107,7 @@ public class RegisterServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         session.setAttribute("pendingEmail", email);
         session.setAttribute("pendingId", result.get("pendingId"));
+        session.setAttribute("otpPurpose", "REGISTER");
         response.sendRedirect(request.getContextPath() + "/verify-otp");
     }
 

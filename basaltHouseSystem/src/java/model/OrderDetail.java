@@ -1,14 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- *
+ * Model class for OrderDetail.
  * @author KayT
  */
 public class OrderDetail {
@@ -22,6 +18,10 @@ public class OrderDetail {
     private LocalDateTime createdAt;
     private boolean isDeleted;
 
+    // ── Display fields (joined from Products & Sizes) ──────────────────
+    private String productName;
+    private String sizeName;
+
     public OrderDetail() {
     }
 
@@ -32,7 +32,6 @@ public class OrderDetail {
         this.sizeId = sizeId;
         this.quantity = quantity;
     }
-    
 
     public OrderDetail(int orderDetailId, int orderId, int productId, int sizeId, int quantity, BigDecimal unitPrice, String note, LocalDateTime createdAt, boolean isDeleted) {
         this.orderDetailId = orderDetailId;
@@ -117,6 +116,27 @@ public class OrderDetail {
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getSizeName() {
+        return sizeName;
+    }
+
+    public void setSizeName(String sizeName) {
+        this.sizeName = sizeName;
+    }
     
-    
+    public BigDecimal getSubtotal() {
+        if (unitPrice == null) {
+            return BigDecimal.ZERO;
+        }
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
+    }
 }

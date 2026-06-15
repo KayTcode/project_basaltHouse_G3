@@ -23,10 +23,16 @@ public class CartService {
         }
         CartItem item = cart.get(productId);
         if (item != null) {
-            item.setQuantity(item.getQuantity() + delta);
-            if (item.getQuantity() <= 0) {
+            int newQty = item.getQuantity() + delta;
+            if (newQty <= 0) {
                 cart.remove(productId);
+                return;
             }
+            
+            if (item.getStock() > 0 && newQty > item.getStock()) {
+                return; 
+            }
+            item.setQuantity(newQty);
         }
     }
 

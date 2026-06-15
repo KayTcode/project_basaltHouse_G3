@@ -57,7 +57,7 @@ public class CartServlet extends HttpServlet {
             }
             request.setAttribute("stockMap", stockMap);
         } catch (Exception ignored) {
-            // nếu DB lỗi, stockMap sẽ null — JSP kiểm tra cũng được
+           
         }
 
         request.setAttribute("cartItems", cart.values());
@@ -113,7 +113,7 @@ public class CartServlet extends HttpServlet {
                     } catch (Exception ignored) {}
                 }
 
-                // ── Tính stock cho sản phẩm + size này ──
+               
                 int stock = 0;
                 if (!sizeName.isEmpty()) {
                     try {
@@ -133,13 +133,19 @@ public class CartServlet extends HttpServlet {
                 String key = productId;
                 CartItem existing = cart.get(key);
                 if (existing == null) {
-                    cart.put(key, new CartItem(productId, productName, price, 1, sizeName, stock));
+                   
+                    if (stock > 0) {
+                        cart.put(key, new CartItem(productId, productName, price, 1, sizeName, stock));
+                    }
                 } else {
-                    existing.setQuantity(existing.getQuantity() + 1);
                     
                     if (!sizeName.isEmpty()) {
                         existing.setSizeName(sizeName);
                         existing.setStock(stock);
+                    }
+                   
+                    if (existing.getStock() <= 0 || existing.getQuantity() < existing.getStock()) {
+                        existing.setQuantity(existing.getQuantity() + 1);
                     }
                 }
 

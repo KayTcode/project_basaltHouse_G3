@@ -218,4 +218,12 @@
     </section>
 </main>
 
+<c:if test="${not empty passwordSuccess}">
+    <script>
+        window.addEventListener("DOMContentLoaded", function () {
+            alert("Đổi mật khẩu thành công");
+        });
+    </script>
+</c:if>
+
 <jsp:include page="/views/HomePage/Footer.jsp"/>

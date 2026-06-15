@@ -19,14 +19,13 @@ public class ActivityLog {
     private String oldValue;
     private String newValue;
     private String status;
-    private boolean isDeleted;
+    private int isDeleted;
     private LocalDateTime createdAt;
 
     public ActivityLog() {
     }
 
-    public ActivityLog(int logId, int accountId, String action, String module, int targetId, String oldValue, String newValue, String status, boolean isDeleted, LocalDateTime createdAt) {
-        this.logId = logId;
+    public ActivityLog(int accountId, String action, String module, int targetId, String oldValue, String newValue, String status, int isDeleted, LocalDateTime createdAt) {
         this.accountId = accountId;
         this.action = action;
         this.module = module;
@@ -102,11 +101,11 @@ public class ActivityLog {
         this.status = status;
     }
 
-    public boolean isIsDeleted() {
+    public int getIsDeleted() {
         return isDeleted;
     }
 
-    public void setIsDeleted(boolean isDeleted) {
+    public void setIsDeleted(int isDeleted) {
         this.isDeleted = isDeleted;
     }
 
@@ -117,6 +116,7 @@ public class ActivityLog {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
     
     
 }

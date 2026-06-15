@@ -5,6 +5,7 @@
 package controller;
 
 import dao.AccountDAO;
+import dao.ActiveLogDAO;
 import dao.CustomersProfileDAO;
 import dto.UserLoginDTO;
 import java.io.IOException;
@@ -14,6 +15,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDateTime;
+import model.ActivityLog;
 import model.CustomerProfile;
 import services.AuthService;
 import utils.PasswordUtils;
@@ -103,7 +106,7 @@ public class AccountServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-
+        ActiveLogDAO activedao = new ActiveLogDAO();
         UserLoginDTO user1 = (UserLoginDTO) session.getAttribute(AuthService.USER_SESSION_KEY);
         if (user1 == null) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -118,6 +121,16 @@ public class AccountServlet extends HttpServlet {
 
         if (passOld.equals(passHard) && !passOld.equals(PasNew)) {
             dao.updatePassword(user1.getAccountId(), PasNew);
+            activedao.ctreatActiveLog(new ActivityLog(user1.getAccountId(),
+                    "Change password",
+                    "Accounts",
+                    user1.getAccountId(),
+                    passOld,
+                    PasNew,
+                    "Success",
+                    0,
+                    LocalDateTime.now()));
+            request.setAttribute("passwordSuccess", "Đổi mật khẩu thành công");
             doGet(request, response);
             return;
 

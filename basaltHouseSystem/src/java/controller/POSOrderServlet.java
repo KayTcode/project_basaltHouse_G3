@@ -11,11 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import services.OrderService;
 
-// [Sửa code gốc]:
-// Trước đây, file này chứa nguyên một mảng logic khổng lồ để nhận giỏ hàng, tính toán tiền, xử lý mã giảm giá, và insert thẳng vào Database.
-// [Mới]:
-// Tôi đã gỡ bỏ hoàn toàn đống code tính toán cồng kềnh đó.
-// Bây giờ file này chỉ đóng vai trò là một Controller mỏng (chuẩn MVC), nhận Request từ giao diện và ném toàn bộ dữ liệu thô cho OrderService.createOfflineOrder() xử lý.
+
 @WebServlet(name = "POSOrderServlet", urlPatterns = {"/POSOrder"})
 public class POSOrderServlet extends HttpServlet {
 

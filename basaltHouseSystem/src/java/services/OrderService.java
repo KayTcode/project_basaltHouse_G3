@@ -19,7 +19,6 @@ import model.Product;
 import model.Recipe;
 import model.TableSession;
 
-// Tạo tầng Service này để kéo logic ra khỏi Controller (Giúp Controller mỏng và sạch hơn).
 // File này xử lý việc dịch chuỗi giỏ hàng, gọi DB lưu đơn hàng, và xử lý nghiệp vụ trừ kho khi cập nhật trạng thái đơn.
 public class OrderService {
     private final OrderDAO dao = new OrderDAO();

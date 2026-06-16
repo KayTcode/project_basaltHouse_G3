@@ -137,6 +137,30 @@ public class ProductDAO extends DBContext {
         return productMap;
     }
 
+    // Mục đích: Lấy danh sách sản phẩm theo dạng List (kèm giá tiền, hình ảnh, CategoryId) để thuận tiện cho việc in ra danh sách thẻ (card) món ăn trên giao diện Thu Ngân (POS).
+    public List<Product> getAllProductsForPOS() {
+        List<Product> list = new ArrayList<>();
+        try {
+            String sql = "SELECT ProductId, ProductName, CategoryId, Price, Description, ImageUrl, IsActive FROM Products WHERE IsDeleted = 0";
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                Product p = new Product();
+                p.setProductId(rs.getInt("ProductId"));
+                p.setProductName(rs.getString("ProductName"));
+                p.setCategoryId(rs.getInt("CategoryId"));
+                p.setPrice(rs.getBigDecimal("Price"));
+                p.setDescription(rs.getString("Description"));
+                p.setImageUrl(rs.getString("ImageUrl"));
+                p.setIsActive(rs.getBoolean("IsActive"));
+                list.add(p);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getAllProductsForPOS: " + e.getMessage());
+        }
+        return list;
+    }
+
     public List<Product> getProductByCategory() {
         return getProductByCategory(1);
     }

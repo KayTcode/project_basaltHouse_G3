@@ -104,10 +104,10 @@ public class RegisterDAO extends DBContext {
     public Map<String, Object> getPendingByEmail(String email) {
         sql = """
               SELECT TOP 1 PendingId, Email, PasswordHash, FullName,
-              Phone, RegisterRole, OtpCode, OtpEpiredAt, IsUsed, AttemptCount
-              FROM PendingRegistration
+              Phone, RegisterRole, OtpCode, OtpExpiredAt, IsUsed, AttemptCount
+              FROM PendingRegistrations
               WHERE Email = ? AND IsUsed = 0 AND IsDeleted = 0
-              ORDER BY CreateAt DESC
+              ORDER BY CreatedAt DESC
               """;
         try {
             ps = connection.prepareStatement(sql);
@@ -122,7 +122,7 @@ public class RegisterDAO extends DBContext {
                 pending.put("phone", rs.getString("Phone"));
                 pending.put("registerRole", rs.getString("RegisterRole"));
                 pending.put("otpCode", rs.getString("OtpCode"));
-                Timestamp ts = rs.getTimestamp("OtpEpiredAt");
+                Timestamp ts = rs.getTimestamp("OtpExpiredAt");
                 pending.put("otpExpiredAt", ts != null ? ts.toLocalDateTime() : null);
                 pending.put("isUsed", rs.getBoolean("IsUsed"));
                 pending.put("attemptCount", rs.getInt("AttemptCount"));
@@ -136,7 +136,7 @@ public class RegisterDAO extends DBContext {
 
     public void increaseAttemptCount(int pendingId) {
         sql = """
-              UPDATE PendingRegistration
+              UPDATE PendingRegistrations
               SET AttemptCount = AttemptCount + 1
               WHERE PendingId = ?
               """;
@@ -151,14 +151,14 @@ public class RegisterDAO extends DBContext {
 
     private void markPendingAsUsed(int pendingId, Connection connection) {
         sql = """
-              UPDATE PendingRegistration
+              UPDATE PendingRegistrations
               SET IsUsed = 1
               WHERE PendingId = ?
               """;
         try {
             ps = connection.prepareStatement(sql);
             ps.setObject(1, pendingId);
-            rs = ps.executeQuery();
+            ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -184,7 +184,7 @@ public class RegisterDAO extends DBContext {
                                        ,[IsEmailVerified]
                                        ,[IsActive]
                                        ,[CreatedAt]
-                                       ,[IsDeleted]
+                                       ,[IsDeleted])
                                  VALUES
                                        (?,?,?,1,1,?,0)
                             """;
@@ -215,6 +215,7 @@ public class RegisterDAO extends DBContext {
             psAccount.setObject(2, email);
             psAccount.setObject(3, passwordHash);
             psAccount.setObject(4, Timestamp.valueOf(LocalDateTime.now()));
+            psAccount.executeUpdate();
             rs = psAccount.getGeneratedKeys();
             if (rs.next()) {
                 newAccountId = rs.getInt(1);
@@ -223,10 +224,11 @@ public class RegisterDAO extends DBContext {
             }
 
             PreparedStatement psCustomer = connection.prepareStatement(sqlCustomer);
-            ps.setObject(1, newAccountId);
-            ps.setObject(2, fullName);
-            ps.setObject(3, phone);
-            ps.setObject(4, Timestamp.valueOf(LocalDateTime.now()));
+            psCustomer.setObject(1, newAccountId);
+            psCustomer.setObject(2, fullName);
+            psCustomer.setObject(3, phone);
+            psCustomer.setObject(4, Timestamp.valueOf(LocalDateTime.now()));
+            psCustomer.executeUpdate();
             markPendingAsUsed(pendingId, connection);
             connection.commit();
         } catch (SQLException e) {
@@ -244,8 +246,8 @@ public class RegisterDAO extends DBContext {
                 String hex = Integer.toHexString(0xff & b);
                 if (hex.length() == 1) {
                     hexStr.append(0);
-                    hexStr.append(hex);
                 }
+                hexStr.append(hex);
             }
             return hexStr.toString();
         } catch (NoSuchAlgorithmException e) {

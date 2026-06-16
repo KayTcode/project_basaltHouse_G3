@@ -65,14 +65,14 @@ private static final String SMTP_HOST = "smtp.gmail.com";
                 + "           box-shadow:0 4px 24px rgba(80,50,20,0.10);overflow:hidden;'>"
                 // Header
                 + "      <tr><td style='background:#3b1f0a;padding:36px 40px 28px;text-align:center;'>"
-                + "        <div style='font-size:28px;font-weight:bold;color:#e8c99a;letter-spacing:3px;'>☕ COFFEELY</div>"
-                + "        <div style='font-size:12px;color:#a07850;letter-spacing:6px;margin-top:4px;'>BASALTHOUSE</div>"
+                + "        <div style='font-size:28px;font-weight:bold;color:#e8c99a;letter-spacing:3px;'>☕ BasltHouse</div>"
+                + "        <div style='font-size:12px;color:#a07850;letter-spacing:6px;margin-top:4px;'>Coffeely</div>"
                 + "      </td></tr>"
                 // Body
                 + "      <tr><td style='padding:40px 44px 32px;'>"
                 + "        <p style='font-size:17px;color:#3b1f0a;margin:0 0 12px;'>Xin chào,</p>"
                 + "        <p style='font-size:15px;color:#5c4033;line-height:1.7;margin:0 0 28px;'>"
-                + "          Cảm ơn bạn đã đăng ký tài khoản tại <strong>Coffeely</strong>. "
+                + "          Cảm ơn bạn đã đăng ký tài khoản tại <strong>BasaltHouse</strong>. "
                 + "          Đây là mã xác thực OTP của bạn:</p>"
                 // OTP Box
                 + "        <div style='background:#fdf6ee;border:2px dashed #c8966a;border-radius:10px;"
@@ -88,7 +88,7 @@ private static final String SMTP_HOST = "smtp.gmail.com";
                 // Footer
                 + "      <tr><td style='background:#f9f3ec;padding:20px 44px;border-top:1px solid #e8d5c0;'>"
                 + "        <p style='font-size:12px;color:#a07850;margin:0;text-align:center;'>"
-                + "          © 2024 Coffeely - BasaltHouse. Trân trọng.</p>"
+                + "          © 2026 Coffeely - BasaltHouse. Trân trọng.</p>"
                 + "      </td></tr>"
                 + "    </table>"
                 + "  </td></tr>"

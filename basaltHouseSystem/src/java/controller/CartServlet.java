@@ -196,14 +196,26 @@ public class CartServlet extends HttpServlet {
         HttpSession session = request.getSession();
         @SuppressWarnings("unchecked")
         Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
-        
+
         if (cart == null || cart.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/Cart?error=empty");
             return;
         }
 
+      
+        String customerIdStr = null;
+        Object currentUser = session.getAttribute("currentUser");
+        if (currentUser instanceof dto.UserLoginDTO) {
+            int accountId = ((dto.UserLoginDTO) currentUser).getAccountId();
+            dao.OrderDAO orderDAO = new dao.OrderDAO();
+            int customerId = orderDAO.getCustomerIdByAccountId(accountId);
+            if (customerId > 0) {
+                customerIdStr = String.valueOf(customerId);
+            }
+        }
+
         String note = request.getParameter("note");
-        String orderCode = cartService.checkout(cart, note);
+        String orderCode = cartService.checkout(cart, note, customerIdStr);
 
         if (orderCode != null) {
             response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);

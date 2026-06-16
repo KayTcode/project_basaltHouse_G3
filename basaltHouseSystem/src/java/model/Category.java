@@ -9,12 +9,12 @@ package model;
  * @author KayT
  */
 public class Category {
+
     private int categoryId;
     private String categoryName;
     private String description;
     private boolean isDeleted;
     private String image;
-    
 
     public Category() {
     }
@@ -33,7 +33,12 @@ public class Category {
         this.image = image;
     }
 
-   
+    public Category(int categoryId, String categoryName, String description, boolean isDeleted) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+        this.description = description;
+        this.isDeleted = isDeleted;
+    }
 
     public int getCategoryId() {
         return categoryId;
@@ -74,6 +79,5 @@ public class Category {
     public void setImage(String image) {
         this.image = image;
     }
-    
-    
+
 }

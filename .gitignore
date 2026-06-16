@@ -6,7 +6,11 @@
 /basaltHouseSystem/target/
 /basaltHouseSystem/out/
 /basaltHouseSystem/src/java/config/app.properties
+<<<<<<< HEAD
+//basaltHouseSystem/nbproject/private
+=======
 /basaltHouseSystem/nbproject/private/
+>>>>>>> 3757ef613c06189c0af1369085a750398f3d35b4
 
 #WAR FILE
 *.war
@@ -68,3 +72,7 @@ apikey.properties
 temp/
 tmp/
 /basaltHouseSystem/nbproject/private/
+/basaltHouseSystem_2/nbproject/private/
+/basaltHouseSystem_2/build/
+/basaltHouseSystem_2/dist/
+/basaltHouseSystem_cp/nbproject/private/

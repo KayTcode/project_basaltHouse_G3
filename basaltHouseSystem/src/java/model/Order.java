@@ -28,6 +28,11 @@ public class Order {
     private BigDecimal finalAmount;
     private LocalDateTime createdAt;
     private boolean isDeleted;
+    
+    // Additional fields for display
+    private String customerName;
+    private String tableName;
+    private String note;
 
     public Order() {
     }
@@ -184,5 +189,28 @@ public class Order {
         this.isDeleted = isDeleted;
     }
     
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+    
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
     
 }

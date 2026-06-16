@@ -4,6 +4,7 @@
  */
 package model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -18,6 +19,10 @@ public class Customer {
     private String avatarUrl;
     private LocalDateTime createdAt;
     private boolean isDeleted;
+    
+    // Thêm các trường phụ để chứa thông tin Membership
+    private String rankName;
+    private BigDecimal discountValue;
 
     public Customer() {
     }
@@ -89,5 +94,20 @@ public class Customer {
         this.isDeleted = isDeleted;
     }
     
+    public String getRankName() {
+        return rankName;
+    }
+
+    public void setRankName(String rankName) {
+        this.rankName = rankName;
+    }
+
+    public BigDecimal getDiscountValue() {
+        return discountValue;
+    }
+
+    public void setDiscountValue(BigDecimal discountValue) {
+        this.discountValue = discountValue;
+    }
     
 }

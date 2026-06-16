@@ -1,33 +1,175 @@
 package services;
 
+import dao.DiscountCodeDAO;
+import dao.IngredientDAO;
 import dao.OrderDAO;
+import dao.ProductDAO;
+import dao.RecipeDAO;
+import dao.SizeDAO;
 import dao.TableSessionDAO;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import model.DiscountCode;
 import model.Order;
 import model.OrderDetail;
+import model.Product;
+import model.Recipe;
 import model.TableSession;
-import java.math.BigDecimal;
-import java.util.List;
 
+// File này xử lý việc dịch chuỗi giỏ hàng, gọi DB lưu đơn hàng, và xử lý nghiệp vụ trừ kho khi cập nhật trạng thái đơn.
 public class OrderService {
+    private final OrderDAO dao = new OrderDAO();
+    private final TableSessionDAO sesioneDAO = new TableSessionDAO();
+    public int createOfflineOrder(String cartData, String totalAmountStr, String discountAmountStr, String finalAmountStr,
+            String paymentMethod, String tableName, String note,
+            String customerIdStr, String discountCode) {
 
-    private final OrderDAO orderDAO = new OrderDAO();
-    private final TableSessionDAO sessionDAO = new TableSessionDAO();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        BigDecimal finalAmount = BigDecimal.ZERO;
+        try {
+            if (totalAmountStr != null) {
+                totalAmount = new BigDecimal(totalAmountStr);
+            }
+            if (discountAmountStr != null) {
+                discountAmount = new BigDecimal(discountAmountStr);
+            }
+            if (finalAmountStr != null) {
+                finalAmount = new BigDecimal(finalAmountStr);
+            }
+        } catch (Exception e) {
+        }
+
+        Order order = new Order();
+        order.setOrderType("Offline");
+        order.setOrderStatus("Preparing");
+        order.setPaymentStatus("Paid");
+        order.setPaymentMethod(paymentMethod != null && !paymentMethod.isEmpty() ? paymentMethod : "Cash");
+        order.setTableName(tableName != null && !tableName.isEmpty() ? tableName : "Walk-in");
+        order.setNote(note);
+        order.setTotalAmount(totalAmount);
+        order.setDiscountAmount(discountAmount);
+        order.setFinalAmount(finalAmount);
+
+        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+            try {
+                order.setCustomerId(Integer.parseInt(customerIdStr));
+            } catch (Exception e) {
+            }
+        }
+
+        if (discountCode != null && !discountCode.trim().isEmpty()) {
+            DiscountCodeDAO dcDao = new DiscountCodeDAO();
+            DiscountCode dto = dcDao.checkDiscountCode(discountCode);
+            if (dto != null) {
+                order.setDiscountId(dto.getDiscountId());
+            }
+        }
+
+        List<OrderDetail> details = new ArrayList<>();
+        ProductDAO pDao = new ProductDAO();
+        SizeDAO sDao = new SizeDAO();
+        HashMap<Integer, Product> products = pDao.getProduct();
+        HashMap<Integer, String> sizes = sDao.getSize();
+
+        if (cartData != null && !cartData.isEmpty()) {
+            // cartData format: name,size,qty,unitPrice|name,size,qty,unitPrice
+            String[] items = cartData.split("\\|");
+            for (String item : items) {
+                if (item.trim().isEmpty()) {
+                    continue;
+                }
+                String[] parts = item.split(",");
+                if (parts.length >= 4) {
+                    String name = parts[0];
+                    String sizeName = parts[1];
+                    int qty = Integer.parseInt(parts[2]);
+                    BigDecimal unitPrice = new BigDecimal(parts[3]);
+
+                    int productId = -1;
+                    for (Map.Entry<Integer, Product> entry : products.entrySet()) {
+                        if (entry.getValue().getProductName().equalsIgnoreCase(name)) {
+                            productId = entry.getKey();
+                            break;
+                        }
+                    }
+
+                    int sizeId = -1;
+                    for (Map.Entry<Integer, String> entry : sizes.entrySet()) {
+                        if (entry.getValue().equalsIgnoreCase(sizeName)) {
+                            sizeId = entry.getKey();
+                            break;
+                        }
+                    }
+
+                    if (productId != -1 && sizeId != -1) {
+                        OrderDetail od = new OrderDetail();
+                        od.setProductId(productId);
+                        od.setSizeId(sizeId);
+                        od.setQuantity(qty);
+                        od.setUnitPrice(unitPrice);
+                        details.add(od);
+                    }
+                }
+            }
+        }
+
+        OrderDAO orderDAO = new OrderDAO();
+        return orderDAO.insertOfflineOrder(order, details);
+    }
+
+    public void updateOrderStatus(int orderId, String action) throws Exception {
+        OrderDAO orderDAO = new OrderDAO();
+
+        if (action.equals("start")) {
+            orderDAO.updateOrderStatus(orderId, "In_Progress");
+        } else if (action.equals("ready")) {
+            orderDAO.updateOrderStatus(orderId, "Ready");
+        } else if (action.equals("complete")) {
+            orderDAO.updateOrderStatus(orderId, "Completed");
+
+            // Inventory Deduction Logic
+            List<OrderDetail> details = orderDAO.getOrderDetailsByOrderId(orderId);
+            RecipeDAO recipeDAO = new RecipeDAO();
+            IngredientDAO ingredientDAO = new IngredientDAO();
+            HashMap<Integer, HashMap<Integer, List<Recipe>>> recipes = recipeDAO.getRecipeMap();
+
+            for (OrderDetail d : details) {
+                int productId = d.getProductId();
+                int sizeId = d.getSizeId();
+                int qty = d.getQuantity();
+
+                if (recipes.containsKey(productId) && recipes.get(productId).containsKey(sizeId)) {
+                    List<Recipe> recipeComponents = recipes.get(productId).get(sizeId);
+                    for (Recipe r : recipeComponents) {
+                        BigDecimal totalNeeded = r.getQuantityNeeded().multiply(new BigDecimal(qty));
+                        ingredientDAO.updateIngredientQuantity(r.getIngredientId(), totalNeeded);
+                    }
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid action: " + action);
+        }
+    }
 
     public List<Order> getOfflineOrdersBySessionId(int sessionId) {
-        return orderDAO.getOfflineOrdersBySessionId(sessionId);
+        return dao.getOfflineOrdersBySessionId(sessionId);
     }
 
     public Order getOfflineOrderById(int orderId) {
-        return orderDAO.getOfflineOrderById(orderId);
+        return dao.getOfflineOrderById(orderId);
     }
 
     public List<OrderDetail> getOfflineOrderDetailsByOrderId(int orderId) {
-        return orderDAO.getOfflineOrderDetailsByOrderId(orderId);
+        return dao.getOfflineOrderDetailsByOrderId(orderId);
     }
 
     public int createOfflineOrderForSession(int sessionId) {
         // Validate: session phải tồn tại và đang ACTIVE
-        TableSession session = sessionDAO.getSessionById(sessionId);
+        TableSession session = sesioneDAO.getSessionById(sessionId);
         if (session == null) {
             System.err.println("[OrderService] Session " + sessionId + " không tồn tại.");
             return -1;
@@ -45,20 +187,20 @@ public class OrderService {
         order.setFinalAmount(BigDecimal.ZERO);
         order.setOrderType("Dine-In");
         order.setPaymentStatus("Unpaid");
-        return orderDAO.createOfflineOrder(order);
+        return dao.createOfflineOrder(order);
     }
 
     public boolean updateOfflineOrderStatus(int orderId, String status) {
-        orderDAO.updateOrderStatus(orderId, status);
+        dao.updateOrderStatus(orderId, status);
         return true;
     }
 
     public boolean addOfflineProductToOrder(int orderId, int productId, int sizeId, int quantity, BigDecimal unitPrice) {
-        List<OrderDetail> details = orderDAO.getOfflineOrderDetailsByOrderId(orderId);
+        List<OrderDetail> details = dao.getOfflineOrderDetailsByOrderId(orderId);
         for (OrderDetail d : details) {
             if (d.getProductId() == productId && d.getSizeId() == sizeId) {
                 int newQty = d.getQuantity() + quantity;
-                boolean updated = orderDAO.updateOrderDetailQuantity(d.getOrderDetailId(), newQty);
+                boolean updated = dao.updateOrderDetailQuantity(d.getOrderDetailId(), newQty);
                 if (updated) {
                     recalculateOfflineOrderTotal(orderId);
                 }
@@ -73,7 +215,7 @@ public class OrderService {
         detail.setQuantity(quantity);
         detail.setUnitPrice(unitPrice);
 
-        boolean added = orderDAO.addOrderDetail(detail);
+        boolean added = dao.addOrderDetail(detail);
         if (added) {
             recalculateOfflineOrderTotal(orderId);
         }
@@ -84,7 +226,7 @@ public class OrderService {
         if (quantity <= 0) {
             return removeOfflineDetailFromOrder(orderId, orderDetailId);
         }
-        boolean updated = orderDAO.updateOrderDetailQuantity(orderDetailId, quantity);
+        boolean updated = dao.updateOrderDetailQuantity(orderDetailId, quantity);
         if (updated) {
             recalculateOfflineOrderTotal(orderId);
         }
@@ -92,7 +234,7 @@ public class OrderService {
     }
 
     public boolean removeOfflineDetailFromOrder(int orderId, int orderDetailId) {
-        boolean deleted = orderDAO.deleteOrderDetail(orderDetailId);
+        boolean deleted = dao.deleteOrderDetail(orderDetailId);
         if (deleted) {
             recalculateOfflineOrderTotal(orderId);
         }
@@ -101,7 +243,7 @@ public class OrderService {
 
     public String updateOrderType(int orderId, String newType) {
         // 1. Kiểm tra order tồn tại
-        Order order = orderDAO.getOfflineOrderById(orderId);
+        Order order = dao.getOfflineOrderById(orderId);
         if (order == null) {
             return "ERR:Order không tồn tại.";
         }
@@ -112,22 +254,22 @@ public class OrderService {
         }
 
         // 3. Kiểm tra order có sản phẩm (products & quantities preserved)
-        List<OrderDetail> details = orderDAO.getOfflineOrderDetailsByOrderId(orderId);
+        List<OrderDetail> details = dao.getOfflineOrderDetailsByOrderId(orderId);
         if (details.isEmpty()) {
             return "ERR:Đơn hàng chưa có sản phẩm.";
         }
 
-        boolean ok = orderDAO.updateOrderType(orderId, newType);
+        boolean ok = dao.updateOrderType(orderId, newType);
         return ok ? "OK" : "ERR:Không thể cập nhật loại đơn hàng.";
     }
 
     public boolean recalculateOfflineOrderTotal(int orderId) {
-        List<OrderDetail> details = orderDAO.getOfflineOrderDetailsByOrderId(orderId);
+        List<OrderDetail> details = dao.getOfflineOrderDetailsByOrderId(orderId);
         BigDecimal total = BigDecimal.ZERO;
         for (OrderDetail d : details) {
             BigDecimal qty = new BigDecimal(d.getQuantity());
             total = total.add(d.getUnitPrice().multiply(qty));
         }
-        return orderDAO.updateOrderTotal(orderId, total);
+        return dao.updateOrderTotal(orderId, total);
     }
 }

@@ -72,3 +72,7 @@ apikey.properties
 temp/
 tmp/
 /basaltHouseSystem/nbproject/private/
+/basaltHouseSystem_2/nbproject/private/
+/basaltHouseSystem_2/build/
+/basaltHouseSystem_2/dist/
+/basaltHouseSystem_cp/nbproject/private/

@@ -86,6 +86,7 @@ public class AccountServlet extends HttpServlet {
         }
         request.getRequestDispatcher("views/AccountProfile/AccountProfile.jsp").forward(request, response);
     }
+
     /**
      * Handles the HTTP <code>POST</code> method.
      *

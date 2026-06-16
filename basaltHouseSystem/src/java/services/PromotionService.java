@@ -5,7 +5,6 @@ import model.Customer;
 import model.DiscountCode;
 
 // Tạo ra để xử lý các logic tính toán Hạng thành viên và Mã giảm giá.
-// Giúp cho CheckMemberServlet và CheckDiscountServlet giữ được sự mỏng nhẹ.
 public class PromotionService {
 
     public String checkMember(String phone) {

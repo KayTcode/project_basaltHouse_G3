@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Random;
 import java.sql.SQLException;
 import java.util.Scanner;
+import utils.PasswordUtils;
 
 /**
  *
@@ -30,7 +31,7 @@ public class RegisterService {
             result.put("error", "Email này đã được sử dụng. Vui lòng email khác hoặc đăng nhập.");
             return result;
         }
-        String passwordHash = registerDao.hashSHA256(password);
+        String passwordHash = PasswordUtils.hashSHA256(password);
         String otpCode = generateOtp();
         LocalDateTime OtpExpiredAt = LocalDateTime.now().plusMinutes(5);
         int pendingId = registerDao.savePendingRegistration(email, passwordHash, fullName, phone, otpCode, OtpExpiredAt);

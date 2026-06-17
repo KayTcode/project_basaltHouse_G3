@@ -75,6 +75,10 @@
         <servlet-name>ResetPasswordServlet</servlet-name>
         <servlet-class>controller.ResetPasswordServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>GoogleLoginServlet</servlet-name>
+        <servlet-class>controller.GoogleLoginServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
@@ -146,6 +150,10 @@
     <servlet-mapping>
         <servlet-name>ResetPasswordServlet</servlet-name>
         <url-pattern>/reset-password</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>GoogleLoginServlet</servlet-name>
+        <url-pattern>/google-login</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

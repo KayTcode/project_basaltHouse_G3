@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * Service xử lý logic áp dụng mã giảm giá cho đơn hàng.
- * @author MSI
+ 
  */
 public class DiscountSevice {
     private DiscountDAO discountDAO = new DiscountDAO();

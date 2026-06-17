@@ -5,6 +5,8 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import static java.util.UUID.randomUUID;
+import utils.PasswordUtils;
 
 public class AuthDAO extends DBContext {
 
@@ -352,5 +354,108 @@ public class AuthDAO extends DBContext {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    ///GoogleLogin
+    public int findAccountIdByEmail(String email) {
+        sql = """
+              SELECT [AccountId]
+                FROM [dbo].[Accounts]
+                WHERE [Email] = ? AND [IsDeleted] = 0
+              """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, email);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("AccountId");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return -1;
+    }
+
+    public Map<String, Object> createGoogleAccount(String email, String fullName, String avatarUrl) {
+        Map<String, Object> result = new HashMap<>();
+        int roleId = getRoleIdByRoleName("Customer");
+        if (roleId == -1) {
+            result.put("success", false);
+            result.put("error", "Không tìm thấy customer trong hệ thống");
+            return result;
+        }
+        String randomPassword = "GOOGLE_" + randomUUID().toString().replace("-", "");
+        String passwordHash = PasswordUtils.hashSHA256(randomPassword);
+        String insertAccount = """
+                           INSERT INTO [dbo].[Accounts]
+                                      ([RoleId]
+                                      ,[Email]
+                                      ,[PasswordHash]
+                                      ,[IsEmailVerified]
+                                      ,[IsActive]
+                                      ,[CreatedAt]
+                                      ,[IsDeleted])
+                                VALUES
+                                      (?,?,?,1,1,GETDATE(),0)
+                           """;
+        String insertCustomer = """
+                                INSERT INTO [dbo].[Customers]
+                                           ([AccountId]
+                                           ,[FullName]
+                                           ,[AvatarUrl]
+                                           ,[CreatedAt]
+                                           ,[IsDeleted])
+                                     VALUES
+                                           (?,?,?,GETDATE(),0)
+                                """;
+        try {
+            connection.setAutoCommit(false);
+            int newAccountId;
+            try (PreparedStatement psInsertAccount = connection.prepareStatement(insertAccount, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                psInsertAccount.setObject(1, roleId);
+                psInsertAccount.setObject(2, email);
+                psInsertAccount.setObject(3, passwordHash);
+                psInsertAccount.executeUpdate();
+                try (ResultSet resultSetAccount = psInsertAccount.getGeneratedKeys()) {
+                    if (!resultSetAccount.next()) {
+                        throw new SQLException("Không lấy được AccountId vừa tạo");
+                    }
+                    newAccountId = resultSetAccount.getInt(1);
+                }
+            }
+            try (PreparedStatement psInsertCustomer = connection.prepareStatement(insertCustomer)) {
+                psInsertCustomer.setObject(1, newAccountId);
+                psInsertCustomer.setObject(2, fullName);
+                
+                psInsertCustomer.setObject(3, avatarUrl);
+                psInsertCustomer.executeUpdate();
+            }
+            connection.commit();
+            result.put("success", true);
+            result.put("accountId", newAccountId);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return result;
+    }
+
+    private int getRoleIdByRoleName(String roleName) {
+        sql = """
+              SELECT [RoleId]
+                FROM [dbo].[Roles]
+              WHERE [RoleName] = ? AND [IsDeleted] = 0
+              """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, roleName);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("RoleId");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return -1;
     }
 }

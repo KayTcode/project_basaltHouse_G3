@@ -58,10 +58,20 @@ public class CartService {
     }
 
     public String checkout(Map<String, CartItem> cart, String note, String customerIdStr) {
-        return checkout(cart, note, customerIdStr, null);
+        return checkout(cart, note, customerIdStr, null, null, null, null);
     }
 
     public String checkout(Map<String, CartItem> cart, String note, String customerIdStr, String discountCode) {
+        return checkout(cart, note, customerIdStr, discountCode, null, null, null);
+    }
+
+    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr,
+                           String discountCode, String deliveryAddress, String paymentMethod) {
+        return checkout(cart, note, customerIdStr, discountCode, deliveryAddress, paymentMethod, null);
+    }
+
+    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr,
+                           String discountCode, String deliveryAddress, String paymentMethod, String deliveryNote) {
         if (cart == null || cart.isEmpty()) {
             return null;
         }
@@ -93,9 +103,35 @@ public class CartService {
         order.setOrderType("Online");
         order.setOrderStatus("Preparing");
         order.setPaymentStatus("Unpaid");
-        order.setPaymentMethod("COD");
+        order.setPaymentMethod((paymentMethod != null && !paymentMethod.isBlank()) ? paymentMethod : "COD");
         order.setTableName("Online");
         order.setNote((note != null && !note.isBlank()) ? note : null);
+
+        // Lưu địa chỉ giao hàng vào bảng OrderAddresses
+        if (deliveryAddress != null && !deliveryAddress.isBlank()) {
+            
+            String[] parts = deliveryAddress.split(" \\| ", 3);
+            String recipientName  = parts.length > 0 ? parts[0].trim() : "";
+            String recipientPhone = parts.length > 1 ? parts[1].trim() : "";
+            String addressDetail  = parts.length > 2 ? parts[2].trim() : deliveryAddress;
+
+            model.OrderAddress addr = new model.OrderAddress();
+            addr.setRecipientName(recipientName);
+            addr.setRecipientPhone(recipientPhone);
+            addr.setAddressDetail(addressDetail);
+            addr.setNote(deliveryNote); 
+            addr.setZoneId(1); 
+            if (customerIdStr != null && !customerIdStr.isBlank()) {
+                try { addr.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception ignored) {}
+            }
+
+            int orderAddressId = new dao.OrderAddressDAO().insertOrderAddress(addr);
+            System.out.println("[CartService] insertOrderAddress → id=" + orderAddressId);
+            if (orderAddressId > 0) {
+                order.setOrderAddressId(orderAddressId);
+            }
+        }
+
         order.setTotalAmount(total);
         order.setDiscountAmount(discountAmount);
         order.setFinalAmount(finalAmount);
@@ -135,7 +171,7 @@ public class CartService {
     }
 
     public String checkout(Map<String, CartItem> cart, String note) {
-        return checkout(cart, note, null, null);
+        return checkout(cart, note, null, null, null, null);
     }
 }
 

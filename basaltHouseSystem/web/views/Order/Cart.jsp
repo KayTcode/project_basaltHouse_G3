@@ -234,8 +234,8 @@
                                     <%-- Field ẩn truyền discountCode khi submit --%>
                                     <input type="hidden" name="discountCode" id="discountCodeHidden" value="">
 
-                                    <button type="submit" class="btn-checkout">
-                                        <span class="material-symbols-outlined">shopping_bag</span>
+                                    <button type="button" class="btn-checkout" onclick="goToCheckout()">
+                                        <span class="material-symbols-outlined">local_shipping</span>
                                         Đặt Hàng Ngay
                                     </button>
                                 </div>
@@ -244,7 +244,7 @@
                             <div class="cart-page-panel cart-note-panel">
                                 <div class="panel-label">Thông tin</div>
                                 <div class="panel-title panel-title-sm">Ghi chú đơn hàng</div>
-                                <textarea name="note" rows="3" class="note-textarea" placeholder="Ghi chú thêm (tuỳ chọn)..."></textarea>
+                                <textarea id="cartNoteInput" name="cartNote" rows="3" class="note-textarea" placeholder="Ghi chú thêm (tuỳ chọn)..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -256,6 +256,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+
 /* ── DateTime ── */
 function updateClock() {
     const el = document.getElementById('currentDateTime');
@@ -346,6 +347,15 @@ if (discountInput) {
     discountInput.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') { e.preventDefault(); applyDiscount(); }
     });
+}
+
+function goToCheckout() {
+    const code      = document.getElementById('discountCodeHidden').value.trim();
+    const orderNote = document.getElementById('cartNoteInput').value.trim();
+    let url = '${pageContext.request.contextPath}/Cart?action=checkout-form';
+    if (code)      url += '&discountCode=' + encodeURIComponent(code);
+    if (orderNote) url += '&orderNote='    + encodeURIComponent(orderNote);
+    window.location.href = url;
 }
 </script>
 </body>

@@ -90,10 +90,12 @@ public class CartServlet extends HttpServlet {
             session.setAttribute("cart", cart);
         }
 
-        String productId = request.getParameter("productId");
+        // cartKey = "productId_sizeName", là key dùng trong Map cart
+        String cartKey = request.getParameter("productId");
 
         switch (action) {
             case "add" -> {
+                String productId  = cartKey; // lúc add, cartKey chứa productId thuần
                 String productName = request.getParameter("productName");
                 String priceStr   = request.getParameter("price");
                 String sizeIdStr  = request.getParameter("sizeId");
@@ -129,21 +131,16 @@ public class CartServlet extends HttpServlet {
                     } catch (Exception ignored) {}
                 }
 
-                
-                String key = productId;
+                // Key = "productId_sizeName" để tách riêng cùng SP khác size
+                String key = productId + "_" + sizeName;
                 CartItem existing = cart.get(key);
                 if (existing == null) {
-                   
                     if (stock > 0) {
-                        cart.put(key, new CartItem(productId, productName, price, 1, sizeName, stock));
+                        CartItem newItem = new CartItem(productId, productName, price, 1, sizeName, stock);
+                        newItem.setCartKey(key);
+                        cart.put(key, newItem);
                     }
                 } else {
-                    
-                    if (!sizeName.isEmpty()) {
-                        existing.setSizeName(sizeName);
-                        existing.setStock(stock);
-                    }
-                   
                     if (existing.getStock() <= 0 || existing.getQuantity() < existing.getStock()) {
                         existing.setQuantity(existing.getQuantity() + 1);
                     }
@@ -172,10 +169,10 @@ public class CartServlet extends HttpServlet {
                     delta = Integer.parseInt(deltaStr);
                 } catch (NumberFormatException ignored) {}
 
-                cartService.updateQuantity(cart, productId, delta);
+                cartService.updateQuantity(cart, cartKey, delta);
             }
             case "remove" -> {
-                cartService.removeItem(cart, productId);
+                cartService.removeItem(cart, cartKey);
             }
             case "clear" -> {
                 cartService.clearCart(cart);

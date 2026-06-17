@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -31,75 +32,76 @@ public class VoucherServlet extends HttpServlet {
                 : null;
 
         DiscountCodeDAO dao = new DiscountCodeDAO();
-        List<DiscountCode> publicVouchers = dao.getDiscountCode();
-        List<CustomerDiscountCode> list = user != null
-                ? dao.getVoucherById(user.getAccountId())
-                : Collections.emptyList();
-
-        LocalDateTime now = LocalDateTime.now();
         Map<Integer, String> voucherStatus = new HashMap<>();
         Map<Integer, String> voucherStatusText = new HashMap<>();
         Map<Integer, String> voucherStatusClass = new HashMap<>();
         Map<Integer, String> publicVoucherStatus = new HashMap<>();
         Map<Integer, String> publicVoucherStatusText = new HashMap<>();
         Map<Integer, String> publicVoucherStatusClass = new HashMap<>();
+         LocalDateTime now = LocalDateTime.now();
+        List<CustomerDiscountCode> list = new ArrayList<>();
+        if (list.isEmpty()) {
+            List<DiscountCode> publicVouchers = dao.getDiscountCode();
+           
 
-        for (DiscountCode item : publicVouchers) {
-            String status = "available";
-            String statusText = "Khả dụng";
-            String statusClass = "";
+            for (DiscountCode item : publicVouchers) {
+                String status = "available";
+                String statusText = "Khả dụng";
+                String statusClass = "";
 
-            if (item.getEndDate() != null) {
-                long daysLeft = ChronoUnit.DAYS.between(now.toLocalDate(), item.getEndDate().toLocalDate());
+                if (item.getEndDate() != null) {
+                    long daysLeft = ChronoUnit.DAYS.between(now.toLocalDate(), item.getEndDate().toLocalDate());
 
-                if (daysLeft < 0) {
-                    status = "expired";
-                    statusText = "Hết hạn";
-                    statusClass = "voucher-status--expired";
-                } else if (daysLeft <= EXPIRING_DAYS) {
-                    status = "expiring";
-                    statusText = "Sắp hết hạn";
-                    statusClass = "voucher-status--warning";
+                    if (daysLeft < 0) {
+                        status = "expired";
+                        statusText = "Hết hạn";
+                        statusClass = "voucher-status--expired";
+                    } else if (daysLeft <= EXPIRING_DAYS) {
+                        status = "expiring";
+                        statusText = "Sắp hết hạn";
+                        statusClass = "voucher-status--warning";
+                    }
                 }
+
+                publicVoucherStatus.put(item.getDiscountId(), status);
+                publicVoucherStatusText.put(item.getDiscountId(), statusText);
+                publicVoucherStatusClass.put(item.getDiscountId(), statusClass);
             }
 
-            publicVoucherStatus.put(item.getDiscountId(), status);
-            publicVoucherStatusText.put(item.getDiscountId(), statusText);
-            publicVoucherStatusClass.put(item.getDiscountId(), statusClass);
-        }
+            request.setAttribute("publicVouchers", publicVouchers);
+        } else {
+            list = dao.getVoucherById(user.getAccountId());
+            for (CustomerDiscountCode item : list) {
+                String status = "available";
+                String statusText = "Khả dụng";
+                String statusClass = "";
 
-        for (CustomerDiscountCode item : list) {
-            String status = "available";
-            String statusText = "Khả dụng";
-            String statusClass = "";
+                if (item.getEndDate() != null) {
+                    long daysLeft = ChronoUnit.DAYS.between(now.toLocalDate(), item.getEndDate().toLocalDate());
 
-            if (item.getEndDate() != null) {
-                long daysLeft = ChronoUnit.DAYS.between(now.toLocalDate(), item.getEndDate().toLocalDate());
-
-                if (daysLeft < 0) {
-                    status = "expired";
-                    statusText = "Hết hạn";
-                    statusClass = "voucher-status--expired";
-                } else if (daysLeft <= EXPIRING_DAYS) {
-                    status = "expiring";
-                    statusText = "Sắp hết hạn";
-                    statusClass = "voucher-status--warning";
+                    if (daysLeft < 0) {
+                        status = "expired";
+                        statusText = "Hết hạn";
+                        statusClass = "voucher-status--expired";
+                    } else if (daysLeft <= EXPIRING_DAYS) {
+                        status = "expiring";
+                        statusText = "Sắp hết hạn";
+                        statusClass = "voucher-status--warning";
+                    }
                 }
+
             }
 
-            voucherStatus.put(item.getCustomerDiscountId(), status);
-            voucherStatusText.put(item.getCustomerDiscountId(), statusText);
-            voucherStatusClass.put(item.getCustomerDiscountId(), statusClass);
+            request.setAttribute("publicVoucherStatus", publicVoucherStatus);
+            request.setAttribute("publicVoucherStatusText", publicVoucherStatusText);
+            request.setAttribute("publicVoucherStatusClass", publicVoucherStatusClass);
+
+            request.setAttribute("voucherStatus", voucherStatus);
+            request.setAttribute("voucherStatusText", voucherStatusText);
+            request.setAttribute("voucherStatusClass", voucherStatusClass);
+            request.setAttribute("listP", list);
         }
 
-        request.setAttribute("publicVouchers", publicVouchers);
-        request.setAttribute("publicVoucherStatus", publicVoucherStatus);
-        request.setAttribute("publicVoucherStatusText", publicVoucherStatusText);
-        request.setAttribute("publicVoucherStatusClass", publicVoucherStatusClass);
-        request.setAttribute("listP", list);
-        request.setAttribute("voucherStatus", voucherStatus);
-        request.setAttribute("voucherStatusText", voucherStatusText);
-        request.setAttribute("voucherStatusClass", voucherStatusClass);
         request.getRequestDispatcher("views/Voucher/Voucher.jsp").forward(request, response);
     }
 

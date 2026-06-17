@@ -26,15 +26,15 @@ public class CartService {
         }
     }
 
-    public void updateQuantity(Map<String, CartItem> cart, String productId, int delta) {
-        if (productId == null || productId.isBlank()) {
+    public void updateQuantity(Map<String, CartItem> cart, String cartKey, int delta) {
+        if (cartKey == null || cartKey.isBlank()) {
             return;
         }
-        CartItem item = cart.get(productId);
+        CartItem item = cart.get(cartKey);
         if (item != null) {
             int newQty = item.getQuantity() + delta;
             if (newQty <= 0) {
-                cart.remove(productId);
+                cart.remove(cartKey);
                 return;
             }
             if (item.getStock() > 0 && newQty > item.getStock()) {
@@ -44,11 +44,11 @@ public class CartService {
         }
     }
 
-    public void removeItem(Map<String, CartItem> cart, String productId) {
-        if (productId == null || productId.isBlank()) {
+    public void removeItem(Map<String, CartItem> cart, String cartKey) {
+        if (cartKey == null || cartKey.isBlank()) {
             return;
         }
-        cart.remove(productId);
+        cart.remove(cartKey);
     }
 
     public void clearCart(Map<String, CartItem> cart) {

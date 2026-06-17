@@ -157,15 +157,15 @@
                                                     </td>
                                                     <td style="text-align:center">
                                                         <div class="ct-qty-wrap" style="justify-content:center">
-                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.productId}&delta=-1" class="ct-qty-btn" style="text-decoration:none;">−</a>
+                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.cartKey}&delta=-1" class="ct-qty-btn" style="text-decoration:none;">−</a>
                                                             <span class="ct-qty-num">${item.quantity}</span>
-                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.productId}&delta=1" class="ct-qty-btn" style="text-decoration:none;">+</a>
+                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.cartKey}&delta=1" class="ct-qty-btn" style="text-decoration:none;">+</a>
                                                         </div>
                                                     </td>
                                                     <td style="text-align:right"><span class="ct-price"><fmt:formatNumber value="${item.price}" pattern="#,###"/>₫</span></td>
                                                     <td style="text-align:right"><span class="ct-subtotal"><fmt:formatNumber value="${item.subtotal}" pattern="#,###"/>₫</span></td>
                                                     <td>
-                                                        <a href="${pageContext.request.contextPath}/Cart?action=remove&productId=${item.productId}" class="ct-remove" title="Xóa sản phẩm" style="text-decoration:none;">
+                                                        <a href="${pageContext.request.contextPath}/Cart?action=remove&productId=${item.cartKey}" class="ct-remove" title="Xóa sản phẩm" style="text-decoration:none;">
                                                             <span class="material-symbols-outlined" style="font-size:20px">delete</span>
                                                         </a>
                                                     </td>

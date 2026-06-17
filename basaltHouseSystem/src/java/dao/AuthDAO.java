@@ -357,6 +357,26 @@ public class AuthDAO extends DBContext {
     }
 
     ///GoogleLogin
+    public int findAccountIdByEmail(String email) {
+        sql = """
+              SELECT [AccountId]
+                FROM [dbo].[Accounts]
+                WHERE [Email] = ? AND [IsDeleted] = 0
+              """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, email);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("AccountId");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return -1;
+    }
+
     public Map<String, Object> createGoogleAccount(String email, String fullName, String avatarUrl) {
         Map<String, Object> result = new HashMap<>();
         int roleId = getRoleIdByRoleName("Customer");
@@ -383,12 +403,11 @@ public class AuthDAO extends DBContext {
                                 INSERT INTO [dbo].[Customers]
                                            ([AccountId]
                                            ,[FullName]
-                                           ,[Phone]
                                            ,[AvatarUrl]
                                            ,[CreatedAt]
                                            ,[IsDeleted])
                                      VALUES
-                                           (?,?,?,?,GETDATE(),0)
+                                           (?,?,?,GETDATE(),0)
                                 """;
         try {
             connection.setAutoCommit(false);
@@ -408,6 +427,7 @@ public class AuthDAO extends DBContext {
             try (PreparedStatement psInsertCustomer = connection.prepareStatement(insertCustomer)) {
                 psInsertCustomer.setObject(1, newAccountId);
                 psInsertCustomer.setObject(2, fullName);
+                
                 psInsertCustomer.setObject(3, avatarUrl);
                 psInsertCustomer.executeUpdate();
             }

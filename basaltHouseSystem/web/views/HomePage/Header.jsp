@@ -126,10 +126,10 @@
                                     <span class="material-symbols-outlined">search</span>
                                 </button>
                             </form>
-                            <button class="btn-nav-icon" title="Giỏ hàng">
+                            <a href="${pageContext.request.contextPath}/Cart"
+                               class="btn-nav-icon" title="Giỏ hàng" style="text-decoration:none;">
                                 <span class="material-symbols-outlined">shopping_cart</span>
-                                <span class="badge-cart">2</span>
-                            </button>
+                            </a>
                             <%-- ── Khu vực tài khoản: 2 trạng thái ──── --%>
                             <c:choose>
 

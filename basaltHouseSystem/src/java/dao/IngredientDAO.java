@@ -25,7 +25,7 @@ public class IngredientDAO extends DBContext {
         HashMap<Integer, Ingredient> map = new HashMap<>();
         try {
             String sql = """
-                     SELECT IngredientId, IngredientName, 
+                     SELECT IngredientId, IngredientName, Unit,
                             StockQuantity, MinStockQuantity
                      FROM Ingredients
                      WHERE IsDeleted = 0 AND IsActive = 1
@@ -39,6 +39,7 @@ public class IngredientDAO extends DBContext {
                         rs.getBigDecimal("StockQuantity"),
                         rs.getBigDecimal("MinStockQuantity")
                 );
+                ig.setUnit(rs.getString("Unit"));
                 map.put(ig.getIngredientId(), ig);
             }
         } catch (Exception e) {
@@ -46,6 +47,7 @@ public class IngredientDAO extends DBContext {
         }
         return map;
     }
+
 
     public void updateIngredientQuantity(int id, BigDecimal quantityNeed) {
         try {

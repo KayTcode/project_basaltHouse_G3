@@ -101,10 +101,10 @@
                                 <a class="nav-link nav-link-coffeely active" href="${pageContext.request.contextPath}/category">Menu</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-link-coffeely" href="#">Ưu đãi</a>
+                                <a class="nav-link nav-link-coffeely" href="${pageContext.request.contextPath}/benefit">Ưu đãi</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-link-coffeely" href="#">Về chúng tôi</a>
+                                <a class="nav-link nav-link-coffeely" href="${pageContext.request.contextPath}/about-us">Về chúng tôi</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link nav-link-coffeely" href="contact">Liên hệ</a>
@@ -126,10 +126,10 @@
                                     <span class="material-symbols-outlined">search</span>
                                 </button>
                             </form>
-                            <button class="btn-nav-icon" title="Giỏ hàng">
+                            <a href="${pageContext.request.contextPath}/Cart"
+                               class="btn-nav-icon" title="Giỏ hàng" style="text-decoration:none;">
                                 <span class="material-symbols-outlined">shopping_cart</span>
-                                <span class="badge-cart">2</span>
-                            </button>
+                            </a>
                             <%-- ── Khu vực tài khoản: 2 trạng thái ──── --%>
                             <c:choose>
 

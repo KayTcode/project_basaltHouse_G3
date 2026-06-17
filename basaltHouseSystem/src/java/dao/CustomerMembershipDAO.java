@@ -77,6 +77,27 @@ public class CustomerMembershipDAO extends DBContext {
         }
     return list;
     }
+    public void creatMemberShip(int accountId){
+        try {
+            String sql = """
+                         INSERT INTO CustomerMemberships (CustomerId, RankId, TotalSpent)
+                         SELECT c.CustomerId, 1, 0
+                         FROM Customers c
+                         WHERE c.AccountId = ?
+                           AND c.IsDeleted = 0
+                           AND NOT EXISTS (
+                               SELECT 1
+                               FROM CustomerMemberships cm
+                               WHERE cm.CustomerId = c.CustomerId
+                           )
+                         """;
+            st = connection.prepareStatement(sql);
+            st.setObject(1, accountId);
+            st.executeUpdate();
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     
+    }
     
 }

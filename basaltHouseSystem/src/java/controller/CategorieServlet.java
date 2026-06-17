@@ -85,7 +85,7 @@ public class CategorieServlet extends HttpServlet {
             product = pdao.getProductByName(keyword);
         }
 
-        List<Category> list = cateDAO.getCategory();
+        List<Category> list = cateDAO.getAllCategories();
         String categoryTitle = "Danh mục";
         for (Category c : list) {
             if (c.getCategoryId() == categoryId) {

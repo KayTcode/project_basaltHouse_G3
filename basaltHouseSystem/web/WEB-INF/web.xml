@@ -39,10 +39,7 @@
         <servlet-name>ProductDetailServlet</servlet-name>
         <servlet-class>controller.ProductDetailServlet</servlet-class>
     </servlet>
-    <servlet>
-        <servlet-name>BuyProductServlet</servlet-name>
-        <servlet-class>controller.BuyProductServlet</servlet-class>
-    </servlet>
+
     <servlet>
         <servlet-name>ContactServlet</servlet-name>
         <servlet-class>controller.ContactServlet</servlet-class>
@@ -91,6 +88,22 @@
         <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>OnlineOrderServlet</servlet-name>
+        <servlet-class>controller.OnlineOrderServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>CartServlet</servlet-name>
+        <servlet-class>controller.CartServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>OnlineOrderServlet</servlet-name>
+        <url-pattern>/Order</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CartServlet</servlet-name>
+        <url-pattern>/Cart</url-pattern>
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>CashierDashboardServlet</servlet-name>
         <url-pattern>/cashier/dashbroad</url-pattern>
@@ -115,10 +128,8 @@
         <servlet-name>ProductDetailServlet</servlet-name>
         <url-pattern>/productdetail</url-pattern>
     </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>BuyProductServlet</servlet-name>
-        <url-pattern>/checkout</url-pattern>
-    </servlet-mapping>
+
+
     <servlet-mapping>
         <servlet-name>ContactServlet</servlet-name>
         <url-pattern>/contact</url-pattern>

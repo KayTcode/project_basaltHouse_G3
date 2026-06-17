@@ -102,10 +102,13 @@
 
                         <div class="action-row">
 
-                            <form action="${pageContext.request.contextPath}/checkout" method="post">
+                            <%-- Nút "Mua ngay": thêm vào giỏ rồi chuyển thẳng sang trang Cart --%>
+                            <form action="${pageContext.request.contextPath}/Cart" method="get">
+                                <input type="hidden" name="action" value="add">
+                                <input type="hidden" name="redirect" value="cart">
                                 <input type="hidden" name="productId" value="${product.productId}">
+                                <input type="hidden" name="productName" value="${product.productName}">
                                 <input type="hidden" name="price" value="${product.price}">
-                                <input type="hidden" name="sizeName" value="${product.sizeName}">
                                 <input type="hidden" id="buySizeId" name="sizeId" value="${product.sizeId}">
                                 <input type="hidden" id="buyQuantity" name="quantity" value="1">
 
@@ -114,8 +117,12 @@
                                 </button>
                             </form>
 
-                            <form action="${pageContext.request.contextPath}/cart/add" method="post">
+                            <%-- Nút "Thêm vào giỏ": thêm và quay lại trang này --%>
+                            <form action="${pageContext.request.contextPath}/Cart" method="get">
+                                <input type="hidden" name="action" value="add">
                                 <input type="hidden" name="productId" value="${product.productId}">
+                                <input type="hidden" name="productName" value="${product.productName}">
+                                <input type="hidden" name="price" value="${product.price}">
                                 <input type="hidden" id="cartSizeId" name="sizeId" value="${product.sizeId}">
                                 <input type="hidden" id="cartQuantity" name="quantity" value="1">
 
@@ -225,6 +232,39 @@
         buyQuantity.value = qty;
         cartQuantity.value = qty;
     });
+
+    /* ── Toast notification ── */
+    function showDetailToast(msg) {
+        let stack = document.getElementById('detailToastStack');
+        if (!stack) {
+            stack = document.createElement('div');
+            stack.id = 'detailToastStack';
+            stack.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+            document.body.appendChild(stack);
+        }
+        const el = document.createElement('div');
+        el.style.cssText = 'display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 18px;box-shadow:0 8px 32px rgba(0,0,0,.12);font-size:14px;min-width:240px;animation:slideInRight .3s ease;';
+        el.innerHTML = '<span class="material-symbols-outlined" style="color:#22c55e;font-size:22px">check_circle</span>' +
+            '<div><strong>Thành công</strong><br><span style="color:#64748b">' + msg + '</span></div>';
+        stack.appendChild(el);
+        setTimeout(() => { el.style.animation = 'slideOutRight .3s ease forwards'; setTimeout(() => el.remove(), 350); }, 2500);
+    }
+
+    /* ── Hiển thị toast khi thêm giỏ hàng thành công ── */
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('addSuccess')) {
+            showDetailToast('Đã thêm sản phẩm vào giỏ hàng!');
+            const clean = window.location.pathname + window.location.search
+                .replace(/[?&]addSuccess=1/, '').replace(/^&/, '?');
+            window.history.replaceState({}, document.title, clean || window.location.pathname);
+        }
+    });
 </script>
+
+<style>
+@keyframes slideInRight { from { transform:translateX(120%); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes slideOutRight { from { transform:none; opacity:1; } to { transform:translateX(120%); opacity:0; } }
+</style>
 
 <jsp:include page="/views/HomePage/Footer.jsp"/>

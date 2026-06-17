@@ -19,7 +19,7 @@ import model.Product;
 import model.Recipe;
 import model.TableSession;
 
-// File này xử lý việc dịch chuỗi giỏ hàng, gọi DB lưu đơn hàng, và xử lý nghiệp vụ trừ kho khi cập nhật trạng thái đơn.
+
 public class OrderService {
     private final OrderDAO dao = new OrderDAO();
     private final TableSessionDAO sesioneDAO = new TableSessionDAO();

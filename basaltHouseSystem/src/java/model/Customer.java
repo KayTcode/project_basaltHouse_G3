@@ -27,6 +27,10 @@ public class Customer {
     public Customer() {
     }
 
+    public Customer(int customerId) {
+        this.customerId = customerId;
+    }
+
     public Customer(int customerId, int accountId, String fullName, String phone, String avatarUrl, LocalDateTime createdAt, boolean isDeleted) {
         this.customerId = customerId;
         this.accountId = accountId;

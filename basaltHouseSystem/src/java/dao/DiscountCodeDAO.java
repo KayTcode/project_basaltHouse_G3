@@ -7,6 +7,8 @@ import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import model.CustomerDiscountCode;
+import model.DiscountCode;
 
 public class DiscountCodeDAO extends DBContext {
 
@@ -69,9 +71,9 @@ public class DiscountCodeDAO extends DBContext {
                                                          Description,
                                                          StartDate,
                                                          EndDate,
-                                                         DATEDIFF(DAY, StartDate, EndDate) AS DayTime
+                                                         DATEDIFF(DAY, GETDATE(), EndDate) AS DayTime
                                                   FROM DiscountCodes
-                                                  WHERE IsActive = 1 and IsPublic = 1;
+                                                  WHERE IsActive = 1 and IsPublic = 1 and IsDeleted = 0
                          """;
           PreparedStatement  st = connection.prepareStatement(sql);
            ResultSet rs = st.executeQuery();
@@ -93,6 +95,8 @@ public class DiscountCodeDAO extends DBContext {
 
     }
 
+    public List<CustomerDiscountCode> getVoucherById(int accountId) {
+        List<CustomerDiscountCode> list = new ArrayList<>();
     public DiscountCode getvoucher(int id) {
         try {
             String sql = """                       
@@ -120,10 +124,49 @@ public class DiscountCodeDAO extends DBContext {
     public void updateActiveAt1(int id) {
         try {
             String sql = """
-                         UPDATE DiscountCodes
-                         SET IsActive = 1
-                         WHERE DiscountId = ?
+                         SELECT cd.CustomerDiscountId,
+                                cd.AccountId,
+                                d.DiscountId,
+                                d.Code,
+                                d.DiscountAmount,
+                                d.DiscountPercent,
+                                d.StartDate,
+                                d.EndDate,
+                                cd.IsUsed,
+                                cd.UsedDate,
+                                d.Description,
+                                DATEDIFF(DAY, GETDATE(), d.EndDate) AS DayTime
+                         FROM CustomerDiscountCodes cd
+                         JOIN DiscountCodes d ON cd.DiscountId = d.DiscountId
+                         WHERE d.IsActive = 1
+                           AND d.IsDeleted = 0
+                           AND cd.AccountId = ?
+                         ORDER BY d.EndDate ASC
                          """;
+            st = connection.prepareStatement(sql);
+            st.setObject(1, accountId);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                CustomerDiscountCode c = new CustomerDiscountCode(
+                        rs.getInt("CustomerDiscountId"),
+                        rs.getInt("AccountId"),
+                        rs.getInt("DiscountId"),
+                        rs.getBigDecimal("DiscountPercent"),
+                        rs.getBigDecimal("DiscountAmount"),
+                        rs.getObject("StartDate", LocalDateTime.class),
+                        rs.getObject("EndDate", LocalDateTime.class),
+                        rs.getBoolean("IsUsed"),
+                        rs.getObject("UsedDate", LocalDateTime.class),
+                        rs.getString("Description"),
+                        rs.getInt("DayTime"),
+                        rs.getString("Code"));
+                list.add(c);
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return list;
+
            PreparedStatement st = connection.prepareStatement(sql);
             st.setObject(1, id);
             st.executeUpdate();
@@ -139,4 +182,5 @@ public class DiscountCodeDAO extends DBContext {
         System.out.println(d);
      
     }
+
 }

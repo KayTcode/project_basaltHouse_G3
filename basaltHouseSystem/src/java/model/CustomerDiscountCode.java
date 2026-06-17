@@ -5,7 +5,7 @@
 package model;
 
 import java.math.BigDecimal;
-import java.security.Timestamp;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class CustomerDiscountCode {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DecimalFormat MONEY_FORMATTER = new DecimalFormat("#,###");
 
     private int customerDiscountId;
     private int accountId;
@@ -27,6 +28,8 @@ public class CustomerDiscountCode {
     private LocalDateTime usedDate;
     private String description;
     private int dayTotal;
+    private String code;
+
     public CustomerDiscountCode() {
     }
 
@@ -42,6 +45,11 @@ public class CustomerDiscountCode {
         this.usedDate = usedDate;
         this.description = description;
         this.dayTotal = dayTotal;
+    }
+
+    public CustomerDiscountCode(int customerDiscountId, int accountId, int discountId, BigDecimal discountPercent, BigDecimal discountAmount, LocalDateTime startDate, LocalDateTime endDate, boolean isUsed, LocalDateTime usedDate, String description, int dayTotal, String code) {
+        this(customerDiscountId, accountId, discountId, discountPercent, discountAmount, startDate, endDate, isUsed, usedDate, description, dayTotal);
+        this.code = code;
     }
 
     public String getDescription() {
@@ -86,6 +94,14 @@ public class CustomerDiscountCode {
         }
 
         return discountPercent.stripTrailingZeros().toPlainString() + "%";
+    }
+
+    public String getDiscountValueFormatted() {
+        if (discountAmount != null && discountAmount.compareTo(BigDecimal.ZERO) > 0) {
+            return MONEY_FORMATTER.format(discountAmount) + "đ";
+        }
+
+        return getDiscountPercentFormatted();
     }
 
     public void setDiscountPercent(BigDecimal discountPercent) {
@@ -144,6 +160,14 @@ public class CustomerDiscountCode {
 
     public void setDayTotal(int dayTotal) {
         this.dayTotal = dayTotal;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
    

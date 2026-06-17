@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="6.0" xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee                         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
+<web-app version="6.0"
+         xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
     <servlet>
         <servlet-name>HomePageServlet</servlet-name>
         <servlet-class>controller.HomePageServlet</servlet-class>
@@ -51,6 +54,14 @@
     <servlet>
         <servlet-name>VoucherServlet</servlet-name>
         <servlet-class>controller.VoucherServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>BenefitServlet</servlet-name>
+        <servlet-class>controller.BenefitServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AboutUsServlet</servlet-name>
+        <servlet-class>controller.AboutUsServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>MembershipRankServlet</servlet-name>
@@ -121,6 +132,14 @@
         <url-pattern>/voucher</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>BenefitServlet</servlet-name>
+        <url-pattern>/benefit</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AboutUsServlet</servlet-name>
+        <url-pattern>/about-us</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>MembershipRankServlet</servlet-name>
         <url-pattern>/membership</url-pattern>
     </servlet-mapping>
@@ -139,6 +158,7 @@
     <session-config>
         <session-timeout>60</session-timeout>
     </session-config>
+
     <welcome-file-list>
         <welcome-file>home</welcome-file>
     </welcome-file-list>

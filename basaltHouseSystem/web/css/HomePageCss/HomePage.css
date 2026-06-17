@@ -601,6 +601,10 @@ h1, h2, h3, h4, .font-display {
     padding: 14px 28px;
     border-radius: 50px;
     border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
     transition: all 0.2s ease;
     white-space: nowrap;
 }

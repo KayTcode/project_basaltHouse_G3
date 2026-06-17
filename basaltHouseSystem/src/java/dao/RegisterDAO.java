@@ -198,6 +198,14 @@ public class RegisterDAO extends DBContext {
                                   VALUES
                                         (?,?,?,?,0)
                              """;
+        String sqlMembership = """
+                               INSERT INTO [dbo].[CustomerMemberships]
+                                          ([CustomerId]
+                                          ,[RankId]
+                                          ,[TotalSpent])
+                                    VALUES
+                                          (?,1,0)
+                               """;
         try {
             connection.setAutoCommit(false);
             int roleId = -1;
@@ -223,12 +231,24 @@ public class RegisterDAO extends DBContext {
                 throw new SQLException("Không lấy được AccountId sau khi INSERT vào Accounts");
             }
 
-            PreparedStatement psCustomer = connection.prepareStatement(sqlCustomer);
+            int newCustomerId;
+            PreparedStatement psCustomer = connection.prepareStatement(sqlCustomer, Statement.RETURN_GENERATED_KEYS);
             psCustomer.setObject(1, newAccountId);
             psCustomer.setObject(2, fullName);
             psCustomer.setObject(3, phone);
             psCustomer.setObject(4, Timestamp.valueOf(LocalDateTime.now()));
             psCustomer.executeUpdate();
+            rs = psCustomer.getGeneratedKeys();
+            if (rs.next()) {
+                newCustomerId = rs.getInt(1);
+            } else {
+                throw new SQLException("Không lấy được CustomerId sau khi INSERT vào Customers");
+            }
+
+            PreparedStatement psMembership = connection.prepareStatement(sqlMembership);
+            psMembership.setObject(1, newCustomerId);
+            psMembership.executeUpdate();
+
             markPendingAsUsed(pendingId, connection);
             connection.commit();
         } catch (SQLException e) {

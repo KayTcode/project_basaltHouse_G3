@@ -5,6 +5,7 @@
 /basaltHouseSystem/dist/
 /basaltHouseSystem/target/
 /basaltHouseSystem/out/
+/basaltHouseSystem/src/java/config/app.properties
 
 
 /basaltHouseSystem/nbproject/private/

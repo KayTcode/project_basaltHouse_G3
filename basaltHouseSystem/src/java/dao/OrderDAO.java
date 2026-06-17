@@ -371,8 +371,8 @@ public class OrderDAO extends DBContext {
             connection.setAutoCommit(false);
 
             String sqlOrder = "INSERT INTO Orders (CustomerId, DiscountId, OrderType, OrderStatus, PaymentStatus, TotalAmount, DiscountAmount, FinalAmount, "
-                    + "PaymentMethod, CreatedAt, IsDeleted) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
+                    + "PaymentMethod, Note, CreatedAt, IsDeleted) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
             st = connection.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
             if (order.getCustomerId() != null) {
                 st.setInt(1, order.getCustomerId());
@@ -391,6 +391,7 @@ public class OrderDAO extends DBContext {
             st.setBigDecimal(7, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
             st.setBigDecimal(8, order.getFinalAmount() != null ? order.getFinalAmount() : BigDecimal.ZERO);
             st.setString(9, order.getPaymentMethod());
+            st.setString(10, order.getNote());
             st.executeUpdate();
 
             rs = st.getGeneratedKeys();

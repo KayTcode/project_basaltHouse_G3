@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="6.0" xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee                         https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
+<web-app version="6.0"
+         xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
     <servlet>
         <servlet-name>HomePageServlet</servlet-name>
         <servlet-class>controller.HomePageServlet</servlet-class>
@@ -13,19 +16,22 @@
         <servlet-class>controller.LogoutServlet</servlet-class>
     </servlet>
     <servlet>
-
         <servlet-name>CashierDashboardServlet</servlet-name>
         <servlet-class>controller.CashierDashboardServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>CashierPOSServlet</servlet-name>
         <servlet-class>controller.CashierPOSServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>RegisterServlet</servlet-name>
         <servlet-class>controller.RegisterServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>VerifyOtpServlet</servlet-name>
         <servlet-class>controller.VerifyOtpServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>CategorieServlet</servlet-name>
         <servlet-class>controller.CategorieServlet</servlet-class>
     </servlet>
@@ -47,6 +53,14 @@
         <servlet-class>controller.VoucherServlet</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>BenefitServlet</servlet-name>
+        <servlet-class>controller.BenefitServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AboutUsServlet</servlet-name>
+        <servlet-class>controller.AboutUsServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>MembershipRankServlet</servlet-name>
         <servlet-class>controller.MembershipRankServlet</servlet-class>
     </servlet>
@@ -57,6 +71,10 @@
     <servlet>
         <servlet-name>ResetPasswordServlet</servlet-name>
         <servlet-class>controller.ResetPasswordServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>GoogleLoginServlet</servlet-name>
+        <servlet-class>controller.GoogleLoginServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -93,12 +111,16 @@
     <servlet-mapping>
         <servlet-name>CashierPOSServlet</servlet-name>
         <url-pattern>/cashier/pos</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>RegisterServlet</servlet-name>
         <url-pattern>/register</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>VerifyOtpServlet</servlet-name>
         <url-pattern>/verify-otp</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>CategorieServlet</servlet-name>
         <url-pattern>/category</url-pattern>
     </servlet-mapping>
@@ -121,6 +143,14 @@
         <url-pattern>/voucher</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>BenefitServlet</servlet-name>
+        <url-pattern>/benefit</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AboutUsServlet</servlet-name>
+        <url-pattern>/about-us</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>MembershipRankServlet</servlet-name>
         <url-pattern>/membership</url-pattern>
     </servlet-mapping>
@@ -132,9 +162,14 @@
         <servlet-name>ResetPasswordServlet</servlet-name>
         <url-pattern>/reset-password</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>GoogleLoginServlet</servlet-name>
+        <url-pattern>/google-login</url-pattern>
+    </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>
     </session-config>
+
     <welcome-file-list>
         <welcome-file>home</welcome-file>
     </welcome-file-list>

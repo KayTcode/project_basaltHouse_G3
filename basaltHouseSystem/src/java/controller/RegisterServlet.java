@@ -4,6 +4,8 @@
  */
 package controller;
 
+import dao.AuthDAO;
+import dao.CustomerMembershipDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +14,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
+import model.Account;
 import services.RegisterService;
 
 /**
@@ -19,7 +22,7 @@ import services.RegisterService;
  * @author KayT
  */
 public class RegisterServlet extends HttpServlet {
-    
+
     private final RegisterService registerService = new RegisterService();
 
     /**
@@ -79,11 +82,12 @@ public class RegisterServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        
+
         String email = request.getParameter("email").trim();
         String password = request.getParameter("password").trim();
         String fullName = request.getParameter("fullName").trim();
         String phone = request.getParameter("phone").trim();
+
         //Validate data
         String validationError = validateInputs(email, password, fullName, phone);
         if (validationError != null) {
@@ -94,7 +98,7 @@ public class RegisterServlet extends HttpServlet {
             request.getRequestDispatcher("views/Authentication/register.jsp").forward(request, response);
             return;
         }
-        
+
         Map<String, Object> result = registerService.processRegister(email, password, fullName, phone);
         if (!(boolean) result.get("success")) {
             request.setAttribute("error", result.get("error"));
@@ -104,6 +108,7 @@ public class RegisterServlet extends HttpServlet {
             request.getRequestDispatcher("views/Authentication/register.jsp").forward(request, response);
             return;
         }
+       
         HttpSession session = request.getSession(true);
         session.setAttribute("pendingEmail", email);
         session.setAttribute("pendingId", result.get("pendingId"));
@@ -136,5 +141,5 @@ public class RegisterServlet extends HttpServlet {
         }
         return null;
     }
-    
+
 }

@@ -101,10 +101,10 @@
                                 <a class="nav-link nav-link-coffeely active" href="${pageContext.request.contextPath}/category">Menu</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-link-coffeely" href="#">Ưu đãi</a>
+                                <a class="nav-link nav-link-coffeely" href="${pageContext.request.contextPath}/benefit">Ưu đãi</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link nav-link-coffeely" href="#">Về chúng tôi</a>
+                                <a class="nav-link nav-link-coffeely" href="${pageContext.request.contextPath}/about-us">Về chúng tôi</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link nav-link-coffeely" href="contact">Liên hệ</a>

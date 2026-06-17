@@ -52,7 +52,7 @@
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
             <div>
                 <div class="page-header-badge">
-                    <span class="material-symbols-outlined" style="font-size:14px">shopping_cart</span>
+                    <span class="material-symbols-outlined">shopping_cart</span>
                     Giỏ hàng
                 </div>
                 <h1>Xác Nhận Đơn Hàng</h1>
@@ -63,7 +63,7 @@
                     <span class="material-symbols-outlined">event</span>
                     <span id="currentDateTime">--</span>
                 </div>
-                <button class="meta-chip" style="cursor:pointer;border:none;" onclick="window.location='${pageContext.request.contextPath}/category'">
+                <button class="meta-chip-btn" onclick="window.location='${pageContext.request.contextPath}/category'">
                     <span class="material-symbols-outlined">arrow_back</span>
                     <span>Tiếp tục mua</span>
                 </button>
@@ -78,25 +78,23 @@
         <c:choose>
             <c:when test="${param.checkoutSuccess == '1'}">
                 <!-- Success Screen -->
-                <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-subtle);max-width:500px;margin:40px auto;box-shadow:var(--shadow-sm);">
-                    <span class="material-symbols-outlined" style="font-size:64px;color:#22c55e;margin-bottom:12px;">check_circle</span>
-                    <h3 style="font-family:var(--font-montserrat);font-weight:700;margin-bottom:8px;color:var(--text-dark);">Đặt Hàng Thành Công!</h3>
-                    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">Đơn hàng của bạn đã được gửi đến nhà hàng. Vui lòng chờ phục vụ.</p>
-                    <div style="background:var(--secondary-bg);border-radius:var(--radius-sm);padding:12px;font-weight:700;color:var(--primary-color);font-family:var(--font-montserrat);margin-bottom:24px;font-size:16px;">
-                        Mã đơn hàng: <c:out value="${param.code}"/>
-                    </div>
-                    <a href="${pageContext.request.contextPath}/category" class="btn-checkout" style="text-decoration:none;display:inline-flex;width:auto;padding:12px 32px;justify-content:center;align-items:center;margin:0 auto;">
+                <div class="cart-status-card success">
+                    <span class="material-symbols-outlined cart-status-icon">check_circle</span>
+                    <h3>Đặt Hàng Thành Công!</h3>
+                    <p>Đơn hàng của bạn đã được gửi đến nhà hàng. Vui lòng chờ phục vụ.</p>
+                    <div class="cart-order-code">Mã đơn hàng: <c:out value="${param.code}"/></div>
+                    <a href="${pageContext.request.contextPath}/category" class="btn-checkout btn-checkout-inline">
                         <span class="material-symbols-outlined">storefront</span>Quay lại Thực đơn
                     </a>
                 </div>
             </c:when>
             <c:when test="${empty cartItems}">
                 <!-- Empty State -->
-                <div style="text-align:center;padding:80px 20px;background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-subtle);max-width:600px;margin:40px auto;box-shadow:var(--shadow-sm);">
-                    <span class="material-symbols-outlined" style="font-size:64px;display:block;margin-bottom:14px;color:#d1d5db;">shopping_cart</span>
-                    <h3 style="font-family:var(--font-montserrat);font-weight:700;margin-bottom:8px;color:var(--text-dark);">Giỏ hàng trống</h3>
-                    <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;">Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
-                    <a class="btn-checkout" style="width:auto;padding:12px 28px;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;margin:0 auto;" href="${pageContext.request.contextPath}/category">
+                <div class="cart-status-card empty">
+                    <span class="material-symbols-outlined cart-status-icon">shopping_cart</span>
+                    <h3>Giỏ hàng trống</h3>
+                    <p>Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
+                    <a class="btn-checkout btn-checkout-inline" href="${pageContext.request.contextPath}/category">
                         <span class="material-symbols-outlined">storefront</span>
                         Xem thực đơn
                     </a>
@@ -118,9 +116,9 @@
                                         <thead>
                                             <tr>
                                                 <th>Sản phẩm</th>
-                                                <th style="text-align:center">Số lượng</th>
-                                                <th style="text-align:right">Đơn giá</th>
-                                                <th style="text-align:right">Thành tiền</th>
+                                                <th class="text-center">Số lượng</th>
+                                                <th class="text-right">Đơn giá</th>
+                                                <th class="text-right">Thành tiền</th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -132,22 +130,22 @@
                                                             <div class="ct-icon"><span class="material-symbols-outlined">fastfood</span></div>
                                                             <div>
                                                                 <div class="ct-name"><c:out value="${item.productName}"/></div>
-                                                                <div class="ct-cat" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;">
+                                                                <div class="ct-cat-row">
                                                                     <c:if test="${not empty item.sizeName}">
-                                                                        <span style="display:inline-flex;align-items:center;gap:3px;background:#f0f4ff;color:#4f46e5;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;">
-                                                                            <span class="material-symbols-outlined" style="font-size:12px;">straighten</span>
+                                                                        <span class="badge-size">
+                                                                            <span class="material-symbols-outlined">straighten</span>
                                                                             Size ${item.sizeName}
                                                                         </span>
                                                                     </c:if>
                                                                     <c:if test="${item.stock > 0}">
-                                                                        <span style="display:inline-flex;align-items:center;gap:3px;background:#f0fdf4;color:#16a34a;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;">
-                                                                            <span class="material-symbols-outlined" style="font-size:12px;">coffee</span>
+                                                                        <span class="badge-stock">
+                                                                            <span class="material-symbols-outlined">coffee</span>
                                                                             ${item.stock} cốc
                                                                         </span>
                                                                     </c:if>
                                                                     <c:if test="${item.stock <= 0 and not empty item.sizeName}">
-                                                                        <span style="display:inline-flex;align-items:center;gap:3px;background:#fef2f2;color:#dc2626;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;">
-                                                                            <span class="material-symbols-outlined" style="font-size:12px;">coffee</span>
+                                                                        <span class="badge-out">
+                                                                            <span class="material-symbols-outlined">coffee</span>
                                                                             Hết hàng
                                                                         </span>
                                                                     </c:if>
@@ -155,18 +153,18 @@
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style="text-align:center">
-                                                        <div class="ct-qty-wrap" style="justify-content:center">
-                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.cartKey}&delta=-1" class="ct-qty-btn" style="text-decoration:none;">−</a>
+                                                    <td class="text-center">
+                                                        <div class="ct-qty-wrap-center">
+                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.cartKey}&delta=-1" class="ct-qty-btn">−</a>
                                                             <span class="ct-qty-num">${item.quantity}</span>
-                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.cartKey}&delta=1" class="ct-qty-btn" style="text-decoration:none;">+</a>
+                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.cartKey}&delta=1" class="ct-qty-btn">+</a>
                                                         </div>
                                                     </td>
-                                                    <td style="text-align:right"><span class="ct-price"><fmt:formatNumber value="${item.price}" pattern="#,###"/>₫</span></td>
-                                                    <td style="text-align:right"><span class="ct-subtotal"><fmt:formatNumber value="${item.subtotal}" pattern="#,###"/>₫</span></td>
+                                                    <td class="text-right"><span class="ct-price"><fmt:formatNumber value="${item.price}" pattern="#,###"/>₫</span></td>
+                                                    <td class="text-right"><span class="ct-subtotal"><fmt:formatNumber value="${item.subtotal}" pattern="#,###"/>₫</span></td>
                                                     <td>
-                                                        <a href="${pageContext.request.contextPath}/Cart?action=remove&productId=${item.cartKey}" class="ct-remove" title="Xóa sản phẩm" style="text-decoration:none;">
-                                                            <span class="material-symbols-outlined" style="font-size:20px">delete</span>
+                                                        <a href="${pageContext.request.contextPath}/Cart?action=remove&productId=${item.cartKey}" class="ct-remove" title="Xóa sản phẩm">
+                                                            <span class="material-symbols-outlined">delete</span>
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -175,27 +173,13 @@
                                     </table>
                                 </div>
 
-                                <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;align-items:stretch;">
-                                    <a href="${pageContext.request.contextPath}/Cart?action=clear"
-                                       style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
-                                              border:1.5px solid #ef4444;color:#ef4444;
-                                              border-radius:8px;font-size:13px;font-weight:600;
-                                              text-decoration:none;background:#fff;
-                                              transition:background .2s,color .2s;"
-                                       onmouseover="this.style.background='#ef4444';this.style.color='#fff';"
-                                       onmouseout="this.style.background='#fff';this.style.color='#ef4444';">
-                                        <span class="material-symbols-outlined" style="font-size:16px">delete_sweep</span>
+                                <div class="cart-actions-row">
+                                    <a href="${pageContext.request.contextPath}/Cart?action=clear" class="btn-cart-danger">
+                                        <span class="material-symbols-outlined">delete_sweep</span>
                                         Xóa tất cả
                                     </a>
-                                    <a href="${pageContext.request.contextPath}/category"
-                                       style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
-                                              border:1.5px solid var(--primary-color);color:var(--primary-color);
-                                              border-radius:8px;font-size:13px;font-weight:600;
-                                              text-decoration:none;background:#fff;
-                                              transition:background .2s,color .2s;"
-                                       onmouseover="this.style.background='var(--primary-color)';this.style.color='#fff';"
-                                       onmouseout="this.style.background='#fff';this.style.color='var(--primary-color)';">
-                                        <span class="material-symbols-outlined" style="font-size:16px">add</span>
+                                    <a href="${pageContext.request.contextPath}/category" class="btn-cart-primary">
+                                        <span class="material-symbols-outlined">add</span>
                                         Thêm sản phẩm
                                     </a>
                                 </div>
@@ -215,11 +199,41 @@
                                             <span class="summary-row-val"><fmt:formatNumber value="${item.subtotal}" pattern="#,###"/>₫</span>
                                         </div>
                                     </c:forEach>
+
+                                    <%-- Ô nhập mã giảm giá --%>
+                                    <div class="summary-divider"></div>
+                                    <div class="discount-section">
+                                        <div class="discount-section-label">Mã giảm giá</div>
+                                        <div class="discount-input-row">
+                                            <input type="text" id="discountInput" class="discount-input" placeholder="Nhập mã...">
+                                            <button type="button" id="applyDiscountBtn" class="btn-apply-discount" onclick="applyDiscount()">
+                                                Áp dụng
+                                            </button>
+                                        </div>
+                                        <div id="discountMsg" class="discount-msg"></div>
+                                    </div>
+
+                                    <%-- Dòng giảm giá (ẩn khi chưa áp dụng) --%>
+                                    <div id="discountRow" class="summary-row-discount" style="display:none;">
+                                        <span class="label">
+                                            <span class="material-symbols-outlined">sell</span>
+                                            Giảm giá
+                                            <button type="button" class="btn-remove-discount" onclick="removeDiscount()" title="Bỏ mã">
+                                                <span class="material-symbols-outlined">cancel</span>
+                                            </button>
+                                        </span>
+                                        <span id="discountAmt" class="val">-0₫</span>
+                                    </div>
+
                                     <div class="summary-divider"></div>
                                     <div class="summary-total-row">
                                         <span class="summary-total-label">Tổng cộng</span>
-                                        <span class="summary-total-val"><fmt:formatNumber value="${totalAmount}" pattern="#,###"/>₫</span>
+                                        <span class="summary-total-val" id="finalTotal"><fmt:formatNumber value="${totalAmount}" pattern="#,###"/>₫</span>
                                     </div>
+
+                                    <%-- Field ẩn truyền discountCode khi submit --%>
+                                    <input type="hidden" name="discountCode" id="discountCodeHidden" value="">
+
                                     <button type="submit" class="btn-checkout">
                                         <span class="material-symbols-outlined">shopping_bag</span>
                                         Đặt Hàng Ngay
@@ -227,13 +241,10 @@
                                 </div>
                             </div>
 
-                            <div class="cart-page-panel" style="margin-top:16px;">
+                            <div class="cart-page-panel cart-note-panel">
                                 <div class="panel-label">Thông tin</div>
-                                <div class="panel-title" style="font-size:16px;margin-bottom:16px;">Ghi chú đơn hàng</div>
-                                <textarea name="note" rows="3" placeholder="Ghi chú thêm (tuỳ chọn)..."
-                                    style="width:100%;border:1.5px solid var(--border-subtle);border-radius:var(--radius-sm);
-                                           padding:10px 12px;font-size:13px;font-family:var(--font-inter);
-                                           resize:none;outline:none;color:var(--text-dark);background:var(--bg-light);"></textarea>
+                                <div class="panel-title panel-title-sm">Ghi chú đơn hàng</div>
+                                <textarea name="note" rows="3" class="note-textarea" placeholder="Ghi chú thêm (tuỳ chọn)..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -253,6 +264,89 @@ function updateClock() {
     }
 }
 updateClock(); setInterval(updateClock, 30000);
+
+/* ── Discount Code ── */
+const BASE_TOTAL = ${totalAmount};
+let appliedDiscount = 0;
+
+function fmtVND(n) {
+    return new Intl.NumberFormat('vi-VN').format(Math.round(n)) + '₫';
+}
+
+function updateTotalDisplay(discountAmt) {
+    const finalVal = Math.max(BASE_TOTAL - discountAmt, 0);
+    document.getElementById('finalTotal').textContent = fmtVND(finalVal);
+    document.getElementById('discountAmt').textContent = '-' + fmtVND(discountAmt);
+    document.getElementById('discountRow').style.display = discountAmt > 0 ? 'flex' : 'none';
+}
+
+function applyDiscount() {
+    const code  = document.getElementById('discountInput').value.trim();
+    const msgEl = document.getElementById('discountMsg');
+    const btn   = document.getElementById('applyDiscountBtn');
+
+    if (!code) {
+        msgEl.className = 'discount-msg error';
+        msgEl.textContent = 'Vui lòng nhập mã giảm giá.';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '...';
+    msgEl.className = 'discount-msg';
+    msgEl.textContent = '';
+
+    fetch('${pageContext.request.contextPath}/CheckDiscount?code=' + encodeURIComponent(code))
+        .then(r => r.json())
+        .then(data => {
+            if (data.valid) {
+                let discountAmt = 0;
+                if (data.amount && data.amount > 0) {
+                    discountAmt = Math.min(data.amount, BASE_TOTAL);
+                } else if (data.pct && data.pct > 0) {
+                    discountAmt = Math.round(BASE_TOTAL * data.pct / 100);
+                }
+                appliedDiscount = discountAmt;
+                document.getElementById('discountCodeHidden').value = code;
+                document.getElementById('discountInput').disabled = true;
+                btn.style.display = 'none';
+                updateTotalDisplay(discountAmt);
+                msgEl.className = 'discount-msg success';
+                const label = data.amount > 0 ? fmtVND(data.amount) : data.pct + '%';
+                msgEl.textContent = ' Áp dụng thành công — giảm ' + label;
+            } else {
+                msgEl.className = 'discount-msg error';
+                msgEl.textContent = data.msg || 'Mã không hợp lệ.';
+                document.getElementById('discountCodeHidden').value = '';
+            }
+        })
+        .catch(() => {
+            msgEl.className = 'discount-msg error';
+            msgEl.textContent = 'Không thể kiểm tra mã. Vui lòng thử lại.';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = 'Áp dụng';
+        });
+}
+
+function removeDiscount() {
+    appliedDiscount = 0;
+    document.getElementById('discountCodeHidden').value = '';
+    document.getElementById('discountInput').value = '';
+    document.getElementById('discountInput').disabled = false;
+    document.getElementById('applyDiscountBtn').style.display = '';
+    document.getElementById('discountMsg').className = 'discount-msg';
+    document.getElementById('discountMsg').textContent = '';
+    updateTotalDisplay(0);
+}
+
+const discountInput = document.getElementById('discountInput');
+if (discountInput) {
+    discountInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); applyDiscount(); }
+    });
+}
 </script>
 </body>
 </html>

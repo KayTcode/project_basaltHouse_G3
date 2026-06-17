@@ -58,6 +58,10 @@ public class CartService {
     }
 
     public String checkout(Map<String, CartItem> cart, String note, String customerIdStr) {
+        return checkout(cart, note, customerIdStr, null);
+    }
+
+    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr, String discountCode) {
         if (cart == null || cart.isEmpty()) {
             return null;
         }
@@ -70,11 +74,20 @@ public class CartService {
             sizeNameToId.put(e.getValue().toLowerCase(), e.getKey());
         }
 
-        // Build Order
+        // Tính tổng tiền gốc
         BigDecimal total = BigDecimal.ZERO;
         for (CartItem item : cart.values()) {
             total = total.add(new BigDecimal(item.getPrice()).multiply(new BigDecimal(item.getQuantity())));
         }
+
+        // Tính discountAmount qua PromotionService
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        if (discountCode != null && !discountCode.isBlank()) {
+            PromotionService promotionService = new PromotionService();
+            discountAmount = promotionService.calculateDiscount(discountCode.trim(), total);
+        }
+        BigDecimal finalAmount = total.subtract(discountAmount);
+        if (finalAmount.compareTo(BigDecimal.ZERO) < 0) finalAmount = BigDecimal.ZERO;
 
         Order order = new Order();
         order.setOrderType("Online");
@@ -84,8 +97,8 @@ public class CartService {
         order.setTableName("Online");
         order.setNote((note != null && !note.isBlank()) ? note : null);
         order.setTotalAmount(total);
-        order.setDiscountAmount(BigDecimal.ZERO);
-        order.setFinalAmount(total);
+        order.setDiscountAmount(discountAmount);
+        order.setFinalAmount(finalAmount);
         if (customerIdStr != null && !customerIdStr.isBlank()) {
             try { order.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception ignored) {}
         }
@@ -111,7 +124,8 @@ public class CartService {
         }
 
         int orderId = onlineOrderService.createOnlineOrderFromCart(order, details);
-        System.out.println("[CartService] checkout → orderId=" + orderId + ", details=" + details.size());
+        System.out.println("[CartService] checkout → orderId=" + orderId + ", details=" + details.size()
+                + ", discount=" + discountAmount);
 
         if (orderId > 0) {
             cart.clear();
@@ -121,7 +135,7 @@ public class CartService {
     }
 
     public String checkout(Map<String, CartItem> cart, String note) {
-        return checkout(cart, note, null);
+        return checkout(cart, note, null, null);
     }
 }
 

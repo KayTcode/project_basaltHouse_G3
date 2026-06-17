@@ -211,8 +211,9 @@ public class CartServlet extends HttpServlet {
             }
         }
 
-        String note = request.getParameter("note");
-        String orderCode = cartService.checkout(cart, note, customerIdStr);
+        String note         = request.getParameter("note");
+        String discountCode = request.getParameter("discountCode");
+        String orderCode    = cartService.checkout(cart, note, customerIdStr, discountCode);
 
         if (orderCode != null) {
             response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);

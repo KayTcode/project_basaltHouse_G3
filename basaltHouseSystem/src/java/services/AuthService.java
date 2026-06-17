@@ -21,8 +21,8 @@ import utils.PasswordUtils;
 public class AuthService {
 
     private static final String JWT_SECRET_KEY = ConfigLoader.get("jwt.secret");
-    private static final SecretKey SECRET_KEY =
-            Keys.hmacShaKeyFor(JWT_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    private static final SecretKey SECRET_KEY
+            = Keys.hmacShaKeyFor(JWT_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
 
     private static final long JWT_EXPIRATION_MS = 7L * 24 * 60 * 60 * 1000;
 
@@ -56,8 +56,8 @@ public class AuthService {
 
             String roleName = authDAO.getRoleNameById(account.getRoleId());
 
-            Map<String, String> profileInfo =
-                    authDAO.getFullNameAndAvatarByAccount(account);
+            Map<String, String> profileInfo
+                    = authDAO.getFullNameAndAvatarByAccount(account);
 
             String fullName = profileInfo.get("fullName");
             String avatarUrl = profileInfo.get("avatarUrl");
@@ -203,16 +203,46 @@ public class AuthService {
         return result;
     }
 
-    public static void main(String[] args) {
-        AuthService ser = new AuthService();
-        int accountId = 4;
-        String input = "thanhedo123";
-        Map<String, Object> result = ser.resetPassword(accountId, input);
-        System.out.println(result);
-    }
-
+//    public static void main(String[] args) {
+//        AuthService ser = new AuthService();
+//        int accountId = 4;
+//        String input = "thanhedo123";
+//        Map<String, Object> result = ser.resetPassword(accountId, input);
+//        System.out.println(result);
+//    }
     public Map<String, Object> resendOtp(String email) {
         return sendForgotPasswordOtp(email);
+    }
+
+    public Map<String, Object> loginOrRegisterWithGoogle(String email, String fullName, String avatarUrl) {
+        Map<String, Object> result = new HashMap<>();
+        int existingAccountId = authDAO.findAccountIdByEmail(email);
+        if (existingAccountId != -1) {
+            result.put("success", false);
+            result.put("error", "Tài khoản với Email này đã tồn tại trong hệ thống. Vui lòng dăng nhập bằng mật khẩu");
+            return result;
+        }
+        Map<String, Object> creatResult = authDAO.createGoogleAccount(email, fullName, avatarUrl);
+        if (!Boolean.TRUE.equals(creatResult.get("success"))) {
+            result.put("success", false);
+            result.put("error", creatResult.get("error"));
+        }
+        int newAccountId = (int) creatResult.get("accountId");
+        String roleName = "Customer";
+        String token = generateJwtToken(newAccountId, email, roleName, fullName);
+
+        UserLoginDTO currentUser = new UserLoginDTO();
+        currentUser.setAccountId(newAccountId);
+        currentUser.setEmail(email);
+        currentUser.setFullName(fullName);
+        currentUser.setAvatarUrl(avatarUrl);
+        currentUser.setRoleName(roleName);
+
+        result.put("success", true);
+        result.put("token", token);
+        result.put("currentUser", currentUser);
+        result.put("roleName", roleName);
+        return result;
     }
 
     private String generateOtp() {

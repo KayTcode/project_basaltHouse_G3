@@ -5,6 +5,7 @@
 package model;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -14,6 +15,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class DiscountCode {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DecimalFormat MONEY_FORMATTER = new DecimalFormat("#,###");
 
     private int discountId;
     private String code;
@@ -117,6 +119,13 @@ public class DiscountCode {
         return endDate;
     }
 
+    public String getEndDateFormatted() {
+        if (endDate == null) {
+            return "";
+        }
+
+        return endDate.format(DATE_FORMATTER);
+    }
 
     public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
@@ -160,6 +169,18 @@ public class DiscountCode {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getDiscountValueFormatted() {
+        if (discountAmount != null && discountAmount.compareTo(BigDecimal.ZERO) > 0) {
+            return MONEY_FORMATTER.format(discountAmount) + "đ";
+        }
+
+        if (discountPercent != null) {
+            return discountPercent.stripTrailingZeros().toPlainString() + "%";
+        }
+
+        return "0";
     }
     
     

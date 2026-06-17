@@ -48,7 +48,8 @@
 
                     <form action="${pageContext.request.contextPath}/contact"
                           method="post"
-                          class="contact-form">
+                          class="contact-form"
+                          data-contact-form>
 
                         <div class="contact-field-grid">
                             <label class="contact-field">
@@ -139,5 +140,30 @@
         </div>
     </section>
 </main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("[data-contact-form]");
+        const shouldOpenOnLoad = "${contactSuccess}" === "true";
+
+        if (form) {
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                form.reset();
+                window.alert("Cảm ơn bạn đã liên hệ");
+            });
+        }
+
+        if (shouldOpenOnLoad) {
+            window.alert("Cảm ơn bạn đã liên hệ");
+        }
+    });
+</script>
 
 <jsp:include page="/views/HomePage/Footer.jsp"/>

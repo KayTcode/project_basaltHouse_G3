@@ -12,9 +12,35 @@ import java.io.IOException;
 import services.OrderService;
 
 
-@WebServlet(name = "POSOrderServlet", urlPatterns = {"/POSOrder"})
+@WebServlet(name = "POSOrderServlet", urlPatterns = { "/PosOrder","/OrderView","/DashBoard"})
 public class POSOrderServlet extends HttpServlet {
-
+    
+   @Override
+   protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+      String action = request.getServletPath();
+        
+       
+        switch (action) {
+            case "/PosOrder":
+                request.getRequestDispatcher("/views/Cashier/POSOrders.jsp").forward(request, response);
+                break;
+                
+            case "/OrderView":
+                request.getRequestDispatcher("/views/Cashier/OrderViews.jsp").forward(request, response);
+                break;
+                
+            case "/DashBoard":
+                request.getRequestDispatcher("/views/Cashier/CashierDashboard.jsp").forward(request, response);
+                break;
+                
+            default:
+              
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                break;
+        }
+    }
+   
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -29,6 +55,7 @@ public class POSOrderServlet extends HttpServlet {
         String discountCode = request.getParameter("discountCode");
         String discountAmountStr = request.getParameter("discountAmount");
         String finalAmountStr = request.getParameter("finalAmount");
+        String tableIdStr = request.getParameter("tableId");
 
         if (cartData == null || cartData.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -39,7 +66,7 @@ public class POSOrderServlet extends HttpServlet {
         try {
             OrderService orderService = new OrderService();
             int orderId = orderService.createOfflineOrder(cartData, totalAmountStr, discountAmountStr, finalAmountStr,
-                                                          paymentMethod, tableName, note, customerIdStr, discountCode);
+                                                          paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr);
                                                           
             if (orderId != -1) {
                 response.setStatus(HttpServletResponse.SC_OK);

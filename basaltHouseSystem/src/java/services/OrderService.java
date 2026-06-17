@@ -23,25 +23,19 @@ import model.TableSession;
 public class OrderService {
     private final OrderDAO dao = new OrderDAO();
     private final TableSessionDAO sesioneDAO = new TableSessionDAO();
-    public int createOfflineOrder(String cartData, String totalAmountStr, String discountAmountStr, String finalAmountStr,
-            String paymentMethod, String tableName, String note,
-            String customerIdStr, String discountCode) {
-
+ 
+    public int createOfflineOrder(String cartData, String totalAmountStr, String discountAmountStr, String finalAmountStr, 
+                                  String paymentMethod, String tableName, String note, 
+                                  String customerIdStr, String discountCode, String tableIdStr) throws Exception {
+                                      
         BigDecimal totalAmount = BigDecimal.ZERO;
         BigDecimal discountAmount = BigDecimal.ZERO;
         BigDecimal finalAmount = BigDecimal.ZERO;
         try {
-            if (totalAmountStr != null) {
-                totalAmount = new BigDecimal(totalAmountStr);
-            }
-            if (discountAmountStr != null) {
-                discountAmount = new BigDecimal(discountAmountStr);
-            }
-            if (finalAmountStr != null) {
-                finalAmount = new BigDecimal(finalAmountStr);
-            }
-        } catch (Exception e) {
-        }
+            if (totalAmountStr != null) totalAmount = new BigDecimal(totalAmountStr);
+            if (discountAmountStr != null) discountAmount = new BigDecimal(discountAmountStr);
+            if (finalAmountStr != null) finalAmount = new BigDecimal(finalAmountStr);
+        } catch (Exception e) {}
 
         Order order = new Order();
         order.setOrderType("Offline");
@@ -54,11 +48,26 @@ public class OrderService {
         order.setDiscountAmount(discountAmount);
         order.setFinalAmount(finalAmount);
 
-        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+        if (tableIdStr != null && !tableIdStr.trim().isEmpty()) {
             try {
-                order.setCustomerId(Integer.parseInt(customerIdStr));
-            } catch (Exception e) {
+                int tableId = Integer.parseInt(tableIdStr);
+                dao.TableSessionDAO tsDao = new dao.TableSessionDAO();
+                int sessionId = tsDao.getActiveSessionId(tableId);
+                if (sessionId == -1) {
+                    // Tu dong tao Session moi
+                    tsDao.createSession(tableId, tableName != null ? tableName : "", 1, null);
+                    sessionId = tsDao.getActiveSessionId(tableId);
+                }
+                if (sessionId != -1) {
+                    order.setTableSessionId(sessionId);
+                }
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
             }
+        }
+
+        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+            try { order.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception e) {}
         }
 
         if (discountCode != null && !discountCode.trim().isEmpty()) {
@@ -76,12 +85,10 @@ public class OrderService {
         HashMap<Integer, String> sizes = sDao.getSize();
 
         if (cartData != null && !cartData.isEmpty()) {
-            // cartData format: name,size,qty,unitPrice|name,size,qty,unitPrice
+           
             String[] items = cartData.split("\\|");
             for (String item : items) {
-                if (item.trim().isEmpty()) {
-                    continue;
-                }
+                if (item.trim().isEmpty()) continue;
                 String[] parts = item.split(",");
                 if (parts.length >= 4) {
                     String name = parts[0];
@@ -118,38 +125,34 @@ public class OrderService {
         }
 
         OrderDAO orderDAO = new OrderDAO();
-        return orderDAO.insertOfflineOrder(order, details);
+        int newOrderId = orderDAO.insertOfflineOrder(order, details);
+        
+        // Cập nhật trừ kho ngay sau khi tạo đơn và thanh toán thành công 
+        if (newOrderId != -1 && !details.isEmpty()) {
+            StockService stockService = new StockService();
+            stockService.updateStockForOrder(details);
+        }
+        
+        return newOrderId;
     }
 
     public void updateOrderStatus(int orderId, String action) throws Exception {
         OrderDAO orderDAO = new OrderDAO();
-
-        if (action.equals("start")) {
+        
+        
+        if (action.equals("confirm")) {
+            // Cashier xác nhận đơn online -> Chuyển sang Preparing (Chờ xử lý) để Bartender thấy
+            orderDAO.updateOrderStatus(orderId, "Preparing");
+        } else if (action.equals("start")) {
+            // Bartender nhấn "Xác nhận" -> Chuyển sang In_Progress (Đang pha chế)
             orderDAO.updateOrderStatus(orderId, "In_Progress");
         } else if (action.equals("ready")) {
+            // Bartender nhấn "Xong" -> Chuyển sang Ready (Sẵn sàng phục vụ)
             orderDAO.updateOrderStatus(orderId, "Ready");
         } else if (action.equals("complete")) {
+            // Bartender nhấn "Hoàn thành" -> Chuyển sang Completed (Đã xong)
             orderDAO.updateOrderStatus(orderId, "Completed");
-
-            // Inventory Deduction Logic
-            List<OrderDetail> details = orderDAO.getOrderDetailsByOrderId(orderId);
-            RecipeDAO recipeDAO = new RecipeDAO();
-            IngredientDAO ingredientDAO = new IngredientDAO();
-            HashMap<Integer, HashMap<Integer, List<Recipe>>> recipes = recipeDAO.getRecipeMap();
-
-            for (OrderDetail d : details) {
-                int productId = d.getProductId();
-                int sizeId = d.getSizeId();
-                int qty = d.getQuantity();
-
-                if (recipes.containsKey(productId) && recipes.get(productId).containsKey(sizeId)) {
-                    List<Recipe> recipeComponents = recipes.get(productId).get(sizeId);
-                    for (Recipe r : recipeComponents) {
-                        BigDecimal totalNeeded = r.getQuantityNeeded().multiply(new BigDecimal(qty));
-                        ingredientDAO.updateIngredientQuantity(r.getIngredientId(), totalNeeded);
-                    }
-                }
-            }
+         
         } else {
             throw new IllegalArgumentException("Invalid action: " + action);
         }

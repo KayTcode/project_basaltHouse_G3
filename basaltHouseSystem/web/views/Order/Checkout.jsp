@@ -25,7 +25,6 @@
                 <a href="${pageContext.request.contextPath}/Cart" class="btn-nav-icon co-nav-cart" title="Giỏ hàng">
                     <span class="material-symbols-outlined">shopping_cart</span>
                 </a>
-
             </div>
         </div>
     </nav>
@@ -56,15 +55,21 @@
                     <span class="material-symbols-outlined">info</span>
                     <div>
                         <div class="co-zone-title">Khu vực giao hàng</div>
-                        <div class="co-zone-desc">Chúng tôi chỉ giao hàng trong khu vực nội thành — vui lòng nhập địa chỉ trong phạm vi phục vụ của chúng tôi.</div>
+                        <div class="co-zone-desc">Chúng tôi chỉ giao hàng trong khu vực Hòa Lạc — Vui lòng nhập địa chỉ trong phạm vi phục vụ của chúng tôi.</div>
                     </div>
                 </div>
 
                 <!-- Order summary -->
                 <div class="co-summary">
-                    <div>
-                        <div class="co-summary-label">Tổng đơn hàng</div>
-                        <div class="co-summary-items">${totalQty} sản phẩm</div>
+                    <div style="flex:1;">
+                        <div class="co-summary-label">Đơn hàng của bạn</div>
+                        <c:forEach var="item" items="${cartItems}">
+                            <div class="co-summary-item-line">
+                                <c:out value="${item.productName}"/>
+                                <c:if test="${not empty item.sizeName}"> (${item.sizeName})</c:if>
+                                &times; ${item.quantity}
+                            </div>
+                        </c:forEach>
                     </div>
                     <div class="text-end">
                         <c:if test="${discountAmount > 0}">
@@ -72,7 +77,7 @@
                                 <fmt:formatNumber value="${totalAmount}" pattern="#,###"/>₫
                             </div>
                             <div style="font-size:11px;color:#16a34a;font-weight:600;margin-bottom:2px;">
-                                − <fmt:formatNumber value="${discountAmount}" pattern="#,###"/>₫ giảm giá
+                                − <fmt:formatNumber value="${discountAmount}" pattern="#,###"/>₫ giảm giá
                             </div>
                         </c:if>
                         <div class="co-summary-total"><fmt:formatNumber value="${finalAmount > 0 ? finalAmount : totalAmount}" pattern="#,###"/>₫</div>
@@ -102,11 +107,20 @@
                         </div>
                         <div class="co-field full">
                             <label>Số nhà / Tên đường <span class="req">*</span></label>
-                            <input type="text" name="street" id="street" placeholder="123 Nguyễn Trãi" autocomplete="street-address">
+                            <input type="text" name="street" id="street" placeholder="VD: Khu A FPT, Đường số 3..." autocomplete="street-address">
                         </div>
                         <div class="co-field full">
-                            <label>Phường / Xã &amp; Quận / Huyện <span class="req">*</span></label>
-                            <input type="text" name="district" id="district" placeholder="Phường Bến Nghé, Quận 1" autocomplete="address-level2">
+                            <label>Khu vực (Hòa Lạc) <span class="req">*</span></label>
+                            <select name="district" id="district" class="co-select">
+                                <option value=""> Chọn khu vực </option>
+                                <option value="Thạch Hòa, Huyện Thạch Thất, Hà Nội">Thạch Hòa, Thạch Thất, Hà Nội</option>
+                                <option value="Tân Xã, Huyện Thạch Thất, Hà Nội">Tân Xã, Thạch Thất, Hà Nội</option>
+                                <option value="Hạ Bằng, Huyện Thạch Thất, Hà Nội">Hạ Bằng, Thạch Thất, Hà Nội</option>
+                                <option value="Bình Yên, Huyện Thạch Thất, Hà Nội">Bình Yên, Thạch Thất, Hà Nội</option>
+                                <option value="Đồng Trúc, Huyện Thạch Thất, Hà Nội">Đồng Trúc, Thạch Thất, Hà Nội</option>
+                                <option value="Cẩm Yên, Huyện Thạch Thất, Hà Nội">Cẩm Yên, Thạch Thất, Hà Nội</option>
+                                <option value="Liên Quan, Huyện Thạch Thất, Hà Nội">Liên Quan, Thạch Thất, Hà Nội</option>
+                            </select>
                         </div>
                         <div class="co-field full">
                             <label>Ghi chú giao hàng (tuỳ chọn)</label>
@@ -167,6 +181,7 @@ function selectPay(method, el) {
     document.getElementById('paymentMethodInput').value = method;
 }
 
+
 function validateForm() {
     const fn  = document.getElementById('fullname').value.trim();
     const ph  = document.getElementById('phone').value.trim();
@@ -181,11 +196,10 @@ function validateForm() {
     err.style.display = 'none';
 
     // Build combined address string
-    const note = document.getElementById('note').value.trim();
+    const note = document.getElementById('deliveryNote').value.trim();
     document.getElementById('deliveryAddressInput').value =
-        fn + ' | ' + ph + ' | ' + st + ', ' + dis;
+        fn + ' | ' + ph + ' | ' + st + ', ' + dis + (note ? ' | ' + note : '');
 
-    // Disable button to prevent double submit
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span> Đang xử lý...';

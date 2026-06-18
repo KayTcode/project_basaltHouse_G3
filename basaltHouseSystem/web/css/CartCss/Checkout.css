@@ -51,6 +51,23 @@
 .co-section-title .material-symbols-outlined { font-size: 16px; }
 .co-divider { height: 1px; background: var(--border-subtle); margin: 24px 0; }
 
+/* ── Order summary strip ── */
+.co-summary {
+    background: var(--secondary-bg); border-radius: var(--radius-sm);
+    padding: 14px 18px; display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 24px;
+}
+.co-summary-label {
+    font-family: var(--font-montserrat); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted);
+    margin-bottom: 6px;
+}
+.co-summary-item-line {
+    font-size: 13px; color: var(--text-dark); font-weight: 500;
+    line-height: 1.7;
+}
+.co-summary-total { font-size: 22px; font-weight: 800; color: var(--primary-color); white-space: nowrap; }
+
 /* ── Form grid ── */
 .co-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .co-grid .full { grid-column: 1 / -1; }
@@ -71,6 +88,33 @@
     box-shadow: 0 0 0 3px rgba(0,110,47,.1);
 }
 .co-field input::placeholder { color: #adb5bd; }
+.co-select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 10px 36px 10px 14px;
+    font-size: 14px;
+    font-family: var(--font-inter);
+    color: var(--text-dark);
+    line-height: 1.5;
+    background-color: var(--bg-light);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    cursor: pointer;
+}
+.co-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0,110,47,.1);
+}
+.co-select option { color: var(--text-dark); }
+.co-select option[value=""] { color: #adb5bd; }
 
 /* ── Error message ── */
 .co-error {

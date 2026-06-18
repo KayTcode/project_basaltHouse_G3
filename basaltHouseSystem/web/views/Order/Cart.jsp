@@ -63,10 +63,6 @@
                     <span class="material-symbols-outlined">event</span>
                     <span id="currentDateTime">--</span>
                 </div>
-                <button class="meta-chip-btn" onclick="window.location='${pageContext.request.contextPath}/category'">
-                    <span class="material-symbols-outlined">arrow_back</span>
-                    <span>Tiếp tục mua</span>
-                </button>
             </div>
         </div>
     </div>

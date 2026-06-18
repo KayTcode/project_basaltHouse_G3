@@ -228,6 +228,7 @@ public class CartServlet extends HttpServlet {
         request.setAttribute("totalQty",       totalQty);
         request.setAttribute("discountCode",   discountCode != null ? discountCode : "");
         request.setAttribute("orderNote",      request.getParameter("orderNote") != null ? request.getParameter("orderNote") : "");
+        request.setAttribute("cartItems",      cart.values());
         request.getRequestDispatcher("views/Order/Checkout.jsp").forward(request, response);
     }
 

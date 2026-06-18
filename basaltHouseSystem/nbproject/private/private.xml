@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/services/AuthService.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/VoucherServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/VerifyOtpServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/HomePage/HomePage.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/RegisterDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/ProductDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/Voucher/Voucher.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/services/RegisterService.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/config/app.properties</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/HomePage/Header.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/DiscountCodeDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/RegisterServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/CashierPOSServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/services/EmailService.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/CustomerCodeDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/model/CustomerDiscountCode.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/css/auth/login.css</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/Authentication/verify-otp.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/Authentication/login.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/WEB-INF/web.xml</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/CategoryDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/model/EmailOtp.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/services/OrderService.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/model/DeliveryLog.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/AuthDAO.java</file>
+        </group>
+    </open-files>
+</project-private>

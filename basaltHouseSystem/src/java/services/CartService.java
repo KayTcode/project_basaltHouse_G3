@@ -1,0 +1,127 @@
+package services;
+
+import dao.SizeDAO;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import model.CartItem;
+import model.Order;
+import model.OrderDetail;
+
+public class CartService {
+
+    private final OnlineOrderService onlineOrderService = new OnlineOrderService();
+
+    public void addProduct(Map<String, CartItem> cart, String productId, String productName, int price) {
+        if (productId == null || productId.isBlank()) {
+            return;
+        }
+        CartItem item = cart.get(productId);
+        if (item == null) {
+            cart.put(productId, new CartItem(productId, productName, price, 1));
+        } else {
+            item.setQuantity(item.getQuantity() + 1);
+        }
+    }
+
+    public void updateQuantity(Map<String, CartItem> cart, String productId, int delta) {
+        if (productId == null || productId.isBlank()) {
+            return;
+        }
+        CartItem item = cart.get(productId);
+        if (item != null) {
+            int newQty = item.getQuantity() + delta;
+            if (newQty <= 0) {
+                cart.remove(productId);
+                return;
+            }
+            if (item.getStock() > 0 && newQty > item.getStock()) {
+                return;
+            }
+            item.setQuantity(newQty);
+        }
+    }
+
+    public void removeItem(Map<String, CartItem> cart, String productId) {
+        if (productId == null || productId.isBlank()) {
+            return;
+        }
+        cart.remove(productId);
+    }
+
+    public void clearCart(Map<String, CartItem> cart) {
+        if (cart != null) {
+            cart.clear();
+        }
+    }
+
+    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr) {
+        if (cart == null || cart.isEmpty()) {
+            return null;
+        }
+
+        // Tra sizeId từ sizeName bằng HashMap<sizeId, sizeName> → đảo ngược thành HashMap<sizeName, sizeId>
+        SizeDAO sizeDAO = new SizeDAO();
+        HashMap<Integer, String> sizeMap = sizeDAO.getSize();
+        HashMap<String, Integer> sizeNameToId = new HashMap<>();
+        for (Map.Entry<Integer, String> e : sizeMap.entrySet()) {
+            sizeNameToId.put(e.getValue().toLowerCase(), e.getKey());
+        }
+
+        // Build Order
+        BigDecimal total = BigDecimal.ZERO;
+        for (CartItem item : cart.values()) {
+            total = total.add(new BigDecimal(item.getPrice()).multiply(new BigDecimal(item.getQuantity())));
+        }
+
+        Order order = new Order();
+        order.setOrderType("Online");
+        order.setOrderStatus("Preparing");
+        order.setPaymentStatus("Unpaid");
+        order.setPaymentMethod("COD");
+        order.setTableName("Online");
+        order.setNote((note != null && !note.isBlank()) ? note : null);
+        order.setTotalAmount(total);
+        order.setDiscountAmount(BigDecimal.ZERO);
+        order.setFinalAmount(total);
+        if (customerIdStr != null && !customerIdStr.isBlank()) {
+            try { order.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception ignored) {}
+        }
+
+        // Build List<OrderDetail> trực tiếp từ CartItem
+        List<OrderDetail> details = new ArrayList<>();
+        for (CartItem item : cart.values()) {
+            int productId = -1;
+            try { productId = Integer.parseInt(item.getProductId()); } catch (Exception ignored) {}
+            if (productId <= 0) continue;
+
+            String sizeName = (item.getSizeName() != null && !item.getSizeName().isBlank())
+                    ? item.getSizeName().toLowerCase() : "m";
+            int sizeId = sizeNameToId.getOrDefault(sizeName, -1);
+            if (sizeId <= 0) continue;
+
+            OrderDetail od = new OrderDetail();
+            od.setProductId(productId);
+            od.setSizeId(sizeId);
+            od.setQuantity(item.getQuantity());
+            od.setUnitPrice(new BigDecimal(item.getPrice()));
+            details.add(od);
+        }
+
+        int orderId = onlineOrderService.createOnlineOrderFromCart(order, details);
+        System.out.println("[CartService] checkout → orderId=" + orderId + ", details=" + details.size());
+
+        if (orderId > 0) {
+            cart.clear();
+            return "BH-" + orderId;
+        }
+        return null;
+    }
+
+    public String checkout(Map<String, CartItem> cart, String note) {
+        return checkout(cart, note, null);
+    }
+}
+

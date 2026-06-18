@@ -7,6 +7,29 @@
 %>
 <jsp:include page="/views/HomePage/Header.jsp" />
 <link href="${pageContext.request.contextPath}/css/Categoty/Categorie.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+<%-- Toast notification container --%>
+<style>
+.cat-toast-stack { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
+.cat-toast { display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid #e2e8f0; border-radius:12px;
+  padding:12px 18px; box-shadow:0 8px 32px rgba(0,0,0,.12); font-size:14px; min-width:240px;
+  animation: slideInRight .3s ease; }
+.cat-toast.success .cat-toast-icon { color:#22c55e; }
+.cat-toast.hide { animation: slideOutRight .3s ease forwards; }
+@keyframes slideInRight { from { transform:translateX(120%); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes slideOutRight { from { transform:none; opacity:1; } to { transform:translateX(120%); opacity:0; } }
+.btn-add-to-cart-cat {
+  display: flex; align-items: center; gap: 6px;
+  background: #16a34a; color: #fff; border: none; border-radius: 8px;
+  padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: background .2s, transform .1s; margin-top: 10px; width: 100%;
+  justify-content: center;
+}
+.btn-add-to-cart-cat:hover { background: #15803d; transform: translateY(-1px); }
+.btn-add-to-cart-cat .material-symbols-outlined { font-size: 17px; }
+</style>
+<div class="cat-toast-stack" id="catToastStack"></div>
 
 <main class="category-page-main">
     <section class="category-hero">
@@ -205,3 +228,29 @@
 </main>
 
 <jsp:include page="/views/HomePage/Footer.jsp" />
+
+<script>
+/* ── Toast notification ── */
+function showCatToast(msg) {
+    const stack = document.getElementById('catToastStack');
+    const el = document.createElement('div');
+    el.className = 'cat-toast success';
+    el.innerHTML =
+        '<span class="material-symbols-outlined cat-toast-icon">check_circle</span>' +
+        '<div><strong>Thành công</strong><br><span style="color:#64748b">' + msg + '</span></div>';
+    stack.appendChild(el);
+    setTimeout(() => { el.classList.add('hide'); setTimeout(() => el.remove(), 350); }, 2500);
+}
+
+/* ── Hiển thị toast khi thêm giỏ hàng thành công ── */
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('addSuccess')) {
+        showCatToast('Đã thêm sản phẩm vào giỏ hàng!');
+        // Xóa param khỏi URL sau khi hiển thị
+        const clean = window.location.pathname + window.location.search
+            .replace(/[?&]addSuccess=1/, '').replace(/^&/, '?');
+        window.history.replaceState({}, document.title, clean || window.location.pathname);
+    }
+});
+</script>

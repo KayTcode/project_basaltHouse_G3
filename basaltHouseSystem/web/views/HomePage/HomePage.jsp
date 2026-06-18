@@ -231,7 +231,7 @@
                                     <div class="promo-code-value">${c.code}</div>
                                 </div>
                                 </c:forEach>
-                                <button class="btn-use-code" onclick="applyPromo()">Sử dụng ngay</button>
+                                <a class="btn-use-code" href="${pageContext.request.contextPath}/category">Sử dụng ngay</a>
                             </div>
                         </div>
                     </div>

@@ -75,8 +75,8 @@ public class DiscountCodeDAO extends DBContext {
                                                   FROM DiscountCodes
                                                   WHERE IsActive = 1 and IsPublic = 1 and IsDeleted = 0
                          """;
-          PreparedStatement  st = connection.prepareStatement(sql);
-           ResultSet rs = st.executeQuery();
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 DiscountCode d = new DiscountCode(rs.getInt("DiscountId"),
                         rs.getString("Code"),
@@ -97,31 +97,6 @@ public class DiscountCodeDAO extends DBContext {
 
     public List<CustomerDiscountCode> getVoucherById(int accountId) {
         List<CustomerDiscountCode> list = new ArrayList<>();
-    public DiscountCode getvoucher(int id) {
-        try {
-            String sql = """                       
-                      select top 1 Code ,d.DiscountId from DiscountCodes d
-                       join CustomerDiscountCodes cd on cd.DiscountId = d.DiscountId
-                       where d.IsActive = 0 and cd.AccountId = ?
-                        """;
-           PreparedStatement st = connection.prepareStatement(sql);
-            st.setObject(1, id);
-           ResultSet rs = st.executeQuery();
-            if (rs.next()) {
-                DiscountCode d = new DiscountCode();
-                d.setDiscountId(rs.getInt("DiscountId"));
-                d.setCode(rs.getString("Code"));
-                return d;
-
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        return null;
-
-    }
-
-    public void updateActiveAt1(int id) {
         try {
             String sql = """
                          SELECT cd.CustomerDiscountId,
@@ -143,9 +118,9 @@ public class DiscountCodeDAO extends DBContext {
                            AND cd.AccountId = ?
                          ORDER BY d.EndDate ASC
                          """;
-            st = connection.prepareStatement(sql);
+            PreparedStatement st = connection.prepareStatement(sql);
             st.setObject(1, accountId);
-            rs = st.executeQuery();
+            ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 CustomerDiscountCode c = new CustomerDiscountCode(
                         rs.getInt("CustomerDiscountId"),
@@ -161,13 +136,23 @@ public class DiscountCodeDAO extends DBContext {
                         rs.getInt("DayTime"),
                         rs.getString("Code"));
                 list.add(c);
+                return list;
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
-        return list;
+        return null;
+    }
 
-           PreparedStatement st = connection.prepareStatement(sql);
+
+    public void updateActiveAt1(int id) {
+        try {
+            String sql = """
+                         UPDATE DiscountCodes
+                         SET IsActive = 1
+                         WHERE DiscountId = ?
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
             st.setObject(1, id);
             st.executeUpdate();
         } catch (Exception e) {
@@ -175,12 +160,4 @@ public class DiscountCodeDAO extends DBContext {
         }
 
     }
-
-    public static void main(String[] args) {
-        DiscountCodeDAO dao = new DiscountCodeDAO();
-        DiscountCode d = dao.getvoucher(6);
-        System.out.println(d);
-     
-    }
-
 }

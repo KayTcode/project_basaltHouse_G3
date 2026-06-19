@@ -164,7 +164,7 @@ public class LoginServlet extends HttpServlet {
         }
         switch (roleName.trim().toLowerCase()) {
             case "admin":
-                return contextPath + "/admin/dashboard";
+                return contextPath + "/home";
             case "staff":
                 return contextPath + "/staff/dashboard";
             case "shipper":

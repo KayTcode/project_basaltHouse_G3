@@ -39,10 +39,38 @@ public class PromotionService {
         DiscountCode discount = dao.checkDiscountCode(code.trim());
 
         if (discount != null) {
-            double pct = discount.getDiscountPercent() != null ? discount.getDiscountPercent().doubleValue() : 0.0;
-            return String.format("{\"valid\": true, \"pct\": %.2f}", pct);
+            double pct    = discount.getDiscountPercent() != null ? discount.getDiscountPercent().doubleValue() : 0.0;
+            double amount = discount.getDiscountAmount()  != null ? discount.getDiscountAmount().doubleValue()  : 0.0;
+            int    id     = discount.getDiscountId();
+            return String.format("{\"valid\": true, \"id\": %d, \"pct\": %.2f, \"amount\": %.2f}",
+                    id, pct, amount);
         } else {
             return "{\"valid\": false, \"msg\": \"Mã giảm giá không tồn tại hoặc đã hết hạn.\"}";
         }
+    }
+
+
+    public java.math.BigDecimal calculateDiscount(String code, java.math.BigDecimal total) {
+        if (code == null || code.isBlank() || total == null || total.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            return java.math.BigDecimal.ZERO;
+        }
+
+        DiscountCodeDAO dao = new DiscountCodeDAO();
+        DiscountCode discount = dao.checkDiscountCode(code.trim());
+        if (discount == null) return java.math.BigDecimal.ZERO;
+
+        if (discount.getDiscountAmount() != null
+                && discount.getDiscountAmount().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            return discount.getDiscountAmount().min(total);
+        }
+
+        if (discount.getDiscountPercent() != null
+                && discount.getDiscountPercent().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            // Giảm theo %
+            return total.multiply(discount.getDiscountPercent())
+                        .divide(new java.math.BigDecimal(100), 0, java.math.RoundingMode.HALF_UP);
+        }
+
+        return java.math.BigDecimal.ZERO;
     }
 }

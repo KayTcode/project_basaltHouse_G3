@@ -48,7 +48,7 @@
                                             <li class="nav-item"><a class="nav-link nav-link-coffeely active"
                                                     href="#">Bàn & Session</a></li>
                                             <li class="nav-item"><a class="nav-link nav-link-coffeely"
-                                                    href="${pageContext.request.contextPath}/Order">Order</a></li>
+                                                    href="#">Order</a></li>
                                             <li class="nav-item"><a class="nav-link nav-link-coffeely" href="#">Báo
                                                     cáo</a></li>
                                         </ul>
@@ -459,6 +459,16 @@
                                 document.getElementById('btnPlus').disabled = (avail <= 1);
                                 clearError();
                                 document.getElementById('btnSubmit').disabled = false;
+
+                                /* ── Nếu trang được mở trong iframe từ CashierCreateOrder thì gửi lại table info ── */
+                                if (window.parent && window.parent !== window) {
+                                    window.parent.postMessage({
+                                        type: 'TABLE_SELECTED',
+                                        tableId: tableId,
+                                        tableCode: code,
+                                        area: area
+                                    }, '*');
+                                }
                             }
 
                             /* ── Guest Count ── */

@@ -1,4 +1,4 @@
-<%-- CashierOrders.jsp - Quan ly don hang --%>
+
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@page import="java.util.List"%>
@@ -43,13 +43,13 @@
         <div class="logo-text">Basalt<span>House Coffee</span></div>
     </div>
     <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/views/Cashier/CashierDashboard.jsp" class="nav-item">
+        <a href="${pageContext.request.contextPath}/DashBoard" class="nav-item">
             <span class="nav-icon material-symbols-outlined">dashboard</span>Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/views/Cashier/OrderViews.jsp" class="nav-item active">
+        <a href="${pageContext.request.contextPath}/OrderView" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">receipt_long</span>Orders
         </a>
-        <a href="${pageContext.request.contextPath}/views/Cashier/POSOrders.jsp" class="nav-item">
+        <a href="${pageContext.request.contextPath}/PosOrder" class="nav-item">
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>POS Order
         </a>
         <a href="#" class="nav-item"><span class="nav-icon material-symbols-outlined">bar_chart</span>Reports</a>
@@ -183,14 +183,7 @@ var ORDERS = {
 };
 
 
-var VALID_CODES = { 'COFFEE20':20000, 'BASALT10':10000, 'WELCOME':15000, 'SAVE30':30000 };
-var MEMBERS = {
-    '0901234567':{ name:'Nguyen Van A', tier:'gold',    pct:10, points:1250 },
-    '0912345678':{ name:'Tran Thi B',   tier:'silver',  pct:5,  points:430  },
-    '0923456789':{ name:'Le Van C',     tier:'diamond', pct:15, points:5800 },
-    '0934567890':{ name:'Pham Thi D',   tier:'none',    pct:0,  points:50   }
-};
-var TIER_ICONS = { none:'&#128100;', silver:'&#129752;', gold:'&#127941;', diamond:'&#128142;' };
+
 
 var currentId     = null;
 var offCoupon     = 0;
@@ -319,8 +312,8 @@ function buildOfflineModal(o) {
     }
 
     /* Status timeline */
-    var STEPS       = ['pending_payment','preparing','ready','completed'];
-    var STEP_LABELS = { pending_payment:'Cho TT', preparing:'Pha che', ready:'San sang', completed:'Hoan thanh' };
+    var STEPS       = ['preparing','in_progress','ready','completed'];
+    var STEP_LABELS = { preparing:'Cho xac nhan', in_progress:'Pha che', ready:'San sang', completed:'Hoan thanh' };
     var curIdx = STEPS.indexOf(o.status);
     if (o.status === 'paid') curIdx = 3;
 
@@ -394,7 +387,7 @@ function toggleOrderStatus() {
 ============================================================ */
 function buildOnlineModal(o) {
     var sc = statusLabelAndClass(o.status);
-    var confirmed = o.sentToBartender || o.status === 'completed' || o.status === 'paid';
+    var confirmed = o.status !== 'pending';
 
     /* ── Item rows ── */
     var itemsHtml = '';
@@ -483,8 +476,8 @@ function buildOnlineModal(o) {
     /* ── Status timeline (chi hien sau khi cashier xac nhan) ── */
     var statusSection = '';
     if (confirmed) {
-        var STEPS       = ['pending_payment','preparing','ready','completed'];
-        var STEP_LABELS = { pending_payment:'Cho xac nhan', preparing:'Pha che', ready:'San sang', completed:'Hoan thanh' };
+        var STEPS       = ['preparing','in_progress','ready','completed'];
+        var STEP_LABELS = { preparing:'Cho xac nhan', in_progress:'Pha che', ready:'San sang', completed:'Hoan thanh' };
         var curIdx = STEPS.indexOf(o.status);
         if (o.status === 'paid') curIdx = 3;
 
@@ -595,11 +588,29 @@ function toggleOnlineStatus() {
 function confirmOnlineOrder() {
     var o = ORDERS[currentId];
     if (!o) return;
-    o.sentToBartender = true;
-    o.status = 'preparing';
-    document.getElementById('status-' + currentId).innerHTML = badgeHtml('preparing');
-    showToast('&#127861; Don ' + currentId + ' da gui Bartender!');
-    buildOnlineModal(o);
+    
+    var formData = new URLSearchParams();
+    formData.append("orderId", o.id);
+    formData.append("action", "confirm");
+
+    fetch('${pageContext.request.contextPath}/Bartender', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+    }).then(function(res) {
+        if(res.ok) {
+            o.sentToBartender = true;
+            o.status = 'preparing';
+            document.getElementById('status-' + currentId).innerHTML = badgeHtml('preparing');
+            showToast('&#127861; Don ' + currentId + ' da gui Bartender!');
+            buildOnlineModal(o);
+        } else {
+            alert('Loi khi xac nhan don tren server!');
+        }
+    }).catch(function(err) {
+        console.error(err);
+        alert('Loi ket noi!');
+    });
 }
 
 function createDelivery() {

@@ -3,9 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/admin/admin_dashboard.css</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/admin_dashboard.jsp</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/sidebar.jsp</file>
+            <file>file:/C:/Users/ADMIN/OneDrive/Documents/Project/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/CashierPOSServlet.java</file>
+            <file>file:/C:/Users/ADMIN/OneDrive/Documents/Project/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/CashierDashboardServlet.java</file>
+            <file>file:/C:/Users/ADMIN/OneDrive/Documents/Project/project_basaltHouse_G3/basaltHouseSystem/web/views/Cashier/CashierDashboard.jsp</file>
+            <file>file:/C:/Users/ADMIN/OneDrive/Documents/Project/project_basaltHouse_G3/basaltHouseSystem/src/java/config/app.properties</file>
+            <file>file:/C:/Users/ADMIN/OneDrive/Documents/Project/project_basaltHouse_G3/basaltHouseSystem/web/WEB-INF/web.xml</file>
+            <file>file:/C:/Users/ADMIN/OneDrive/Documents/Project/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/VoucherServlet.java</file>
+            <file>file:/C:/Users/ADMIN/OneDrive/Documents/Project/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/POSOrderServlet.java</file>
         </group>
     </open-files>
 </project-private>

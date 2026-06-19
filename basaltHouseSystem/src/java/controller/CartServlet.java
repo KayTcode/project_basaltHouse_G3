@@ -24,6 +24,10 @@ public class CartServlet extends HttpServlet {
             throws ServletException, IOException {
         
         String action = request.getParameter("action");
+        if ("checkout-form".equals(action)) {
+            handleCheckoutForm(request, response);
+            return;
+        }
         if (action != null) {
             handleCartAction(request, response, action);
             return;
@@ -90,10 +94,12 @@ public class CartServlet extends HttpServlet {
             session.setAttribute("cart", cart);
         }
 
-        String productId = request.getParameter("productId");
+        // cartKey = "productId_sizeName", là key dùng trong Map cart
+        String cartKey = request.getParameter("productId");
 
         switch (action) {
             case "add" -> {
+                String productId  = cartKey; // lúc add, cartKey chứa productId thuần
                 String productName = request.getParameter("productName");
                 String priceStr   = request.getParameter("price");
                 String sizeIdStr  = request.getParameter("sizeId");
@@ -129,21 +135,16 @@ public class CartServlet extends HttpServlet {
                     } catch (Exception ignored) {}
                 }
 
-                
-                String key = productId;
+                // Key = "productId_sizeName" để tách riêng cùng SP khác size
+                String key = productId + "_" + sizeName;
                 CartItem existing = cart.get(key);
                 if (existing == null) {
-                   
                     if (stock > 0) {
-                        cart.put(key, new CartItem(productId, productName, price, 1, sizeName, stock));
+                        CartItem newItem = new CartItem(productId, productName, price, 1, sizeName, stock);
+                        newItem.setCartKey(key);
+                        cart.put(key, newItem);
                     }
                 } else {
-                    
-                    if (!sizeName.isEmpty()) {
-                        existing.setSizeName(sizeName);
-                        existing.setStock(stock);
-                    }
-                   
                     if (existing.getStock() <= 0 || existing.getQuantity() < existing.getStock()) {
                         existing.setQuantity(existing.getQuantity() + 1);
                     }
@@ -172,10 +173,10 @@ public class CartServlet extends HttpServlet {
                     delta = Integer.parseInt(deltaStr);
                 } catch (NumberFormatException ignored) {}
 
-                cartService.updateQuantity(cart, productId, delta);
+                cartService.updateQuantity(cart, cartKey, delta);
             }
             case "remove" -> {
-                cartService.removeItem(cart, productId);
+                cartService.removeItem(cart, cartKey);
             }
             case "clear" -> {
                 cartService.clearCart(cart);
@@ -189,6 +190,46 @@ public class CartServlet extends HttpServlet {
         } else {
             response.sendRedirect(request.getContextPath() + "/Cart");
         }
+    }
+
+    private void handleCheckoutForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        @SuppressWarnings("unchecked")
+        Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
+
+        if (cart == null || cart.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/Cart?error=empty");
+            return;
+        }
+
+        long totalAmount = 0;
+        int  totalQty    = 0;
+        for (CartItem item : cart.values()) {
+            totalAmount += item.getSubtotal();
+            totalQty    += item.getQuantity();
+        }
+
+        // Tính giảm giá nếu có mã
+        String discountCode  = request.getParameter("discountCode");
+        long   discountAmount = 0;
+        if (discountCode != null && !discountCode.isBlank()) {
+            try {
+                java.math.BigDecimal total = new java.math.BigDecimal(totalAmount);
+                services.PromotionService ps = new services.PromotionService();
+                discountAmount = ps.calculateDiscount(discountCode.trim(), total).longValue();
+            } catch (Exception ignored) {}
+        }
+        long finalAmount = Math.max(totalAmount - discountAmount, 0);
+
+        request.setAttribute("totalAmount",    totalAmount);
+        request.setAttribute("discountAmount", discountAmount);
+        request.setAttribute("finalAmount",    finalAmount);
+        request.setAttribute("totalQty",       totalQty);
+        request.setAttribute("discountCode",   discountCode != null ? discountCode : "");
+        request.setAttribute("orderNote",      request.getParameter("orderNote") != null ? request.getParameter("orderNote") : "");
+        request.setAttribute("cartItems",      cart.values());
+        request.getRequestDispatcher("views/Order/Checkout.jsp").forward(request, response);
     }
 
     private void handleCheckout(HttpServletRequest request, HttpServletResponse response)
@@ -214,8 +255,12 @@ public class CartServlet extends HttpServlet {
             }
         }
 
-        String note = request.getParameter("note");
-        String orderCode = cartService.checkout(cart, note, customerIdStr);
+        String orderNote       = request.getParameter("orderNote");    // ghi chú từ Cart.jsp → Orders.Note
+        String deliveryNote    = request.getParameter("deliveryNote"); // ghi chú từ Checkout.jsp → OrderAddresses.Note
+        String discountCode    = request.getParameter("discountCode");
+        String deliveryAddress = request.getParameter("deliveryAddress");
+        String paymentMethod   = request.getParameter("paymentMethod");
+        String orderCode       = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
 
         if (orderCode != null) {
             response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);

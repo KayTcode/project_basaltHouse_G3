@@ -379,29 +379,35 @@ public class OrderDAO extends DBContext {
         try {
             connection.setAutoCommit(false);
 
-            String sqlOrder = "INSERT INTO Orders (CustomerId, DiscountId, OrderType, OrderStatus, PaymentStatus, TotalAmount, DiscountAmount, FinalAmount, "
+            String sqlOrder = "INSERT INTO Orders (CustomerId, OrderAddressId, DiscountId, OrderType, OrderStatus, PaymentStatus, TotalAmount, DiscountAmount, FinalAmount, "
                     + "PaymentMethod, Note, CreatedAt, IsDeleted) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
             st = connection.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
             if (order.getCustomerId() != null) {
                 st.setInt(1, order.getCustomerId());
             } else {
                 st.setNull(1, java.sql.Types.INTEGER);
             }
-            if (order.getDiscountId() != null) {
-                st.setInt(2, order.getDiscountId());
+            if (order.getOrderAddressId() != null) {
+                st.setInt(2, order.getOrderAddressId());
             } else {
                 st.setNull(2, java.sql.Types.INTEGER);
             }
-            st.setString(3, order.getOrderType() != null ? order.getOrderType() : "Offline");
-            st.setString(4, order.getOrderStatus() != null ? order.getOrderStatus() : "Preparing");
-            st.setString(5, order.getPaymentStatus() != null ? order.getPaymentStatus() : "Paid");
-            st.setBigDecimal(6, order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
-            st.setBigDecimal(7, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
-            st.setBigDecimal(8, order.getFinalAmount() != null ? order.getFinalAmount() : BigDecimal.ZERO);
-            st.setString(9, order.getPaymentMethod());
-            st.setString(10, order.getNote());
+            if (order.getDiscountId() != null) {
+                st.setInt(3, order.getDiscountId());
+            } else {
+                st.setNull(3, java.sql.Types.INTEGER);
+            }
+            st.setString(4, order.getOrderType() != null ? order.getOrderType() : "Offline");
+            st.setString(5, order.getOrderStatus() != null ? order.getOrderStatus() : "Preparing");
+            st.setString(6, order.getPaymentStatus() != null ? order.getPaymentStatus() : "Paid");
+            st.setBigDecimal(7, order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+            st.setBigDecimal(8, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
+            st.setBigDecimal(9, order.getFinalAmount() != null ? order.getFinalAmount() : BigDecimal.ZERO);
+            st.setString(10, order.getPaymentMethod());
+            st.setString(11, order.getNote());
             st.executeUpdate();
+
 
             rs = st.getGeneratedKeys();
             if (rs.next()) {

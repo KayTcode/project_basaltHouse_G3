@@ -34,32 +34,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderNew.css?v=4" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderViews.css?v=4" rel="stylesheet">
-    <style>
-        .history-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
-        .order-card.completed {
-            border: 1px solid #d1d5db;
-            background: #fff;
-        }
-        .order-card.completed .card-top {
-            background: #f3f4f6;
-            color: #374151;
-        }
-        .empty-history {
-            grid-column: 1 / -1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 0;
-            color: #9ca3af;
-            font-size: 16px;
-        }
-    </style>
+   
 </head>
 <body>
 
@@ -70,10 +45,10 @@
         <div class="logo-text">Basalt<span>House Coffee</span></div>
     </div>
     <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/views/Bartender/BartenderViews.jsp" class="nav-item">
+        <a href="${pageContext.request.contextPath}/Bartender" class="nav-item">
             <span class="nav-icon material-symbols-outlined">view_kanban</span>Prep Board
         </a>
-        <a href="${pageContext.request.contextPath}/views/Bartender/BartenderHistory.jsp" class="nav-item active">
+        <a href="${pageContext.request.contextPath}/BartenderHistory" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">history</span>History
         </a>
         <a href="#" class="nav-item">
@@ -170,7 +145,7 @@
             </div>
         <% } %>
     </div>
-</div><!-- /content-area -->
+</div>
 
 </body>
 </html>

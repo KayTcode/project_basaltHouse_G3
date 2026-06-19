@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import services.PromotionService;
 
-// Gộp CheckDiscountServlet và CheckMemberServlet làm 1.
 @WebServlet(name = "CheckPromotionServlet", urlPatterns = {"/CheckDiscount", "/CheckMember"})
 public class CheckPromotionServlet extends HttpServlet {
 

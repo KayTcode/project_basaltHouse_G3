@@ -162,15 +162,17 @@ public class OrderDAO extends DBContext {
         }
     }
 
-    // Thêm lấy dữ liệu DiscountAmount, TotalAmount (nếu có) để hiển thị đầy đủ chi tiết đơn hàng ở màn hình modal.
+    
     public List<Order> getAllOrdersWithCustomerName() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, c.FullName "
-                    + "FROM Orders o "
-                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
-                    + "WHERE o.IsDeleted = 0 "
-                    + "ORDER BY o.CreatedAt DESC";
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, tb.TableCode AS TableName, o.Note, c.FullName " +
+                         "FROM Orders o " +
+                         "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId " +
+                         "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId " +
+                         "LEFT JOIN Tables tb ON ts.TableId = tb.TableId " +
+                         "WHERE o.IsDeleted = 0 " +
+                         "ORDER BY o.CreatedAt DESC";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -188,6 +190,8 @@ public class OrderDAO extends DBContext {
                 String cName = rs.getString("FullName");
                 o.setCustomerName(cName != null ? cName : "Walk-in");
                 o.setPaymentMethod(rs.getString("PaymentMethod"));
+                o.setTableName(rs.getString("TableName"));
+                o.setNote(rs.getString("Note"));
                 list.add(o);
             }
         } catch (Exception e) {
@@ -310,11 +314,13 @@ public class OrderDAO extends DBContext {
     public List<Order> getBartenderOrders() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, c.FullName "
-                    + "FROM Orders o "
-                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
-                    + "WHERE o.IsDeleted = 0 AND o.OrderStatus IN ('Preparing', 'In_Progress', 'Ready') "
-                    + "ORDER BY CASE o.OrderStatus WHEN 'Preparing' THEN 1 WHEN 'In_Progress' THEN 2 WHEN 'Ready' THEN 3 ELSE 4 END, o.CreatedAt ASC";
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, tb.TableCode AS TableName, o.Note, c.FullName " +
+                         "FROM Orders o " +
+                         "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId " +
+                         "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId " +
+                         "LEFT JOIN Tables tb ON ts.TableId = tb.TableId " +
+                         "WHERE o.IsDeleted = 0 AND o.OrderStatus IN ('Preparing', 'In_Progress', 'Ready') " +
+                         "ORDER BY CASE o.OrderStatus WHEN 'Preparing' THEN 1 WHEN 'In_Progress' THEN 2 WHEN 'Ready' THEN 3 ELSE 4 END, o.CreatedAt ASC";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -328,6 +334,8 @@ public class OrderDAO extends DBContext {
                 }
                 String cName = rs.getString("FullName");
                 o.setCustomerName(cName != null ? cName : "Walk-in");
+                o.setTableName(rs.getString("TableName"));
+                o.setNote(rs.getString("Note"));
                 list.add(o);
             }
         } catch (Exception e) {
@@ -335,6 +343,7 @@ public class OrderDAO extends DBContext {
         }
         return list;
     }
+
 
     public List<Order> getCompletedOrders() {
         List<Order> list = new ArrayList<>();

@@ -76,6 +76,10 @@
         <servlet-name>AdminDashboardServlet</servlet-name>
         <servlet-class>controller.AdminDashboardServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>AdminAccountServlet</servlet-name>
+        <servlet-class>controller.AdminAccountServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
@@ -167,6 +171,10 @@
     <servlet-mapping>
         <servlet-name>AdminDashboardServlet</servlet-name>
         <url-pattern>/admin/dashboard</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminAccountServlet</servlet-name>
+        <url-pattern>/admin/accounts</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

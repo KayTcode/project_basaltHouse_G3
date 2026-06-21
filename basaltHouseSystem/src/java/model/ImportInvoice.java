@@ -49,6 +49,21 @@ public class ImportInvoice {
         this.isDeleted = isDeleted;
     }
 
+    public ImportInvoice(int importId, String importCode, int supplierId, String status, LocalDateTime orderedDate, LocalDateTime expectedDate, LocalDateTime receivedDate, String supplierInvoiceCode, BigDecimal totalOrderedAmount, BigDecimal totalReceivedAmount, String note, String rejectReason) {
+        this.importId = importId;
+        this.importCode = importCode;
+        this.supplierId = supplierId;
+        this.status = status;
+        this.orderedDate = orderedDate;
+        this.expectedDate = expectedDate;
+        this.receivedDate = receivedDate;
+        this.supplierInvoiceCode = supplierInvoiceCode;
+        this.totalOrderedAmount = totalOrderedAmount;
+        this.totalReceivedAmount = totalReceivedAmount;
+        this.note = note;
+        this.rejectReason = rejectReason;
+    }
+
     public int getImportId() {
         return importId;
     }

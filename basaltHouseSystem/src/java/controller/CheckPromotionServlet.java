@@ -8,21 +8,21 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import services.PromotionService;
 
-@WebServlet(name = "CheckPromotionServlet", urlPatterns = {"/CheckDiscount", "/CheckMember"})
+@WebServlet(name = "CheckPromotionServlet", urlPatterns = {"/CheckPromotion"})
 public class CheckPromotionServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
-        String path = request.getServletPath();
+        String action = request.getParameter("action");
         PromotionService promotionService = new PromotionService();
         String json = "";
 
-        if ("/CheckDiscount".equals(path)) {
+        if ("discount".equals(action)) {
             String code = request.getParameter("code");
             json = promotionService.checkDiscount(code);
-        } else if ("/CheckMember".equals(path)) {
+        } else if ("member".equals(action)) {
             String phone = request.getParameter("phone");
             json = promotionService.checkMember(phone);
         }

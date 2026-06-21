@@ -1,4 +1,3 @@
-<%-- CashierCreateOrder.jsp - Tao don hang offline + Thanh toan --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page import="services.StockService" %>
@@ -121,7 +120,7 @@
                     <div class="menu-card" data-cat="cat-${p.categoryId}" data-name="${p.productName}" data-stock="${maxStockMap[p.productId] != null ? maxStockMap[p.productId] : 0}">
                         <div class="menu-card-img" style="background:linear-gradient(135deg,#d4a96a,#8b5e3c); display: flex; align-items: center; justify-content: center; overflow: hidden;">
                             <c:if test="${not empty p.imageUrl}">
-                                <img src="${pageContext.request.contextPath}${p.imageUrl}" alt="${p.productName}" style="width:100%;height:100%;object-fit:cover;">
+                                <img src="${p.imageUrl.startsWith('http') ? p.imageUrl : pageContext.request.contextPath.concat(p.imageUrl)}" alt="${p.productName}" style="width:100%;height:100%;object-fit:cover;">
                             </c:if>
                             <c:if test="${empty p.imageUrl}">
                                 <span style="font-size: 24px;">&#9749;</span>
@@ -578,7 +577,11 @@ function addItem(name, price) {
         var cardEl = document.getElementById('sz-' + s);
         
         if (!hasRecipe) {
-            cardEl.style.display = 'none';
+            cardEl.style.display = '';
+            stockEl.textContent = 'Khong co size nay';
+            stockEl.style.color = '#9ca3af';
+            cardEl.style.opacity = '0.4';
+            cardEl.style.pointerEvents = 'none';
         } else {
             cardEl.style.display = '';
             if (cups > 0) {
@@ -1111,11 +1114,7 @@ function submitPOSOrder(isNewOrder) {
         if (response.ok) {
             showToast("Tao don thanh cong!");
             closeModal('billModal');
-            if (isNewOrder) {
-                setTimeout(function() { window.location.reload(); }, 600);
-            } else {
-                resetAll();
-            }
+            setTimeout(function() { window.location.reload(); }, 600);
         } else {
             response.text().then(function(text) {
                 alert("Lỗi Backend: " + text);

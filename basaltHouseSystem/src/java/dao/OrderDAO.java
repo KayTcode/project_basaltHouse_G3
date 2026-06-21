@@ -9,7 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import model.Order;
 import model.OrderDetail;
 
@@ -605,5 +607,68 @@ public class OrderDAO extends DBContext {
             System.err.println("Error getCustomerIdByAccountId: " + e.getMessage());
         }
         return -1;
+    }
+    public Map<String, Object> getCashierDashboard() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("todayRevenue", BigDecimal.ZERO);
+        stats.put("todayOrders", 0);
+        stats.put("pendingOrders", 0);
+        stats.put("newCustomers", 0);
+
+        try {
+            // Doanh thu hom nay
+            String sqlRevenue = """
+                    SELECT SUM(FinalAmount) AS Revenue 
+                    FROM Orders 
+                    WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                                """;
+            PreparedStatement st1 = connection.prepareStatement(sqlRevenue);
+            ResultSet rs1 = st1.executeQuery();
+            if (rs1.next()) {
+                BigDecimal rev = rs1.getBigDecimal("Revenue");
+                if (rev != null) stats.put("todayRevenue", rev);
+            }
+
+            // Don hang hom nay
+            String sqlOrders = """
+                 SELECT COUNT(OrderId) AS OrdersCount 
+                 FROM Orders 
+                 WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                               """;
+            PreparedStatement st2 = connection.prepareStatement(sqlOrders);
+            ResultSet rs2 = st2.executeQuery();
+            if (rs2.next()) {
+                stats.put("todayOrders", rs2.getInt("OrdersCount"));
+            }
+
+            // Don cho xu ly (Pending / Preparing) hom nay
+            String sqlPending = """
+            SELECT COUNT(OrderId) AS PendingCount 
+            FROM Orders 
+            WHERE OrderStatus IN ('Pending', 'Preparing') 
+            AND CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                                """;
+            PreparedStatement st3 = connection.prepareStatement(sqlPending);
+            ResultSet rs3 = st3.executeQuery();
+            if (rs3.next()) {
+                stats.put("pendingOrders", rs3.getInt("PendingCount"));
+            }
+
+            // Khach hang moi hom nay
+            String sqlCust = """
+            SELECT COUNT(CustomerId) AS CustCount 
+            FROM Customers 
+            WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                             """;
+            PreparedStatement st4 = connection.prepareStatement(sqlCust);
+            ResultSet rs4 = st4.executeQuery();
+            if (rs4.next()) {
+                stats.put("newCustomers", rs4.getInt("CustCount"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stats;
     }
 }

@@ -31,6 +31,9 @@ public class POSOrderServlet extends HttpServlet {
                 break;
                 
             case "/DashBoard":
+                dao.OrderDAO orderDAO = new dao.OrderDAO();
+                java.util.Map<String, Object> stats = orderDAO.getCashierDashboard();
+                request.setAttribute("dashboardStats", stats);
                 request.getRequestDispatcher("/views/Cashier/CashierDashboard.jsp").forward(request, response);
                 break;
                 

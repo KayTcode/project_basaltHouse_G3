@@ -17,8 +17,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Thu Ngân | Coffee House</title>
-    <meta name="description" content="Màn hình Dashboard Thu Ngân - Coffee House POS">
+    <title>Dashboard - Thu Ngân | Basalt House</title>
+    <meta name="description" content="Màn hình Dashboard Thu Ngân - Basalt House POS">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=2" rel="stylesheet">
@@ -93,23 +93,19 @@
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Doanh thu hôm nay</div>
-            <div class="stat-value">0 đ</div>
-            <div class="stat-change neutral">Đang cập nhật...</div>
+            <div class="stat-value"><fmt:formatNumber value="${dashboardStats.todayRevenue}" type="number" maxFractionDigits="0"/> đ</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Đơn hàng hôm nay</div>
-            <div class="stat-value">0</div>
-            <div class="stat-change neutral">Đang cập nhật...</div>
+            <div class="stat-value">${dashboardStats.todayOrders}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Đơn chờ xử lý</div>
-            <div class="stat-value">0</div>
-            <div class="stat-change neutral">Đang cập nhật...</div>
+            <div class="stat-value">${dashboardStats.pendingOrders}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Khách hàng mới</div>
-            <div class="stat-value">0</div>
-            <div class="stat-change neutral">Đang cập nhật...</div>
+            <div class="stat-value">${dashboardStats.newCustomers}</div>
         </div>
     </div>
 

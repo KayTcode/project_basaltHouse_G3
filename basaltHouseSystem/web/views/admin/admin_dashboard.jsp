@@ -14,11 +14,11 @@
         <header class="top-header">
             <div class="logo">Basalt <span>House</span></div>
             <div class="header-buttons">
-                <!-- Nút đã bỏ -->
             </div>
         </header>
 
         <div class="app-container">
+            
             <jsp:include page="sidebar.jsp" />
 
             <main class="main-content">

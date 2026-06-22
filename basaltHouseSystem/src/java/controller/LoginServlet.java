@@ -160,20 +160,8 @@ public class LoginServlet extends HttpServlet {
     private String determineRedirectUrl(HttpServletRequest request, String roleName) {
         String contextPath = request.getContextPath();
         if (roleName == null) {
-            return contextPath + "/home";
+            return contextPath + "/login";
         }
-        switch (roleName.trim().toLowerCase()) {
-            case "admin":
-                return contextPath + "/admin/dashboard";
-            case "staff":
-                return contextPath + "/staff";
-            case "shipper":
-                return contextPath + "/shipper/dashboard";
-            case "cashier":
-                return contextPath + "/cashier/dashbroad";
-            case "customer":
-            default:
-                return contextPath + "/home";
-        }
+        return contextPath + "/home";
     }
 }

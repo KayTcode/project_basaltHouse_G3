@@ -67,7 +67,6 @@ public class CategorieServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        CategoryDAO cateDAO = new CategoryDAO();
         List<Product> product = new ArrayList<>();
         int categoryId = 1;
         String categoryParam = request.getParameter("category");

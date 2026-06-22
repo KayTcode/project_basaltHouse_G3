@@ -1,4 +1,3 @@
-<%-- CashierCreateOrder.jsp - Tao don hang offline + Thanh toan --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page import="services.StockService" %>
@@ -20,6 +19,19 @@
     CategoryDAO cDao = new CategoryDAO();
     List<Category> categoryList = cDao.getAllCategories();
     request.setAttribute("categoryList", categoryList);
+
+    // Pre-calculate max stock for initial display
+    StockService ssInit = new StockService();
+    HashMap<Product, HashMap<String, Integer>> stockMapInit = ssInit.calculateProduct();
+    HashMap<Integer, Integer> maxStockMap = new HashMap<>();
+    for(Map.Entry<Product, HashMap<String, Integer>> entry : stockMapInit.entrySet()) {
+        int max = 0;
+        for(Integer val : entry.getValue().values()) {
+            if(val > max) max = val;
+        }
+        maxStockMap.put(entry.getKey().getProductId(), max);
+    }
+    request.setAttribute("maxStockMap", maxStockMap);
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -41,13 +53,13 @@
         <div class="logo-text">Basalt<span>House Coffee</span></div>
     </div>
     <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/views/Cashier/CashierDashboard.jsp" class="nav-item">
+        <a href="${pageContext.request.contextPath}/DashBoard" class="nav-item">
             <span class="nav-icon material-symbols-outlined">dashboard</span>Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/views/Cashier/OrderViews.jsp" class="nav-item">
+        <a href="${pageContext.request.contextPath}/OrderView" class="nav-item">
             <span class="nav-icon material-symbols-outlined">receipt_long</span>Orders
         </a>
-        <a href="${pageContext.request.contextPath}/views/Cashier/POSOrders.jsp" class="nav-item active">
+        <a href="${pageContext.request.contextPath}/PosOrder" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>POS Order
         </a>
         <a href="#" class="nav-item"><span class="nav-icon material-symbols-outlined">bar_chart</span>Reports</a>
@@ -105,10 +117,10 @@
         <div class="co-menu">
             <div class="menu-grid" id="menuGrid">
                 <c:forEach items="${productList}" var="p">
-                    <div class="menu-card" data-cat="cat-${p.categoryId}" data-name="${p.productName}" data-stock="99">
+                    <div class="menu-card" data-cat="cat-${p.categoryId}" data-name="${p.productName}" data-stock="${maxStockMap[p.productId] != null ? maxStockMap[p.productId] : 0}">
                         <div class="menu-card-img" style="background:linear-gradient(135deg,#d4a96a,#8b5e3c); display: flex; align-items: center; justify-content: center; overflow: hidden;">
                             <c:if test="${not empty p.imageUrl}">
-                                <img src="${pageContext.request.contextPath}${p.imageUrl}" alt="${p.productName}" style="width:100%;height:100%;object-fit:cover;">
+                                <img src="${p.imageUrl.startsWith('http') ? p.imageUrl : pageContext.request.contextPath.concat(p.imageUrl)}" alt="${p.productName}" style="width:100%;height:100%;object-fit:cover;">
                             </c:if>
                             <c:if test="${empty p.imageUrl}">
                                 <span style="font-size: 24px;">&#9749;</span>
@@ -366,6 +378,7 @@ console.log("DB Loaded Stock:", PRODUCT_STOCK);
 ============================================================ */
 var cart = [];
 var selectedTable  = null;
+var selectedTableId = null;
 var subtotalVal    = 0;
 var couponDiscount = 0;   // percentage from coupon code
 var activeCouponCode = '';
@@ -514,34 +527,8 @@ function switchInvTab(tab, btn) {
     renderInventoryModal();
 }
 
-/* Init inventory warnings on page load */
 renderInventoryWarning();
 
-var VALID_CODES = {
-    'COFFEE20': 20000,
-    'BASALT10': 10000,
-    'WELCOME':  15000,
-    'SAVE30':   30000
-};
-
-/* Fake membership DB (simulate lookup by phone) */
-var MEMBERS = {
-    '0901234567': { name: 'Nguyen Van A', tier: 'gold',    pct: 10, points: 1250 },
-    '0912345678': { name: 'Tran Thi B',   tier: 'silver',  pct: 5,  points: 430  },
-    '0923456789': { name: 'Le Van C',     tier: 'diamond', pct: 15, points: 5800 },
-    '0934567890': { name: 'Pham Thi D',   tier: 'none',    pct: 0,  points: 50   }
-};
-
-var TIER_INFO = {
-    none:    { label: 'Khach thuong',  icon: '&#128100;', disc: '0%' },
-    silver:  { label: 'Silver',        icon: '&#129752;', disc: '-5%' },
-    gold:    { label: 'Gold',          icon: '&#127941;', disc: '-10%' },
-    diamond: { label: 'Diamond',       icon: '&#128142;', disc: '-15%' }
-};
-
-/* ============================================================
-   CATEGORY FILTER
-============================================================ */
 var activeCat = 'all';
 
 function setCategory(cat, btn) {
@@ -564,11 +551,9 @@ function filterMenu() {
     }
 }
 
-/* ============================================================
-   CART LOGIC
-============================================================ */
-var pendingItem = null;   // {name, basePrice}
-var pendingSize = 'M';    // default size
+
+var pendingItem = null;   
+var pendingSize = 'M';    
 
 var SIZE_MODS = { S: -5000, M: 0, L: 10000 };
 var SIZE_LABELS = { S: 'Nho', M: 'Vua', L: 'Lon' };
@@ -592,7 +577,11 @@ function addItem(name, price) {
         var cardEl = document.getElementById('sz-' + s);
         
         if (!hasRecipe) {
-            cardEl.style.display = 'none';
+            cardEl.style.display = '';
+            stockEl.textContent = 'Khong co size nay';
+            stockEl.style.color = '#9ca3af';
+            cardEl.style.opacity = '0.4';
+            cardEl.style.pointerEvents = 'none';
         } else {
             cardEl.style.display = '';
             if (cups > 0) {
@@ -694,8 +683,7 @@ function removeItem(name) {
 function fmt(n) { return n.toLocaleString('vi-VN') + ' d'; }
 
 function renderCart() {
-    var panel    = document.getElementById('orderPanel');
-    var emptyMsg = document.getElementById('emptyMsg');
+    var panel = document.getElementById('orderPanel');
 
     // Recalc subtotal
     subtotalVal = 0;
@@ -716,12 +704,13 @@ function renderCart() {
     document.getElementById('discountAmt').textContent = discountVal > 0 ? '-' + fmt(discountVal) : '0 d';
     document.getElementById('grandTotal').textContent  = fmt(grandTotalVal);
 
-    if (cart.length === 0) {
-        panel.innerHTML = '';
-        panel.appendChild(emptyMsg);
-        emptyMsg.style.display = 'block';
-        return;
-    }
+      if (cart.length === 0) {
+          panel.innerHTML = '<div class="empty-cart" id="emptyMsg" style="display:block;">' +
+                            '<div class="ec-icon">&#128722;</div>' +
+                            '<div class="ec-text">Chua co mon nao</div>' +
+                            '</div>';
+          return;
+      }
 
     panel.innerHTML = '';
     for (var j = 0; j < cart.length; j++) {
@@ -867,6 +856,7 @@ function closeTableIfOverlay(e) {
 window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'TABLE_SELECTED') {
         selectedTable = e.data.tableCode;
+        selectedTableId = e.data.tableId;
         var btn = document.getElementById('tableBtn');
         btn.textContent = e.data.tableCode + (e.data.area ? ' \u2014 ' + e.data.area : '');
         btn.style.background = '#2c1a0e';
@@ -1067,6 +1057,7 @@ function newOrder() {
     discountVal    = 0;
     activeMember   = null;
     selectedTable  = null;
+    selectedTableId = null;
     document.getElementById('tableBtn').textContent = 'Chon ban';
     document.getElementById('discountCode').value  = '';
     document.getElementById('discMsg').textContent  = '';
@@ -1081,10 +1072,11 @@ function newOrder() {
    MODAL HELPERS
 ============================================================ */
 function submitPOSOrder(isNewOrder) {
-    if (cart.length === 0) {
-        showToast("Gio hang trong!");
-        return;
-    }
+    try {
+        if (cart.length === 0) {
+            showToast("Gio hang trong!");
+            return;
+        }
     var cartData = cart.map(function(item) {
         return item.name + "," + item.size + "," + item.qty + "," + item.price;
     }).join("|");
@@ -1101,6 +1093,9 @@ function submitPOSOrder(isNewOrder) {
     formData.append("finalAmount", grandTotalVal);
     formData.append("paymentMethod", finalPayMethod);
     formData.append("tableName", selectedTable || 'Walk-in');
+    if (selectedTableId) {
+        formData.append("tableId", selectedTableId);
+    }
     formData.append("note", noteVal);
     
     if (activeMember && activeMember.id) {
@@ -1110,7 +1105,7 @@ function submitPOSOrder(isNewOrder) {
         formData.append("discountCode", activeCouponCode);
     }
     
-    fetch('${pageContext.request.contextPath}/POSOrder', {
+    fetch('${pageContext.request.contextPath}/PosOrder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()
@@ -1119,19 +1114,41 @@ function submitPOSOrder(isNewOrder) {
         if (response.ok) {
             showToast("Tao don thanh cong!");
             closeModal('billModal');
-            if (isNewOrder) {
-                setTimeout(function() { window.location.reload(); }, 600);
-            } else {
-                resetAll();
-            }
+            setTimeout(function() { window.location.reload(); }, 600);
         } else {
-            showToast("Loi tao don! Vui long thu lai.");
+            response.text().then(function(text) {
+                alert("Lỗi Backend: " + text);
+            });
         }
     })
     .catch(function(err) {
         showToast("Loi ket noi!");
+        alert("Lỗi mạng / Lỗi gọi API: " + err);
         console.error(err);
     });
+    } catch(err) {
+        alert("Lỗi kịch bản Javascript: " + err.message + "\nDòng: " + err.lineNumber);
+        console.error(err);
+    }
+}
+
+function resetAll() {
+    cart = [];
+    selectedTable = null;
+    selectedTableId = null;
+    couponDiscount = 0;
+    activeCouponCode = '';
+    activeMember = null;
+    
+    document.getElementById('tableBtn').textContent = 'Chon ban';
+    document.getElementById('tableBtn').style = '';
+    document.getElementById('memberPhone').value = '';
+    document.getElementById('memResult').classList.remove('show');
+    document.getElementById('discountCode').value = '';
+    document.getElementById('discMsg').textContent = '';
+    if(document.getElementById('orderNote')) document.getElementById('orderNote').value = '';
+    
+    renderCart();
 }
 
 function closeModal(id) {

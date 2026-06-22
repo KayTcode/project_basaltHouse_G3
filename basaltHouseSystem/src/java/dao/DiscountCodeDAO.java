@@ -14,11 +14,13 @@ public class DiscountCodeDAO extends DBContext {
     public DiscountCode checkDiscountCode(String code) {
         DiscountCode dto = null;
         try {
-            String sql = "SELECT DiscountId, Code, DiscountPercent, DiscountAmount "
-                    + "FROM DiscountCodes "
-                    + "WHERE Code = ? AND IsActive = 1 AND IsDeleted = 0 "
-                    + "AND (StartDate IS NULL OR StartDate <= GETDATE()) "
-                    + "AND (EndDate IS NULL OR EndDate >= GETDATE())";
+            String sql = """
+                         SELECT DiscountId, Code, DiscountPercent, DiscountAmount 
+                         FROM DiscountCodes 
+                         WHERE Code = ? AND IsActive = 1 AND IsDeleted = 0 
+                         AND (StartDate IS NULL OR StartDate <= GETDATE())
+                         AND (EndDate IS NULL OR EndDate >= GETDATE())
+                         """;
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, code);
             ResultSet rs = st.executeQuery();
@@ -38,11 +40,13 @@ public class DiscountCodeDAO extends DBContext {
     public Customer getCustomerMembership(String phone) {
         Customer dto = null;
         try {
-            String sql = "SELECT c.CustomerId, c.FullName, r.RankName, r.DiscountValue "
-                    + "FROM Customers c "
-                    + "LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId "
-                    + "LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId "
-                    + "WHERE c.Phone = ? AND c.IsDeleted = 0";
+            String sql = """
+                      SELECT c.CustomerId, c.FullName, r.RankName, r.DiscountValue 
+                      FROM Customers c 
+                      LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
+                      LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
+                      WHERE c.Phone = ? AND c.IsDeleted = 0
+                         """;
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, phone);
             ResultSet rs = st.executeQuery();

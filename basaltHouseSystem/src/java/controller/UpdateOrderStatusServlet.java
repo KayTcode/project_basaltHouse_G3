@@ -9,9 +9,24 @@ import java.io.IOException;
 import services.OrderService;
 
 
-@WebServlet(name = "UpdateOrderStatusServlet", urlPatterns = {"/UpdateOrderStatus"})
+@WebServlet(name = "UpdateOrderStatusServlet", urlPatterns = {"/Bartender", "/BartenderHistory"})
 public class UpdateOrderStatusServlet extends HttpServlet {
-
+    
+   @Override 
+protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+    String action = request.getServletPath();
+    switch(action){
+        case"/Bartender":
+        request.getRequestDispatcher("/views/Bartender/BartenderViews.jsp").forward(request, response);
+        break;
+        case"/BartenderHistory":
+       request.getRequestDispatcher("/views/Bartender/BartenderHistory.jsp").forward(request, response);
+        break;
+    }
+            
+    
+}
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

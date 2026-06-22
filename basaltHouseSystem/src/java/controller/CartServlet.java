@@ -1,6 +1,7 @@
 package controller;
 
 import dao.SizeDAO;
+import dto.UserLoginDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,14 +23,17 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String action = request.getParameter("action");
+        if ("checkout-form".equals(action)) {
+            handleCheckoutForm(request, response);
+            return;
+        }
         if (action != null) {
             handleCartAction(request, response, action);
             return;
         }
 
-        
         HttpSession session = request.getSession();
         @SuppressWarnings("unchecked")
         Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
@@ -38,7 +42,6 @@ public class CartServlet extends HttpServlet {
             session.setAttribute("cart", cart);
         }
 
-        
         int totalAmount = 0;
         int totalQty = 0;
         for (CartItem item : cart.values()) {
@@ -46,8 +49,7 @@ public class CartServlet extends HttpServlet {
             totalQty += item.getQuantity();
         }
 
-        // ── Tính stock hiện tại theo từng productId-size ──
-
+        // ── Tính stock hiện tại theo từng productId-size ──────────────────
         try {
             StockService stockSvc = new StockService();
             HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
@@ -57,7 +59,6 @@ public class CartServlet extends HttpServlet {
             }
             request.setAttribute("stockMap", stockMap);
         } catch (Exception ignored) {
-           
         }
 
         request.setAttribute("cartItems", cart.values());
@@ -70,7 +71,7 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String action = request.getParameter("action");
         if ("checkout".equals(action)) {
             handleCheckout(request, response);
@@ -90,19 +91,21 @@ public class CartServlet extends HttpServlet {
             session.setAttribute("cart", cart);
         }
 
-        String productId = request.getParameter("productId");
+        // cartKey = "productId_sizeName", là key dùng trong Map cart
+        String cartKey = request.getParameter("productId");
 
         switch (action) {
             case "add" -> {
+                String productId  = cartKey; // lúc add, cartKey chứa productId thuần
                 String productName = request.getParameter("productName");
-                String priceStr   = request.getParameter("price");
-                String sizeIdStr  = request.getParameter("sizeId");
+                String priceStr = request.getParameter("price");
+                String sizeIdStr = request.getParameter("sizeId");
                 int price = 0;
                 try {
                     price = new java.math.BigDecimal(priceStr.trim()).intValue();
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
 
-                
                 String sizeName = "";
                 if (sizeIdStr != null && !sizeIdStr.isBlank()) {
                     try {
@@ -110,10 +113,10 @@ public class CartServlet extends HttpServlet {
                         SizeDAO sizeDAO = new SizeDAO();
                         HashMap<Integer, String> sizeMap = sizeDAO.getSize();
                         sizeName = sizeMap.getOrDefault(sizeId, "");
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
 
-               
                 int stock = 0;
                 if (!sizeName.isEmpty()) {
                     try {
@@ -126,24 +129,23 @@ public class CartServlet extends HttpServlet {
                                 break;
                             }
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
 
-                
                 String key = productId;
                 CartItem existing = cart.get(key);
                 if (existing == null) {
-                   
                     if (stock > 0) {
-                        cart.put(key, new CartItem(productId, productName, price, 1, sizeName, stock));
+                        CartItem newItem = new CartItem(productId, productName, price, 1, sizeName, stock);
+                        newItem.setCartKey(key);
+                        cart.put(key, newItem);
                     }
                 } else {
-                    
                     if (!sizeName.isEmpty()) {
                         existing.setSizeName(sizeName);
                         existing.setStock(stock);
                     }
-                   
                     if (existing.getStock() <= 0 || existing.getQuantity() < existing.getStock()) {
                         existing.setQuantity(existing.getQuantity() + 1);
                     }
@@ -155,7 +157,6 @@ public class CartServlet extends HttpServlet {
                     return;
                 }
 
-                
                 String referer = request.getHeader("referer");
                 if (referer != null && !referer.isEmpty()) {
                     String sep = referer.contains("?") ? "&" : "?";
@@ -170,25 +171,57 @@ public class CartServlet extends HttpServlet {
                 int delta = 1;
                 try {
                     delta = Integer.parseInt(deltaStr);
-                } catch (NumberFormatException ignored) {}
-
+                } catch (NumberFormatException ignored) {
+                }
                 cartService.updateQuantity(cart, productId, delta);
             }
-            case "remove" -> {
+            case "remove" ->
                 cartService.removeItem(cart, productId);
-            }
-            case "clear" -> {
+            case "clear" ->
                 cartService.clearCart(cart);
-            }
         }
 
-        
-        String referer = request.getHeader("referer");
-        if (referer != null && referer.contains("/Cart")) {
-            response.sendRedirect(request.getContextPath() + "/Cart");
-        } else {
-            response.sendRedirect(request.getContextPath() + "/Cart");
+        response.sendRedirect(request.getContextPath() + "/Cart");
+    }
+
+    private void handleCheckoutForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        @SuppressWarnings("unchecked")
+        Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
+
+        if (cart == null || cart.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/Cart?error=empty");
+            return;
         }
+
+        long totalAmount = 0;
+        int  totalQty    = 0;
+        for (CartItem item : cart.values()) {
+            totalAmount += item.getSubtotal();
+            totalQty    += item.getQuantity();
+        }
+
+        // Tính giảm giá nếu có mã
+        String discountCode  = request.getParameter("discountCode");
+        long   discountAmount = 0;
+        if (discountCode != null && !discountCode.isBlank()) {
+            try {
+                java.math.BigDecimal total = new java.math.BigDecimal(totalAmount);
+                services.PromotionService ps = new services.PromotionService();
+                discountAmount = ps.calculateDiscount(discountCode.trim(), total).longValue();
+            } catch (Exception ignored) {}
+        }
+        long finalAmount = Math.max(totalAmount - discountAmount, 0);
+
+        request.setAttribute("totalAmount",    totalAmount);
+        request.setAttribute("discountAmount", discountAmount);
+        request.setAttribute("finalAmount",    finalAmount);
+        request.setAttribute("totalQty",       totalQty);
+        request.setAttribute("discountCode",   discountCode != null ? discountCode : "");
+        request.setAttribute("orderNote",      request.getParameter("orderNote") != null ? request.getParameter("orderNote") : "");
+        request.setAttribute("cartItems",      cart.values());
+        request.getRequestDispatcher("views/Order/Checkout.jsp").forward(request, response);
     }
 
     private void handleCheckout(HttpServletRequest request, HttpServletResponse response)
@@ -202,11 +235,11 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-      
+        // ── Lấy customerId từ session (giữ nguyên logic cũ) ───────────────
         String customerIdStr = null;
         Object currentUser = session.getAttribute("currentUser");
-        if (currentUser instanceof dto.UserLoginDTO) {
-            int accountId = ((dto.UserLoginDTO) currentUser).getAccountId();
+        if (currentUser instanceof UserLoginDTO user) {
+            int accountId = user.getAccountId();
             dao.OrderDAO orderDAO = new dao.OrderDAO();
             int customerId = orderDAO.getCustomerIdByAccountId(accountId);
             if (customerId > 0) {
@@ -215,12 +248,32 @@ public class CartServlet extends HttpServlet {
         }
 
         String note = request.getParameter("note");
-        String orderCode = cartService.checkout(cart, note, customerIdStr);
 
-        if (orderCode != null) {
-            response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);
-        } else {
+        // ── Lấy phương thức thanh toán từ form, mặc định COD ─────────────
+        String paymentMethod = request.getParameter("paymentMethod");
+        if (paymentMethod == null || paymentMethod.isBlank()
+                || (!"COD".equals(paymentMethod) && !"MOMO".equals(paymentMethod))) {
+            paymentMethod = "COD";
+        }
+
+        // ── Tạo đơn hàng trong DB ─────────────────────────────────────────
+        // CartService sẽ KHÔNG clear cart nếu là VNPAY (clear khi confirm)
+        String orderCode = cartService.checkout(cart, note, customerIdStr, paymentMethod);
+
+        if (orderCode == null) {
             response.sendRedirect(request.getContextPath() + "/Cart?error=checkout_failed");
+            return;
+        }
+
+        // ── Phân luồng theo phương thức thanh toán ────────────────────────
+        if ("MOMO".equals(paymentMethod)) {
+            // Lưu orderCode vào session để VnpayPaymentServlet và VnpayReturnServlet dùng
+            session.setAttribute("pendingOrderCode", orderCode);
+            // Redirect sang servlet khởi tạo cổng thanh toán VNPAY
+            response.sendRedirect(request.getContextPath() + "/momo/payment?orderCode=" + orderCode);
+        } else {
+            // COD: cart đã được clear bởi CartService, redirect trang thành công
+            response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);
         }
     }
 }

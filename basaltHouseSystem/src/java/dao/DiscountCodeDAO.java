@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import model.CustomerDiscountCode;
-import model.DiscountCode;
 
 public class DiscountCodeDAO extends DBContext {
 
@@ -113,6 +112,7 @@ public class DiscountCodeDAO extends DBContext {
                                 d.EndDate,
                                 cd.IsUsed,
                                 cd.UsedDate,
+                                cd.[Status],
                                 d.Description,
                                 DATEDIFF(DAY, GETDATE(), d.EndDate) AS DayTime
                          FROM CustomerDiscountCodes cd
@@ -120,6 +120,7 @@ public class DiscountCodeDAO extends DBContext {
                          WHERE d.IsActive = 1
                            AND d.IsDeleted = 0
                            AND cd.AccountId = ?
+                           AND cd.[Status] = 1
                          ORDER BY d.EndDate ASC
                          """;
             PreparedStatement st = connection.prepareStatement(sql);
@@ -138,14 +139,82 @@ public class DiscountCodeDAO extends DBContext {
                         rs.getObject("UsedDate", LocalDateTime.class),
                         rs.getString("Description"),
                         rs.getInt("DayTime"),
-                        rs.getString("Code"));
+                        rs.getString("Code"),
+                        rs.getInt("Status"));
                 list.add(c);
-                return list;
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+        return list;
+    }
+
+    public CustomerDiscountCode getCustomerVoucherByCode(int accountId, String code) {
+        try {
+            String sql = """
+                         SELECT cd.CustomerDiscountId,
+                                cd.AccountId,
+                                d.DiscountId,
+                                d.Code,
+                                d.DiscountAmount,
+                                d.DiscountPercent,
+                                d.StartDate,
+                                d.EndDate,
+                                cd.IsUsed,
+                                cd.UsedDate,
+                                cd.[Status],
+                                d.Description,
+                                DATEDIFF(DAY, GETDATE(), d.EndDate) AS DayTime
+                         FROM CustomerDiscountCodes cd
+                         JOIN DiscountCodes d ON cd.DiscountId = d.DiscountId
+                         WHERE d.IsActive = 1
+                           AND d.IsDeleted = 0
+                           AND cd.AccountId = ?
+                           AND UPPER(d.Code) = UPPER(?)
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setObject(1, accountId);
+            st.setString(2, code);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return new CustomerDiscountCode(
+                        rs.getInt("CustomerDiscountId"),
+                        rs.getInt("AccountId"),
+                        rs.getInt("DiscountId"),
+                        rs.getBigDecimal("DiscountPercent"),
+                        rs.getBigDecimal("DiscountAmount"),
+                        rs.getObject("StartDate", LocalDateTime.class),
+                        rs.getObject("EndDate", LocalDateTime.class),
+                        rs.getBoolean("IsUsed"),
+                        rs.getObject("UsedDate", LocalDateTime.class),
+                        rs.getString("Description"),
+                        rs.getInt("DayTime"),
+                        rs.getString("Code"),
+                        rs.getInt("Status"));
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
         return null;
+    }
+
+    public boolean updateCustomerVoucherStatus(int customerDiscountId, int status) {
+        try {
+            String sql = """
+                         UPDATE CustomerDiscountCodes
+                         SET [Status] = ?
+                         WHERE CustomerDiscountId = ?
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, status);
+            st.setInt(2, customerDiscountId);
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
+        return false;
     }
 
 

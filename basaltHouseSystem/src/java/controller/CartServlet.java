@@ -22,7 +22,7 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String action = request.getParameter("action");
         if ("checkout-form".equals(action)) {
             handleCheckoutForm(request, response);
@@ -33,7 +33,6 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        
         HttpSession session = request.getSession();
         @SuppressWarnings("unchecked")
         Map<String, CartItem> cart = (Map<String, CartItem>) session.getAttribute("cart");
@@ -42,7 +41,6 @@ public class CartServlet extends HttpServlet {
             session.setAttribute("cart", cart);
         }
 
-        
         int totalAmount = 0;
         int totalQty = 0;
         for (CartItem item : cart.values()) {
@@ -51,7 +49,6 @@ public class CartServlet extends HttpServlet {
         }
 
         // ── Tính stock hiện tại theo từng productId-size ──
-
         try {
             StockService stockSvc = new StockService();
             HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
@@ -61,7 +58,7 @@ public class CartServlet extends HttpServlet {
             }
             request.setAttribute("stockMap", stockMap);
         } catch (Exception ignored) {
-           
+
         }
 
         request.setAttribute("cartItems", cart.values());
@@ -74,7 +71,7 @@ public class CartServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String action = request.getParameter("action");
         if ("checkout".equals(action)) {
             handleCheckout(request, response);
@@ -99,16 +96,16 @@ public class CartServlet extends HttpServlet {
 
         switch (action) {
             case "add" -> {
-                String productId  = cartKey; // lúc add, cartKey chứa productId thuần
+                String productId = cartKey; // lúc add, cartKey chứa productId thuần
                 String productName = request.getParameter("productName");
-                String priceStr   = request.getParameter("price");
-                String sizeIdStr  = request.getParameter("sizeId");
+                String priceStr = request.getParameter("price");
+                String sizeIdStr = request.getParameter("sizeId");
                 int price = 0;
                 try {
                     price = new java.math.BigDecimal(priceStr.trim()).intValue();
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
 
-                
                 String sizeName = "";
                 if (sizeIdStr != null && !sizeIdStr.isBlank()) {
                     try {
@@ -116,10 +113,10 @@ public class CartServlet extends HttpServlet {
                         SizeDAO sizeDAO = new SizeDAO();
                         HashMap<Integer, String> sizeMap = sizeDAO.getSize();
                         sizeName = sizeMap.getOrDefault(sizeId, "");
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
 
-               
                 int stock = 0;
                 if (!sizeName.isEmpty()) {
                     try {
@@ -132,7 +129,9 @@ public class CartServlet extends HttpServlet {
                                 break;
                             }
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
 
                 // Key = "productId_sizeName" để tách riêng cùng SP khác size
@@ -156,7 +155,6 @@ public class CartServlet extends HttpServlet {
                     return;
                 }
 
-                
                 String referer = request.getHeader("referer");
                 if (referer != null && !referer.isEmpty()) {
                     String sep = referer.contains("?") ? "&" : "?";
@@ -171,7 +169,8 @@ public class CartServlet extends HttpServlet {
                 int delta = 1;
                 try {
                     delta = Integer.parseInt(deltaStr);
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
 
                 cartService.updateQuantity(cart, cartKey, delta);
             }
@@ -183,7 +182,6 @@ public class CartServlet extends HttpServlet {
             }
         }
 
-        
         String referer = request.getHeader("referer");
         if (referer != null && referer.contains("/Cart")) {
             response.sendRedirect(request.getContextPath() + "/Cart");
@@ -204,31 +202,32 @@ public class CartServlet extends HttpServlet {
         }
 
         long totalAmount = 0;
-        int  totalQty    = 0;
+        int totalQty = 0;
         for (CartItem item : cart.values()) {
             totalAmount += item.getSubtotal();
-            totalQty    += item.getQuantity();
+            totalQty += item.getQuantity();
         }
 
         // Tính giảm giá nếu có mã
-        String discountCode  = request.getParameter("discountCode");
-        long   discountAmount = 0;
+        String discountCode = request.getParameter("discountCode");
+        long discountAmount = 0;
         if (discountCode != null && !discountCode.isBlank()) {
             try {
                 java.math.BigDecimal total = new java.math.BigDecimal(totalAmount);
                 services.PromotionService ps = new services.PromotionService();
                 discountAmount = ps.calculateDiscount(discountCode.trim(), total).longValue();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         long finalAmount = Math.max(totalAmount - discountAmount, 0);
 
-        request.setAttribute("totalAmount",    totalAmount);
+        request.setAttribute("totalAmount", totalAmount);
         request.setAttribute("discountAmount", discountAmount);
-        request.setAttribute("finalAmount",    finalAmount);
-        request.setAttribute("totalQty",       totalQty);
-        request.setAttribute("discountCode",   discountCode != null ? discountCode : "");
-        request.setAttribute("orderNote",      request.getParameter("orderNote") != null ? request.getParameter("orderNote") : "");
-        request.setAttribute("cartItems",      cart.values());
+        request.setAttribute("finalAmount", finalAmount);
+        request.setAttribute("totalQty", totalQty);
+        request.setAttribute("discountCode", discountCode != null ? discountCode : "");
+        request.setAttribute("orderNote", request.getParameter("orderNote") != null ? request.getParameter("orderNote") : "");
+        request.setAttribute("cartItems", cart.values());
         request.getRequestDispatcher("views/Order/Checkout.jsp").forward(request, response);
     }
 
@@ -243,7 +242,6 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-      
         String customerIdStr = null;
         Object currentUser = session.getAttribute("currentUser");
         if (currentUser instanceof dto.UserLoginDTO) {
@@ -255,12 +253,12 @@ public class CartServlet extends HttpServlet {
             }
         }
 
-        String orderNote       = request.getParameter("orderNote");    // ghi chú từ Cart.jsp → Orders.Note
-        String deliveryNote    = request.getParameter("deliveryNote"); // ghi chú từ Checkout.jsp → OrderAddresses.Note
-        String discountCode    = request.getParameter("discountCode");
+        String orderNote = request.getParameter("orderNote");    // ghi chú từ Cart.jsp → Orders.Note
+        String deliveryNote = request.getParameter("deliveryNote"); // ghi chú từ Checkout.jsp → OrderAddresses.Note
+        String discountCode = request.getParameter("discountCode");
         String deliveryAddress = request.getParameter("deliveryAddress");
-        String paymentMethod   = request.getParameter("paymentMethod");
-        String orderCode       = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
+        String paymentMethod = request.getParameter("paymentMethod");
+        String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
 
         if (orderCode != null) {
             response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);

@@ -37,7 +37,7 @@ public class AccountDAO extends DBContext {
         return null;
     }
     
-    public void updatePassword(int accountId ,String passNew){
+    public boolean updatePassword(int accountId ,String passNew){
         try {
             String sql = """
                          UPDATE [dbo].[Accounts]
@@ -50,10 +50,12 @@ public class AccountDAO extends DBContext {
             st.setObject(1, passNew);
             st.setObject(2, accountId);
             st.executeUpdate();
+            return true;
             
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+        return false;
     }
    
 }

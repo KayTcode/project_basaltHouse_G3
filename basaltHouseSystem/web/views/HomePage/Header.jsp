@@ -126,11 +126,17 @@
                                     <span class="material-symbols-outlined">search</span>
                                 </button>
                             </form>
+                            <c:set var="headerCartQty" value="0" />
+                            <c:if test="${not empty sessionScope.cart}">
+                                <c:forEach var="item" items="${sessionScope.cart.values()}">
+                                    <c:set var="headerCartQty" value="${headerCartQty + item.quantity}" />
+                                </c:forEach>
+                            </c:if>
                             <a href="${pageContext.request.contextPath}/Cart"
                                class="btn-nav-icon" title="Giỏ hàng" style="text-decoration:none;position:relative;">
                                 <span class="material-symbols-outlined">shopping_cart</span>
-                                <c:if test="${totalQty > 0}">
-                                    <span class="cart-badge visible" id="navCartBadge">${totalQty}</span>
+                                <c:if test="${headerCartQty > 0}">
+                                    <span class="badge-cart cart-badge visible" id="navCartBadge">${headerCartQty}</span>
                                 </c:if>
                             </a>
                             <%-- ── Khu vực tài khoản: 2 trạng thái ──── --%>

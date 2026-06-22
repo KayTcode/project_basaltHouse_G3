@@ -32,7 +32,7 @@
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                     <div>
                         <div class="page-header-badge">
-                            <span class="material-symbols-outlined" style="font-size:14px">shopping_cart</span>
+                            <span class="material-symbols-outlined page-header-badge-icon">shopping_cart</span>
                             Giỏ hàng
                         </div>
                         <h1>Xác Nhận Đơn Hàng</h1>
@@ -43,10 +43,6 @@
                             <span class="material-symbols-outlined">event</span>
                             <span id="currentDateTime">--</span>
                         </div>
-                        <button class="meta-chip" style="cursor:pointer;border:none;" onclick="window.location = '${pageContext.request.contextPath}/category'">
-                            <span class="material-symbols-outlined">arrow_back</span>
-                            <span>Tiếp tục mua</span>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -58,28 +54,36 @@
                 <c:choose>
                     <c:when test="${param.checkoutSuccess == '1'}">
                         <!-- Success Screen -->
-                        <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-subtle);max-width:500px;margin:40px auto;box-shadow:var(--shadow-sm);">
-                            <span class="material-symbols-outlined" style="font-size:64px;color:#22c55e;margin-bottom:12px;">check_circle</span>
-                            <h3 style="font-family:var(--font-montserrat);font-weight:700;margin-bottom:8px;color:var(--text-dark);">Đặt Hàng Thành Công!</h3>
-                            <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">Đơn hàng của bạn đã được gửi đến nhà hàng. Vui lòng chờ phục vụ.</p>
-                            <div style="background:var(--secondary-bg);border-radius:var(--radius-sm);padding:12px;font-weight:700;color:var(--primary-color);font-family:var(--font-montserrat);margin-bottom:24px;font-size:16px;">
+                        <div class="cart-success-screen" style="text-align:center; padding:60px 20px; background:#fff; border-radius:16px; border:1px solid rgba(0,0,0,0.06); max-width:500px; margin:40px auto; box-shadow:0 8px 24px rgba(0,0,0,0.10); display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                            <span class="material-symbols-outlined cart-success-icon" style="font-size:64px; color:#22c55e; margin-bottom:12px; display:block;">check_circle</span>
+                            <h3 class="cart-success-title" style="font-family:'Montserrat',sans-serif; font-weight:700; margin-bottom:8px; color:#191c1e;">Đặt Hàng Thành Công!</h3>
+                            <p class="cart-success-desc" style="font-size:14px; color:#3d4a3d; margin-bottom:20px;">Đơn hàng của bạn đã được gửi đến nhà hàng. Vui lòng chờ phục vụ.</p>
+                            <div class="cart-success-code" style="background:#f0fdf4; border-radius:8px; padding:12px; font-weight:700; color:#006e2f; font-family:'Montserrat',sans-serif; margin-bottom:24px; font-size:16px;">
                                 Mã đơn hàng: <c:out value="${param.code}"/>
                             </div>
-                            <a href="${pageContext.request.contextPath}/category" class="btn-checkout" style="text-decoration:none;display:inline-flex;width:auto;padding:12px 32px;justify-content:center;align-items:center;margin:0 auto;">
-                                <span class="material-symbols-outlined">storefront</span>Quay lại Thực đơn
-                            </a>
+                            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                                <a href="${pageContext.request.contextPath}/category" 
+                                   style="display:inline-flex;align-items:center;gap:8px;justify-content:center;width:auto;padding:12px 32px;border:none;border-radius:8px;background:#006e2f;color:#fff;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:background .2s;"
+                                   onmouseover="this.style.background='#005321'" onmouseout="this.style.background='#006e2f'">
+                                    <span class="material-symbols-outlined">storefront</span>Quay lại Thực đơn
+                                </a>
+                            </div>
                         </div>
                     </c:when>
                     <c:when test="${empty cartItems}">
                         <!-- Empty State -->
-                        <div style="text-align:center;padding:80px 20px;background:#fff;border-radius:var(--radius-md);border:1px solid var(--border-subtle);max-width:600px;margin:40px auto;box-shadow:var(--shadow-sm);">
-                            <span class="material-symbols-outlined" style="font-size:64px;display:block;margin-bottom:14px;color:#d1d5db;">shopping_cart</span>
-                            <h3 style="font-family:var(--font-montserrat);font-weight:700;margin-bottom:8px;color:var(--text-dark);">Giỏ hàng trống</h3>
-                            <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;">Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
-                            <a class="btn-checkout" style="width:auto;padding:12px 28px;text-decoration:none;display:inline-flex;justify-content:center;align-items:center;margin:0 auto;" href="${pageContext.request.contextPath}/category">
-                                <span class="material-symbols-outlined">storefront</span>
-                                Xem thực đơn
-                            </a>
+                        <div class="cart-empty-screen" style="text-align:center; padding:80px 20px; background:#fff; border-radius:16px; border:1px solid rgba(0,0,0,0.06); max-width:600px; margin:40px auto; box-shadow:0 8px 24px rgba(0,0,0,0.10); display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                            <span class="material-symbols-outlined cart-empty-icon" style="font-size:64px; display:block; margin-bottom:14px; color:#d1d5db;">shopping_cart</span>
+                            <h3 class="cart-empty-title" style="font-family:'Montserrat',sans-serif; font-weight:700; margin-bottom:8px; color:#191c1e;">Giỏ hàng trống</h3>
+                            <p class="cart-empty-desc" style="font-size:14px; color:#3d4a3d; margin-bottom:24px;">Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
+                            <div style="display: flex; justify-content: center; margin-top: 20px;">
+                                <a href="${pageContext.request.contextPath}/category"
+                                   style="display:inline-flex;align-items:center;gap:8px;justify-content:center;width:auto;padding:12px 32px;border:none;border-radius:8px;background:#006e2f;color:#fff;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:background .2s;"
+                                   onmouseover="this.style.background='#005321'" onmouseout="this.style.background='#006e2f'">
+                                    <span class="material-symbols-outlined">storefront</span>
+                                    Xem thực đơn
+                                </a>
+                            </div>
                         </div>
                     </c:when>
                     <c:otherwise>
@@ -138,15 +142,33 @@
                                                             </td>
                                                             <td style="text-align:center">
                                                                 <div class="ct-qty-wrap" style="justify-content:center">
-                                                                    <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.productId}&delta=-1" class="ct-qty-btn" style="text-decoration:none;">−</a>
+                                                                    <%-- Nút trừ: disable khi qty = 1 --%>
+                                                                    <c:choose>
+                                                                        <c:when test="${item.quantity <= 1}">
+                                                                            <span class="ct-qty-btn ct-qty-btn--disabled" title="Số lượng tối thiểu">−</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${empty item.cartKey ? item.productId : item.cartKey}&delta=-1" class="ct-qty-btn" style="text-decoration:none;">−</a>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+
                                                                     <span class="ct-qty-num">${item.quantity}</span>
-                                                                    <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${item.productId}&delta=1" class="ct-qty-btn" style="text-decoration:none;">+</a>
+
+                                                                    <%-- Nút cộng: disable khi qty >= stock --%>
+                                                                    <c:choose>
+                                                                        <c:when test="${item.stock > 0 and item.quantity >= item.stock}">
+                                                                            <span class="ct-qty-btn ct-qty-btn--disabled" title="Đã đạt giới hạn tồn kho (${item.stock} cốc)">+</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <a href="${pageContext.request.contextPath}/Cart?action=update&productId=${empty item.cartKey ? item.productId : item.cartKey}&delta=1" class="ct-qty-btn" style="text-decoration:none;">+</a>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
                                                                 </div>
                                                             </td>
                                                             <td style="text-align:right"><span class="ct-price"><fmt:formatNumber value="${item.price}" pattern="#,###"/>₫</span></td>
                                                             <td style="text-align:right"><span class="ct-subtotal"><fmt:formatNumber value="${item.subtotal}" pattern="#,###"/>₫</span></td>
                                                             <td>
-                                                                <a href="${pageContext.request.contextPath}/Cart?action=remove&productId=${item.productId}" class="ct-remove" title="Xóa sản phẩm" style="text-decoration:none;">
+                                                                <a href="${pageContext.request.contextPath}/Cart?action=remove&productId=${empty item.cartKey ? item.productId : item.cartKey}" class="ct-remove" title="Xóa sản phẩm" style="text-decoration:none;">
                                                                     <span class="material-symbols-outlined" style="font-size:20px">delete</span>
                                                                 </a>
                                                             </td>
@@ -158,24 +180,14 @@
 
                                         <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;align-items:stretch;">
                                             <a href="${pageContext.request.contextPath}/Cart?action=clear"
-                                               style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
-                                               border:1.5px solid #ef4444;color:#ef4444;
-                                               border-radius:8px;font-size:13px;font-weight:600;
-                                               text-decoration:none;background:#fff;
-                                               transition:background .2s,color .2s;"
-                                               onmouseover="this.style.background = '#ef4444';this.style.color = '#fff';"
-                                               onmouseout="this.style.background = '#fff';this.style.color = '#ef4444';">
+                                               style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;text-decoration:none;background:#fff;border:1.5px solid #ef4444;color:#ef4444;cursor:pointer;transition:background .2s,color .2s;"
+                                               onmouseover="this.style.background='#ef4444';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#ef4444'">
                                                 <span class="material-symbols-outlined" style="font-size:16px">delete_sweep</span>
                                                 Xóa tất cả
                                             </a>
                                             <a href="${pageContext.request.contextPath}/category"
-                                               style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;
-                                               border:1.5px solid var(--primary-color);color:var(--primary-color);
-                                               border-radius:8px;font-size:13px;font-weight:600;
-                                               text-decoration:none;background:#fff;
-                                               transition:background .2s,color .2s;"
-                                               onmouseover="this.style.background = 'var(--primary-color)';this.style.color = '#fff';"
-                                               onmouseout="this.style.background = '#fff';this.style.color = 'var(--primary-color)';">
+                                               style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;text-decoration:none;background:#fff;border:1.5px solid #006e2f;color:#006e2f;cursor:pointer;transition:background .2s,color .2s;"
+                                               onmouseover="this.style.background='#006e2f';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#006e2f'">
                                                 <span class="material-symbols-outlined" style="font-size:16px">add</span>
                                                 Thêm sản phẩm
                                             </a>
@@ -194,18 +206,56 @@
                                         <div class="cart-summary-body">
                                             <c:forEach var="item" items="${cartItems}">
                                                 <div class="summary-row">
-                                                    <span class="summary-row-label"><c:out value="${item.productName}"/> × ${item.quantity}</span>
+                                                    <span class="summary-row-label">
+                                                        <c:out value="${item.productName}"/>
+                                                        <c:if test="${not empty item.sizeName}">
+                                                            <span class="summary-size-tag">${item.sizeName}</span>
+                                                        </c:if>
+                                                        <span class="summary-qty-tag">×${item.quantity}</span>
+                                                    </span>
                                                     <span class="summary-row-val"><fmt:formatNumber value="${item.subtotal}" pattern="#,###"/>₫</span>
                                                 </div>
                                             </c:forEach>
+
+                                            <%-- Ô nhập mã giảm giá --%>
                                             <div class="summary-divider"></div>
-                                            <div class="summary-total-row">
-                                                <span class="summary-total-label">Tổng cộng</span>
-                                                <span class="summary-total-val"><fmt:formatNumber value="${totalAmount}" pattern="#,###"/>₫</span>
+                                            <div class="discount-section">
+                                                <div class="discount-section-label">Mã giảm giá</div>
+                                                <div class="discount-input-row">
+                                                    <input type="text" id="discountCodeInput"
+                                                           class="discount-input"
+                                                           placeholder="Nhập mã giảm giá..."
+                                                           value="${discountCode}"
+                                                           autocomplete="off">
+                                                    <button type="button" class="btn-apply-discount" id="btnApplyDiscount"
+                                                            onclick="applyDiscount()">Áp dụng</button>
+                                                     <button type="button" id="btnRemoveDiscount"
+                                                             onclick="removeDiscount()"
+                                                             style="display: none; padding: 8px 14px; background: #ef4444; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: 'Inter', sans-serif; margin-left: 5px;">Xóa</button>
+                                                </div>
+                                                <div id="discountMsg" class="discount-msg"></div>
+                                            </div>
+
+                                            <%-- Totals block --%>
+                                            <div class="summary-totals-block">
+                                                <div class="summary-subtotal-row">
+                                                    <span class="summary-subtotal-label">Tạm tính</span>
+                                                    <span class="summary-subtotal-val" id="summaryTotal"><fmt:formatNumber value="${totalAmount}" pattern="#,###"/>₫</span>
+                                                </div>
+                                                <div class="summary-discount-row" id="discountRow" style="display:none;">
+                                                    <span class="summary-discount-label">Giảm giá</span>
+                                                    <span class="summary-discount-val" id="discountVal">−0₫</span>
+                                                </div>
+                                                <div class="summary-divider"></div>
+                                                <div class="summary-grand-row" id="finalRow">
+                                                    <span class="summary-grand-label" style="font-weight: 900 !important;">Thành tiền</span>
+                                                    <span class="summary-grand-val" id="finalVal" style="font-weight: 900 !important;"><fmt:formatNumber value="${totalAmount}" pattern="#,###"/>₫</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <%-- Nút đặt hàng nằm trong summary-card để giữ layout cũ --%>
-                                        <div style="padding: 16px;">
+                                        <%-- Nút đặt hàng --%>
+                                        <div class="cart-checkout-footer">
+                                            <input type="hidden" name="discountCode" id="discountCodeHidden" value="${discountCode}">
                                             <button type="submit" class="btn-checkout">
                                                 <span class="material-symbols-outlined">shopping_bag</span>
                                                 Đặt Hàng Ngay
@@ -217,7 +267,7 @@
                                 
                                     <div class="cart-page-panel payment-section">
                                         <div class="panel-label">Thanh toán</div>
-                                        <div class="panel-title" style="font-size:15px;margin-bottom:14px;">Phương thức thanh toán</div>
+                                        <div class="panel-title panel-title--payment">Phương thức thanh toán</div>
 
                                         <%-- Option 1: COD --%>
                                         <div class="payment-option mb-3">
@@ -261,9 +311,8 @@
                                         <div class="panel-label">Thông tin</div>
                                         <div class="panel-title" style="font-size:16px;margin-bottom:16px;">Ghi chú đơn hàng</div>
                                         <textarea name="note" rows="3" placeholder="Ghi chú thêm (tuỳ chọn)..."
-                                                  style="width:100%;border:1.5px solid var(--border-subtle);border-radius:var(--radius-sm);
-                                                  padding:10px 12px;font-size:13px;font-family:var(--font-inter);
-                                                  resize:none;outline:none;color:var(--text-dark);background:var(--bg-light);"></textarea>
+                                                  style="width:100%;border:1.5px solid rgba(0,0,0,0.06);border-radius:8px;padding:10px 12px;font-size:13px;font-family:'Inter',sans-serif;resize:none;outline:none;color:#191c1e;background:#f7f9fb;box-sizing:border-box;"
+                                                  onfocus="this.style.borderColor='#006e2f'" onblur="this.style.borderColor='rgba(0,0,0,0.06)'"></textarea>
                                     </div>
 
                                 </div><%-- /col-lg-4 --%>
@@ -288,6 +337,89 @@
             }
             updateClock();
             setInterval(updateClock, 30000);
+
+            /* ── Mã giảm giá ── */
+            function formatVND(n) {
+                return new Intl.NumberFormat('vi-VN').format(n) + '₫';
+            }
+
+            function applyDiscount() {
+                const code = document.getElementById('discountCodeInput').value.trim();
+                const msg  = document.getElementById('discountMsg');
+                const btn  = document.getElementById('btnApplyDiscount');
+
+                if (!code) {
+                    msg.style.color = '#ef4444';
+                    msg.textContent = 'Vui lòng nhập mã giảm giá.';
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = 'Đang kiểm tra...';
+                msg.textContent = '';
+
+                const ctx = '${pageContext.request.contextPath}';
+                fetch(ctx + '/Cart?action=applyDiscount&discountCode=' + encodeURIComponent(code))
+                    .then(r => r.json())
+                    .then(data => {
+                        btn.disabled = false;
+                        btn.textContent = 'Áp dụng';
+
+                        if (data.success) {
+                            msg.style.color = '#16a34a';
+                            msg.textContent = ' Áp dụng thành công: ' + data.codeName;
+
+                            document.getElementById('discountRow').style.display = '';
+                            document.getElementById('discountVal').textContent    = '−' + formatVND(data.discountAmount);
+                            document.getElementById('finalVal').textContent       = formatVND(data.finalAmount);
+                            document.getElementById('discountCodeHidden').value   = code;
+                            document.getElementById('btnRemoveDiscount').style.display = 'inline-block';
+                        } else {
+                            msg.style.color = '#ef4444';
+                            msg.textContent = ' ' + (data.error || 'Mã không hợp lệ hoặc đã hết hạn.');
+                            document.getElementById('discountRow').style.display = 'none';
+                            // Reset finalVal về tổng gốc
+                            const origTotal = document.getElementById('summaryTotal').textContent;
+                            document.getElementById('finalVal').textContent = origTotal;
+                            document.getElementById('discountCodeHidden').value = '';
+                            document.getElementById('btnRemoveDiscount').style.display = 'none';
+                        }
+                    })
+                    .catch(() => {
+                        btn.disabled = false;
+                        btn.textContent = 'Áp dụng';
+                        msg.style.color = '#ef4444';
+                        msg.textContent = 'Lỗi kết nối, vui lòng thử lại.';
+                        document.getElementById('btnRemoveDiscount').style.display = 'none';
+                    });
+            }
+
+            function removeDiscount() {
+                document.getElementById('discountCodeInput').value = '';
+                document.getElementById('discountCodeHidden').value = '';
+                document.getElementById('discountRow').style.display = 'none';
+                
+                // Reset finalVal về tổng gốc
+                const origTotal = document.getElementById('summaryTotal').textContent;
+                document.getElementById('finalVal').textContent = origTotal;
+                
+                // Xóa tin nhắn và ẩn nút xóa
+                const msg = document.getElementById('discountMsg');
+                msg.textContent = '';
+                document.getElementById('btnRemoveDiscount').style.display = 'none';
+                
+                // Kích hoạt lại input và nút áp dụng nếu cần
+                document.getElementById('discountCodeInput').disabled = false;
+                document.getElementById('btnApplyDiscount').disabled = false;
+            }
+
+            /* Enter để áp dụng mã */
+            const dcInput = document.getElementById('discountCodeInput');
+            if (dcInput) {
+                dcInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') { e.preventDefault(); applyDiscount(); }
+                });
+            }
         </script>
     </body>
 </html>

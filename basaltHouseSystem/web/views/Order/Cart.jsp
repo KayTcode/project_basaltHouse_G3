@@ -263,48 +263,6 @@
                                         </div>
                                     </div>
 
-                                    <%-- Panel 2: Phương thức thanh toán — TÁCH RIÊNG khỏi summary-card --%>
-                                
-                                    <div class="cart-page-panel payment-section" style="display: none;">
-                                        <div class="panel-label">Thanh toán</div>
-                                        <div class="panel-title panel-title--payment">Phương thức thanh toán</div>
-
-                                        <%-- Option 1: COD --%>
-                                        <div class="payment-option mb-3">
-                                            <input type="radio"
-                                                   name="paymentMethod"
-                                                   id="pay_cod"
-                                                   value="COD"
-                                                   checked>
-                                            <label class="payment-option-label" for="pay_cod">
-                                                <div class="payment-icon" style="background:#e8f5e9;">
-                                                    <i class="bi bi-cash-coin fs-5" style="color:#005c25;"></i>
-                                                </div>
-                                                <div>
-                                                    <div style="font-weight:600;font-size:14px;color:#1a1a1a;">Tiền mặt khi nhận hàng</div>
-                                                    <div style="font-size:12px;color:#6b7280;margin-top:2px;">COD — Thanh toán khi shipper giao</div>
-                                                </div>
-                                            </label>
-                                        </div>
-
-                                        <%-- Option 2: MoMo --%>
-                                        <div class="payment-option">
-                                            <input type="radio"
-                                                   name="paymentMethod"
-                                                   id="pay_momo"
-                                                   value="MOMO">
-                                            <label class="payment-option-label" for="pay_momo">
-                                                <div class="payment-icon fw-bold text-white"
-                                                     style="background:#a50064;font-size:12px;letter-spacing:-0.5px;">
-                                                    MoMo
-                                                </div>
-                                                <div>
-                                                    <div style="font-weight:600;font-size:14px;color:#1a1a1a;">Ví MoMo / QR / ATM</div>
-                                                    <div style="font-size:12px;color:#6b7280;margin-top:2px;">Quét QR hoặc chọn ngân hàng trên MoMo</div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
 
                                     <%-- Panel 3: Ghi chú (giữ nguyên) --%>
                                     <div class="cart-page-panel" style="margin-top:16px;">

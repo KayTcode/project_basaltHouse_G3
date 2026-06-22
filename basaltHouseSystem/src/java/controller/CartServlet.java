@@ -26,6 +26,12 @@ public class CartServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("checkout-form".equals(action)) {
+            HttpSession session = request.getSession();
+            if (session.getAttribute("currentUser") == null) {
+                session.setAttribute("loginError", "Vui lòng đăng nhập để tiến hành thanh toán.");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
             handleCheckoutForm(request, response);
             return;
         }
@@ -76,6 +82,12 @@ public class CartServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("checkout".equals(action)) {
+            HttpSession session = request.getSession();
+            if (session.getAttribute("currentUser") == null) {
+                session.setAttribute("loginError", "Vui lòng đăng nhập để tiến hành thanh toán.");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
             handleCheckout(request, response);
             return;
         }
@@ -97,7 +109,7 @@ public class CartServlet extends HttpServlet {
         String cartKey = request.getParameter("productId");
 
         switch (action) {
-            case "add" -> {
+            case "add": {
                 String productId = cartKey; // lúc add, cartKey chứa productId thuần
                 String productName = request.getParameter("productName");
                 String priceStr = request.getParameter("price");
@@ -109,7 +121,7 @@ public class CartServlet extends HttpServlet {
                 }
 
                 String sizeName = "";
-                if (sizeIdStr != null && !sizeIdStr.isBlank()) {
+                if (sizeIdStr != null && !sizeIdStr.trim().isEmpty()) {
                     try {
                         int sizeId = Integer.parseInt(sizeIdStr.trim());
                         SizeDAO sizeDAO = new SizeDAO();
@@ -167,7 +179,7 @@ public class CartServlet extends HttpServlet {
                 }
                 return;
             }
-            case "update" -> {
+            case "update": {
                 String deltaStr = request.getParameter("delta");
                 int delta = 1;
                 try {
@@ -175,11 +187,14 @@ public class CartServlet extends HttpServlet {
                 } catch (NumberFormatException ignored) {
                 }
                 cartService.updateQuantity(cart, cartKey, delta);
+                break;
             }
-            case "remove" ->
+            case "remove":
                 cartService.removeItem(cart, cartKey);
-            case "clear" ->
+                break;
+            case "clear":
                 cartService.clearCart(cart);
+                break;
         }
         String referer = request.getHeader("referer");
         if (referer != null && referer.contains("/Cart")) {
@@ -210,7 +225,7 @@ public class CartServlet extends HttpServlet {
         // Tính giảm giá nếu có mã
         String discountCode = request.getParameter("discountCode");
         long discountAmount = 0;
-        if (discountCode != null && !discountCode.isBlank()) {
+        if (discountCode != null && !discountCode.trim().isEmpty()) {
             try {
                 java.math.BigDecimal total = new java.math.BigDecimal(totalAmount);
                 services.PromotionService ps = new services.PromotionService();
@@ -243,7 +258,8 @@ public class CartServlet extends HttpServlet {
 
         String customerIdStr = null;
         Object currentUser = session.getAttribute("currentUser");
-        if (currentUser instanceof UserLoginDTO user) {
+        if (currentUser instanceof UserLoginDTO) {
+            UserLoginDTO user = (UserLoginDTO) currentUser;
             int accountId = user.getAccountId();
             dao.OrderDAO orderDAO = new dao.OrderDAO();
             int customerId = orderDAO.getCustomerIdByAccountId(accountId);
@@ -260,7 +276,7 @@ public class CartServlet extends HttpServlet {
 //        String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
 
         // ── Lấy phương thức thanh toán từ form, mặc định COD ─────────────
-        if (paymentMethod == null || paymentMethod.isBlank()
+        if (paymentMethod == null || paymentMethod.trim().isEmpty()
                 || (!"COD".equals(paymentMethod) && !"MOMO".equals(paymentMethod))) {
             paymentMethod = "COD";
         }
@@ -291,7 +307,7 @@ public class CartServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
 
         String code = request.getParameter("discountCode");
-        if (code == null || code.isBlank()) {
+        if (code == null || code.trim().isEmpty()) {
             response.getWriter().write("{\"success\":false,\"error\":\"Vui lòng nhập mã giảm giá.\"}");
             return;
         }

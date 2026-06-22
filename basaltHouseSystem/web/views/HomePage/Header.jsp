@@ -127,8 +127,11 @@
                                 </button>
                             </form>
                             <a href="${pageContext.request.contextPath}/Cart"
-                               class="btn-nav-icon" title="Giỏ hàng" style="text-decoration:none;">
+                               class="btn-nav-icon" title="Giỏ hàng" style="text-decoration:none;position:relative;">
                                 <span class="material-symbols-outlined">shopping_cart</span>
+                                <c:if test="${totalQty > 0}">
+                                    <span class="cart-badge visible" id="navCartBadge">${totalQty}</span>
+                                </c:if>
                             </a>
                             <%-- ── Khu vực tài khoản: 2 trạng thái ──── --%>
                             <c:choose>

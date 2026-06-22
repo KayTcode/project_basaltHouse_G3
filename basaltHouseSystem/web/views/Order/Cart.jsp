@@ -2,6 +2,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -22,32 +23,8 @@
         <!-- Toast Stack -->
         <div class="toast-stack" id="toastStack"></div>
 
-        <!-- ── Navbar Khách Hàng ── -->
-        <header class="sticky-top">
-            <nav class="navbar navbar-expand-md navbar-light navbar-coffeely py-3">
-                <div class="container">
-                    <a class="navbar-brand navbar-brand-coffeely" href="${pageContext.request.contextPath}/Order">BasaltHouse</a>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse justify-content-between" id="mainNav">
-                        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                            <li class="nav-item"><a class="nav-link nav-link-coffeely" href="${pageContext.request.contextPath}/category">Menu</a></li>
-                            <li class="nav-item"><a class="nav-link nav-link-coffeely active" href="${pageContext.request.contextPath}/Cart">Giỏ Hàng</a></li>
-                        </ul>
-                        <div class="d-flex align-items-center gap-2">
-                            <button class="btn-nav-icon cart-nav-btn" title="Giỏ hàng" onclick="window.location = '${pageContext.request.contextPath}/Cart'">
-                                <span class="material-symbols-outlined">shopping_cart</span>
-                                <span class="cart-badge ${totalQty > 0 ? 'visible' : ''}" id="navCartBadge">${totalQty}</span>
-                            </button>
-                            <button class="btn-nav-icon" title="Tài khoản">
-                                <span class="material-symbols-outlined">account_circle</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-        </header>
+        <%-- Header chung --%>
+        <jsp:include page="/views/HomePage/Header.jsp"/>
 
         <!-- ── Page Header ── -->
         <div class="page-header">

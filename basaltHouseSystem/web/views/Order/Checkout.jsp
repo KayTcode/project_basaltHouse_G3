@@ -2,6 +2,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -16,19 +17,8 @@
 </head>
 <body>
 
-<!-- Navbar -->
-<header class="sticky-top">
-    <nav class="navbar navbar-expand-md navbar-light navbar-coffeely py-3">
-        <div class="container">
-            <a class="navbar-brand navbar-brand-coffeely" href="${pageContext.request.contextPath}/Order">BasaltHouse</a>
-            <div class="d-flex align-items-center gap-2">
-                <a href="${pageContext.request.contextPath}/Cart" class="btn-nav-icon co-nav-cart" title="Giỏ hàng">
-                    <span class="material-symbols-outlined">shopping_cart</span>
-                </a>
-            </div>
-        </div>
-    </nav>
-</header>
+<%-- Header chung --%>
+<jsp:include page="/views/HomePage/Header.jsp"/>
 
 <div class="co-page">
     <div class="container">

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="6.0"
-         xmlns="https://jakarta.ee/xml/ns/jakartaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
+<web-app version="6.0" xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
     <servlet>
         <servlet-name>HomePageServlet</servlet-name>
         <servlet-class>controller.HomePageServlet</servlet-class>
@@ -39,7 +36,6 @@
         <servlet-name>ProductDetailServlet</servlet-name>
         <servlet-class>controller.ProductDetailServlet</servlet-class>
     </servlet>
-
     <servlet>
         <servlet-name>ContactServlet</servlet-name>
         <servlet-class>controller.ContactServlet</servlet-class>
@@ -75,6 +71,27 @@
     <servlet>
         <servlet-name>GoogleLoginServlet</servlet-name>
         <servlet-class>controller.GoogleLoginServlet</servlet-class>
+    </servlet>
+    <servlet>
+<<<<<<< HEAD
+        <servlet-name>StaffServlet</servlet-name>
+        <servlet-class>controller.StaffServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ViewImportVoiceServlet</servlet-name>
+        <servlet-class>controller.ViewImportVoiceServlet</servlet-class>
+=======
+        <servlet-name>MonoPaymentServlet</servlet-name>
+        <servlet-class>controller.MonoPaymentServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>MomoReturnServlet</servlet-name>
+        <servlet-class>controller.MomoReturnServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>MomoIpnServlet</servlet-name>
+        <servlet-class>controller.MomoIpnServlet</servlet-class>
+>>>>>>> 760312c42306341dd6aca4df1c404e4b392fd972
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -128,8 +145,6 @@
         <servlet-name>ProductDetailServlet</servlet-name>
         <url-pattern>/productdetail</url-pattern>
     </servlet-mapping>
-
-
     <servlet-mapping>
         <servlet-name>ContactServlet</servlet-name>
         <url-pattern>/contact</url-pattern>
@@ -166,10 +181,30 @@
         <servlet-name>GoogleLoginServlet</servlet-name>
         <url-pattern>/google-login</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+<<<<<<< HEAD
+        <servlet-name>StaffServlet</servlet-name>
+        <url-pattern>/staff</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ViewImportVoiceServlet</servlet-name>
+        <url-pattern>/viewimportvoice</url-pattern>
+=======
+        <servlet-name>MonoPaymentServlet</servlet-name>
+        <url-pattern>/momo/payment</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MomoReturnServlet</servlet-name>
+        <url-pattern>/mono/return</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MomoIpnServlet</servlet-name>
+        <url-pattern>/momo/ipn</url-pattern>
+>>>>>>> 760312c42306341dd6aca4df1c404e4b392fd972
+    </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>
     </session-config>
-
     <welcome-file-list>
         <welcome-file>home</welcome-file>
     </welcome-file-list>

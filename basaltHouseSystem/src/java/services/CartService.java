@@ -57,25 +57,13 @@ public class CartService {
         }
     }
 
-    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr) {
-        return checkout(cart, note, customerIdStr, null, null, null, null);
-    }
-
-    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr, String discountCode) {
-        return checkout(cart, note, customerIdStr, discountCode, null, null, null);
-    }
-
-    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr,
-                           String discountCode, String deliveryAddress, String paymentMethod) {
-        return checkout(cart, note, customerIdStr, discountCode, deliveryAddress, paymentMethod, null);
-    }
-
-    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr,
-                           String discountCode, String deliveryAddress, String paymentMethod, String deliveryNote) {
+    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr, String discountCode, String deliveryAddress, String paymentMethod, String deliveryNote) {
         if (cart == null || cart.isEmpty()) {
             return null;
         }
-
+        if (!"COD".equals(paymentMethod) && !"MOMO".equals(paymentMethod)) {
+            paymentMethod = "COD";
+        }
         // Tra sizeId từ sizeName bằng HashMap<sizeId, sizeName> → đảo ngược thành HashMap<sizeName, sizeId>
         SizeDAO sizeDAO = new SizeDAO();
         HashMap<Integer, String> sizeMap = sizeDAO.getSize();
@@ -97,32 +85,37 @@ public class CartService {
             discountAmount = promotionService.calculateDiscount(discountCode.trim(), total);
         }
         BigDecimal finalAmount = total.subtract(discountAmount);
-        if (finalAmount.compareTo(BigDecimal.ZERO) < 0) finalAmount = BigDecimal.ZERO;
+        if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
+            finalAmount = BigDecimal.ZERO;
+        }
 
         Order order = new Order();
         order.setOrderType("Online");
         order.setOrderStatus("Preparing");
         order.setPaymentStatus("Unpaid");
-        order.setPaymentMethod((paymentMethod != null && !paymentMethod.isBlank()) ? paymentMethod : "COD");
+        order.setPaymentMethod(paymentMethod);
         order.setTableName("Online");
         order.setNote((note != null && !note.isBlank()) ? note : null);
 
         // Lưu địa chỉ giao hàng vào bảng OrderAddresses
         if (deliveryAddress != null && !deliveryAddress.isBlank()) {
-            
+
             String[] parts = deliveryAddress.split(" \\| ", 3);
-            String recipientName  = parts.length > 0 ? parts[0].trim() : "";
+            String recipientName = parts.length > 0 ? parts[0].trim() : "";
             String recipientPhone = parts.length > 1 ? parts[1].trim() : "";
-            String addressDetail  = parts.length > 2 ? parts[2].trim() : deliveryAddress;
+            String addressDetail = parts.length > 2 ? parts[2].trim() : deliveryAddress;
 
             model.OrderAddress addr = new model.OrderAddress();
             addr.setRecipientName(recipientName);
             addr.setRecipientPhone(recipientPhone);
             addr.setAddressDetail(addressDetail);
-            addr.setNote(deliveryNote); 
-            addr.setZoneId(1); 
+            addr.setNote(deliveryNote);
+            addr.setZoneId(1);
             if (customerIdStr != null && !customerIdStr.isBlank()) {
-                try { addr.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception ignored) {}
+                try {
+                    addr.setCustomerId(Integer.parseInt(customerIdStr));
+                } catch (Exception ignored) {
+                }
             }
 
             int orderAddressId = new dao.OrderAddressDAO().insertOrderAddress(addr);
@@ -136,20 +129,30 @@ public class CartService {
         order.setDiscountAmount(discountAmount);
         order.setFinalAmount(finalAmount);
         if (customerIdStr != null && !customerIdStr.isBlank()) {
-            try { order.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception ignored) {}
+            try {
+                order.setCustomerId(Integer.parseInt(customerIdStr));
+            } catch (NumberFormatException ignored) {
+            }
         }
 
         // Build List<OrderDetail> trực tiếp từ CartItem
         List<OrderDetail> details = new ArrayList<>();
         for (CartItem item : cart.values()) {
             int productId = -1;
-            try { productId = Integer.parseInt(item.getProductId()); } catch (Exception ignored) {}
-            if (productId <= 0) continue;
+            try {
+                productId = Integer.parseInt(item.getProductId());
+            } catch (Exception ignored) {
+            }
+            if (productId <= 0) {
+                continue;
+            }
 
             String sizeName = (item.getSizeName() != null && !item.getSizeName().isBlank())
                     ? item.getSizeName().toLowerCase() : "m";
             int sizeId = sizeNameToId.getOrDefault(sizeName, -1);
-            if (sizeId <= 0) continue;
+            if (sizeId <= 0) {
+                continue;
+            }
 
             OrderDetail od = new OrderDetail();
             od.setProductId(productId);
@@ -171,7 +174,6 @@ public class CartService {
     }
 
     public String checkout(Map<String, CartItem> cart, String note) {
-        return checkout(cart, note, null, null, null, null);
+        return checkout(cart, note, null, null, null, "COD", null);
     }
 }
-

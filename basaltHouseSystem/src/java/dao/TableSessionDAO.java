@@ -31,7 +31,19 @@ public class TableSessionDAO extends DBContext {
         }
         return 0;
     }
-
+ public int getActiveSessionId(int tableId) {
+        if (connection == null) return -1;
+        String sql = "SELECT TOP 1 SessionId FROM TableSessions WHERE TableId = ? AND Status IN ('ACTIVE', 'Open') AND IsDeleted = 0 ORDER BY OpenedAt DESC";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, tableId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return -1;
+    }
     public String createSession(int tableId, String tableCode, int guestCount, Integer cashierId) {
         String sessionCode = "TS-" + tableCode + "-"
                 + LocalDateTime.now().toString().replaceAll("[^0-9]", "").substring(0, 14);

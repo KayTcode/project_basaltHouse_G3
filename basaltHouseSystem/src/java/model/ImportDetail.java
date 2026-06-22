@@ -36,6 +36,16 @@ public class ImportDetail {
         this.isDeleted = isDeleted;
     }
 
+    public ImportDetail(int importId, int ingredientId, BigDecimal orderedQuantity, BigDecimal receivedQuantity, BigDecimal unitPrice, String discrepancyNote, String note) {
+        this.importId = importId;
+        this.ingredientId = ingredientId;
+        this.orderedQuantity = orderedQuantity;
+        this.receivedQuantity = receivedQuantity;
+        this.unitPrice = unitPrice;
+        this.discrepancyNote = discrepancyNote;
+        this.note = note;
+    }
+
     public int getImportDetailId() {
         return importDetailId;
     }

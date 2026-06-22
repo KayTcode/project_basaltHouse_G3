@@ -1,6 +1,7 @@
 package controller;
 
 import dao.SizeDAO;
+import dto.UserLoginDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,8 +48,6 @@ public class CartServlet extends HttpServlet {
             totalAmount += item.getSubtotal();
             totalQty += item.getQuantity();
         }
-
-        // ── Tính stock hiện tại theo từng productId-size ──
         try {
             StockService stockSvc = new StockService();
             HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
@@ -58,7 +57,6 @@ public class CartServlet extends HttpServlet {
             }
             request.setAttribute("stockMap", stockMap);
         } catch (Exception ignored) {
-
         }
 
         request.setAttribute("cartItems", cart.values());
@@ -134,8 +132,7 @@ public class CartServlet extends HttpServlet {
                     }
                 }
 
-                // Key = "productId_sizeName" để tách riêng cùng SP khác size
-                String key = productId + "_" + sizeName;
+                String key = productId;
                 CartItem existing = cart.get(key);
                 if (existing == null) {
                     if (stock > 0) {
@@ -144,6 +141,10 @@ public class CartServlet extends HttpServlet {
                         cart.put(key, newItem);
                     }
                 } else {
+                    if (!sizeName.isEmpty()) {
+                        existing.setSizeName(sizeName);
+                        existing.setStock(stock);
+                    }
                     if (existing.getStock() <= 0 || existing.getQuantity() < existing.getStock()) {
                         existing.setQuantity(existing.getQuantity() + 1);
                     }
@@ -171,17 +172,13 @@ public class CartServlet extends HttpServlet {
                     delta = Integer.parseInt(deltaStr);
                 } catch (NumberFormatException ignored) {
                 }
-
                 cartService.updateQuantity(cart, cartKey, delta);
             }
-            case "remove" -> {
+            case "remove" ->
                 cartService.removeItem(cart, cartKey);
-            }
-            case "clear" -> {
+            case "clear" ->
                 cartService.clearCart(cart);
-            }
         }
-
         String referer = request.getHeader("referer");
         if (referer != null && referer.contains("/Cart")) {
             response.sendRedirect(request.getContextPath() + "/Cart");
@@ -244,8 +241,8 @@ public class CartServlet extends HttpServlet {
 
         String customerIdStr = null;
         Object currentUser = session.getAttribute("currentUser");
-        if (currentUser instanceof dto.UserLoginDTO) {
-            int accountId = ((dto.UserLoginDTO) currentUser).getAccountId();
+        if (currentUser instanceof UserLoginDTO user) {
+            int accountId = user.getAccountId();
             dao.OrderDAO orderDAO = new dao.OrderDAO();
             int customerId = orderDAO.getCustomerIdByAccountId(accountId);
             if (customerId > 0) {
@@ -258,12 +255,32 @@ public class CartServlet extends HttpServlet {
         String discountCode = request.getParameter("discountCode");
         String deliveryAddress = request.getParameter("deliveryAddress");
         String paymentMethod = request.getParameter("paymentMethod");
+//        String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
+
+        // ── Lấy phương thức thanh toán từ form, mặc định COD ─────────────
+        if (paymentMethod == null || paymentMethod.isBlank()
+                || (!"COD".equals(paymentMethod) && !"MOMO".equals(paymentMethod))) {
+            paymentMethod = "COD";
+        }
+
+        // ── Tạo đơn hàng trong DB ─────────────────────────────────────────
+        // CartService sẽ KHÔNG clear cart nếu là VNPAY (clear khi confirm)
         String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
 
-        if (orderCode != null) {
-            response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);
-        } else {
+        if (orderCode == null) {
             response.sendRedirect(request.getContextPath() + "/Cart?error=checkout_failed");
+            return;
+        }
+
+        // ── Phân luồng theo phương thức thanh toán ────────────────────────
+        if ("MOMO".equals(paymentMethod)) {
+            // Lưu orderCode vào session để VnpayPaymentServlet và VnpayReturnServlet dùng
+            session.setAttribute("pendingOrderCode", orderCode);
+            // Redirect sang servlet khởi tạo cổng thanh toán VNPAY
+            response.sendRedirect(request.getContextPath() + "/momo/payment?orderCode=" + orderCode);
+        } else {
+            // COD: cart đã được clear bởi CartService, redirect trang thành công
+            response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);
         }
     }
 }

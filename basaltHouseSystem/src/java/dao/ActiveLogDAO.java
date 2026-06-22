@@ -17,7 +17,7 @@ public class ActiveLogDAO extends DBContext {
     PreparedStatement st;
     ResultSet rs;
 
-    public void ctreatActiveLog(ActivityLog s) {
+    public boolean ctreatActiveLog(ActivityLog s) {
         try {
              String sql = """
                           INSERT INTO [dbo].[ActivityLogs]
@@ -44,9 +44,11 @@ public class ActiveLogDAO extends DBContext {
              st.setObject(8, s.getIsDeleted());
              st.setObject(9, s.getCreatedAt());
              st.executeUpdate();
+             return true;
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+        return false;
                
     }
 }

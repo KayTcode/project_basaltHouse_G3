@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/css/CartCss/Cart.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/css/CartCss/Checkout.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
@@ -77,7 +78,6 @@
                 <form action="${pageContext.request.contextPath}/Cart" method="POST" id="checkoutForm" onsubmit="return validateForm()">
                     <input type="hidden" name="action"        value="checkout">
                     <input type="hidden" name="discountCode"  value="${discountCode}">
-                    <input type="hidden" name="paymentMethod" id="paymentMethodInput" value="COD">
                     <input type="hidden" name="orderNote"     value="${orderNote}">
 
                     <!-- Address section -->
@@ -134,22 +134,42 @@
                         Phương thức thanh toán
                     </div>
 
-                    <div class="co-pay-grid">
-                        <label class="co-pay-card selected" id="payCOD" onclick="selectPay('COD', this)">
-                            <input type="radio" name="_pay" value="COD" checked>
-                            <div class="co-pay-icon"><span class="material-symbols-outlined">payments</span></div>
-                            <div class="co-pay-name">Thanh toán khi nhận hàng</div>
-                            <div class="co-pay-desc">COD — trả tiền mặt cho tài xế</div>
-                            <span class="material-symbols-outlined co-pay-check">check_circle</span>
-                        </label>
+                    <div class="cart-page-panel payment-section" style="margin-top: 0; border: none; padding: 0; background: transparent; box-shadow: none;">
+                        <%-- Option 1: COD --%>
+                        <div class="payment-option mb-3">
+                            <input type="radio"
+                                   name="paymentMethod"
+                                   id="pay_cod"
+                                   value="COD"
+                                   checked>
+                            <label class="payment-option-label" for="pay_cod">
+                                <div class="payment-icon" style="background:#e8f5e9;">
+                                    <i class="bi bi-cash-coin fs-5" style="color:#005c25;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;font-size:14px;color:#1a1a1a;">Tiền mặt khi nhận hàng</div>
+                                    <div style="font-size:12px;color:#6b7280;margin-top:2px;">COD — Thanh toán khi shipper giao</div>
+                                </div>
+                            </label>
+                        </div>
 
-                        <label class="co-pay-card" id="payOnline" onclick="selectPay('Online', this)">
-                            <input type="radio" name="_pay" value="Online">
-                            <div class="co-pay-icon online"><span class="material-symbols-outlined">credit_card</span></div>
-                            <div class="co-pay-name">Thanh toán online</div>
-                            <div class="co-pay-desc">Chuyển khoản / Ví điện tử</div>
-                            <span class="material-symbols-outlined co-pay-check">check_circle</span>
-                        </label>
+                        <%-- Option 2: MoMo --%>
+                        <div class="payment-option">
+                            <input type="radio"
+                                   name="paymentMethod"
+                                   id="pay_momo"
+                                   value="MOMO">
+                            <label class="payment-option-label" for="pay_momo">
+                                <div class="payment-icon fw-bold text-white"
+                                     style="background:#a50064;font-size:12px;letter-spacing:-0.5px;">
+                                    MoMo
+                                </div>
+                                <div>
+                                    <div style="font-weight:600;font-size:14px;color:#1a1a1a;">Ví MoMo / QR / ATM</div>
+                                    <div style="font-size:12px;color:#6b7280;margin-top:2px;">Quét QR hoặc chọn ngân hàng trên MoMo</div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
                     <button type="submit" class="co-submit" id="submitBtn">
@@ -164,12 +184,6 @@
 </div>
 
 <script>
-function selectPay(method, el) {
-    document.getElementById('payCOD').classList.remove('selected');
-    document.getElementById('payOnline').classList.remove('selected');
-    el.classList.add('selected');
-    document.getElementById('paymentMethodInput').value = method;
-}
 
 
 function validateForm() {

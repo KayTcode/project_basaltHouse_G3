@@ -88,8 +88,8 @@
                     </c:when>
                     <c:otherwise>
                         <!-- Filled Cart Grid -->
-                        <form action="${pageContext.request.contextPath}/Cart" method="POST">
-                            <input type="hidden" name="action" value="checkout"/>
+                         <form action="${pageContext.request.contextPath}/Cart" method="GET">
+                             <input type="hidden" name="action" value="checkout-form"/>
                             <div class="row g-4">
 
                                 <!-- ── Left Column: Bảng sản phẩm ── -->
@@ -265,7 +265,7 @@
 
                                     <%-- Panel 2: Phương thức thanh toán — TÁCH RIÊNG khỏi summary-card --%>
                                 
-                                    <div class="cart-page-panel payment-section">
+                                    <div class="cart-page-panel payment-section" style="display: none;">
                                         <div class="panel-label">Thanh toán</div>
                                         <div class="panel-title panel-title--payment">Phương thức thanh toán</div>
 
@@ -310,7 +310,7 @@
                                     <div class="cart-page-panel" style="margin-top:16px;">
                                         <div class="panel-label">Thông tin</div>
                                         <div class="panel-title" style="font-size:16px;margin-bottom:16px;">Ghi chú đơn hàng</div>
-                                        <textarea name="note" rows="3" placeholder="Ghi chú thêm (tuỳ chọn)..."
+                                        <textarea name="orderNote" rows="3" placeholder="Ghi chú thêm (tuỳ chọn)..."
                                                   style="width:100%;border:1.5px solid rgba(0,0,0,0.06);border-radius:8px;padding:10px 12px;font-size:13px;font-family:'Inter',sans-serif;resize:none;outline:none;color:#191c1e;background:#f7f9fb;box-sizing:border-box;"
                                                   onfocus="this.style.borderColor='#006e2f'" onblur="this.style.borderColor='rgba(0,0,0,0.06)'"></textarea>
                                     </div>

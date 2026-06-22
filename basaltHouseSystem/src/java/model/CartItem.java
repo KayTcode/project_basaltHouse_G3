@@ -3,6 +3,7 @@ package model;
 import java.io.Serializable;
 
 public class CartItem implements Serializable {
+    private String cartKey;   // composite key: "productId_sizeName"
     private String productId;
     private String productName;
     private int price;
@@ -72,6 +73,14 @@ public class CartItem implements Serializable {
 
     public void setSizeName(String sizeName) {
         this.sizeName = sizeName;
+    }
+
+    public String getCartKey() {
+        return cartKey;
+    }
+
+    public void setCartKey(String cartKey) {
+        this.cartKey = cartKey;
     }
 
     public int getStock() {

@@ -7,6 +7,7 @@ package services;
 import dao.ImportVoiceDAO;
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import model.ImportDetail;
 import model.ImportInvoice;
 import model.ImportInvoicesDetail;
@@ -75,7 +76,41 @@ public class ImportVoiceService {
   
   }
   
+  public HashMap<String , Object> getImportInvoicesDetail(){
+   HashMap<String,Object>s = new HashMap<>();
+      try {
+          List<ImportInvoicesDetail> list = dao.getImportInvoicesDetail();
+          if(list==null){
+              s.put("error", "Danh sách lỗi");
+          }else{
+          
+          s.put("success", list);
+          }
+      } catch (Exception e) {
+          System.err.println(e.getMessage());
+      }
+   
+  return s;
   
+  }
+  
+   public HashMap<String , Object> getSupplierOptions(){
+   HashMap<String,Object>s = new HashMap<>();
+      try {
+          List<HashMap<String, Object>> list = dao.getSupplierOptions();
+          if(list==null){
+              s.put("error", "Danh sách lỗi");
+          }else{
+          
+          s.put("success", list);
+          }
+      } catch (Exception e) {
+          System.err.println(e.getMessage());
+      }
+   
+  return s;
+  
+  }
    
    
 }

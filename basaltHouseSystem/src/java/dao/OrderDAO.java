@@ -9,7 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import model.Order;
 import model.OrderDetail;
 
@@ -162,15 +164,17 @@ public class OrderDAO extends DBContext {
         }
     }
 
-    // Thêm lấy dữ liệu DiscountAmount, TotalAmount (nếu có) để hiển thị đầy đủ chi tiết đơn hàng ở màn hình modal.
+    
     public List<Order> getAllOrdersWithCustomerName() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, c.FullName "
-                    + "FROM Orders o "
-                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
-                    + "WHERE o.IsDeleted = 0 "
-                    + "ORDER BY o.CreatedAt DESC";
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, tb.TableCode AS TableName, o.Note, c.FullName " +
+                         "FROM Orders o " +
+                         "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId " +
+                         "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId " +
+                         "LEFT JOIN Tables tb ON ts.TableId = tb.TableId " +
+                         "WHERE o.IsDeleted = 0 " +
+                         "ORDER BY o.CreatedAt DESC";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -188,6 +192,8 @@ public class OrderDAO extends DBContext {
                 String cName = rs.getString("FullName");
                 o.setCustomerName(cName != null ? cName : "Walk-in");
                 o.setPaymentMethod(rs.getString("PaymentMethod"));
+                o.setTableName(rs.getString("TableName"));
+                o.setNote(rs.getString("Note"));
                 list.add(o);
             }
         } catch (Exception e) {
@@ -310,11 +316,13 @@ public class OrderDAO extends DBContext {
     public List<Order> getBartenderOrders() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, c.FullName "
-                    + "FROM Orders o "
-                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
-                    + "WHERE o.IsDeleted = 0 AND o.OrderStatus IN ('Preparing', 'In_Progress', 'Ready') "
-                    + "ORDER BY CASE o.OrderStatus WHEN 'Preparing' THEN 1 WHEN 'In_Progress' THEN 2 WHEN 'Ready' THEN 3 ELSE 4 END, o.CreatedAt ASC";
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, tb.TableCode AS TableName, o.Note, c.FullName " +
+                         "FROM Orders o " +
+                         "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId " +
+                         "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId " +
+                         "LEFT JOIN Tables tb ON ts.TableId = tb.TableId " +
+                         "WHERE o.IsDeleted = 0 AND o.OrderStatus IN ('Preparing', 'In_Progress', 'Ready') " +
+                         "ORDER BY CASE o.OrderStatus WHEN 'Preparing' THEN 1 WHEN 'In_Progress' THEN 2 WHEN 'Ready' THEN 3 ELSE 4 END, o.CreatedAt ASC";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -328,6 +336,8 @@ public class OrderDAO extends DBContext {
                 }
                 String cName = rs.getString("FullName");
                 o.setCustomerName(cName != null ? cName : "Walk-in");
+                o.setTableName(rs.getString("TableName"));
+                o.setNote(rs.getString("Note"));
                 list.add(o);
             }
         } catch (Exception e) {
@@ -335,6 +345,7 @@ public class OrderDAO extends DBContext {
         }
         return list;
     }
+
 
     public List<Order> getCompletedOrders() {
         List<Order> list = new ArrayList<>();
@@ -370,29 +381,35 @@ public class OrderDAO extends DBContext {
         try {
             connection.setAutoCommit(false);
 
-            String sqlOrder = "INSERT INTO Orders (CustomerId, DiscountId, OrderType, OrderStatus, PaymentStatus, TotalAmount, DiscountAmount, FinalAmount, "
+            String sqlOrder = "INSERT INTO Orders (CustomerId, OrderAddressId, DiscountId, OrderType, OrderStatus, PaymentStatus, TotalAmount, DiscountAmount, FinalAmount, "
                     + "PaymentMethod, Note, CreatedAt, IsDeleted) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
             st = connection.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
             if (order.getCustomerId() != null) {
                 st.setInt(1, order.getCustomerId());
             } else {
                 st.setNull(1, java.sql.Types.INTEGER);
             }
-            if (order.getDiscountId() != null) {
-                st.setInt(2, order.getDiscountId());
+            if (order.getOrderAddressId() != null) {
+                st.setInt(2, order.getOrderAddressId());
             } else {
                 st.setNull(2, java.sql.Types.INTEGER);
             }
-            st.setString(3, order.getOrderType() != null ? order.getOrderType() : "Offline");
-            st.setString(4, order.getOrderStatus() != null ? order.getOrderStatus() : "Preparing");
-            st.setString(5, order.getPaymentStatus() != null ? order.getPaymentStatus() : "Paid");
-            st.setBigDecimal(6, order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
-            st.setBigDecimal(7, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
-            st.setBigDecimal(8, order.getFinalAmount() != null ? order.getFinalAmount() : BigDecimal.ZERO);
-            st.setString(9, order.getPaymentMethod());
-            st.setString(10, order.getNote());
+            if (order.getDiscountId() != null) {
+                st.setInt(3, order.getDiscountId());
+            } else {
+                st.setNull(3, java.sql.Types.INTEGER);
+            }
+            st.setString(4, order.getOrderType() != null ? order.getOrderType() : "Offline");
+            st.setString(5, order.getOrderStatus() != null ? order.getOrderStatus() : "Preparing");
+            st.setString(6, order.getPaymentStatus() != null ? order.getPaymentStatus() : "Paid");
+            st.setBigDecimal(7, order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
+            st.setBigDecimal(8, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
+            st.setBigDecimal(9, order.getFinalAmount() != null ? order.getFinalAmount() : BigDecimal.ZERO);
+            st.setString(10, order.getPaymentMethod());
+            st.setString(11, order.getNote());
             st.executeUpdate();
+
 
             rs = st.getGeneratedKeys();
             if (rs.next()) {
@@ -590,5 +607,68 @@ public class OrderDAO extends DBContext {
             System.err.println("Error getCustomerIdByAccountId: " + e.getMessage());
         }
         return -1;
+    }
+    public Map<String, Object> getCashierDashboard() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("todayRevenue", BigDecimal.ZERO);
+        stats.put("todayOrders", 0);
+        stats.put("pendingOrders", 0);
+        stats.put("newCustomers", 0);
+
+        try {
+            // Doanh thu hom nay
+            String sqlRevenue = """
+                    SELECT SUM(FinalAmount) AS Revenue 
+                    FROM Orders 
+                    WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                                """;
+            PreparedStatement st1 = connection.prepareStatement(sqlRevenue);
+            ResultSet rs1 = st1.executeQuery();
+            if (rs1.next()) {
+                BigDecimal rev = rs1.getBigDecimal("Revenue");
+                if (rev != null) stats.put("todayRevenue", rev);
+            }
+
+            // Don hang hom nay
+            String sqlOrders = """
+                 SELECT COUNT(OrderId) AS OrdersCount 
+                 FROM Orders 
+                 WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                               """;
+            PreparedStatement st2 = connection.prepareStatement(sqlOrders);
+            ResultSet rs2 = st2.executeQuery();
+            if (rs2.next()) {
+                stats.put("todayOrders", rs2.getInt("OrdersCount"));
+            }
+
+            // Don cho xu ly (Pending / Preparing) hom nay
+            String sqlPending = """
+            SELECT COUNT(OrderId) AS PendingCount 
+            FROM Orders 
+            WHERE OrderStatus IN ('Pending', 'Preparing') 
+            AND CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                                """;
+            PreparedStatement st3 = connection.prepareStatement(sqlPending);
+            ResultSet rs3 = st3.executeQuery();
+            if (rs3.next()) {
+                stats.put("pendingOrders", rs3.getInt("PendingCount"));
+            }
+
+            // Khach hang moi hom nay
+            String sqlCust = """
+            SELECT COUNT(CustomerId) AS CustCount 
+            FROM Customers 
+            WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                             """;
+            PreparedStatement st4 = connection.prepareStatement(sqlCust);
+            ResultSet rs4 = st4.executeQuery();
+            if (rs4.next()) {
+                stats.put("newCustomers", rs4.getInt("CustCount"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stats;
     }
 }

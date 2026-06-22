@@ -50,10 +50,10 @@
         <div class="logo-text">Basalt<span>House Coffee</span></div>
     </div>
     <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/views/Bartender/BartenderViews.jsp" class="nav-item active">
+        <a href="${pageContext.request.contextPath}/Bartender" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">view_kanban</span>Prep Board
         </a>
-        <a href="${pageContext.request.contextPath}/views/Bartender/BartenderHistory.jsp" class="nav-item">
+        <a href="${pageContext.request.contextPath}/BartenderHistory" class="nav-item">
             <span class="nav-icon material-symbols-outlined">history</span>History
         </a>
         <a href="#" class="nav-item">
@@ -175,8 +175,10 @@ var ORDERS = [
     <% 
         Order currentOrder = (Order) pageContext.getAttribute("o");
         String fTime = "00:00";
+        String startedAtTime = "null";
         if (currentOrder.getCreatedAt() != null) {
             fTime = currentOrder.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm"));
+            startedAtTime = String.valueOf(currentOrder.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
         }
     %>
     { 
@@ -185,7 +187,7 @@ var ORDERS = [
       type:'${o.orderType != null ? o.orderType.toLowerCase() : "offline"}', 
       location:'${o.tableName != null && !o.tableName.isEmpty() ? o.tableName : (o.orderType != null && o.orderType.equalsIgnoreCase("online") ? "Online" : "Walk-in")}', 
       time:'<%=fTime%>', 
-      startedAt: ${o.orderStatus == "Preparing" ? "null" : "Date.now()-2*60000"},
+      startedAt: <%= currentOrder.getOrderStatus().equals("Preparing") ? "null" : startedAtTime %>,
       note:'${o.note != null ? o.note : ""}',
       items:[
         <% 
@@ -343,7 +345,7 @@ function startOrder(id) {
     var formData = new URLSearchParams();
     formData.append("orderId", id);
     formData.append("action", "start");
-    fetch('${pageContext.request.contextPath}/UpdateOrderStatus', {
+    fetch('${pageContext.request.contextPath}/Bartender', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()
@@ -366,7 +368,7 @@ function markReady(id) {
     var formData = new URLSearchParams();
     formData.append("orderId", id);
     formData.append("action", "ready");
-    fetch('${pageContext.request.contextPath}/UpdateOrderStatus', {
+    fetch('${pageContext.request.contextPath}/Bartender', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()
@@ -388,7 +390,7 @@ function completeOrder(id) {
     var formData = new URLSearchParams();
     formData.append("orderId", id);
     formData.append("action", "complete");
-    fetch('${pageContext.request.contextPath}/UpdateOrderStatus', {
+    fetch('${pageContext.request.contextPath}/Bartender', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()

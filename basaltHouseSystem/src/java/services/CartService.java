@@ -57,7 +57,7 @@ public class CartService {
         }
     }
 
-    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr, String paymentMethod) {
+    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr, String discountCode, String deliveryAddress, String paymentMethod, String deliveryNote) {
         if (cart == null || cart.isEmpty()) {
             return null;
         }
@@ -85,7 +85,9 @@ public class CartService {
             discountAmount = promotionService.calculateDiscount(discountCode.trim(), total);
         }
         BigDecimal finalAmount = total.subtract(discountAmount);
-        if (finalAmount.compareTo(BigDecimal.ZERO) < 0) finalAmount = BigDecimal.ZERO;
+        if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
+            finalAmount = BigDecimal.ZERO;
+        }
 
         Order order = new Order();
         order.setOrderType("Online");
@@ -97,20 +99,23 @@ public class CartService {
 
         // Lưu địa chỉ giao hàng vào bảng OrderAddresses
         if (deliveryAddress != null && !deliveryAddress.isBlank()) {
-            
+
             String[] parts = deliveryAddress.split(" \\| ", 3);
-            String recipientName  = parts.length > 0 ? parts[0].trim() : "";
+            String recipientName = parts.length > 0 ? parts[0].trim() : "";
             String recipientPhone = parts.length > 1 ? parts[1].trim() : "";
-            String addressDetail  = parts.length > 2 ? parts[2].trim() : deliveryAddress;
+            String addressDetail = parts.length > 2 ? parts[2].trim() : deliveryAddress;
 
             model.OrderAddress addr = new model.OrderAddress();
             addr.setRecipientName(recipientName);
             addr.setRecipientPhone(recipientPhone);
             addr.setAddressDetail(addressDetail);
-            addr.setNote(deliveryNote); 
-            addr.setZoneId(1); 
+            addr.setNote(deliveryNote);
+            addr.setZoneId(1);
             if (customerIdStr != null && !customerIdStr.isBlank()) {
-                try { addr.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception ignored) {}
+                try {
+                    addr.setCustomerId(Integer.parseInt(customerIdStr));
+                } catch (Exception ignored) {
+                }
             }
 
             int orderAddressId = new dao.OrderAddressDAO().insertOrderAddress(addr);
@@ -169,6 +174,6 @@ public class CartService {
     }
 
     public String checkout(Map<String, CartItem> cart, String note) {
-        return checkout(cart, note, null, "COD");
+        return checkout(cart, note, null, null, null, "COD", null);
     }
 }

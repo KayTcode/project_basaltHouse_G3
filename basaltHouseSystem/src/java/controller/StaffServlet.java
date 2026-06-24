@@ -87,8 +87,15 @@ public class StaffServlet extends HttpServlet {
         request.setAttribute("staffName", user != null && user.getFullName() != null
                 ? user.getFullName()
                 : "Staff");
-        ImportVoiceDAO dao = new ImportVoiceDAO();
-        List<ImportInvoicesDetail> list = dao.getImportInvoicesDetail();
+       
+        List<ImportInvoicesDetail> list = null;
+        HashMap<String,Object>s = importService.getImportInvoicesDetail();
+        if(s.containsKey("error")){
+         request.setAttribute("error", s.get("error").toString());
+        
+        }else{
+           list = (List<ImportInvoicesDetail>)s.get("success");
+        }
         try {
             StockService stockService = new StockService();
             HashMap<String, Object> dashboardData = stockService.getStaffDashboardData();
@@ -99,7 +106,7 @@ public class StaffServlet extends HttpServlet {
             request.setAttribute("dataError", e.getMessage());
         }
         request.setAttribute("listP", list);
-        request.getRequestDispatcher("views/Staff/Staff.jsp").forward(request, response);
+        request.getRequestDispatcher("/views/Staff/Staff.jsp").forward(request, response);
 
     }
 

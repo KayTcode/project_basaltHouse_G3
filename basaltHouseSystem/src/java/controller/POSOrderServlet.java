@@ -18,9 +18,7 @@ public class POSOrderServlet extends HttpServlet {
    @Override
    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-      String action = request.getServletPath();
-        
-       
+        String action = request.getServletPath();
         switch (action) {
             case "/PosOrder":
                 request.getRequestDispatcher("/views/Cashier/POSOrders.jsp").forward(request, response);
@@ -33,7 +31,7 @@ public class POSOrderServlet extends HttpServlet {
             case "/DashBoard":
                 dao.OrderDAO orderDAO = new dao.OrderDAO();
                 java.util.Map<String, Object> stats = orderDAO.getCashierDashboard();
-                request.setAttribute("dashboardStats", stats);
+                request.setAttribute("dashboard", stats);
                 request.getRequestDispatcher("/views/Cashier/CashierDashboard.jsp").forward(request, response);
                 break;
                 

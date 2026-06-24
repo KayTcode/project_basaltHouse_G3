@@ -42,17 +42,17 @@ public class AdminProductDAO extends DBContext{
 
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
-                list.add(new Product(
-                    rs.getInt("ProductId"),
-                    rs.getString("ProductName"),
-                    rs.getInt("CategoryId"),
-                    rs.getString("CategoryName"),
-                    rs.getDouble("Price"),
-                    rs.getString("Description"),
-                    rs.getString("ImageUrl"),
-                    rs.getBoolean("IsActive"),
-                    rs.getTimestamp("CreatedAt")
-                ));
+//                list.add(new Product(
+//                    rs.getInt("ProductId"),
+//                    rs.getString("ProductName"),
+//                    rs.getInt("CategoryId"),
+//                    rs.getString("CategoryName"),
+//                    rs.getDouble("Price"),
+//                    rs.getString("Description"),
+//                    rs.getString("ImageUrl"),
+//                    rs.getBoolean("IsActive"),
+//                    rs.getTimestamp("CreatedAt")
+//                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();

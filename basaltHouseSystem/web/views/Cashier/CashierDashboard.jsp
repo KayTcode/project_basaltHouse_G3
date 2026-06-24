@@ -81,7 +81,7 @@
     <div class="page-header">
         <div class="page-title">
             <h1>Dashboard</h1>
-            <p>Overview of today's business</p>
+            
         </div>
         <div class="page-date">
             <span class="material-symbols-outlined" style="font-size:16px;color:#8b5e3c">calendar_month</span>
@@ -93,19 +93,19 @@
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Doanh thu hôm nay</div>
-            <div class="stat-value"><fmt:formatNumber value="${dashboardStats.todayRevenue}" type="number" maxFractionDigits="0"/> đ</div>
+            <div class="stat-value"><fmt:formatNumber value="${dashboard.todayRevenue}" type="number" maxFractionDigits="0"/> đ</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Đơn hàng hôm nay</div>
-            <div class="stat-value">${dashboardStats.todayOrders}</div>
+            <div class="stat-value">${dashboard.todayOrders}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Đơn chờ xử lý</div>
-            <div class="stat-value">${dashboardStats.pendingOrders}</div>
+            <div class="stat-value">${dashboard.pendingOrders}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Khách hàng mới</div>
-            <div class="stat-value">${dashboardStats.newCustomers}</div>
+            <div class="stat-value">${dashboard.newCustomers}</div>
         </div>
     </div>
 

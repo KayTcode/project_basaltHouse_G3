@@ -73,14 +73,12 @@
         <servlet-class>controller.GoogleLoginServlet</servlet-class>
     </servlet>
     <servlet>
-
         <servlet-name>StaffServlet</servlet-name>
         <servlet-class>controller.StaffServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>ViewImportVoiceServlet</servlet-name>
         <servlet-class>controller.ViewImportVoiceServlet</servlet-class>
-
     </servlet>
     <servlet>
         <servlet-name>MonoPaymentServlet</servlet-name>
@@ -93,7 +91,6 @@
     <servlet>
         <servlet-name>MomoIpnServlet</servlet-name>
         <servlet-class>controller.MomoIpnServlet</servlet-class>
-
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -184,14 +181,12 @@
         <url-pattern>/google-login</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-
         <servlet-name>StaffServlet</servlet-name>
-        <url-pattern>/staff</url-pattern>
+        <url-pattern>/staff/dashboard</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ViewImportVoiceServlet</servlet-name>
-        <url-pattern>/viewimportvoice</url-pattern>
-
+        <url-pattern>/viewimportvoice</url-pattern>   
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>MonoPaymentServlet</servlet-name>
@@ -204,7 +199,6 @@
     <servlet-mapping>
         <servlet-name>MomoIpnServlet</servlet-name>
         <url-pattern>/momo/ipn</url-pattern>
-
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

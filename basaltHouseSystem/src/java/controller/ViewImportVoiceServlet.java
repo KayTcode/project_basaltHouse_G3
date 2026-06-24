@@ -90,9 +90,15 @@ public class ViewImportVoiceServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/staff");
             return;
         }
-        ImportVoiceDAO dao = new ImportVoiceDAO();
-        List<HashMap<String, Object>> listS = dao.getSupplierOptions();
+        
+        List<HashMap<String, Object>> listS = null;
         HashMap<Integer, Ingredient>ingre = null;
+        HashMap<String , Object>s1 = importService.getSupplierOptions();
+        if(s1.containsKey("error")){
+        request.setAttribute("error", s1.get("error").toString());
+        }else{
+          listS = ( List<HashMap<String, Object>> )s1.get("success");
+        }
         HashMap<String,Object> s2 = iService.getAllIngredients();
          if(s2.containsKey("error")){
           request.setAttribute("error", s2.get("error").toString());

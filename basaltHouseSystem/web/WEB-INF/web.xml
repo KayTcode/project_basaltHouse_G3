@@ -92,9 +92,17 @@
         <servlet-name>MomoIpnServlet</servlet-name>
         <servlet-class>controller.MomoIpnServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>OrderTrackingServlet</servlet-name>
+        <servlet-class>controller.OrderTrackingServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>OrderTrackingServlet</servlet-name>
+        <url-pattern>/my-orders</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>HomePageServlet</servlet-name>

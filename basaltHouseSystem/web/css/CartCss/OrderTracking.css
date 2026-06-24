@@ -157,7 +157,7 @@ h1, h2, h3, h4 { font-family: var(--font-montserrat); }
     gap: 5px;
     padding: 7px 16px;
     border-radius: 50px;
-    border: 1.5px solid var(--border-subtle);
+    border: 1.5px solid #a0a8a0;
     background: var(--surface);
     color: var(--text-muted);
     font-size: 13px;
@@ -534,7 +534,7 @@ h1, h2, h3, h4 { font-family: var(--font-montserrat); }
     gap: 5px;
     padding: 7px 16px;
     border-radius: 50px;
-    border: 1.5px solid var(--border-subtle);
+    border: 1.5px solid #a0a8a0;
     background: transparent;
     color: var(--text-muted);
     font-size: 12px;

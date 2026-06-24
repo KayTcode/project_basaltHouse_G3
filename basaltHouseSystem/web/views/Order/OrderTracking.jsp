@@ -97,10 +97,6 @@
                     Tất cả
                     <span class="ot-filter-count">${totalOrders}</span>
                 </div>
-                <div class="ot-filter-tab" onclick="filterOrders(this,'pending')">
-                    <span class="material-symbols-outlined">hourglass_empty</span>
-                    Chờ xử lý
-                </div>
                 <div class="ot-filter-tab" onclick="filterOrders(this,'preparing')">
                     <span class="material-symbols-outlined">coffee_maker</span>
                     Đang pha chế

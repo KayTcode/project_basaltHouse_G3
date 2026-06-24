@@ -81,6 +81,8 @@
         <servlet-name>ViewImportVoiceServlet</servlet-name>
         <servlet-class>controller.ViewImportVoiceServlet</servlet-class>
 
+    </servlet>
+    <servlet>
         <servlet-name>MonoPaymentServlet</servlet-name>
         <servlet-class>controller.MonoPaymentServlet</servlet-class>
     </servlet>
@@ -190,6 +192,8 @@
         <servlet-name>ViewImportVoiceServlet</servlet-name>
         <url-pattern>/viewimportvoice</url-pattern>
 
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>MonoPaymentServlet</servlet-name>
         <url-pattern>/momo/payment</url-pattern>
     </servlet-mapping>

@@ -26,7 +26,17 @@ public class CartServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("checkout-form".equals(action)) {
+            HttpSession session = request.getSession();
+            if (session.getAttribute("currentUser") == null) {
+                session.setAttribute("loginError", "Vui lòng đăng nhập để tiến hành thanh toán.");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
             handleCheckoutForm(request, response);
+            return;
+        }
+        if ("applyDiscount".equals(action)) {
+            handleApplyDiscount(request, response);
             return;
         }
         if (action != null) {
@@ -72,6 +82,12 @@ public class CartServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("checkout".equals(action)) {
+            HttpSession session = request.getSession();
+            if (session.getAttribute("currentUser") == null) {
+                session.setAttribute("loginError", "Vui lòng đăng nhập để tiến hành thanh toán.");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
             handleCheckout(request, response);
             return;
         }
@@ -93,7 +109,7 @@ public class CartServlet extends HttpServlet {
         String cartKey = request.getParameter("productId");
 
         switch (action) {
-            case "add" -> {
+            case "add": {
                 String productId = cartKey; // lúc add, cartKey chứa productId thuần
                 String productName = request.getParameter("productName");
                 String priceStr = request.getParameter("price");
@@ -105,7 +121,7 @@ public class CartServlet extends HttpServlet {
                 }
 
                 String sizeName = "";
-                if (sizeIdStr != null && !sizeIdStr.isBlank()) {
+                if (sizeIdStr != null && !sizeIdStr.trim().isEmpty()) {
                     try {
                         int sizeId = Integer.parseInt(sizeIdStr.trim());
                         SizeDAO sizeDAO = new SizeDAO();
@@ -132,7 +148,8 @@ public class CartServlet extends HttpServlet {
                     }
                 }
 
-                String key = productId;
+                // Composite key: "productId_sizeName" để phân biệt cùng sản phẩm khác size
+                String key = sizeName.isEmpty() ? productId : productId + "_" + sizeName;
                 CartItem existing = cart.get(key);
                 if (existing == null) {
                     if (stock > 0) {
@@ -141,10 +158,7 @@ public class CartServlet extends HttpServlet {
                         cart.put(key, newItem);
                     }
                 } else {
-                    if (!sizeName.isEmpty()) {
-                        existing.setSizeName(sizeName);
-                        existing.setStock(stock);
-                    }
+                    // Cùng sản phẩm + cùng size → chỉ tăng số lượng
                     if (existing.getStock() <= 0 || existing.getQuantity() < existing.getStock()) {
                         existing.setQuantity(existing.getQuantity() + 1);
                     }
@@ -165,7 +179,7 @@ public class CartServlet extends HttpServlet {
                 }
                 return;
             }
-            case "update" -> {
+            case "update": {
                 String deltaStr = request.getParameter("delta");
                 int delta = 1;
                 try {
@@ -173,11 +187,14 @@ public class CartServlet extends HttpServlet {
                 } catch (NumberFormatException ignored) {
                 }
                 cartService.updateQuantity(cart, cartKey, delta);
+                break;
             }
-            case "remove" ->
+            case "remove":
                 cartService.removeItem(cart, cartKey);
-            case "clear" ->
+                break;
+            case "clear":
                 cartService.clearCart(cart);
+                break;
         }
         String referer = request.getHeader("referer");
         if (referer != null && referer.contains("/Cart")) {
@@ -208,7 +225,7 @@ public class CartServlet extends HttpServlet {
         // Tính giảm giá nếu có mã
         String discountCode = request.getParameter("discountCode");
         long discountAmount = 0;
-        if (discountCode != null && !discountCode.isBlank()) {
+        if (discountCode != null && !discountCode.trim().isEmpty()) {
             try {
                 java.math.BigDecimal total = new java.math.BigDecimal(totalAmount);
                 services.PromotionService ps = new services.PromotionService();
@@ -241,7 +258,8 @@ public class CartServlet extends HttpServlet {
 
         String customerIdStr = null;
         Object currentUser = session.getAttribute("currentUser");
-        if (currentUser instanceof UserLoginDTO user) {
+        if (currentUser instanceof UserLoginDTO) {
+            UserLoginDTO user = (UserLoginDTO) currentUser;
             int accountId = user.getAccountId();
             dao.OrderDAO orderDAO = new dao.OrderDAO();
             int customerId = orderDAO.getCustomerIdByAccountId(accountId);
@@ -258,7 +276,7 @@ public class CartServlet extends HttpServlet {
 //        String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
 
         // ── Lấy phương thức thanh toán từ form, mặc định COD ─────────────
-        if (paymentMethod == null || paymentMethod.isBlank()
+        if (paymentMethod == null || paymentMethod.trim().isEmpty()
                 || (!"COD".equals(paymentMethod) && !"MOMO".equals(paymentMethod))) {
             paymentMethod = "COD";
         }
@@ -282,5 +300,57 @@ public class CartServlet extends HttpServlet {
             // COD: cart đã được clear bởi CartService, redirect trang thành công
             response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);
         }
+    }
+
+    private void handleApplyDiscount(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+
+        String code = request.getParameter("discountCode");
+        if (code == null || code.trim().isEmpty()) {
+            response.getWriter().write("{\"success\":false,\"error\":\"Vui lòng nhập mã giảm giá.\"}");
+            return;
+        }
+
+        // Validate mã qua PromotionService
+        services.PromotionService ps = new services.PromotionService();
+        String checkJson = ps.checkDiscount(code.trim());
+
+        if (checkJson.contains("\"valid\": false") || checkJson.contains("\"valid\":false")) {
+            // Lấy msg từ JSON thủ công
+            String msg = "Mã không hợp lệ hoặc đã hết hạn.";
+            int msgIdx = checkJson.indexOf("\"msg\":");
+            if (msgIdx >= 0) {
+                int start = checkJson.indexOf('"', msgIdx + 6) + 1;
+                int end   = checkJson.indexOf('"', start);
+                if (start > 0 && end > start) msg = checkJson.substring(start, end);
+            }
+            response.getWriter().write("{\"success\":false,\"error\":\"" + msg + "\"}");
+            return;
+        }
+
+        // Tính tổng tiền từ cart hiện tại
+        HttpSession session = request.getSession(false);
+        @SuppressWarnings("unchecked")
+        Map<String, CartItem> cart = session != null
+                ? (Map<String, CartItem>) session.getAttribute("cart") : null;
+
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        if (cart != null) {
+            for (CartItem item : cart.values()) {
+                total = total.add(new java.math.BigDecimal(item.getPrice())
+                        .multiply(new java.math.BigDecimal(item.getQuantity())));
+            }
+        }
+
+        java.math.BigDecimal discountAmt = ps.calculateDiscount(code.trim(), total);
+        java.math.BigDecimal finalAmt    = total.subtract(discountAmt).max(java.math.BigDecimal.ZERO);
+
+        response.getWriter().write(String.format(
+                "{\"success\":true,\"codeName\":\"%s\",\"discountAmount\":%s,\"finalAmount\":%s}",
+                code.trim().replace("\"", "\\\""),
+                discountAmt.toPlainString(),
+                finalAmt.toPlainString()
+        ));
     }
 }

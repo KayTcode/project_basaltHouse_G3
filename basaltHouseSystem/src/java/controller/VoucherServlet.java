@@ -27,7 +27,7 @@ public class VoucherServlet extends HttpServlet {
         UserLoginDTO user = getCurrentUser(request);
         Integer accountId = user != null ? user.getAccountId() : null;
         HashMap<String, Object> voucherData = discountCodeService.statusVoucherById(accountId);
-
+        
         for (Map.Entry<String, Object> entry : voucherData.entrySet()) {
             request.setAttribute(entry.getKey(), entry.getValue());
         }

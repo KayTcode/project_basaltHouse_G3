@@ -1,19 +1,6 @@
-/* ==========================================================================
-   BASALTHOUSE CAFÉ SYSTEM - THEME ACCOUNT CONTROL PANEL (BRAND NEW STYLE)
-   This CSS handles the unified Theme, Headers, Sidebars, table grid & interactive Modals.
-   Place this at: project/src/main/webapp/css/admin/admin_account.css
-   ========================================================================== */
-
 :root {
-    --basalt-green: #006233;
-    --basalt-green-hover: #004d27;
-    --basalt-gold: #c39b62;
     --basalt-gold-light: #fef8f0;
-    --basalt-white: #ffffff;
-    --basalt-charcoal: #2d312e;
     --basalt-slate-black: #111111;
-    --basalt-neutral-bg: #f5f7f6;
-    --basalt-border: #e3e7e5;
     --basalt-red: #c92a2a;
     --basalt-red-light: #ffe3e3;
     --basalt-blue: #1c7ed6;
@@ -22,815 +9,315 @@
     --basalt-emerald-light: #ebfbee;
 }
 
-/* Base resets & typography selection */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--basalt-neutral-bg);
-    color: var(--basalt-charcoal);
-    font-size: 13px;
-    line-height: 1.5;
-    overflow-x: hidden;
-}
-
-code {
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: 700;
-    color: var(--basalt-green-hover);
-    background-color: #e6f0eb;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 11px;
-}
-
-/* ==========================================================================
-   1. TOP HEADER (IDENTICAL TO THE DASHBOARD VIEWPORT)
-   ========================================================================== */
-.top-header {
-    background: #ffffff; /* Đổi từ gradient xanh sang màu trắng */
-    color: #333333;      /* Chữ mặc định đổi sang màu tối */
-    padding: 16px 32px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1); /* Đổ bóng nhẹ hơn cho giao diện sáng */
-    border-bottom: 2px solid #e8eef5;       /* Đường kẻ mảnh dưới đáy header */
-    margin-bottom: 0;
-}
-
-/* Định dạng màu chữ Logo Basalt House trên nền trắng */
-.top-header .logo {
-    color: #006644; /* Chữ "Basalt" đổi thành màu xanh lá đậm */
-    font-size: 22px;
-    font-weight: 800;
-}
-
-.top-header .logo span {
-    color: #ffb300; /* Chữ "House" đổi thành màu vàng nghệ */
-}
-
-.sys-time-badge {
-    font-size: 11px;
-    font-weight: 700;
-    color: #006644;
-    background-color: #e6f5ea;
-    padding: 5px 12px;
-    border-radius: 6px;
-    letter-spacing: 0.2px;
-}
-
-/* ==========================================================================
-   2. APP CONTAINER & SIDEBAR (IDENTICAL TO THE DASHBOARD VIEWPORT)
-   ========================================================================== */
-.app-container {
-    display: flex;
-    min-height: calc(100vh - 80px);
-}
-
-/* 1. Nền tổng thể Sidebar */
-.sidebar {
-    width: 320px;
-    background: #ffffff !important;
-    padding: 0;
-    border-right: 1px solid #e8eef5 !important;
-    box-shadow: none !important;
-    flex-shrink: 0;
-    overflow-y: auto;
-}
-
-/* 2. Khối thông tin User (Tên Admin) */
-.sidebar .user-info strong {
-    color: #333333 !important; /* Ép tên admin thành màu đen/xám đậm */
-}
-.sidebar .user-info span {
-    color: #2eb872 !important; /* Màu xanh lá cho chữ "Trực tuyến" */
-}
-
-/* 3. Tiêu đề các nhóm danh mục (TỔNG QUAN, HỒ SƠ & TÀI KHOẢN...) */
-.sidebar .section-header {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8 !important; /* Màu xám xanh thanh lịch */
-    padding: 16px 24px 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* 4. Các mục Menu (Chữ bên cạnh các Icon) */
-.sidebar .menu-item {
-    display: flex !important;
-    align-items: center;
-    gap: 12px;                  /* Tạo khoảng cách giữa Icon và Chữ */
-    padding: 12px 20px;
-    color: #475569 !important;  /* Ép chữ menu thành màu xám đậm rõ ràng */
-    text-decoration: none !important;
-    font-size: 13px;
-    font-weight: 500;
-    margin: 2px 12px;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-/* 5. Hiệu ứng khi di chuột (Hover) */
-.sidebar .menu-item:hover {
-    background: #f1f5f9 !important; /* Đổi nền xám nhạt */
-    color: #006644 !important;      /* Chữ chuyển sang màu xanh lá */
-}
-
-/* 6. Mục đang được chọn (Active) */
-.sidebar .menu-item.active {
-    background: #f0f3ff !important; /* Nền xanh tím nhạt */
-    color: #4f46e5 !important;      /* Chữ chuyển hẳn sang màu xanh tím hiện đại */
-    font-weight: 600 !important;
-    border-left: 4px solid #4f46e5 !important; /* Vạch màu xanh tím ở mép trái */
-    border-radius: 0 8px 8px 0;
-    margin-left: 0;
-}
-
-/* ── User Section ── */
-.sidebar .user-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 18px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    margin-bottom: 8px;
-}
-
-.sidebar .user-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #006644;
-    font-weight: 800;
-    font-size: 20px;
-    flex-shrink: 0;
-}
-
-.sidebar .user-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.sidebar .user-info strong {
-    font-size: 13px;
-    color: #333333 !important;
-    font-weight: 700;
-    line-height: 1.3;
-}
-
-.sidebar .user-info span {
-    font-size: 11px;
-    color: rgba(255,255,255,0.7);
-}
-
-/* ── Menu Section ── */
-.sidebar .menu-section {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 4px;
-}
-
-/* ==========================================================================
-   3. MAIN CONTENT LAYER & TITLE BAR
-   ========================================================================== */
-.main-content {
-    flex: 1;
-    padding: 24px 32px;
-    background: #f5f7fa;
-    overflow-y: auto;
-}
-
-.viewport-headline-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+/* ── ACCOUNT PANEL OVERVIEW CARDS ── */
+.account-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
     margin-bottom: 28px;
 }
 
-.headline-left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.page-title {
-    font-size: 22px;
-    font-weight: 950;
-    color: var(--basalt-green-hover);
-    letter-spacing: -0.5px;
-}
-
-.page-desc {
-    font-size: 12px;
-    color: #79857f;
-    font-weight: 500;
-}
-
-/* User identity header */
-.user-avatar-wrapper {
+.overview-card-item {
+    background-color: var(--basalt-white);
+    border: 1px solid var(--basalt-border);
+    border-radius: 10px;
+    padding: 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: var(--basalt-white);
-    padding: 6px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--basalt-border);
+    gap: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.015);
 }
 
-.avatar-letter {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background-color: var(--basalt-green);
-    color: var(--basalt-white);
-    font-weight: 850;
+.card-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 20px;
 }
 
-.user-info {
+.overview-card-item:nth-child(1) .card-icon-wrapper { background-color: #edf2ff; color: #4c6ef5; }
+.overview-card-item:nth-child(2) .card-icon-wrapper { background-color: var(--basalt-emerald-light); color: var(--basalt-emerald); }
+.overview-card-item:nth-child(3) .card-icon-wrapper { background-color: #fff9db; color: #f59f00; }
+.overview-card-item:nth-child(4) .card-icon-wrapper { background-color: var(--basalt-red-light); color: var(--basalt-red); }
+
+.card-metrics-data {
     display: flex;
     flex-direction: column;
 }
 
-.user-name {
-    font-size: 11.5px;
+.card-metrics-data .metric-label {
+    font-size: 12px;
+    color: #868e96;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.card-metrics-data .metric-count {
+    font-size: 20px;
     font-weight: 800;
     color: var(--basalt-slate-black);
 }
 
-.user-status-dot {
-    font-size: 9px;
-    color: #2b8a3e;
-    font-weight: 700;
-}
-
-/* ==========================================================================
-   4. KPI CARDS GRID LAYOUT
-   ========================================================================== */
-.kpi-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.kpi-card-item {
+/* ── DATA TABLE & FILTER SECTION ── */
+.data-management-panel {
     background-color: var(--basalt-white);
     border: 1px solid var(--basalt-border);
     border-radius: 12px;
-    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    overflow: hidden;
+}
+
+.panel-header-toolbar {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--basalt-border);
     display: flex;
-    flex-direction: column;
     justify-content: space-between;
-    height: 126px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-}
-
-.kpi-card-item.border-l-green {
-    border-left: 4px solid var(--basalt-gold);
-}
-.kpi-card-item.border-l-blue {
-    border-left: 4px solid var(--basalt-blue);
-}
-.kpi-card-item.border-l-emerald {
-    border-left: 4px solid var(--basalt-green);
-}
-.kpi-card-item.border-l-red {
-    border-left: 4px solid var(--basalt-red);
-}
-
-.kpi-card-header {
-    display: flex;
     align-items: center;
-    justify-content: space-between;
 }
 
-.kpi-label {
-    font-size: 10px;
-    font-weight: 900;
-    color: #839189;
-    letter-spacing: 0.5px;
-}
-
-.kpi-icon {
-    font-size: 15px;
-    color: #b0c2b8;
-}
-
-.kpi-value {
-    font-size: 24px;
-    font-weight: 900;
+.panel-header-toolbar h2 {
+    font-size: 16px;
+    font-weight: 800;
     color: var(--basalt-slate-black);
-    margin: 8px 0;
 }
 
-.kpi-footer {
-    font-size: 10px;
-    font-weight: 700;
-    color: #79857f;
-}
-
-.text-green-trend {
-    color: var(--basalt-emerald);
-}
-.text-red-strong {
-    color: var(--basalt-red);
-}
-
-/* ==========================================================================
-   5. VISUAL CARD PATTERN (WHITE PANEL SHEETS)
-   ========================================================================== */
-.dashboard-visual-card {
-    background-color: var(--basalt-white);
-    border: 1px solid var(--basalt-border);
-    border-radius: 14px;
-    padding: 24px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01);
-    margin-bottom: 24px;
-}
-
-.card-title-header {
+.toolbar-actions-group {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
     gap: 12px;
 }
 
-.card-title {
-    display: block;
-    font-size: 15px;
-    font-weight: 950;
-    color: var(--basalt-green-hover);
-    letter-spacing: -0.2px;
-}
-
-.card-subtitle {
-    display: block;
-    font-size: 11px;
-    color: #79857f;
-    margin-top: 2px;
-}
-
-/* Action CTA Buttons */
-.btn-primary {
-    background-color: var(--basalt-green);
-    color: var(--basalt-white);
-    font-weight: 700;
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 98, 51, 0.15);
-}
-
-.btn-primary:hover {
-    background-color: var(--basalt-green-hover);
-    transform: translateY(-1px);
-}
-
-/* ==========================================================================
-   6. POWER SEARCH AND FILTERS SHEET
-   ========================================================================== */
-.search-filter-belt {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #fafbfb;
-    border: 1px solid var(--basalt-border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.input-search-wrapper {
+.search-input-box {
     position: relative;
-    flex: 1;
-    min-width: 260px;
 }
 
-.input-search-wrapper input {
-    width: 100%;
-    padding: 8px 12px 8px 36px;
+.search-input-box input {
+    padding: 9px 12px 9px 36px;
     border: 1px solid var(--basalt-border);
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 13px;
+    width: 260px;
     outline: none;
-    color: var(--basalt-charcoal);
-    font-family: inherit;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s;
 }
 
-.input-search-wrapper input:focus {
+.search-input-box input:focus {
     border-color: var(--basalt-green);
     box-shadow: 0 0 0 3px rgba(0, 98, 51, 0.08);
 }
 
-.search-icon {
+.search-input-box::before {
+    content: "🔍";
     position: absolute;
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #8c9c93;
     font-size: 13px;
+    opacity: 0.5;
 }
 
-.filter-dropdown-group {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.select-wrapper {
+.btn-primary-action {
+    background-color: var(--basalt-green);
+    color: var(--basalt-white);
+    border: none;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 11.5px;
-    font-weight: 700;
+    transition: background 0.2s;
 }
 
-.select-wrapper label {
-    color: #556B5D;
+.btn-primary-action:hover {
+    background-color: var(--basalt-green-hover);
 }
 
-.select-wrapper select {
-    padding: 6px 12px;
-    border: 1px solid var(--basalt-border);
-    border-radius: 6px;
-    font-size: 11.5px;
-    font-family: inherit;
-    outline: none;
-    background-color: var(--basalt-white);
-    color: var(--basalt-charcoal);
-    cursor: pointer;
-    min-width: 140px;
-    font-weight: 600;
+/* Table Style */
+.responsive-table-wrapper {
+    overflow-x: auto;
 }
 
-.select-wrapper select:focus {
-    border-color: var(--basalt-green);
-}
-
-/* ==========================================================================
-   7. SIMPLE DATA TABLE SYSTEM
-   ========================================================================== */
-.dashboard-simple-table {
+.basalt-custom-table {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    margin-top: 6px;
+    font-size: 13px;
 }
 
-.dashboard-simple-table th {
-    background-color: var(--basalt-neutral-bg);
-    color: #516057;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    padding: 12px 16px;
-    border-bottom: 1.5px solid var(--basalt-border);
-}
-
-.dashboard-simple-table td {
-    padding: 14px 16px;
+.basalt-custom-table th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 700;
+    padding: 14px 24px;
     border-bottom: 1px solid var(--basalt-border);
-    font-size: 11.5px;
+}
+
+.basalt-custom-table td {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--basalt-border);
+    color: var(--basalt-charcoal);
     vertical-align: middle;
 }
 
-.dashboard-simple-table tr:hover td {
-    background-color: #fafbfc;
+.basalt-custom-table tr:last-child td {
+    border-bottom: none;
 }
 
-.user-cell-name {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.basalt-custom-table tr:hover td {
+    background-color: #fcfdfe;
 }
 
-.symbol-avatar {
-    font-size: 16px;
-    background-color: var(--basalt-gold-light);
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(195, 155, 98, 0.15);
-}
-
-.contact-card-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.contact-card-cell span {
-    font-size: 11px;
-}
-
-.cell-email {
-    color: var(--basalt-charcoal);
-    font-weight: 500;
-}
-
-.cell-phone {
-    color: #79857f;
-}
-
-.contact-card-cell i {
-    color: #8c9c93;
-    margin-right: 4px;
-    width: 12px;
-}
-
-.text-center {
-    text-align: center !important;
-}
-.text-right {
-    text-align: right !important;
-}
-.font-bold {
-    font-weight: 800 !important;
-}
-.font-semibold {
-    font-weight: 600 !important;
-}
-.font-medium {
-    font-weight: 500 !important;
-}
-.text-dark-green {
-    color: var(--basalt-green-hover) !important;
-}
-.text-slate {
-    color: #79857f;
-}
-
-/* Role Badge Styles */
-.role-badge {
+/* Badges */
+.status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
     padding: 4px 10px;
-    border-radius: 100px;
-    font-weight: 750;
-    font-size: 10px;
-    letter-spacing: 0.1px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
 }
 
-.role-admin {
-    background-color: #f3f0ff;
-    color: #6f2dbd;
-    border: 1px solid #e5dbff;
-}
+.status-badge.badge-active { background-color: var(--basalt-emerald-light); color: var(--basalt-emerald); }
+.status-badge.badge-suspended { background-color: var(--basalt-red-light); color: var(--basalt-red); }
 
-.role-employee {
-    background-color: var(--basalt-blue-light);
-    color: var(--basalt-blue);
-    border: 1px solid #d0ebff;
-}
-
-.role-customer {
-    background-color: #f1f3f2;
-    color: #495057;
-    border: 1px solid #dee2e6;
-}
-
-/* Status Badge Styles */
-.status-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 100px;
-    font-size: 10px;
-    font-weight: 800;
-    text-align: center;
-}
-
-.status-completed {
-    background-color: var(--basalt-emerald-light);
-    color: var(--basalt-emerald);
-    border: 1px solid #d3f9d8;
-}
-
-.status-cancelled {
-    background-color: var(--basalt-red-light);
-    color: var(--basalt-red);
-    border: 1px solid #ffd8a8;
-}
-
-/* Interactive Action Buttons Column */
-.action-column-buttons {
+/* Row Actions */
+.row-actions-cell {
     display: flex;
-    justify-content: flex-end;
     gap: 8px;
-    padding-right: 8px;
 }
 
-.action-btn {
-    width: 28px;
-    height: 28px;
+.btn-icon-action {
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
     border: 1px solid var(--basalt-border);
     background-color: var(--basalt-white);
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+}
+
+.btn-icon-action:hover { background-color: #f8f9fa; }
+.btn-icon-action.action-edit:hover { border-color: var(--basalt-blue); color: var(--basalt-blue); }
+.btn-icon-action.action-delete:hover { border-color: var(--basalt-red); color: var(--basalt-red); }
+
+/* Pagination Footer */
+.table-pagination-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--basalt-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 12px;
+    color: #868e96;
 }
 
-.btn-edit {
-    color: var(--basalt-blue);
+.pagination-controls-group {
+    display: flex;
+    gap: 6px;
 }
 
-.btn-edit:hover {
-    background-color: var(--basalt-blue-light);
-    border-color: var(--basalt-blue);
+.btn-page-nav {
+    padding: 6px 12px;
+    border: 1px solid var(--basalt-border);
+    background-color: var(--basalt-white);
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--basalt-charcoal);
+    text-decoration: none;
 }
 
-.btn-lock {
-    color: #f08c00;
+.btn-page-nav:hover { background-color: #f8f9fa; }
+.btn-page-nav.nav-active {
+    background-color: var(--basalt-green);
+    color: var(--basalt-white);
+    border-color: var(--basalt-green);
 }
 
-.btn-lock:hover {
-    background-color: #fff9db;
-    border-color: #f08c00;
-}
-
-.btn-unlock {
-    color: #8c9c93;
-}
-
-.btn-unlock:hover {
-    background-color: var(--basalt-neutral-bg);
-    border-color: #495057;
-}
-
-.btn-delete {
-    color: var(--basalt-red);
-}
-
-.btn-delete:hover {
-    background-color: var(--basalt-red-light);
-    border-color: var(--basalt-red);
-}
-
-/* ==========================================================================
-   8. MODERN DIALOG/MODAL COMPONENT ENGINE
-   ========================================================================== */
-.modal-backdrop {
+/* ── MODALS OVERLAY ── */
+.modal-overlay-backdrop {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(26, 35, 30, 0.45);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 9999;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.25s ease;
 }
 
-.modal-backdrop.active {
+.modal-overlay-backdrop.modal-is-visible {
     opacity: 1;
     pointer-events: auto;
 }
 
-.modal-card {
+.modal-card-window {
     background-color: var(--basalt-white);
-    border-radius: 14px;
-    width: 100%;
-    max-width: 580px;
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-    transform: scale(0.95) translateY(10px);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 12px;
+    width: 520px;
+    max-width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     overflow: hidden;
-    border: 1px solid var(--basalt-border);
-}
-
-.modal-backdrop.active .modal-card {
-    transform: scale(1) translateY(0);
 }
 
 .modal-card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--basalt-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--basalt-border);
-    background-color: var(--basalt-neutral-bg);
+    background-color: #f8f9fa;
 }
 
 .modal-card-header h3 {
-    font-size: 14.5px;
-    font-weight: 900;
-    color: var(--basalt-green-hover);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--basalt-slate-black);
 }
 
-.close-modal-x {
+.btn-modal-close {
+    border: none;
+    background: none;
     font-size: 22px;
-    font-weight: 300;
-    color: #79857f;
     cursor: pointer;
-    line-height: 1;
-    transition: color 0.15s ease;
+    color: #adb5bd;
 }
 
-.close-modal-x:hover {
-    color: var(--basalt-red);
-}
+.modal-card-body { padding: 24px; }
+.modal-form-flex-stack { display: flex; flex-direction: column; gap: 16px; }
+.form-field-group { display: flex; flex-direction: column; gap: 6px; }
+.form-field-group label { font-size: 12.5px; font-weight: 700; color: #495057; }
 
-/* Modal Body Forms Design */
-.modal-card-body {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    max-height: 70vh;
-    overflow-y: auto;
-}
-
-.form-group-row {
-    width: 100%;
-}
-
-.grid-2-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-@media(max-width: 576px) {
-    .grid-2-col {
-        grid-template-columns: 1fr;
-    }
-}
-
-.form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.form-label {
-    font-size: 11.5px;
-    font-weight: 700;
-    color: #556B5D;
-}
-
-.form-label .required {
-    color: var(--basalt-red);
-}
-
-.form-input, .form-select {
-    width: 100%;
+.form-field-group .form-input-text,
+.form-field-group .form-select {
     padding: 10px 12px;
     border: 1px solid var(--basalt-border);
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 13px;
     outline: none;
-    font-family: inherit;
-    color: var(--basalt-charcoal);
-    background-color: #fafbfb;
-    transition: all 0.2s ease;
+    background-color: var(--basalt-neutral-bg);
+    width: 100%;
 }
 
-.form-input:focus, .form-select:focus {
+.form-field-group .form-input-text:focus,
+.form-field-group .form-select:focus {
     border-color: var(--basalt-green);
     background-color: var(--basalt-white);
-    box-shadow: 0 0 0 3px rgba(0, 98, 51, 0.08);
 }
 
 .edit-account-notice {
@@ -839,14 +326,11 @@ code {
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 11.5px;
-    border: 1px solid rgba(28, 126, 214, 0.15);
 }
 
-/* Modal Footer controls */
 .modal-card-footer {
     display: flex;
     justify-content: flex-end;
-    align-items: center;
     gap: 12px;
     padding: 16px 24px;
     background-color: var(--basalt-neutral-bg);
@@ -861,29 +345,104 @@ code {
     border-radius: 6px;
     font-weight: 700;
     cursor: pointer;
-    font-size: 11.5px;
-    transition: all 0.15s ease;
 }
 
-.btn-cancel:hover {
-    background-color: #ebebeb;
-    color: var(--basalt-slate-black);
+/* ==========================================================================
+   XỬ LÝ ĐỂ MODAL BIẾN THÀNH BOX NỔI GIỮA MÀN HÌNH (FIX LỖI BỊ ĐẨY XUỐNG ĐÁY)
+   ========================================================================== */
+
+/* Lớp nền tối bao phủ toàn màn hình */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.55); /* Làm tối nền phía sau */
+    backdrop-filter: blur(4px);            /* Làm mờ nhẹ hậu cảnh cho sang */
+    display: flex;
+    align-items: center;                   /* Căn giữa Box theo chiều dọc */
+    justify-content: center;               /* Căn giữa Box theo chiều ngang */
+    z-index: 99999;                        /* Đảm bảo nổi lên trên cùng tất cả sidebar/header */
+    
+    /* Mặc định là ẩn */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-in-out;
 }
 
-.btn-submit-action {
-    background-color: var(--basalt-green);
-    color: var(--basalt-white);
-    border: none;
-    padding: 9px 18px;
-    border-radius: 6px;
+/* Khi bấm nút Thêm/Sửa -> JS thêm class .active vào -> Hiện Box lên */
+.modal-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Hộp thoại Box nội dung trắng bên trong */
+.modal-card {
+    background-color: var(--basalt-white);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 520px;                      /* Chiều rộng tối đa của Box */
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25); /* Đổ bóng sâu để tạo hiệu ứng nổi */
+    overflow: hidden;
+    
+    /* Tạo hiệu ứng lao nhẹ từ trên xuống khi hiển thị */
+    transform: translateY(-40px);
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Khi kích hoạt thì Box rơi về vị trí trung tâm chuẩn */
+.modal-backdrop.active .modal-card {
+    transform: translateY(0);
+}
+
+/* Tiêu đề Box */
+.modal-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    background-color: var(--basalt-white);
+    border-bottom: 1px solid var(--basalt-border);
+}
+
+.modal-card-header h3 {
+    font-size: 16px;
     font-weight: 700;
-    cursor: pointer;
-    font-size: 11.5px;
-    box-shadow: 0 2px 4px rgba(0, 98, 51, 0.1);
-    transition: all 0.15s ease;
+    color: var(--basalt-slate-black);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.btn-submit-action:hover {
-    background-color: var(--basalt-green-hover);
-    transform: translateY(-0.5px);
+/* Nút X tắt nhanh Box */
+.close-modal-x {
+    font-size: 24px;
+    font-weight: 400;
+    color: #a0a0a0;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-modal-x:hover {
+    color: var(--basalt-red);
+}
+
+/* Cấu trúc form bên trong thân Box */
+.modal-card-body {
+    padding: 24px;
+    max-height: 75vh;                     /* Tránh việc box quá dài tràn màn hình */
+    overflow-y: auto;                     /* Tự cuộn nếu màn hình laptop nhỏ */
+}
+
+/* Khu vực nút bấm dưới đáy Box */
+.modal-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background-color: var(--basalt-neutral-bg);
+    border-top: 1px solid var(--basalt-border);
 }

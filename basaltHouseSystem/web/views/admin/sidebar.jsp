@@ -1,7 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<%-- Tự động lấy Request URI hiện tại để kiểm tra active menu --%>
 <c:set var="currentURI" value="${requestScope['jakarta.servlet.forward.request_uri']}" />
 <c:if test="${empty currentURI}">
     <c:set var="currentURI" value="${pageContext.request.requestURI}" />

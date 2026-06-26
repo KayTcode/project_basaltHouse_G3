@@ -34,6 +34,11 @@ public class Supplier {
         this.isDeleted = isDeleted;
     }
 
+    public Supplier(int supplierId, String supplierName) {
+        this.supplierId = supplierId;
+        this.supplierName = supplierName;
+    }
+
     public int getSupplierId() {
         return supplierId;
     }

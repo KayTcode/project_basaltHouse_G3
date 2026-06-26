@@ -13,16 +13,24 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.List;
 import model.Category;
 import model.DiscountCode;
 import model.Product;
+import services.CategoryService;
+import services.DiscountCodeService;
+import services.ProductService;
 
 /**
  *
  * @author admin
  */
 public class HomePageServlet extends HttpServlet {
+
+    private static final ProductService Pservice = new ProductService();
+    private static final CategoryService Cservice = new CategoryService();
+    private static final DiscountCodeService Dservice = new DiscountCodeService();
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -41,7 +49,7 @@ public class HomePageServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet HomePageServlet</title>");            
+            out.println("<title>Servlet HomePageServlet</title>");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet HomePageServlet at " + request.getContextPath() + "</h1>");
@@ -60,14 +68,32 @@ public class HomePageServlet extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     @Override
-     protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        ProductDAO productDAO = new ProductDAO();
-        CategoryDAO cate = new CategoryDAO();
-        DiscountCodeDAO discound = new DiscountCodeDAO();
-        List<DiscountCode>listD = discound.getDiscountCode();
-        List<Category> list = cate.getCategory();
-        List<Product> featuredProducts = productDAO.getBestSellingProducts(5);
+        HashMap<String, Object> s3 = Dservice.getDiscountCode();
+        List<DiscountCode> listD = null;
+        if (s3.containsKey("error")) {
+            request.setAttribute("error", s3.get("error").toString());
+        } else {
+            listD = (List<DiscountCode>) s3.get("success");
+        }
+        List<Category> list = null;
+        HashMap<String, Object> s2 = Cservice.getCategory();
+        if (s2.containsKey("error")) {
+            request.setAttribute("error", s2.get("error").toString());
+
+        } else {
+            list = (List<Category>) s2.get("success");
+        }
+
+        HashMap<String, Object> s = Pservice.getBestSellingProducts(5);
+        List<Product> featuredProducts = null;
+        if (s.containsKey("error")) {
+            request.setAttribute("error", s.get("error").toString());
+
+        } else {
+            featuredProducts = (List<Product>) s.get("success");
+        }
         request.setAttribute("Listd", listD);
         request.setAttribute("ListP", list);
         request.setAttribute("featuredProducts", featuredProducts);

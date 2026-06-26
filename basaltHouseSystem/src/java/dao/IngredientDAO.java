@@ -26,7 +26,7 @@ public class IngredientDAO extends DBContext {
         try {
             String sql = """
                      SELECT IngredientId, IngredientName, Unit,
-                            StockQuantity, MinStockQuantity
+                            StockQuantity, MinStockQuantity, SupplierId
                      FROM Ingredients
                      WHERE IsDeleted = 0 AND IsActive = 1
                      """;
@@ -40,6 +40,8 @@ public class IngredientDAO extends DBContext {
                         rs.getBigDecimal("MinStockQuantity")
                 );
                 ig.setUnit(rs.getString("Unit"));
+                Object supplierId = rs.getObject("SupplierId");
+                ig.setSupplierId(supplierId == null ? null : rs.getInt("SupplierId"));
                 map.put(ig.getIngredientId(), ig);
             }
         } catch (Exception e) {
@@ -63,6 +65,24 @@ public class IngredientDAO extends DBContext {
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+    }
+      public boolean updateIngredientQuantity2(int id, BigDecimal quantityNeed) {
+        try {
+            String sql = """
+                         UPDATE Ingredients
+                         SET StockQuantity = StockQuantity + ?
+                         WHERE IngredientId = ?
+                         """;
+            st = connection.prepareStatement(sql);
+            st.setObject(1, quantityNeed);
+            st.setObject(2, id);
+            st.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return false;
+        }
+   
     }
 
     public List<Ingredient> getIngredientsBelowWarning() {

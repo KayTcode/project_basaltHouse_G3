@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import model.Order;
 import java.sql.Statement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -202,6 +201,8 @@ public class OrderDAO extends DBContext {
         return list;
     }
 
+
+
     /**
      * Áp dụng mã giảm giá cho đơn hàng: cập nhật DiscountId, DiscountAmount,
      * FinalAmount.
@@ -350,9 +351,12 @@ public class OrderDAO extends DBContext {
     public List<Order> getCompletedOrders() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, c.FullName "
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, "
+                    + "o.Note, tb.TableCode AS TableName, c.FullName "
                     + "FROM Orders o "
                     + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
+                    + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
+                    + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
                     + "WHERE o.IsDeleted = 0 AND o.OrderStatus = 'Completed' "
                     + "ORDER BY o.CreatedAt DESC";
             st = connection.prepareStatement(sql);
@@ -362,6 +366,8 @@ public class OrderDAO extends DBContext {
                 o.setOrderId(rs.getInt("OrderId"));
                 o.setOrderType(rs.getString("OrderType"));
                 o.setOrderStatus(rs.getString("OrderStatus"));
+                o.setNote(rs.getString("Note"));
+                o.setTableName(rs.getString("TableName"));
                 java.sql.Timestamp ts = rs.getTimestamp("CreatedAt");
                 if (ts != null) {
                     o.setCreatedAt(ts.toLocalDateTime());

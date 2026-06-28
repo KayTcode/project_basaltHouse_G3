@@ -33,6 +33,7 @@ public class ImportInvoicesDetail {
     private String rejectReason;
     private String discrepancyNote;
     private String detailNote;
+    private int ingredientCount = 1;
 
     public ImportInvoicesDetail() {
     }
@@ -231,6 +232,14 @@ public class ImportInvoicesDetail {
 
     public void setDetailNote(String detailNote) {
         this.detailNote = detailNote;
+    }
+
+    public int getIngredientCount() {
+        return ingredientCount;
+    }
+
+    public void setIngredientCount(int ingredientCount) {
+        this.ingredientCount = ingredientCount;
     }
 
     public String getOrderedDateInput() {

@@ -31,13 +31,12 @@
                     </div>
                     <c:remove var="toastMessage" scope="session" />
                 </c:if>
-
                 <div class="viewport-headline-bar">
                     <div class="headline-left">
                         <h1 class="page-title">Quản Lý Tài Khoản Thành Viên</h1>
                         <p class="page-desc">Phân quyền, quản trị bảo mật thông tin và giám sát hoạt động hệ thống BasaltHouse.</p>
                     </div>
-
+      
                     <div class="user-avatar-wrapper">
                         <div class="avatar-letter">A</div>
                         <div class="user-info">
@@ -320,6 +319,7 @@
                         <button type="button" class="btn-cancel" onclick="closeAddModal()">Hủy Bỏ</button>
                         <button type="submit" class="btn-primary-action">Lưu Tài Khoản</button>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -338,7 +338,7 @@
                     <div class="modal-card-body">
                         <div class="modal-form-flex-stack">
                             <p class="edit-account-notice">Đang chỉnh sửa cho thành viên: <strong id="edit_notice_title">#ID</strong></p>
-                            
+
                             <div class="form-field-group">
                                 <label>Họ &amp; Tên <span style="color:var(--basalt-red);">*</span></label>
                                 <input type="text" name="fullName" id="edit_fullName" required class="form-input-text">
@@ -400,7 +400,7 @@
 
                 document.getElementById('editAccountModal').classList.add('active');
             }
-            
+
             function closeEditModal() {
                 document.getElementById('editAccountModal').classList.remove('active');
             }

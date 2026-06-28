@@ -3,16 +3,16 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/AdminDashboardDAO.java</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/admin/admin_common.css</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/header.jsp</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/admin/admin_account.css</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/AdminDashboardServlet.java</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/admin/admin_dashboard.css</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/model/Product.java</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/AdminProductServlet.java</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dto/RecipeDTO.java</file>
             <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/AdminAccountServlet.java</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/admin_account.jsp</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/admin_dashboard.jsp</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/sidebar.jsp</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dto/ProductDTO.java</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/admin_product.jsp</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/admin/admin_product.css</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/AdminAccountService.java</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/services/AdminProductService.java</file>
+            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/AdminProductDAO.java</file>
         </group>
     </open-files>
 </project-private>

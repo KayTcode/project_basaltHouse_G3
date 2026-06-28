@@ -28,17 +28,42 @@ public class ReviewDAO extends DBContext {
 
 
     public boolean submitReview(int orderId, int customerId, int rating, String comment) {
-        
+        int productId = 0;
+        String findProductSql = "SELECT TOP 1 ProductId FROM OrderDetails WHERE OrderId = ? AND IsDeleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(findProductSql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    productId = rs.getInt("ProductId");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("ReviewDAO.submitReview - find product error: " + e.getMessage());
+        }
+
+        if (productId <= 0) {
+            String fallbackSql = "SELECT TOP 1 ProductId FROM Products WHERE IsDeleted = 0 AND IsActive = 1";
+            try (PreparedStatement ps = connection.prepareStatement(fallbackSql);
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    productId = rs.getInt("ProductId");
+                }
+            } catch (SQLException e) {
+                System.err.println("ReviewDAO.submitReview - fallback product error: " + e.getMessage());
+            }
+        }
+
         String sql = """
                      INSERT INTO Reviews (CustomerId, OrderId, ProductId, Rating, Comment,
-                                         IsVisible, CreatedAt, IsDeleted)
-                     VALUES (?, ?, 0, ?, ?, 1, GETDATE(), 0)
+                                          IsVisible, CreatedAt, IsDeleted)
+                     VALUES (?, ?, ?, ?, ?, 1, GETDATE(), 0)
                      """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, customerId);
             ps.setInt(2, orderId);
-            ps.setInt(3, rating);
-            ps.setString(4, comment != null ? comment.trim() : "");
+            ps.setInt(3, productId);
+            ps.setInt(4, rating);
+            ps.setString(5, comment != null ? comment.trim() : "");
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("ReviewDAO.submitReview Error: " + e.getMessage());

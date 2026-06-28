@@ -5,8 +5,6 @@
 
 package controller;
 
-import dao.IngredientDAO;
-import dao.ImportVoiceDAO;
 import dto.UserLoginDTO;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,9 +16,11 @@ import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import model.ActivityLog;
 import model.ImportDetail;
 import model.ImportInvoice;
@@ -80,19 +80,30 @@ public class ViewImportVoiceServlet extends HttpServlet {
             idParam = request.getParameter("importId");
         }
         if (idParam == null || idParam.trim().isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/staff");
+            response.sendRedirect(request.getContextPath() + "/staff/history");
             return;
         }
         int id;
         try {
             id = Integer.parseInt(idParam);
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/staff");
+            response.sendRedirect(request.getContextPath() + "/staff/history");
             return;
         }
         
-        List<HashMap<String, Object>> listS = null;
-        HashMap<Integer, Ingredient>ingre = null;
+        HashMap<String, Object> s3 = importService.getImportInvoiceDetailsById(id);
+        if (s3.containsKey("error")) {
+            request.setAttribute("error", s3.get("error").toString());
+            request.getRequestDispatcher("views/Staff/ViewImportVoice.jsp").forward(request, response);
+            return;
+        }
+        List<ImportInvoicesDetail> invoiceDetails =
+                (List<ImportInvoicesDetail>) s3.get("success");
+        ImportInvoicesDetail im = invoiceDetails.get(0);
+        im.setIngredientCount(invoiceDetails.size());
+
+        List<HashMap<String, Object>> listS = new ArrayList<>();
+        HashMap<Integer, Ingredient> ingre = new HashMap<>();
         HashMap<String , Object>s1 = importService.getSupplierOptions();
         if(s1.containsKey("error")){
         request.setAttribute("error", s1.get("error").toString());
@@ -106,17 +117,10 @@ public class ViewImportVoiceServlet extends HttpServlet {
         }else{
           ingre = (HashMap<Integer, Ingredient>)s2.get("success");
         }
-        ImportInvoicesDetail im = null;
-        HashMap<String,Object> s3 = importService.getImportInvoicesDetailById(id);
-        if(s3.containsKey("error")){
-        request.setAttribute("error", s3.get("error").toString());
-        
-        }else{
-        im = (ImportInvoicesDetail) s3.get("success");
-        }
         request.setAttribute("ingredients", new ArrayList<>(ingre.values()));
         request.setAttribute("suppliers", listS);
         request.setAttribute("invoiceDetail", im);
+        request.setAttribute("invoiceDetails", invoiceDetails);
         request.getRequestDispatcher("views/Staff/ViewImportVoice.jsp").forward(request, response);
     } 
 
@@ -140,14 +144,17 @@ public class ViewImportVoiceServlet extends HttpServlet {
             return;
         }
 
+        try {
         int importId = Integer.parseInt(request.getParameter("importId"));
-        HashMap<String, Object> oldResult = importService.getImportInvoicesDetailById(importId);
+        HashMap<String, Object> oldResult = importService.getImportInvoiceDetailsById(importId);
         if (oldResult.containsKey("error")) {
             request.setAttribute("errorMessage", oldResult.get("error").toString());
             doGet(request, response);
             return;
         }
-        ImportInvoicesDetail oldInvoice = (ImportInvoicesDetail) oldResult.get("success");
+        List<ImportInvoicesDetail> oldDetails =
+                (List<ImportInvoicesDetail>) oldResult.get("success");
+        ImportInvoicesDetail oldInvoice = oldDetails.get(0);
 
         String importCode = request.getParameter("importCode");
         String supplierInvoiceCode = request.getParameter("supplierInvoiceCode");
@@ -157,15 +164,68 @@ public class ViewImportVoiceServlet extends HttpServlet {
         LocalDateTime expectedDate = parseDateTime(request.getParameter("expectedDate"));
         LocalDateTime receivedDate = parseDateTime(request.getParameter("receivedDate"));
         String note = request.getParameter("note");
-        String rejectReason = request.getParameter("rejectReason");
-        int ingredientId = Integer.parseInt(request.getParameter("ingredientId"));
-        BigDecimal orderedQuantityInput = parseBigDecimal(request.getParameter("orderedQuantity"));
-        BigDecimal receivedQuantityInput = parseBigDecimal(request.getParameter("receivedQuantity"));
-        BigDecimal unitPriceInput = parseBigDecimal(request.getParameter("unitPrice"));
-        BigDecimal totalOrderedAmount = orderedQuantityInput.multiply(unitPriceInput);
-        BigDecimal totalReceivedAmount = receivedQuantityInput.multiply(unitPriceInput);
-        String discrepancyNote = request.getParameter("discrepancyNote");
-        String detailNote= request.getParameter("detailNote");
+        String rejectReason = trimToNull(request.getParameter("rejectReason"));
+        if ("Rejected".equalsIgnoreCase(status) && rejectReason == null) {
+            throw new IllegalArgumentException("Vui lòng nhập lý do từ chối phiếu hàng.");
+        }
+        if (!"Rejected".equalsIgnoreCase(status)) {
+            rejectReason = null;
+        }
+        String[] importDetailIds = request.getParameterValues("importDetailId");
+        String[] ingredientIds = request.getParameterValues("ingredientId");
+        String[] orderedQuantities = request.getParameterValues("orderedQuantity");
+        String[] receivedQuantities = request.getParameterValues("receivedQuantity");
+        String[] unitPrices = request.getParameterValues("unitPrice");
+        String[] discrepancyNotes = request.getParameterValues("discrepancyNote");
+        String[] detailNotes = request.getParameterValues("detailNote");
+        validateDetailParameterCounts(importDetailIds, ingredientIds, orderedQuantities,
+                receivedQuantities, unitPrices, discrepancyNotes, detailNotes);
+   
+
+        HashMap<Integer, ImportInvoicesDetail> oldByDetailId = new HashMap<>();
+        for (ImportInvoicesDetail oldDetail : oldDetails) {
+            oldByDetailId.put(oldDetail.getImportDetailId(), oldDetail);
+        }
+
+        List<ImportDetail> details = new ArrayList<>();
+        Set<Integer> uniqueIngredientIds = new HashSet<>();
+        Set<Integer> uniqueDetailIds = new HashSet<>();
+        BigDecimal totalOrderedAmount = BigDecimal.ZERO;
+        BigDecimal totalReceivedAmount = BigDecimal.ZERO;
+        for (int index = 0; index < importDetailIds.length; index++) {
+            int importDetailId = Integer.parseInt(importDetailIds[index]);
+            int ingredientId = Integer.parseInt(ingredientIds[index]);
+            if (!oldByDetailId.containsKey(importDetailId) || !uniqueDetailIds.add(importDetailId)) {
+                throw new IllegalArgumentException("Chi tiết phiếu nhập không hợp lệ.");
+            }
+            if (!uniqueIngredientIds.add(ingredientId)) {
+                throw new IllegalArgumentException("Mỗi nguyên liệu chỉ được xuất hiện một lần trong phiếu nhập.");
+            }
+
+            BigDecimal orderedQuantity = parseBigDecimal(orderedQuantities[index]);
+            BigDecimal receivedQuantity = parseBigDecimal(receivedQuantities[index]);
+            BigDecimal unitPrice = parseBigDecimal(unitPrices[index]);
+            if (orderedQuantity.compareTo(BigDecimal.ZERO) <= 0
+                    || receivedQuantity.compareTo(BigDecimal.ZERO) < 0
+                    || unitPrice.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Số lượng và đơn giá không hợp lệ.");
+            }
+
+            totalOrderedAmount = totalOrderedAmount.add(orderedQuantity.multiply(unitPrice));
+            totalReceivedAmount = totalReceivedAmount.add(receivedQuantity.multiply(unitPrice));
+            details.add(new ImportDetail(
+                    importDetailId,
+                    importId,
+                    ingredientId,
+                    orderedQuantity,
+                    receivedQuantity,
+                    unitPrice,
+                    discrepancyNotes[index],
+                    detailNotes[index],
+                    false
+            ));
+        }
+
         ImportInvoice v = new ImportInvoice(importId, 
                 importCode, 
                 supplierId, 
@@ -178,14 +238,7 @@ public class ViewImportVoiceServlet extends HttpServlet {
                 totalReceivedAmount, 
                 note, 
                 rejectReason);
-        ImportDetail detail = new ImportDetail(importId,
-                ingredientId, 
-                orderedQuantityInput, 
-                receivedQuantityInput, 
-                unitPriceInput,
-                discrepancyNote,
-                detailNote);
-         HashMap<String, Object> s = importService.updateImportInVoce(v,detail);
+         HashMap<String, Object> s = importService.updateImportInVoice(v, details);
          if (s.containsKey("error")) {
              request.setAttribute("errorMessage", s.get("error").toString());
              doGet(request, response);
@@ -202,12 +255,26 @@ public class ViewImportVoiceServlet extends HttpServlet {
          appendChange(oldValue, newValue, "receivedDate", oldInvoice.getReceivedDate(), receivedDate);
          appendChange(oldValue, newValue, "note", oldInvoice.getInvoiceNote(), note);
          appendChange(oldValue, newValue, "rejectReason", oldInvoice.getRejectReason(), rejectReason);
-         appendChange(oldValue, newValue, "ingredientId", oldInvoice.getIngredientId(), ingredientId);
-         appendChange(oldValue, newValue, "orderedQuantity", oldInvoice.getOrderedQuantity(), orderedQuantityInput);
-         appendChange(oldValue, newValue, "receivedQuantity", oldInvoice.getReceivedQuantity(), receivedQuantityInput);
-         appendChange(oldValue, newValue, "unitPrice", oldInvoice.getUnitPrice(), unitPriceInput);
-         appendChange(oldValue, newValue, "discrepancyNote", oldInvoice.getDiscrepancyNote(), discrepancyNote);
-         appendChange(oldValue, newValue, "detailNote", oldInvoice.getDetailNote(), detailNote);
+         appendChange(oldValue, newValue, "totalOrderedAmount",
+                 oldInvoice.getTotalOrderedAmount(), totalOrderedAmount);
+         appendChange(oldValue, newValue, "totalReceivedAmount",
+                 oldInvoice.getTotalReceivedAmount(), totalReceivedAmount);
+         for (ImportDetail detail : details) {
+             ImportInvoicesDetail oldDetail = oldByDetailId.get(detail.getImportDetailId());
+             String prefix = "detail[" + detail.getImportDetailId() + "].";
+             appendChange(oldValue, newValue, prefix + "ingredientId",
+                     oldDetail.getIngredientId(), detail.getIngredientId());
+             appendChange(oldValue, newValue, prefix + "orderedQuantity",
+                     oldDetail.getOrderedQuantity(), detail.getOrderedQuantity());
+             appendChange(oldValue, newValue, prefix + "receivedQuantity",
+                     oldDetail.getReceivedQuantity(), detail.getReceivedQuantity());
+             appendChange(oldValue, newValue, prefix + "unitPrice",
+                     oldDetail.getUnitPrice(), detail.getUnitPrice());
+             appendChange(oldValue, newValue, prefix + "discrepancyNote",
+                     oldDetail.getDiscrepancyNote(), detail.getDiscrepancyNote());
+             appendChange(oldValue, newValue, prefix + "detailNote",
+                     oldDetail.getDetailNote(), detail.getNote());
+         }
 
          if (oldValue.length() > 0) {
              HashMap<String,Object>s2 = activeService.ctreatActiveLog(new ActivityLog(user.getAccountId(),
@@ -226,8 +293,23 @@ public class ViewImportVoiceServlet extends HttpServlet {
              }
          }
          response.sendRedirect(request.getContextPath() + "/viewimportvoice?id=" + importId);
+        } catch (Exception e) {
+            request.setAttribute("errorMessage", e.getMessage());
+            doGet(request, response);
+        }
         
-        
+    }
+
+    private void validateDetailParameterCounts(String[]... values) {
+        if (values.length == 0 || values[0] == null || values[0].length == 0) {
+            throw new IllegalArgumentException("Phiếu nhập phải có ít nhất một nguyên liệu.");
+        }
+        int detailCount = values[0].length;
+        for (String[] value : values) {
+            if (value == null || value.length != detailCount) {
+                throw new IllegalArgumentException("Dữ liệu chi tiết phiếu nhập không hợp lệ.");
+            }
+        }
     }
 
     private LocalDateTime parseDateTime(String value) {
@@ -235,6 +317,13 @@ public class ViewImportVoiceServlet extends HttpServlet {
             return null;
         }
         return LocalDateTime.parse(value.trim());
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 
     private BigDecimal parseBigDecimal(String value) {

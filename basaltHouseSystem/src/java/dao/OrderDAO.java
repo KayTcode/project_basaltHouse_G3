@@ -7,6 +7,7 @@ import model.Order;
 import java.sql.Statement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -619,6 +620,200 @@ public class OrderDAO extends DBContext {
         }
         return -1;
     }
+    /**
+     * Lấy tất cả đơn hàng Online của một khách hàng, sắp xếp mới nhất trước.
+     * Dùng cho màn Theo dõi đơn hàng.
+     */
+    public List<Order> getOnlineOrdersByCustomerId(int customerId) {
+        List<Order> list = new ArrayList<>();
+        try {
+            String sql = """
+                         SELECT OrderId, CustomerId, ShipperId, OrderAddressId, DiscountId,
+                                OrderType, OrderStatus, PaymentMethod, PaymentStatus,
+                                TotalAmount, DiscountAmount, FinalAmount, CreatedAt
+                         FROM Orders
+                         WHERE CustomerId = ? AND OrderType = 'Online' AND IsDeleted = 0
+                         ORDER BY CreatedAt DESC
+                         """;
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, customerId);
+                try (ResultSet rs2 = ps.executeQuery()) {
+                    while (rs2.next()) {
+                        Order o = new Order();
+                        o.setOrderId(rs2.getInt("OrderId"));
+                        o.setCustomerId(rs2.getObject("CustomerId") != null ? rs2.getInt("CustomerId") : null);
+                        o.setShipperId(rs2.getObject("ShipperId") != null ? rs2.getInt("ShipperId") : null);
+                        o.setOrderAddressId(rs2.getObject("OrderAddressId") != null ? rs2.getInt("OrderAddressId") : null);
+                        o.setDiscountId(rs2.getObject("DiscountId") != null ? rs2.getInt("DiscountId") : null);
+                        o.setOrderType(rs2.getString("OrderType"));
+                        o.setOrderStatus(rs2.getString("OrderStatus"));
+                        o.setPaymentMethod(rs2.getString("PaymentMethod"));
+                        o.setPaymentStatus(rs2.getString("PaymentStatus"));
+                        o.setTotalAmount(rs2.getBigDecimal("TotalAmount"));
+                        o.setDiscountAmount(rs2.getBigDecimal("DiscountAmount"));
+                        o.setFinalAmount(rs2.getBigDecimal("FinalAmount"));
+                        Timestamp ts = rs2.getTimestamp("CreatedAt");
+                        if (ts != null) o.setCreatedAt(ts.toLocalDateTime());
+                        list.add(o);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("getOnlineOrdersByCustomerId Error: " + e.getMessage());
+        }
+        return list;
+    }
+
+    /**
+     * Lấy địa chỉ giao hàng theo OrderAddressId.
+     */
+    public model.OrderAddress getOrderAddressByOrderAddressId(int orderAddressId) {
+        try {
+            String sql = """
+                         SELECT OrderAddressId, CustomerId, ZoneId, RecipientName,
+                                RecipientPhone, AddressDetail, Note
+                         FROM OrderAddresses
+                         WHERE OrderAddressId = ? AND IsDeleted = 0
+                         """;
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, orderAddressId);
+                try (ResultSet rs2 = ps.executeQuery()) {
+                    if (rs2.next()) {
+                        model.OrderAddress addr = new model.OrderAddress();
+                        addr.setOrderAddressId(rs2.getInt("OrderAddressId"));
+                        addr.setCustomerId(rs2.getInt("CustomerId"));
+                        addr.setZoneId(rs2.getInt("ZoneId"));
+                        addr.setRecipientName(rs2.getString("RecipientName"));
+                        addr.setRecipientPhone(rs2.getString("RecipientPhone"));
+                        addr.setAddressDetail(rs2.getString("AddressDetail"));
+                        addr.setNote(rs2.getString("Note"));
+                        return addr;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("getOrderAddressByOrderAddressId Error: " + e.getMessage());
+        }
+        return null;
+
+    public List<HashMap<String, Object>> getTodaySoldProductSizeRows() {
+        List<HashMap<String, Object>> rows = new ArrayList<>();
+        String sql = """
+                     SET NOCOUNT ON;
+
+                     DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+                     DECLARE @AuditDate DATE = @Today;
+                     DECLARE @Start DATETIME2;
+                     DECLARE @End DATETIME2;
+
+                     IF NOT EXISTS (
+                         SELECT 1
+                         FROM Orders
+                         WHERE IsDeleted = 0
+                           AND PaymentStatus = 'Paid'
+                           AND CreatedAt >= CAST(@AuditDate AS DATETIME2)
+                           AND CreatedAt < DATEADD(DAY, 1, CAST(@AuditDate AS DATETIME2))
+                     )
+                     BEGIN
+                         SELECT TOP 1 @AuditDate = CAST(CreatedAt AS DATE)
+                         FROM Orders
+                         WHERE IsDeleted = 0
+                           AND PaymentStatus = 'Paid'
+                         ORDER BY CreatedAt DESC;
+                     END
+
+                     SET @Start = CAST(@AuditDate AS DATETIME2);
+                     SET @End = DATEADD(DAY, 1, @Start);
+
+                     SELECT od.ProductId,
+                            od.SizeId,
+                            p.ProductName,
+                            s.SizeName,
+                            SUM(od.Quantity) AS SoldQuantity,
+                            MAX(od.UnitPrice) AS UnitPrice,
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
+                            @AuditDate AS AuditDate
+                     FROM OrderDetails od
+                     JOIN Orders o ON o.OrderId = od.OrderId
+                     JOIN Products p ON p.ProductId = od.ProductId
+                     JOIN Sizes s ON s.SizeId = od.SizeId
+                     WHERE od.IsDeleted = 0
+                       AND o.IsDeleted = 0
+                       AND o.PaymentStatus = 'Paid'
+                       AND o.CreatedAt >= @Start
+                       AND o.CreatedAt < @End
+                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
+                     ORDER BY p.ProductName ASC, s.SizeName ASC
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs2 = ps.executeQuery()) {
+            while (rs2.next()) {
+                HashMap<String, Object> row = new HashMap<>();
+                row.put("productId", rs2.getInt("ProductId"));
+                row.put("sizeId", rs2.getInt("SizeId"));
+                row.put("productName", rs2.getString("ProductName"));
+                row.put("sizeName", rs2.getString("SizeName"));
+                row.put("soldQuantity", rs2.getInt("SoldQuantity"));
+                row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
+                row.put("revenue", rs2.getBigDecimal("Revenue"));
+                row.put("auditDate", rs2.getDate("AuditDate"));
+                rows.add(row);
+            }
+        } catch (Exception e) {
+            System.err.println("getTodaySoldProductSizeRows Error: " + e.getMessage());
+        }
+        return rows;
+    }
+
+    public List<HashMap<String, Object>> getSoldProductSizeRowsByDate(LocalDate auditDate) {
+        List<HashMap<String, Object>> rows = new ArrayList<>();
+        String sql = """
+                     DECLARE @AuditDate DATE = ?;
+                     DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
+                     DECLARE @End DATETIME2 = DATEADD(DAY, 1, @Start);
+
+                     SELECT od.ProductId,
+                            od.SizeId,
+                            p.ProductName,
+                            s.SizeName,
+                            SUM(od.Quantity) AS SoldQuantity,
+                            MAX(od.UnitPrice) AS UnitPrice,
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
+                            @AuditDate AS AuditDate
+                     FROM OrderDetails od
+                     JOIN Orders o ON o.OrderId = od.OrderId
+                     JOIN Products p ON p.ProductId = od.ProductId
+                     JOIN Sizes s ON s.SizeId = od.SizeId
+                     WHERE od.IsDeleted = 0
+                       AND o.IsDeleted = 0
+                       AND o.PaymentStatus = 'Paid'
+                       AND o.CreatedAt >= @Start
+                       AND o.CreatedAt < @End
+                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
+                     ORDER BY p.ProductName ASC, s.SizeName ASC
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(auditDate));
+            try (ResultSet rs2 = ps.executeQuery()) {
+                while (rs2.next()) {
+                    HashMap<String, Object> row = new HashMap<>();
+                    row.put("productId", rs2.getInt("ProductId"));
+                    row.put("sizeId", rs2.getInt("SizeId"));
+                    row.put("productName", rs2.getString("ProductName"));
+                    row.put("sizeName", rs2.getString("SizeName"));
+                    row.put("soldQuantity", rs2.getInt("SoldQuantity"));
+                    row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
+                    row.put("revenue", rs2.getBigDecimal("Revenue"));
+                    row.put("auditDate", rs2.getDate("AuditDate"));
+                    rows.add(row);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("getSoldProductSizeRowsByDate Error: " + e.getMessage());
+        }
+        return rows;
+    }
+
     public Map<String, Object> getCashierDashboard() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("todayRevenue", BigDecimal.ZERO);

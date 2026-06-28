@@ -54,7 +54,6 @@ public class OrderService {
                 dao.TableSessionDAO tsDao = new dao.TableSessionDAO();
                 int sessionId = tsDao.getActiveSessionId(tableId);
                 if (sessionId == -1) {
-                    // Tu dong tao Session moi
                     tsDao.createSession(tableId, tableName != null ? tableName : "", 1, null);
                     sessionId = tsDao.getActiveSessionId(tableId);
                 }

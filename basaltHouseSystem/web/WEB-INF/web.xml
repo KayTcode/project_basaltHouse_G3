@@ -186,7 +186,7 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ViewImportVoiceServlet</servlet-name>
-        <url-pattern>/viewimportvoice</url-pattern>   
+        <url-pattern>/viewimportvoice</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>MonoPaymentServlet</servlet-name>

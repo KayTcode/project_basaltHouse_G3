@@ -13,12 +13,12 @@
         <servlet-class>controller.LogoutServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>CashierDashboardServlet</servlet-name>
-        <servlet-class>controller.CashierDashboardServlet</servlet-class>
+        <servlet-name>POSOrderServlet</servlet-name>
+        <servlet-class>controller.POSOrderServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>CashierPOSServlet</servlet-name>
-        <servlet-class>controller.CashierPOSServlet</servlet-class>
+        <servlet-name>BartenderServlet</servlet-name>
+        <servlet-class>controller.BartenderServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>RegisterServlet</servlet-name>
@@ -121,12 +121,15 @@
         <url-pattern>/Cart</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>CashierDashboardServlet</servlet-name>
-        <url-pattern>/cashier/dashbroad</url-pattern>
+    <servlet-name>POSOrderServlet</servlet-name>
+    <url-pattern>/cashier/pos</url-pattern>
+    <url-pattern>/cashier/oderview</url-pattern>
+    <url-pattern>/cashier/dashboard</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>CashierPOSServlet</servlet-name>
-        <url-pattern>/cashier/pos</url-pattern>
+    <servlet-name>BartenderServlet</servlet-name>
+    <url-pattern>/bartender/view</url-pattern>
+    <url-pattern>/bartender/history</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>RegisterServlet</servlet-name>

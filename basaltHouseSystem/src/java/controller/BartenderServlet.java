@@ -15,7 +15,7 @@ import java.util.List;
 import model.Order;
 import services.OrderService;
 
-@WebServlet(name = "BartenderServlet", urlPatterns = {"/Bartender", "/BartenderHistory"})
+
 public class BartenderServlet extends HttpServlet {
 
    
@@ -24,9 +24,9 @@ public class BartenderServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = request.getServletPath();
-        if ("/Bartender".equals(path)) {
+        if ("/bartender/view".equals(path)) {
             handleBartenderView(request, response);
-        } else if ("/BartenderHistory".equals(path)) {
+        } else if ("/bartender/history".equals(path)) {
             handleBartenderHistory(request, response);
         }
     }
@@ -56,7 +56,8 @@ public class BartenderServlet extends HttpServlet {
             response.getWriter().write("Error: " + e.getMessage());
         }
     }
-     private <T> void paginateList(HttpServletRequest request, List<T> list, int limit, String pageParam, String listAttr, String pageAttr, String totalPagesAttr, String totalItemsAttr) {
+     private <T> void paginateList(HttpServletRequest request, List<T> list, int limit, String pageParam, 
+             String listAttr, String pageAttr, String totalPagesAttr, String totalItemsAttr) {
         int pageNum = 1;
         String ps = request.getParameter(pageParam);
         if (ps != null && !ps.isEmpty()) {

@@ -77,6 +77,22 @@
         <servlet-class>controller.StaffServlet</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>StaffIngredientServlet</servlet-name>
+        <servlet-class>controller.StaffIngredientServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>StaffImportServlet</servlet-name>
+        <servlet-class>controller.StaffImportServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>StaffHistoryServlet</servlet-name>
+        <servlet-class>controller.StaffHistoryInvoiceServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>StaffSalesHistoryServlet</servlet-name>
+        <servlet-class>controller.StaffHistoryBuyProductServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>ViewImportVoiceServlet</servlet-name>
         <servlet-class>controller.ViewImportVoiceServlet</servlet-class>
     </servlet>
@@ -99,6 +115,8 @@
     <servlet>
         <servlet-name>ReviewServlet</servlet-name>
         <servlet-class>controller.ReviewServlet</servlet-class>
+        <servlet-name>AdminProductServlet</servlet-name>
+        <servlet-class>controller.AdminProductServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -201,6 +219,26 @@
         <url-pattern>/staff/dashboard</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>StaffServlet</servlet-name>
+        <url-pattern>/staff</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffIngredientServlet</servlet-name>
+        <url-pattern>/staff/ingredient</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffImportServlet</servlet-name>
+        <url-pattern>/staff/import</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffHistoryServlet</servlet-name>
+        <url-pattern>/staff/history</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffSalesHistoryServlet</servlet-name>
+        <url-pattern>/staff/sales-history</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>ViewImportVoiceServlet</servlet-name>
         <url-pattern>/viewimportvoice</url-pattern>
     </servlet-mapping>
@@ -215,6 +253,10 @@
     <servlet-mapping>
         <servlet-name>MomoIpnServlet</servlet-name>
         <url-pattern>/momo/ipn</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminProductServlet</servlet-name>
+        <url-pattern>/admin/products</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

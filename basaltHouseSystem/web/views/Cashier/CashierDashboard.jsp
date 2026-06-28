@@ -21,7 +21,7 @@
     <meta name="description" content="Màn hình Dashboard Thu Ngân - Basalt House POS">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=2" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=5" rel="stylesheet">
 </head>
 <body>
 
@@ -48,10 +48,7 @@
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>
             POS Order
         </a>
-        <a href="#" class="nav-item" id="nav-reports">
-            <span class="nav-icon material-symbols-outlined">bar_chart</span>
-            Reports
-        </a>
+
         <a href="#" class="nav-item" id="nav-settings">
             <span class="nav-icon material-symbols-outlined">settings</span>
             Settings
@@ -92,20 +89,32 @@
     <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-label">Doanh thu hôm nay</div>
-            <div class="stat-value"><fmt:formatNumber value="${dashboard.todayRevenue}" type="number" maxFractionDigits="0"/> đ</div>
+            <div class="stat-icon revenue"><span class="material-symbols-outlined">payments</span></div>
+            <div class="stat-info">
+                <div class="stat-label">Doanh thu hôm nay</div>
+                <div class="stat-value"><fmt:formatNumber value="${dashboard.todayRevenue}" type="number" maxFractionDigits="0"/> đ</div>
+            </div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Đơn hàng hôm nay</div>
-            <div class="stat-value">${dashboard.todayOrders}</div>
+            <div class="stat-icon orders"><span class="material-symbols-outlined">receipt_long</span></div>
+            <div class="stat-info">
+                <div class="stat-label">Đơn hàng hôm nay</div>
+                <div class="stat-value">${dashboard.todayOrders}</div>
+            </div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Đơn chờ xử lý</div>
-            <div class="stat-value">${dashboard.pendingOrders}</div>
+            <div class="stat-icon pending"><span class="material-symbols-outlined">pending_actions</span></div>
+            <div class="stat-info">
+                <div class="stat-label">Đơn chờ xử lý</div>
+                <div class="stat-value">${dashboard.pendingOrders}</div>
+            </div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Khách hàng mới</div>
-            <div class="stat-value">${dashboard.newCustomers}</div>
+            <div class="stat-icon customers"><span class="material-symbols-outlined">group_add</span></div>
+            <div class="stat-info">
+                <div class="stat-label">Khách hàng mới</div>
+                <div class="stat-value">${dashboard.newCustomers}</div>
+            </div>
         </div>
     </div>
 
@@ -113,7 +122,7 @@
     <div class="card">
         <div class="card-header">
             <span class="card-title">Đơn hàng gần đây</span>
-            <a href="${pageContext.request.contextPath}/views/Cashier/OrderViews.jsp" class="card-link">Xem tất cả</a>
+            <a href="${pageContext.request.contextPath}/OrderView" class="card-link">Xem tất cả</a>
         </div>
         <table class="data-table">
             <thead>
@@ -148,7 +157,7 @@
                                     <c:choose>
                                         <c:when test="${o.orderStatus == 'Pending Payment'}"><span class="badge badge-pending-payment">Pending Payment</span></c:when>
                                         <c:when test="${o.orderStatus == 'Preparing'}"><span class="badge badge-preparing">Preparing</span></c:when>
-                                        <c:when test="${o.orderStatus == 'In_Progress'}"><span class="badge badge-preparing">In Progress</span></c:when>
+                                        <c:when test="${o.orderStatus == 'In_Progress'}"><span class="badge badge-in-progress">In Progress</span></c:when>
                                         <c:when test="${o.orderStatus == 'Ready'}"><span class="badge badge-ready">Ready</span></c:when>
                                         <c:when test="${o.orderStatus == 'Completed'}"><span class="badge badge-completed">Completed</span></c:when>
                                         <c:otherwise><span class="badge">${o.orderStatus}</span></c:otherwise>

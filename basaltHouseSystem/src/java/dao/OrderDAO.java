@@ -6,8 +6,8 @@ import java.sql.ResultSet;
 import model.Order;
 import java.sql.Statement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -202,6 +202,8 @@ public class OrderDAO extends DBContext {
         return list;
     }
 
+
+
     /**
      * Áp dụng mã giảm giá cho đơn hàng: cập nhật DiscountId, DiscountAmount,
      * FinalAmount.
@@ -350,9 +352,12 @@ public class OrderDAO extends DBContext {
     public List<Order> getCompletedOrders() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, c.FullName "
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, "
+                    + "o.Note, tb.TableCode AS TableName, c.FullName "
                     + "FROM Orders o "
                     + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
+                    + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
+                    + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
                     + "WHERE o.IsDeleted = 0 AND o.OrderStatus = 'Completed' "
                     + "ORDER BY o.CreatedAt DESC";
             st = connection.prepareStatement(sql);
@@ -362,6 +367,8 @@ public class OrderDAO extends DBContext {
                 o.setOrderId(rs.getInt("OrderId"));
                 o.setOrderType(rs.getString("OrderType"));
                 o.setOrderStatus(rs.getString("OrderStatus"));
+                o.setNote(rs.getString("Note"));
+                o.setTableName(rs.getString("TableName"));
                 java.sql.Timestamp ts = rs.getTimestamp("CreatedAt");
                 if (ts != null) {
                     o.setCreatedAt(ts.toLocalDateTime());
@@ -688,6 +695,123 @@ public class OrderDAO extends DBContext {
             System.err.println("getOrderAddressByOrderAddressId Error: " + e.getMessage());
         }
         return null;
+
+    public List<HashMap<String, Object>> getTodaySoldProductSizeRows() {
+        List<HashMap<String, Object>> rows = new ArrayList<>();
+        String sql = """
+                     SET NOCOUNT ON;
+
+                     DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+                     DECLARE @AuditDate DATE = @Today;
+                     DECLARE @Start DATETIME2;
+                     DECLARE @End DATETIME2;
+
+                     IF NOT EXISTS (
+                         SELECT 1
+                         FROM Orders
+                         WHERE IsDeleted = 0
+                           AND PaymentStatus = 'Paid'
+                           AND CreatedAt >= CAST(@AuditDate AS DATETIME2)
+                           AND CreatedAt < DATEADD(DAY, 1, CAST(@AuditDate AS DATETIME2))
+                     )
+                     BEGIN
+                         SELECT TOP 1 @AuditDate = CAST(CreatedAt AS DATE)
+                         FROM Orders
+                         WHERE IsDeleted = 0
+                           AND PaymentStatus = 'Paid'
+                         ORDER BY CreatedAt DESC;
+                     END
+
+                     SET @Start = CAST(@AuditDate AS DATETIME2);
+                     SET @End = DATEADD(DAY, 1, @Start);
+
+                     SELECT od.ProductId,
+                            od.SizeId,
+                            p.ProductName,
+                            s.SizeName,
+                            SUM(od.Quantity) AS SoldQuantity,
+                            MAX(od.UnitPrice) AS UnitPrice,
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
+                            @AuditDate AS AuditDate
+                     FROM OrderDetails od
+                     JOIN Orders o ON o.OrderId = od.OrderId
+                     JOIN Products p ON p.ProductId = od.ProductId
+                     JOIN Sizes s ON s.SizeId = od.SizeId
+                     WHERE od.IsDeleted = 0
+                       AND o.IsDeleted = 0
+                       AND o.PaymentStatus = 'Paid'
+                       AND o.CreatedAt >= @Start
+                       AND o.CreatedAt < @End
+                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
+                     ORDER BY p.ProductName ASC, s.SizeName ASC
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs2 = ps.executeQuery()) {
+            while (rs2.next()) {
+                HashMap<String, Object> row = new HashMap<>();
+                row.put("productId", rs2.getInt("ProductId"));
+                row.put("sizeId", rs2.getInt("SizeId"));
+                row.put("productName", rs2.getString("ProductName"));
+                row.put("sizeName", rs2.getString("SizeName"));
+                row.put("soldQuantity", rs2.getInt("SoldQuantity"));
+                row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
+                row.put("revenue", rs2.getBigDecimal("Revenue"));
+                row.put("auditDate", rs2.getDate("AuditDate"));
+                rows.add(row);
+            }
+        } catch (Exception e) {
+            System.err.println("getTodaySoldProductSizeRows Error: " + e.getMessage());
+        }
+        return rows;
+    }
+
+    public List<HashMap<String, Object>> getSoldProductSizeRowsByDate(LocalDate auditDate) {
+        List<HashMap<String, Object>> rows = new ArrayList<>();
+        String sql = """
+                     DECLARE @AuditDate DATE = ?;
+                     DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
+                     DECLARE @End DATETIME2 = DATEADD(DAY, 1, @Start);
+
+                     SELECT od.ProductId,
+                            od.SizeId,
+                            p.ProductName,
+                            s.SizeName,
+                            SUM(od.Quantity) AS SoldQuantity,
+                            MAX(od.UnitPrice) AS UnitPrice,
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
+                            @AuditDate AS AuditDate
+                     FROM OrderDetails od
+                     JOIN Orders o ON o.OrderId = od.OrderId
+                     JOIN Products p ON p.ProductId = od.ProductId
+                     JOIN Sizes s ON s.SizeId = od.SizeId
+                     WHERE od.IsDeleted = 0
+                       AND o.IsDeleted = 0
+                       AND o.PaymentStatus = 'Paid'
+                       AND o.CreatedAt >= @Start
+                       AND o.CreatedAt < @End
+                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
+                     ORDER BY p.ProductName ASC, s.SizeName ASC
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(auditDate));
+            try (ResultSet rs2 = ps.executeQuery()) {
+                while (rs2.next()) {
+                    HashMap<String, Object> row = new HashMap<>();
+                    row.put("productId", rs2.getInt("ProductId"));
+                    row.put("sizeId", rs2.getInt("SizeId"));
+                    row.put("productName", rs2.getString("ProductName"));
+                    row.put("sizeName", rs2.getString("SizeName"));
+                    row.put("soldQuantity", rs2.getInt("SoldQuantity"));
+                    row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
+                    row.put("revenue", rs2.getBigDecimal("Revenue"));
+                    row.put("auditDate", rs2.getDate("AuditDate"));
+                    rows.add(row);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("getSoldProductSizeRowsByDate Error: " + e.getMessage());
+        }
+        return rows;
     }
 
     public Map<String, Object> getCashierDashboard() {

@@ -379,28 +379,26 @@
                                                 Tiết kiệm <fmt:formatNumber value="${order.discountAmount}" pattern="#,###"/>₫
                                             </div>
                                         </c:if>
-                                    </div>
-                                    <%-- Nút Đánh giá - chỉ hiện cho đơn Completed --%>
-                                    <c:if test="${order.orderStatus == 'Completed'}">
-                                        <c:set var="reviewKey" value=",${order.orderId},"/>
-                                        <c:choose>
-                                            <c:when test="${fn:contains(reviewedOrderIds, reviewKey)}">
-                                                <div class="ot-reviewed-badge">
-                                                    <span class="material-symbols-outlined">star</span>
-                                                    Đã đánh giá
-                                                </div>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <button class="ot-review-btn"
-                                                        data-order-id="${order.orderId}"
-                                                        onclick="openReviewModal(${order.orderId}, '#BH-${order.orderId}')">
-                                                    <span class="material-symbols-outlined">star_rate</span>
-                                                    Đánh giá
-                                                </button>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </c:if>
-                                </div>
+                                     </div>
+                                     <%-- Nút Đánh giá - hiện cho mọi đơn hàng --%>
+                                     <c:set var="reviewKey" value=",${order.orderId},"/>
+                                     <c:choose>
+                                         <c:when test="${fn:contains(reviewedOrderIds, reviewKey)}">
+                                             <div class="ot-reviewed-badge">
+                                                 <span class="material-symbols-outlined">star</span>
+                                                 Đã đánh giá
+                                             </div>
+                                         </c:when>
+                                         <c:otherwise>
+                                             <button class="ot-review-btn"
+                                                     data-order-id="${order.orderId}"
+                                                     onclick="openReviewModal(${order.orderId}, '#BH-${order.orderId}')">
+                                                 <span class="material-symbols-outlined">star_rate</span>
+                                                 Đánh giá
+                                             </button>
+                                         </c:otherwise>
+                                     </c:choose>
+                                 </div>
                             </div>
 
                         </div><%-- end ot-order-card --%>

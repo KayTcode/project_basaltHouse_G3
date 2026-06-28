@@ -11,17 +11,15 @@
 <%@page import="java.util.HashMap"%>
 <%@page import="java.time.format.DateTimeFormatter"%>
 <%
+    // Lấy DAO để truy xuất order detail
     OrderDAO oDao = new OrderDAO();
-    List<Order> orderList = oDao.getCompletedOrders();
-    request.setAttribute("orderList", orderList);
     
-    ProductDAO pDao = new ProductDAO();
-    HashMap<Integer, Product> products = pDao.getProduct();
-    request.setAttribute("products", products);
-    
-    SizeDAO sDao = new SizeDAO();
-    HashMap<Integer, String> sizes = sDao.getSize();
-    request.setAttribute("sizes", sizes);
+    // Lấy danh sách sản phẩm và size được truyền từ Controller
+    HashMap<Integer, Product> products = (HashMap<Integer, Product>) request.getAttribute("products");
+    HashMap<Integer, String> sizes     = (HashMap<Integer, String>) request.getAttribute("sizes");
+
+    int historyPage  = request.getAttribute("historyPage") != null ? (Integer) request.getAttribute("historyPage") : 1;
+    int historyPages = request.getAttribute("historyPages") != null ? (Integer) request.getAttribute("historyPages") : 1;
 %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -32,9 +30,8 @@
     <meta name="description" content="Lịch sử pha chế Bartender">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderNew.css?v=4" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderViews.css?v=4" rel="stylesheet">
-   
+    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderNew.css?v=5" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderViews.css?v=8" rel="stylesheet">
 </head>
 <body>
 
@@ -71,19 +68,19 @@
 
     <!-- Stats bar -->
     <div class="stats-bar">
-        <div class="stat-chip done" style="width:250px;">
+        <div class="stat-chip done" style="max-width: 320px;">
             <span class="stat-icon">&#127881;</span>
             <div>
                 <div class="stat-label">Tổng đơn đã hoàn thành</div>
-                <div class="stat-value"><%=orderList.size()%></div>
+                <div class="stat-value">${totalHistory}</div>
             </div>
         </div>
     </div>
 
-    <!-- History Grid -->
+    <!-- History Grid — chỉ render items của trang hiện tại từ pageResult -->
     <div class="history-grid">
         <c:forEach items="${orderList}" var="o">
-            <% 
+            <%
                 Order currentOrder = (Order) pageContext.getAttribute("o");
                 String fTime = "00:00";
                 if (currentOrder.getCreatedAt() != null) {
@@ -105,9 +102,9 @@
                     </div>
                     <div><span class="wait-badge ok" style="background:#dcfce7;color:#166534;border:none;">&#10003; <%=fTime%></span></div>
                 </div>
-                
+
                 <div class="card-items">
-                    <% 
+                    <%
                        List<OrderDetail> detailsList = oDao.getOrderDetailsByOrderId(currentOrder.getOrderId());
                        for (OrderDetail d : detailsList) {
                            Product p = products.get(d.getProductId());
@@ -128,7 +125,7 @@
                     </div>
                     <% } %>
                 </div>
-                
+
                 <c:if test="${not empty o.note}">
                     <div class="card-note">
                         <span class="material-symbols-outlined" style="font-size:13px;flex-shrink:0">edit_note</span>
@@ -137,15 +134,32 @@
                 </c:if>
             </div>
         </c:forEach>
-        
-        <% if (orderList.isEmpty()) { %>
+
+        <c:if test="${empty orderList}">
             <div class="empty-history">
-                <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 10px; color:#cbd5e1;">history</span>
+                <span class="material-symbols-outlined" style="font-size:48px;margin-bottom:10px;color:#cbd5e1;">history</span>
                 Chưa có đơn hàng nào hoàn thành
             </div>
-        <% } %>
+        </c:if>
     </div>
-</div>
+
+    <!-- Phân trang History — render từ server, dùng cùng CSS .pagination / .btn-page -->
+    <c:if test="${historyPages > 1}">
+    <div class="pagination" style="padding:20px 0;">
+        <a href="?page=<%=historyPage - 1%>"
+           class="btn-page <%= historyPage <= 1 ? "disabled" : "" %>">&#171;</a>
+
+        <c:forEach begin="1" end="${historyPages}" var="pg">
+            <a href="?page=${pg}"
+               class="btn-page ${pg == historyPage ? 'active' : ''}">${pg}</a>
+        </c:forEach>
+
+        <a href="?page=<%=historyPage + 1%>"
+           class="btn-page <%= historyPage >= historyPages ? "disabled" : "" %>">&#187;</a>
+    </div>
+    </c:if>
+
+</div><!-- /content-area -->
 
 </body>
 </html>

@@ -32,38 +32,7 @@
                         <!-- ── Toast Stack ── -->
                         <div class="toast-stack" id="toastStack"></div>
 
-                        <!-- ── Navbar ── -->
-                        <header class="sticky-top">
-                            <nav class="navbar navbar-expand-md navbar-light navbar-coffeely py-3">
-                                <div class="container">
-                                    <a class="navbar-brand navbar-brand-coffeely" href="#">BasaltHouse</a>
-                                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#mainNav">
-                                        <span class="navbar-toggler-icon"></span>
-                                    </button>
-                                    <div class="collapse navbar-collapse justify-content-between" id="mainNav">
-                                        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                                            <li class="nav-item"><a class="nav-link nav-link-coffeely" href="#">Menu</a>
-                                            </li>
-                                            <li class="nav-item"><a class="nav-link nav-link-coffeely active"
-                                                    href="#">Bàn & Session</a></li>
-                                            <li class="nav-item"><a class="nav-link nav-link-coffeely"
-                                                    href="#">Order</a></li>
-                                            <li class="nav-item"><a class="nav-link nav-link-coffeely" href="#">Báo
-                                                    cáo</a></li>
-                                        </ul>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <button class="btn-nav-icon" title="Thông báo">
-                                                <span class="material-symbols-outlined">notifications</span>
-                                            </button>
-                                            <button class="btn-nav-icon" title="Tài khoản">
-                                                <span class="material-symbols-outlined">account_circle</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </nav>
-                        </header>
+
 
                         <!-- ── Page Header ── -->
                         <div class="page-header">
@@ -219,7 +188,11 @@
                                                                 <% if (activeSessions !=null &&
                                                                     !activeSessions.isEmpty()) { %>
                                                                     <ul class="session-list">
-                                                                        <% for (TableSession s : activeSessions) { %>
+                                                                        <% for (TableSession s : activeSessions) { 
+                                                                            Table t = tablesMap != null ? tablesMap.get(s.getTableId()) : null;
+                                                                            String tbCode = t != null ? t.getTableCode() : "";
+                                                                            String area = t != null ? t.getArea() : "";
+                                                                        %>
                                                                             <li class="session-item">
                                                                                 <div class="session-avatar">
                                                                                     <span
@@ -239,10 +212,12 @@
                                                                                         style="font-size:14px;vertical-align:middle">person</span>
                                                                                     <%= s.getGuestCount() %> khách
                                                                                 </span>
-                                                                                <button type="button" class="btn-checkout-session"
-                                                                                    onclick="openCheckoutModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
-                                                                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">payments</span>Thanh toán
-                                                                                </button>
+                                                                                <div style="display: flex; gap: 5px; align-items: center; justify-content: flex-end; margin-left: auto;">
+                                                                                    <button type="button" class="btn-checkout-session"
+                                                                                        onclick="openCheckoutModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
+                                                                                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">payments</span>Thanh toán
+                                                                                    </button>
+                                                                                </div>
                                                                             </li>
                                                                             <% } %>
                                                                     </ul>
@@ -305,8 +280,7 @@
                                                                     </div>
 
                                                                     <!-- Form -->
-                                                                    <form id="createSessionForm" method="POST"
-                                                                        action="${pageContext.request.contextPath}/TableSession">
+                                                                    <form id="createSessionForm">
                                                                         <input type="hidden" name="action"
                                                                             value="create">
                                                                         <input type="hidden" name="tableId"
@@ -355,8 +329,8 @@
 
                                                                         <div class="divider"></div>
 
-                                                                        <button type="submit" class="btn-create-session"
-                                                                            id="btnSubmit" disabled>
+                                                                        <button type="button" class="btn-create-session"
+                                                                            id="btnSubmit" disabled onclick="submitCreateSession()">
                                                                             <span
                                                                                 class="material-symbols-outlined">add_circle</span>
                                                                             Tạo Session
@@ -451,24 +425,15 @@
                                 document.getElementById('selectedTableInfo').classList.add('visible');
                                 document.getElementById('guestCountSection').style.display = '';
 
-                                /* reset guest count */
+                                /* reset guest count to max available by default */
                                 const inp = document.getElementById('guestCount');
-                                inp.value = 1;
+                                inp.value = avail;
                                 inp.max = avail;
-                                document.getElementById('btnMinus').disabled = true;
-                                document.getElementById('btnPlus').disabled = (avail <= 1);
+                                document.getElementById('btnMinus').disabled = (avail <= 1);
+                                document.getElementById('btnPlus').disabled = true;
                                 clearError();
                                 document.getElementById('btnSubmit').disabled = false;
 
-                                /* ── Nếu trang được mở trong iframe từ CashierCreateOrder thì gửi lại table info ── */
-                                if (window.parent && window.parent !== window) {
-                                    window.parent.postMessage({
-                                        type: 'TABLE_SELECTED',
-                                        tableId: tableId,
-                                        tableCode: code,
-                                        area: area
-                                    }, '*');
-                                }
                             }
 
                             /* ── Guest Count ── */
@@ -506,19 +471,75 @@
                                 document.getElementById('guestError').classList.remove('visible');
                             }
 
-                            /* ── Form Submit — plain HTML POST, no fetch ── */
-                            document.getElementById('createSessionForm').addEventListener('submit', function (e) {
+                            /* ── Form Submit (AJAX) ── */
+                            function submitCreateSession() {
                                 const val = parseInt(document.getElementById('guestCount').value) || 0;
                                 if (val < 1 || val > selectedAvail) {
-                                    e.preventDefault();
                                     validateGuest();
                                     return;
                                 }
-                                // Let the browser submit normally — servlet will redirect back with result
-                                const btn = document.getElementById('btnSubmit');
-                                btn.disabled = true;
-                                btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Đang tạo...';
-                            });
+
+                                const tableId   = document.getElementById('formTableId').value;
+                                const tableCode = selectedCard ? selectedCard.dataset.tableCode : '';
+                                const area      = selectedCard ? selectedCard.dataset.area      : '';
+
+                                const btnSubmit = document.getElementById('btnSubmit');
+                                btnSubmit.disabled = true;
+                                btnSubmit.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Đang tạo...';
+
+                                const formData = new URLSearchParams();
+                                formData.append('action', 'create');
+                                formData.append('tableId', tableId);
+                                formData.append('guestCount', val);
+
+                                fetch('${pageContext.request.contextPath}/TableSession', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                    body: formData.toString()
+                                })
+                                .then(function(response) {
+                                    if (response.ok) {
+                                        /* Thành công: đọc sessionId từ response nếu có,
+                                           rồi gửi postMessage về màn hình POS chính */
+                                        return response.text().then(function(text) {
+                                            // Cố parse JSON nếu server trả về JSON có sessionId
+                                            let tableSessionId = null;
+                                            try {
+                                                const json = JSON.parse(text);
+                                                tableSessionId = json.sessionId || json.tableSessionId || null;
+                                            } catch(ignored) {
+                                                // Server trả về HTML/text thường — không sao
+                                            }
+
+                                            showToast('success', 'Thành công', 'Đã tạo session cho bàn ' + tableCode + '!');
+
+                                            /* ── Callback về POS chính ── */
+                                            const message = {
+                                                type            : 'TABLE_SELECTED',
+                                                tableId         : tableId,
+                                                tableCode       : tableCode,
+                                                area            : area,
+                                                tableSessionId  : tableSessionId
+                                            };
+                                            window.parent.postMessage(message, '*');
+                                            /* POS chính sẽ tự đóng modal sau khi nhận message */
+                                        });
+                                    } else {
+                                        return response.text().then(function(text) {
+                                            showToast('error', 'Lỗi', 'Không thể tạo session. Vui lòng thử lại.');
+                                            console.error('Create session failed:', text);
+                                            btnSubmit.disabled = false;
+                                            btnSubmit.innerHTML = '<span class="material-symbols-outlined">add_circle</span> Tạo Session';
+                                        });
+                                    }
+                                })
+                                .catch(function(err) {
+                                    showToast('error', 'Lỗi kết nối', 'Không thể kết nối đến server.');
+                                    console.error('Network error:', err);
+                                    btnSubmit.disabled = false;
+                                    btnSubmit.innerHTML = '<span class="material-symbols-outlined">add_circle</span> Tạo Session';
+                                });
+                            }
 
                             /* ── Toast ── */
                             function showToast(type, title, msg) {
@@ -559,8 +580,6 @@
 <% if (checkoutSuccessMsg != null && !checkoutSuccessMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('success', 'Thanh toán', '<%= checkoutSuccessMsg.replace("'","\\'") %>'));
 <% } %>
-
-                            // Add & Delete Table Modal scripts have been extracted to AddTableModal.jsp and DeleteTableModal.jsp
                         </script>
                     </body>
 

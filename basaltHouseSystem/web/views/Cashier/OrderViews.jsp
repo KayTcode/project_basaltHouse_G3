@@ -72,9 +72,9 @@
                 <input type="text" id="searchInput" placeholder="Tìm kiếm mã đơn, khách hàng..." oninput="doFilter()">
             </div>
             <div class="filter-tabs">
-                <button type="button" class="filter-tab ${empty currentType || currentType == 'all' ? 'active' : ''}" onclick="window.location.href='OrderView?type=all'">All</button>
-                <button type="button" class="filter-tab ${currentType == 'online' ? 'active' : ''}"        onclick="window.location.href='OrderView?type=online'">Online</button>
-                <button type="button" class="filter-tab ${currentType == 'offline' ? 'active' : ''}"        onclick="window.location.href='OrderView?type=offline'">Offline</button>
+                <button type="button" class="filter-tab ${empty currentType || currentType == 'all' ? 'active' : ''}" onclick="window.location.href='oderview?type=all'">All</button>
+                <button type="button" class="filter-tab ${currentType == 'online' ? 'active' : ''}"        onclick="window.location.href='oderview?type=online'">Online</button>
+                <button type="button" class="filter-tab ${currentType == 'offline' ? 'active' : ''}"        onclick="window.location.href='oderview?type=offline'">Offline</button>
             </div>
             <button type="button" class="btn-filter">
                 <span class="material-symbols-outlined" style="font-size:17px">tune</span>
@@ -113,15 +113,15 @@
 
         <div class="pagination">
             <c:if test="${currentPage > 1}">
-                <button type="button" class="page-btn" onclick="window.location.href='OrderView?page=${currentPage - 1}&type=${currentType}'">
+                <button type="button" class="page-btn" onclick="window.location.href='oderview?page=${currentPage - 1}&type=${currentType}'">
                     <span class="material-symbols-outlined" style="font-size:14px">chevron_left</span>
                 </button>
             </c:if>
             <c:forEach begin="1" end="${totalPages > 0 ? totalPages : 1}" var="i">
-                <button type="button" class="page-btn ${currentPage == i ? 'active' : ''}" onclick="window.location.href='OrderView?page=${i}&type=${currentType}'">${i}</button>
+                <button type="button" class="page-btn ${currentPage == i ? 'active' : ''}" onclick="window.location.href='oderview?page=${i}&type=${currentType}'">${i}</button>
             </c:forEach>
             <c:if test="${currentPage < totalPages}">
-                <button type="button" class="page-btn" onclick="window.location.href='OrderView?page=${currentPage + 1}&type=${currentType}'">
+                <button type="button" class="page-btn" onclick="window.location.href='oderview?page=${currentPage + 1}&type=${currentType}'">
                     <span class="material-symbols-outlined" style="font-size:14px">chevron_right</span>
                 </button>
             </c:if>
@@ -580,7 +580,7 @@ function confirmOnlineOrder() {
     formData.append("orderId", o.id);
     formData.append("action", "confirm");
 
-    fetch('${pageContext.request.contextPath}/bartender/bartenderview', {
+    fetch('${pageContext.request.contextPath}/bartender/view', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()

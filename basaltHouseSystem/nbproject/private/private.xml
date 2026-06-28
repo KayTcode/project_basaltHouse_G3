@@ -3,16 +3,21 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/AdminDashboardDAO.java</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/admin/admin_common.css</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/header.jsp</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/admin/admin_account.css</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/AdminDashboardServlet.java</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/css/admin/admin_dashboard.css</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/AdminAccountServlet.java</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/admin_account.jsp</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/admin_dashboard.jsp</file>
-            <file>file:/C:/Users/MSI/OneDrive/Desktop/SWP_BasaltHouse/project_basaltHouse_G3/basaltHouseSystem/web/views/admin/sidebar.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/Order/Cart.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/VoucherServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/MembershipRankServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/BenefitServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/config/app.properties</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/utils/Momoconfig.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/HomePage/Header.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/ProductDetailServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/AccountServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/WEB-INF/web.xml</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/HomePageServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/web/views/Order/Checkout.jsp</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/controller/CategorieServlet.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/dao/ShipperDAO.java</file>
+            <file>file:/C:/Users/KayT/Documents/SWP391/project_basaltHouse_G3/basaltHouseSystem/src/java/utils/ConfigLoader.java</file>
         </group>
     </open-files>
 </project-private>

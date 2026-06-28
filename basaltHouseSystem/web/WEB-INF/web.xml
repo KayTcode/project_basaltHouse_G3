@@ -92,6 +92,18 @@
         <servlet-name>MomoIpnServlet</servlet-name>
         <servlet-class>controller.MomoIpnServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ShipperDashboardServlet</servlet-name>
+        <servlet-class>controller.ShipperDashboardServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AcceptOrderServlet</servlet-name>
+        <servlet-class>controller.AcceptOrderServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>UpdateDeliveryServlet</servlet-name>
+        <servlet-class>controller.UpdateDeliveryServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
@@ -199,6 +211,18 @@
     <servlet-mapping>
         <servlet-name>MomoIpnServlet</servlet-name>
         <url-pattern>/momo/ipn</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ShipperDashboardServlet</servlet-name>
+        <url-pattern>/shipper/dashboard</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AcceptOrderServlet</servlet-name>
+        <url-pattern>/shipper/accept-order</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UpdateDeliveryServlet</servlet-name>
+        <url-pattern>/shipper/update-delivery</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

@@ -137,6 +137,37 @@
                         <c:set var="details" value="${orderInfo.details}"/>
                         <c:set var="address" value="${orderInfo.address}"/>
 
+                        <c:set var="placedTime" value=""/>
+                        <c:set var="confirmedTime" value=""/>
+                        <c:set var="deliveringTime" value=""/>
+                        <c:set var="completedTime" value=""/>
+
+                        <c:if test="${not empty order.createdAt}">
+                            <c:set var="dtStr" value="${order.createdAt.toString()}"/>
+                            <c:set var="placedTime" value="${fn:substring(dtStr, 11, 16)} ${fn:substring(dtStr, 8, 10)}/${fn:substring(dtStr, 5, 7)}"/>
+                        </c:if>
+
+                        <c:forEach var="log" items="${orderInfo.deliveryLogs}">
+                            <c:choose>
+                                <c:when test="${log.status == 'ShipperConfirmed' && not empty log.shipperConfirmedAt}">
+                                    <c:set var="cfStr" value="${log.shipperConfirmedAt.toString()}"/>
+                                    <c:set var="confirmedTime" value="${fn:substring(cfStr, 11, 16)} ${fn:substring(cfStr, 8, 10)}/${fn:substring(cfStr, 5, 7)}"/>
+                                </c:when>
+                                <c:when test="${log.status == 'Delivering' && not empty log.pickedUpAt}">
+                                    <c:set var="puStr" value="${log.pickedUpAt.toString()}"/>
+                                    <c:set var="deliveringTime" value="${fn:substring(puStr, 11, 16)} ${fn:substring(puStr, 8, 10)}/${fn:substring(puStr, 5, 7)}"/>
+                                </c:when>
+                                <c:when test="${(log.status == 'Delivered' || log.status == 'Completed') && not empty log.deliveredAt}">
+                                    <c:set var="dvStr" value="${log.deliveredAt.toString()}"/>
+                                    <c:set var="completedTime" value="${fn:substring(dvStr, 11, 16)} ${fn:substring(dvStr, 8, 10)}/${fn:substring(dvStr, 5, 7)}"/>
+                                </c:when>
+                                <c:when test="${(log.status == 'Delivered' || log.status == 'Completed') && not empty log.customerConfirmedAt}">
+                                    <c:set var="dvStr" value="${log.customerConfirmedAt.toString()}"/>
+                                    <c:set var="completedTime" value="${fn:substring(dvStr, 11, 16)} ${fn:substring(dvStr, 8, 10)}/${fn:substring(dvStr, 5, 7)}"/>
+                                </c:when>
+                            </c:choose>
+                        </c:forEach>
+
                         <%-- Map status → CSS class --%>
                         <c:set var="sc" value="pending"/>
                         <c:choose>
@@ -223,6 +254,9 @@
                                         <div class="ot-tl-step ${s1}">
                                             <div class="ot-tl-dot"><span class="material-symbols-outlined">receipt</span></div>
                                             <div class="ot-tl-label">Đặt hàng</div>
+                                            <c:if test="${not empty placedTime}">
+                                                <div class="ot-tl-time">${placedTime}</div>
+                                            </c:if>
                                         </div>
 
                                         <%-- Step 2: Pha chế --%>
@@ -238,6 +272,9 @@
                                         <div class="ot-tl-step ${s2}">
                                             <div class="ot-tl-dot"><span class="material-symbols-outlined">coffee_maker</span></div>
                                             <div class="ot-tl-label">Pha chế</div>
+                                            <c:if test="${not empty confirmedTime}">
+                                                <div class="ot-tl-time">${confirmedTime}</div>
+                                            </c:if>
                                         </div>
 
                                         <%-- Step 3: Giao hàng --%>
@@ -253,6 +290,9 @@
                                         <div class="ot-tl-step ${s3}">
                                             <div class="ot-tl-dot"><span class="material-symbols-outlined">local_shipping</span></div>
                                             <div class="ot-tl-label">Giao hàng</div>
+                                            <c:if test="${not empty deliveringTime}">
+                                                <div class="ot-tl-time">${deliveringTime}</div>
+                                            </c:if>
                                         </div>
 
                                         <%-- Step 4: Hoàn thành --%>
@@ -261,6 +301,9 @@
                                         <div class="ot-tl-step ${s4}">
                                             <div class="ot-tl-dot"><span class="material-symbols-outlined">task_alt</span></div>
                                             <div class="ot-tl-label">Hoàn thành</div>
+                                            <c:if test="${not empty completedTime}">
+                                                <div class="ot-tl-time">${completedTime}</div>
+                                            </c:if>
                                         </div>
 
                                     </div>

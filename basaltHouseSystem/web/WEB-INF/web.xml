@@ -115,6 +115,8 @@
     <servlet>
         <servlet-name>ReviewServlet</servlet-name>
         <servlet-class>controller.ReviewServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>AdminProductServlet</servlet-name>
         <servlet-class>controller.AdminProductServlet</servlet-class>
     </servlet>

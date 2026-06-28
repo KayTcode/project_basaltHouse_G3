@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="${pageContext.request.contextPath}/css/CartCss/OrderTracking.css" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/CartCss/OrderTracking.css?v=1.0.3" rel="stylesheet">
 </head>
 <body>
 
@@ -325,15 +325,37 @@
                                         </div>
                                     </c:if>
                                 </div>
-                                <div class="ot-total-block">
-                                    <div class="ot-total-label">Thành tiền</div>
-                                    <div class="ot-total-amount">
-                                        <fmt:formatNumber value="${order.finalAmount != null ? order.finalAmount : order.totalAmount}" pattern="#,###"/>₫
-                                    </div>
-                                    <c:if test="${order.discountAmount != null && order.discountAmount > 0}">
-                                        <div class="ot-discount-note">
-                                            Tiết kiệm <fmt:formatNumber value="${order.discountAmount}" pattern="#,###"/>₫
+                                <div class="ot-footer-right-block">
+                                    <div class="ot-total-block">
+                                        <div class="ot-total-label">Thành tiền</div>
+                                        <div class="ot-total-amount">
+                                            <fmt:formatNumber value="${order.finalAmount != null ? order.finalAmount : order.totalAmount}" pattern="#,###"/>₫
                                         </div>
+                                        <c:if test="${order.discountAmount != null && order.discountAmount > 0}">
+                                            <div class="ot-discount-note">
+                                                Tiết kiệm <fmt:formatNumber value="${order.discountAmount}" pattern="#,###"/>₫
+                                            </div>
+                                        </c:if>
+                                    </div>
+                                    <%-- Nút Đánh giá - chỉ hiện cho đơn Completed --%>
+                                    <c:if test="${order.orderStatus == 'Completed'}">
+                                        <c:set var="reviewKey" value=",${order.orderId},"/>
+                                        <c:choose>
+                                            <c:when test="${fn:contains(reviewedOrderIds, reviewKey)}">
+                                                <div class="ot-reviewed-badge">
+                                                    <span class="material-symbols-outlined">star</span>
+                                                    Đã đánh giá
+                                                </div>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <button class="ot-review-btn"
+                                                        data-order-id="${order.orderId}"
+                                                        onclick="openReviewModal(${order.orderId}, '#BH-${order.orderId}')">
+                                                    <span class="material-symbols-outlined">star_rate</span>
+                                                    Đánh giá
+                                                </button>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </c:if>
                                 </div>
                             </div>
@@ -356,9 +378,42 @@
     </div>
 </main>
 
-<jsp:include page="/views/HomePage/Footer.jsp"/>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<%-- ── Review Modal ── --%>
+<div class="ot-review-overlay" id="reviewOverlay" onclick="closeReviewModal(event)" style="display:none;">
+    <div class="ot-review-modal">
+        <button class="ot-review-close" onclick="closeReviewModal(null)" aria-label="Đóng">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        <div class="ot-review-header">
+            <span class="material-symbols-outlined ot-review-header-icon">star_rate</span>
+            <h3>Đánh Giá Đơn Hàng</h3>
+            <p id="reviewOrderLabel">Mã đơn: --</p>
+        </div>
+        <div class="ot-star-group">
+            <span class="ot-star" data-val="1">&#9733;</span>
+            <span class="ot-star" data-val="2">&#9733;</span>
+            <span class="ot-star" data-val="3">&#9733;</span>
+            <span class="ot-star" data-val="4">&#9733;</span>
+            <span class="ot-star" data-val="5">&#9733;</span>
+        </div>
+        <div class="ot-star-hint" id="starHint">Chạm vào sao để chọn điểm</div>
+        <textarea class="ot-review-comment" id="reviewComment" rows="3" maxlength="500"
+                  placeholder="Nhận xét của bạn (tuỳ chọn)..."></textarea>
+        <div class="ot-review-msg" id="reviewMsg"></div>
+        <div class="ot-review-actions">
+            <button class="ot-review-cancel" onclick="closeReviewModal(null)">Hủy</button>
+            <button class="ot-review-submit" id="btnSubmitReview" onclick="submitReview()">
+                <span class="material-symbols-outlined">send</span>
+                Gửi đánh giá
+            </button>
+        </div>
+    </div>
+</div>
+
+
 <script>
 function filterOrders(tabEl, filter) {
     document.querySelectorAll('.ot-filter-tab').forEach(t => t.classList.remove('active'));
@@ -381,14 +436,121 @@ function toggleDetails(orderId) {
     const open = panel.classList.toggle('open');
     btn.classList.toggle('open', open);
     btn.querySelector('.material-symbols-outlined').textContent = open ? 'expand_less' : 'expand_more';
-    const txt = btn.querySelector('span:last-child') || btn.childNodes[btn.childNodes.length - 1];
-    // update text label
     const match = btn.textContent.match(/\d+/);
     const count = match ? match[0] : '';
     btn.childNodes[btn.childNodes.length - 1].textContent = open
         ? ' Ẩn chi tiết'
         : ' Xem chi tiết (' + count + ' sản phẩm)';
 }
+
+/* ====== Review Modal ====== */
+let _reviewOrderId = null;
+let _selectedRating = 0;
+const STAR_HINTS = ['', 'Không hài lòng', 'Tạm ổn', 'Bình thường', 'Hài lòng', 'Tuyệt vời!'];
+
+function openReviewModal(orderId, orderCode) {
+    _reviewOrderId = orderId;
+    _selectedRating = 0;
+    document.getElementById('reviewOrderLabel').textContent = 'Mã đơn: ' + orderCode;
+    document.getElementById('reviewComment').value = '';
+    document.getElementById('reviewMsg').textContent = '';
+    document.getElementById('starHint').textContent = 'Chạm vào sao để chọn điểm';
+    setStars(0);
+    const overlay = document.getElementById('reviewOverlay');
+    document.body.appendChild(overlay);   // đảm bảo nằm trong body → CSS apply
+    overlay.style.display        = 'flex';
+    overlay.style.position       = 'fixed';
+    overlay.style.top            = '0';
+    overlay.style.left           = '0';
+    overlay.style.width          = '100vw';
+    overlay.style.height         = '100vh';
+    overlay.style.background     = 'rgba(0,0,0,0.55)';
+    overlay.style.zIndex         = '99999';
+    overlay.style.alignItems     = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.padding        = '20px';
+    overlay.style.boxSizing      = 'border-box';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReviewModal(e) {
+    if (e && e.target !== document.getElementById('reviewOverlay')) return;
+    document.getElementById('reviewOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function setStars(val) {
+    document.querySelectorAll('.ot-star').forEach(s => {
+        s.classList.toggle('active', parseInt(s.dataset.val) <= val);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.ot-star').forEach(star => {
+        star.addEventListener('mouseover', () => setStars(parseInt(star.dataset.val)));
+        star.addEventListener('mouseleave', () => setStars(_selectedRating));
+        star.addEventListener('click', () => {
+            _selectedRating = parseInt(star.dataset.val);
+            setStars(_selectedRating);
+            document.getElementById('starHint').textContent = STAR_HINTS[_selectedRating];
+        });
+    });
+});
+
+function submitReview() {
+    const msg = document.getElementById('reviewMsg');
+    if (_selectedRating === 0) {
+        msg.style.color = '#dc2626';
+        msg.textContent = '• Vui lòng chọn số sao đánh giá.';
+        return;
+    }
+    const btn = document.getElementById('btnSubmitReview');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Đang gửi...';
+    msg.textContent = '';
+
+    const ctx = '${pageContext.request.contextPath}';
+    const body = new URLSearchParams({
+        orderId:  _reviewOrderId,
+        rating:   _selectedRating,
+        comment:  document.getElementById('reviewComment').value.trim()
+    });
+
+    fetch(ctx + '/review', { method: 'POST', body })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                msg.style.color = '#16a34a';
+                msg.textContent = '✓ ' + data.message;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-symbols-outlined">check</span> Đã gửi';
+                setTimeout(() => {
+                    const oldBtn = document.querySelector('.ot-review-btn[data-order-id="' + _reviewOrderId + '"]');
+                    if (oldBtn) {
+                        const badge = document.createElement('div');
+                        badge.className = 'ot-reviewed-badge';
+                        badge.innerHTML = '<span class="material-symbols-outlined">star</span> Đã đánh giá';
+                        oldBtn.replaceWith(badge);
+                    }
+                    document.getElementById('reviewOverlay').style.display = 'none';
+                    document.body.style.overflow = '';
+                }, 900);
+            } else {
+                msg.style.color = '#dc2626';
+                msg.textContent = '• ' + data.message;
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined">send</span> Gửi đánh giá';
+            }
+        })
+        .catch(() => {
+            msg.style.color = '#dc2626';
+            msg.textContent = '• Lỗi kết nối, vui lòng thử lại.';
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined">send</span> Gửi đánh giá';
+        });
+}
 </script>
-</body>
-</html>
+
+<jsp:include page="/views/HomePage/Footer.jsp"/>
+
+

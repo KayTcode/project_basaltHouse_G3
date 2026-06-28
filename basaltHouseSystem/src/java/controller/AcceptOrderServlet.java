@@ -4,6 +4,7 @@
  */
 package controller;
 
+import dto.UserLoginDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import model.ProcessOrderResult;
+import model.Shipper;
 import services.ShipperService;
 
 /**
@@ -60,7 +62,7 @@ public class AcceptOrderServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+       response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
     }
 
     /**
@@ -75,22 +77,43 @@ public class AcceptOrderServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        int shipperId = (int) session.getAttribute("shipperId");
-        String orderInParam = request.getParameter("orderId");
+ 
+        // Guard: chưa đăng nhập
+        if (session == null || session.getAttribute("currentUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+ 
+        // Lấy shipperId từ currentUser → ShipperService (giống ShipperDashboardServlet)
+        UserLoginDTO currentUser = (UserLoginDTO) session.getAttribute("currentUser");
+        Shipper currentShipper = shipperService.getShipperByAccountId(currentUser.getAccountId());
+        if (currentShipper == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        int shipperId = currentShipper.getShipperId();
+ 
+        // Đọc orderId từ form POST
+        String orderIdParam = request.getParameter("orderId");
         int orderId;
         try {
-            orderId = Integer.parseInt(orderInParam);
-        } catch (NumberFormatException e) {            
-            setFlashMessage(session, false, "Mã đơn hàng không hợp lệ");
+            orderId = Integer.parseInt(orderIdParam);
+        } catch (NumberFormatException e) {
+            setFlashMessage(session, false, "Mã đơn hàng không hợp lệ!");
             response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
             return;
         }
+ 
+        // Gọi Service xử lý nghiệp vụ
         ProcessOrderResult result = shipperService.accecptOrder(orderId, shipperId);
+ 
         if (result.isSuccess()) {
-            setFlashMessage(session, true, "Bạn đã nhận đơn #" + orderId + " thành công! Chúc bạn giao hàng thuận lợi");
+            setFlashMessage(session, true,
+                    "Bạn đã nhận đơn #" + orderId + " thành công! Chúc bạn giao hàng thuận lợi.");
         } else {
-            setFlashMessage(session, false, String.join("|", result.getErrors()));
+            setFlashMessage(session, false, String.join(" | ", result.getErrors()));
         }
+ 
         response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
     }
 

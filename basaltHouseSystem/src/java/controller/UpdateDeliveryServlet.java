@@ -4,6 +4,7 @@
  */
 package controller;
 
+import dto.UserLoginDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import model.ProcessOrderResult;
+import model.Shipper;
 import services.ShipperService;
 
 /**
@@ -60,7 +62,7 @@ public class UpdateDeliveryServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
     }
 
     /**
@@ -75,37 +77,63 @@ public class UpdateDeliveryServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        
+ 
         HttpSession session = request.getSession(false);
-        int shipperId = (int) session.getAttribute("shipperId");
-        String orderInParam = request.getParameter("orderId");
-        String action = request.getParameter("action");
-        String note = request.getParameter("note");
+ 
+        // Guard: chưa đăng nhập
+        if (session == null || session.getAttribute("currentUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+ 
+        // Lấy shipperId từ currentUser → ShipperService (giống ShipperDashboardServlet)
+        UserLoginDTO currentUser = (UserLoginDTO) session.getAttribute("currentUser");
+        Shipper currentShipper = shipperService.getShipperByAccountId(currentUser.getAccountId());
+        if (currentShipper == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        int shipperId = currentShipper.getShipperId();
+ 
+        // Đọc các tham số từ form POST
+        String orderIdParam  = request.getParameter("orderId");
+        String action        = request.getParameter("action");        // "success" | "failed"
+        String note          = request.getParameter("note");
         String proofImageUrl = request.getParameter("proofImageUrl");
-        String failReason = request.getParameter("failReason");
-        
+        String failReason    = request.getParameter("failReason");
+ 
+        // Validate orderId
         int orderId;
         try {
-            orderId = Integer.parseInt(orderInParam);
+            orderId = Integer.parseInt(orderIdParam);
         } catch (NumberFormatException e) {
             setFlashMessage(session, false, "Mã đơn hàng không hợp lệ!");
             response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
             return;
         }
+ 
+        // Validate action
         if (!"success".equals(action) && !"failed".equals(action)) {
-            setFlashMessage(session, false, "Hành động không hợp lệ");
+            setFlashMessage(session, false, "Hành động không hợp lệ!");
             response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
             return;
         }
+ 
         boolean isSuccess = "success".equals(action);
-        ProcessOrderResult result = shipperService.updateDeliveryStatus(orderId, shipperId, isSuccess, note, proofImageUrl, failReason);
+ 
+        // Gọi Service xử lý nghiệp vụ
+        ProcessOrderResult result = shipperService.updateDeliveryStatus(
+                orderId, shipperId, isSuccess, note, proofImageUrl, failReason);
+ 
         if (result.isSuccess()) {
-            String msg = isSuccess ? "Đơn hàng #" + orderId + " đã được giao thành công!"
+            String msg = isSuccess
+                    ? "Đơn hàng #" + orderId + " đã được giao thành công!"
                     : "Đã ghi nhận đơn hàng #" + orderId + " giao hàng thất bại!";
             setFlashMessage(session, true, msg);
         } else {
             setFlashMessage(session, false, String.join(" | ", result.getErrors()));
         }
+ 
         response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
     }
 

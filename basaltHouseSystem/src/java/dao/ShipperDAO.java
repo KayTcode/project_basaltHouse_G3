@@ -122,7 +122,7 @@ public class ShipperDAO extends DBContext {
         sql = """
               SELECT o.orderId, o.CustomerId, o.CashierId, o.ShipperId,
                                      o.TableSessionId, o.OrderAddressId, o.DiscountId,
-                                     o.OrderType, o.OrderStatus, o.PaymentMethod, o.PaymentMethod,
+                                     o.OrderType, o.OrderStatus, o.PaymentMethod, o.PaymentStatus
                                      o.TotalAmount, o.DiscountAmount, o.FinalAmount,
                                      o.CreatedAt, o.IsDeleted,
                                      ISNULL(c.fullName, 'Khách vãng lai') AS customerName
@@ -226,7 +226,7 @@ public class ShipperDAO extends DBContext {
                                     UPDATE Orders
                                     SET 
                                     ShipperId = ?,
-                                    OrderStatus = 'DELIVERING'
+                                    OrderStatus = 'Delivering'
                                     WHERE OrderId = ? AND OrderStatus = 'PENDING_SHIPPER'
                                     """;
             try (PreparedStatement ps = connection.prepareStatement(updateOrderSql)) {
@@ -242,7 +242,7 @@ public class ShipperDAO extends DBContext {
             String insertLogSql = """
                                   INSERT INTO DeliveryLogs
                                   (OrderId, ShipperId, Status, PickedUpAt, CreateAt, IsDeleted)
-                                  VALUES (?,?,"DELIVERING", ?, ?, 0)
+                                  VALUES (?,?,'Delivering', ?, ?, 0)
                                   """;
             try (PreparedStatement ps = connection.prepareStatement(insertLogSql)) {
                 LocalDateTime now = LocalDateTime.now();
@@ -274,7 +274,7 @@ public class ShipperDAO extends DBContext {
                 String updateOrderSql = """
                                         UPDATE Orders
                                         SET OrderStatus = ?
-                                        WHERE OrderId = ? AND ShipperId = ? AND OrderStatus = "DELIVERING"
+                                        WHERE OrderId = ? AND ShipperId = ? AND OrderStatus = 'Delivering'
                                         """;
                 try (PreparedStatement ps = connection.prepareStatement(updateOrderSql)) {
                     ps.setObject(1, newLogStatus);
@@ -295,7 +295,7 @@ public class ShipperDAO extends DBContext {
                                               DeliveredAt = ?,
                                               ProofImageUrl = ?,
                                               Note = ?
-                                              WHERE OrderId = ? AND ShipperId = ? AND Status = 'DELIVERING'
+                                              WHERE OrderId = ? AND ShipperId = ? AND Status = 'Delivering'
                                               """;
                     try (PreparedStatement ps = connection.prepareStatement(updateLogSql)) {
                         ps.setObject(1, newLogStatus);
@@ -312,7 +312,7 @@ public class ShipperDAO extends DBContext {
                                           SET
                                           Status = ?,
                                           FailReason = ?
-                                          WHERE OrderId = ? AND ShipperId = ? AND Status = 'DELIVERING'
+                                          WHERE OrderId = ? AND ShipperId = ? AND Status = 'Delivering'
                                           """;
                     try (PreparedStatement ps = connection.prepareStatement(updateLogSql)) {
                         ps.setObject(1, newLogStatus);
@@ -336,7 +336,7 @@ public class ShipperDAO extends DBContext {
     private boolean hasActiveShippingOrder(Connection connection, int shipperId) {
         sql = """
                SELECT COUNT(1) 
-               FROM [Orders] WHERE [ShipperId] = ? AND [OrderStatus] = 'DELIVERING' AND [IsDeleted] = 0
+               FROM [Orders] WHERE [ShipperId] = ? AND [OrderStatus] = 'Delivering' AND [IsDeleted] = 0
                """;
         try {
             ps = connection.prepareStatement(sql);

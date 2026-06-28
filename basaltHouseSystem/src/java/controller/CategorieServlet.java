@@ -13,9 +13,12 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import model.Category;
 import model.Product;
+import services.CategoryService;
+import services.ProductService;
 
 /**
  *
@@ -23,6 +26,9 @@ import model.Product;
  */
 public class CategorieServlet extends HttpServlet {
 
+    private static final ProductService pService = new ProductService();
+    private static final CategoryService Cservice = new CategoryService();
+   
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -61,8 +67,6 @@ public class CategorieServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        CategoryDAO cateDAO = new CategoryDAO();
-        ProductDAO pdao = new ProductDAO();
         List<Product> product = new ArrayList<>();
         int categoryId = 1;
         String categoryParam = request.getParameter("category");
@@ -77,15 +81,27 @@ public class CategorieServlet extends HttpServlet {
         if (keyword != null) {
             keyword = keyword.trim();
         }
+        HashMap<String,Object>s = pService.getProductByCategory(categoryId);
+        HashMap<String,Object>s2 = pService.getProductByName(keyword);
+        if(s.containsKey("error")||s2.containsKey("error")){
+              request.setAttribute("error", s.get("error").toString());
+              request.setAttribute("error", s2.get("error").toString());
+        }
         boolean isSearchResult = keyword != null && !keyword.isBlank();
         if (!isSearchResult) {
-            product = pdao.getProductByCategory(categoryId);
+            product = (List<Product>)s.get("success");
 
         } else {
-            product = pdao.getProductByName(keyword);
+            product = (List<Product>)s2.get("success");
         }
-
-        List<Category> list = cateDAO.getAllCategories();
+         
+        List<Category> list = null;
+        HashMap<String,Object>s3 = Cservice.getAllCategories();
+        if(s3.containsKey("error")){
+        request.setAttribute("error", s3.get("error").toString());
+        }else{
+         list = (List<Category>)s3.get("success");
+        }
         String categoryTitle = "Danh mục";
         for (Category c : list) {
             if (c.getCategoryId() == categoryId) {

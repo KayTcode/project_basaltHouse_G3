@@ -10,8 +10,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.List;
 import model.DiscountCode;
+import services.DiscountCodeService;
 
 /**
  *
@@ -19,11 +21,19 @@ import model.DiscountCode;
  */
 public class BenefitServlet extends HttpServlet {
 
+    private static final DiscountCodeService dService = new DiscountCodeService();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        DiscountCodeDAO dao = new DiscountCodeDAO();
-        List<DiscountCode> publicVouchers = dao.getDiscountCode();
+        HashMap<String, Object> s = dService.getDiscountCode();
+        List<DiscountCode> publicVouchers = null;
+        if (s.containsKey("errorr")) {
+            request.setAttribute("error", s.get("error").toString());
+
+        } else {
+            publicVouchers =(List<DiscountCode>)s.get("success");
+        }
 
         request.setAttribute("publicVouchers", publicVouchers);
         request.getRequestDispatcher("views/Benefit/Benefit.jsp").forward(request, response);

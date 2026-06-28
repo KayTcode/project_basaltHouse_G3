@@ -4,7 +4,7 @@ import dao.DiscountCodeDAO;
 import model.Customer;
 import model.DiscountCode;
 
-// Tạo ra để xử lý các logic tính toán Hạng thành viên và Mã giảm giá.
+
 public class PromotionService {
 
     public String checkMember(String phone) {

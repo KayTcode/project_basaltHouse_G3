@@ -1,4 +1,3 @@
-<%-- CashierCreateOrder.jsp - Tao don hang offline + Thanh toan --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@ page import="services.StockService" %>
@@ -81,8 +80,8 @@
 <main class="content-area">
     <div class="co-header" style="position: relative; display:flex;align-items:center;justify-content:space-between; padding-right: 140px; box-sizing: border-box;">
         <div>
-            <h1>Create Offline Order</h1>
-            <p>Tao don hang tai quay</p>
+            <h1>POS Order</h1>
+            
         </div>
         <button type="button" onclick="openInventoryModal()" style="position: absolute; right: 28px; top: 18px; display:flex;align-items:center;gap:6px;background:#2c1a0e;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#5c3317'" onmouseout="this.style.background='#2c1a0e'">
             <span class="material-symbols-outlined" style="font-size:17px">inventory_2</span>
@@ -121,7 +120,7 @@
                     <div class="menu-card" data-cat="cat-${p.categoryId}" data-name="${p.productName}" data-stock="${maxStockMap[p.productId] != null ? maxStockMap[p.productId] : 0}">
                         <div class="menu-card-img" style="background:linear-gradient(135deg,#d4a96a,#8b5e3c); display: flex; align-items: center; justify-content: center; overflow: hidden;">
                             <c:if test="${not empty p.imageUrl}">
-                                <img src="${pageContext.request.contextPath}${p.imageUrl}" alt="${p.productName}" style="width:100%;height:100%;object-fit:cover;">
+                                <img src="${p.imageUrl.startsWith('http') ? p.imageUrl : pageContext.request.contextPath.concat(p.imageUrl)}" alt="${p.productName}" style="width:100%;height:100%;object-fit:cover;">
                             </c:if>
                             <c:if test="${empty p.imageUrl}">
                                 <span style="font-size: 24px;">&#9749;</span>
@@ -578,7 +577,11 @@ function addItem(name, price) {
         var cardEl = document.getElementById('sz-' + s);
         
         if (!hasRecipe) {
-            cardEl.style.display = 'none';
+            cardEl.style.display = '';
+            stockEl.textContent = 'Khong co size nay';
+            stockEl.style.color = '#9ca3af';
+            cardEl.style.opacity = '0.4';
+            cardEl.style.pointerEvents = 'none';
         } else {
             cardEl.style.display = '';
             if (cups > 0) {
@@ -1017,25 +1020,25 @@ function showBill() {
         : '';
 
     var html =
-        '<div class="receipt-logo">&#9749; Coffee House</div>' +
+        '<div class="receipt-logo">&#9749; Basalt House Coffee</div>' +
         '<div class="receipt-store">123 Nguyen Hue, Q.1, TP.HCM</div>' +
         '<div class="receipt-store">SĐT: 028 1234 5678</div>' +
         '<hr class="receipt-divider">' +
-        '<div class="receipt-info"><strong>Ma don:</strong> ' + orderId + '</div>' +
-        '<div class="receipt-info"><strong>Ban:</strong> ' + (selectedTable || 'Walk-in') + '</div>' +
-        '<div class="receipt-info"><strong>Thoi gian:</strong> ' + dateStr + '</div>' +
+        '<div class="receipt-info"><strong>Mã đơn:</strong> ' + orderId + '</div>' +
+        '<div class="receipt-info"><strong>Bàn:</strong> ' + (selectedTable || 'Walk-in') + '</div>' +
+        '<div class="receipt-info"><strong>Thời gian:</strong> ' + dateStr + '</div>' +
         '<hr class="receipt-divider">' +
-        '<div class="receipt-items-hd"><span>Mon</span><span style="width:28px;text-align:center">SL</span><span style="min-width:72px;text-align:right">Gia</span></div>' +
+        '<div class="receipt-items-hd"><span>Món</span><span style="width:28px;text-align:center">SL</span><span style="min-width:72px;text-align:right">Gia</span></div>' +
         itemRows +
         '<hr class="receipt-divider">' +
-        '<div class="receipt-total-row"><span>Tam tinh</span><span>' + fmt(subtotalVal) + '</span></div>' +
+        '<div class="receipt-total-row"><span>Tạm tính</span><span>' + fmt(subtotalVal) + '</span></div>' +
         discRow +
-        '<div class="receipt-total-row receipt-grand"><span>TONG CONG</span><span>' + fmt(grandTotalVal) + '</span></div>' +
+        '<div class="receipt-total-row receipt-grand"><span>TỔNG CỘNG</span><span>' + fmt(grandTotalVal) + '</span></div>' +
         changeRow +
-        '<div class="receipt-method">Thanh toan: ' + methodNames[selectedPayMethod] + '</div>' +
+        '<div class="receipt-method">Thanh toán: ' + methodNames[selectedPayMethod] + '</div>' +
         '<hr class="receipt-divider">' +
-        '<div class="receipt-footer">Cam on quy khach da den voi Coffee House!</div>' +
-        '<div class="receipt-footer">Hen gap lai quy khach! &#128149;</div>';
+        '<div class="receipt-footer">Cảm ơn quý khách đã đến với Basalt House Coffee!</div>' +
+        '<div class="receipt-footer">Hẹn gặp lại quý khách! &#128149;</div>';
 
     document.getElementById('receiptContent').innerHTML = html;
     document.getElementById('billModal').classList.add('open');
@@ -1111,11 +1114,7 @@ function submitPOSOrder(isNewOrder) {
         if (response.ok) {
             showToast("Tao don thanh cong!");
             closeModal('billModal');
-            if (isNewOrder) {
-                setTimeout(function() { window.location.reload(); }, 600);
-            } else {
-                resetAll();
-            }
+            setTimeout(function() { window.location.reload(); }, 600);
         } else {
             response.text().then(function(text) {
                 alert("Lỗi Backend: " + text);

@@ -73,12 +73,40 @@
         <servlet-class>controller.GoogleLoginServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>AdminDashboardServlet</servlet-name>
-        <servlet-class>controller.AdminDashboardServlet</servlet-class>
+        <servlet-name>StaffServlet</servlet-name>
+        <servlet-class>controller.StaffServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>AdminAccountServlet</servlet-name>
-        <servlet-class>controller.AdminAccountServlet</servlet-class>
+        <servlet-name>StaffIngredientServlet</servlet-name>
+        <servlet-class>controller.StaffIngredientServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>StaffImportServlet</servlet-name>
+        <servlet-class>controller.StaffImportServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>StaffHistoryServlet</servlet-name>
+        <servlet-class>controller.StaffHistoryInvoiceServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>StaffSalesHistoryServlet</servlet-name>
+        <servlet-class>controller.StaffHistoryBuyProductServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ViewImportVoiceServlet</servlet-name>
+        <servlet-class>controller.ViewImportVoiceServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>MonoPaymentServlet</servlet-name>
+        <servlet-class>controller.MonoPaymentServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>MomoReturnServlet</servlet-name>
+        <servlet-class>controller.MomoReturnServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>MomoIpnServlet</servlet-name>
+        <servlet-class>controller.MomoIpnServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -169,12 +197,44 @@
         <url-pattern>/google-login</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>AdminDashboardServlet</servlet-name>
-        <url-pattern>/admin/dashboard</url-pattern>
+        <servlet-name>StaffServlet</servlet-name>
+        <url-pattern>/staff/dashboard</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>AdminAccountServlet</servlet-name>
-        <url-pattern>/admin/accounts</url-pattern>
+        <servlet-name>StaffServlet</servlet-name>
+        <url-pattern>/staff</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffIngredientServlet</servlet-name>
+        <url-pattern>/staff/ingredient</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffImportServlet</servlet-name>
+        <url-pattern>/staff/import</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffHistoryServlet</servlet-name>
+        <url-pattern>/staff/history</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>StaffSalesHistoryServlet</servlet-name>
+        <url-pattern>/staff/sales-history</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ViewImportVoiceServlet</servlet-name>
+        <url-pattern>/viewimportvoice</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MonoPaymentServlet</servlet-name>
+        <url-pattern>/momo/payment</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MomoReturnServlet</servlet-name>
+        <url-pattern>/mono/return</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>MomoIpnServlet</servlet-name>
+        <url-pattern>/momo/ipn</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

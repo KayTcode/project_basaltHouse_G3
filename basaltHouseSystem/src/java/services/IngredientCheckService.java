@@ -9,6 +9,7 @@ import dao.OrderDAO;
 import dao.RecipeDAO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +24,12 @@ import model.Recipe;
  */
 public class IngredientCheckService {
 
+    private static final OrderDAO o = new OrderDAO();
+    private static final RecipeDAO r = new RecipeDAO();
+    private static final IngredientDAO i = new IngredientDAO();
+
     public List<String> check(int orderId) {
-        OrderDAO o = new OrderDAO();
-        RecipeDAO r = new RecipeDAO();
-        IngredientDAO i = new IngredientDAO();
+
         List<String> errors = new ArrayList<>();
 
         List<OrderDetail> details = o.getOrderDetailsByOrderId(orderId);
@@ -79,5 +82,72 @@ public class IngredientCheckService {
         }
 
         return errors;
+    }
+
+    public HashMap<String, Object> updateIngredientQuantity2(int id, BigDecimal needStock) {
+
+        HashMap<String, Object> s = new HashMap<>();
+        try {
+            boolean exits = i.updateIngredientQuantity2(id, needStock);
+            if (exits) {
+                s.put("success", true);
+
+            } else {
+                s.put("error", "Cập nhật StockQuantity thất bại ");
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return s;
+    }
+
+    public HashMap<String, Object> updateIngredientQuantity(int id, BigDecimal needStock) {
+        HashMap<String, Object> s = new HashMap<>();
+        try {
+            boolean exits = i.updateIngredientQuantity(id, needStock);
+            if (exits) {
+                s.put("success", true);
+            } else {
+                s.put("error", "Cập nhật StockQuantity thất bại ");
+            }
+        } catch (Exception e) {
+            s.put("error", e.getMessage());
+            System.err.println(e.getMessage());
+        }
+        return s;
+    }
+
+    public HashMap<String, Object> getStockSnapshotByDate(LocalDate auditDate) {
+        HashMap<String, Object> s = new HashMap<>();
+        try {
+            List<HashMap<String, Object>> list = i.getStockSnapshotByDate(auditDate);
+            if (list == null) {
+                s.put("error", "Danh sách tồn kho theo ngày lỗi");
+            } else {
+                s.put("success", list);
+            }
+        } catch (Exception e) {
+            s.put("error", e.getMessage());
+            System.err.println(e.getMessage());
+        }
+        return s;
+    }
+
+    public HashMap<String, Object> getAllIngredients() {
+        HashMap<String, Object> s = new HashMap<>();
+        try {
+            HashMap<Integer, Ingredient> map = i.getAllIngredients();
+            if (map == null) {
+                s.put("error", "Không tìm thấy Import Voice");
+
+            } else {
+                s.put("success", map);
+
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return s;
+
     }
 }

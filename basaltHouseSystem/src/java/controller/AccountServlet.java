@@ -17,9 +17,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import model.ActivityLog;
 import model.CustomerProfile;
+import services.AccountService;
+import services.ActivityLogService;
 import services.AuthService;
+import services.CustomerService;
 import utils.PasswordUtils;
 
 /**
@@ -29,7 +33,9 @@ import utils.PasswordUtils;
 public class AccountServlet extends HttpServlet {
 
     private final AuthService autheService = new AuthService();
-    private final AccountDAO dao = new AccountDAO();
+    private static final CustomerService cusService = new CustomerService();
+    private static final ActivityLogService activeService = new ActivityLogService();
+    private static final AccountService accService = new AccountService();
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -82,8 +88,13 @@ public class AccountServlet extends HttpServlet {
             return;
         }
 
-        CustomersProfileDAO dao = new CustomersProfileDAO();
-        CustomerProfile p = dao.getCustomerById(user1.getAccountId());
+        CustomerProfile p = null;
+        HashMap<String, Object> s = cusService.getCustomerById(user1.getAccountId());
+        if (s.containsKey("error")) {
+            request.setAttribute("error", s.get("error").toString());
+        } else {
+            p = (CustomerProfile) s.get("success");
+        }
         request.setAttribute("cusr", p);
         if (p != null) {
             request.setAttribute("phone", p.getPhone());
@@ -110,7 +121,6 @@ public class AccountServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        ActiveLogDAO activedao = new ActiveLogDAO();
         UserLoginDTO user1 = (UserLoginDTO) session.getAttribute(AuthService.USER_SESSION_KEY);
         if (user1 == null) {
             response.sendRedirect(request.getContextPath() + "/login");
@@ -118,16 +128,22 @@ public class AccountServlet extends HttpServlet {
         }
 
 
-        AuthService authen = new AuthService();
-        AccountDAO dao = new AccountDAO();
-
         String passOld = PasswordUtils.hashSHA256(request.getParameter("oldPassword"));
         String PasNew = PasswordUtils.hashSHA256(request.getParameter("newPassword"));
-        String passHard = dao.getPassordById(user1.getAccountId());
+        String passHard = null;
+        HashMap<String, Object> s = accService.getPassordById(user1.getAccountId());
+        if (s.containsKey("error")) {
+            request.setAttribute("error", s.get("error").toString());
+        } else {
+            passHard = (String) s.get("success");
+        }
 
         if (passOld.equals(passHard) && !passOld.equals(PasNew)) {
-            dao.updatePassword(user1.getAccountId(), PasNew);
-            activedao.ctreatActiveLog(new ActivityLog(user1.getAccountId(),
+            HashMap<String, Object> s2 = accService.updatePassword(user1.getAccountId(), PasNew);
+            if (s2.containsKey("error")) {
+                request.setAttribute("error", s2.get("error").toString());
+            }
+            HashMap<String, Object> s3 = activeService.ctreatActiveLog(new ActivityLog(user1.getAccountId(),
                     "Change password",
                     "Accounts",
                     user1.getAccountId(),
@@ -136,9 +152,13 @@ public class AccountServlet extends HttpServlet {
                     "Success",
                     0,
                     LocalDateTime.now()));
-            request.setAttribute("passwordSuccess", "Đổi mật khẩu thành công");
-            doGet(request, response);
-            return;
+            if (s3.containsKey("error")) {
+                request.setAttribute("error", s3.get("error"));
+            } else {
+                request.setAttribute("passwordSuccess", "Đổi mật khẩu thành công");
+                doGet(request, response);
+                return;
+            }
 
         } else if (passOld.equals(passHard) && passOld.equals(PasNew)) {
             request.setAttribute("error", "Mật khẩu mới không được giống mật khẩu cũ ");

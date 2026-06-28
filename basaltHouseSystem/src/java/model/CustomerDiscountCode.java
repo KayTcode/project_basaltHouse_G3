@@ -29,6 +29,7 @@ public class CustomerDiscountCode {
     private String description;
     private int dayTotal;
     private String code;
+    private int status;
 
     public CustomerDiscountCode() {
     }
@@ -50,6 +51,11 @@ public class CustomerDiscountCode {
     public CustomerDiscountCode(int customerDiscountId, int accountId, int discountId, BigDecimal discountPercent, BigDecimal discountAmount, LocalDateTime startDate, LocalDateTime endDate, boolean isUsed, LocalDateTime usedDate, String description, int dayTotal, String code) {
         this(customerDiscountId, accountId, discountId, discountPercent, discountAmount, startDate, endDate, isUsed, usedDate, description, dayTotal);
         this.code = code;
+    }
+
+    public CustomerDiscountCode(int customerDiscountId, int accountId, int discountId, BigDecimal discountPercent, BigDecimal discountAmount, LocalDateTime startDate, LocalDateTime endDate, boolean isUsed, LocalDateTime usedDate, String description, int dayTotal, String code, int status) {
+        this(customerDiscountId, accountId, discountId, discountPercent, discountAmount, startDate, endDate, isUsed, usedDate, description, dayTotal, code);
+        this.status = status;
     }
 
     public String getDescription() {
@@ -170,6 +176,12 @@ public class CustomerDiscountCode {
         this.code = code;
     }
 
-   
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
 
 }

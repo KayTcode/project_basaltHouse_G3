@@ -8,8 +8,11 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import model.Order;
 import model.OrderDetail;
 
@@ -380,8 +383,8 @@ public class OrderDAO extends DBContext {
             connection.setAutoCommit(false);
 
             String sqlOrder = "INSERT INTO Orders (CustomerId, OrderAddressId, DiscountId, OrderType, OrderStatus, PaymentStatus, TotalAmount, DiscountAmount, FinalAmount, "
-                    + "PaymentMethod, Note, CreatedAt, IsDeleted) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
+                    + "PaymentMethod, Note, TableSessionId, CreatedAt, IsDeleted) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
             st = connection.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
             if (order.getCustomerId() != null) {
                 st.setInt(1, order.getCustomerId());
@@ -406,6 +409,11 @@ public class OrderDAO extends DBContext {
             st.setBigDecimal(9, order.getFinalAmount() != null ? order.getFinalAmount() : BigDecimal.ZERO);
             st.setString(10, order.getPaymentMethod());
             st.setString(11, order.getNote());
+            if (order.getTableSessionId() != null) {
+                st.setInt(12, order.getTableSessionId());
+            } else {
+                st.setNull(12, java.sql.Types.INTEGER);
+            }
             st.executeUpdate();
 
 
@@ -605,5 +613,187 @@ public class OrderDAO extends DBContext {
             System.err.println("Error getCustomerIdByAccountId: " + e.getMessage());
         }
         return -1;
+    }
+
+    public List<HashMap<String, Object>> getTodaySoldProductSizeRows() {
+        List<HashMap<String, Object>> rows = new ArrayList<>();
+        String sql = """
+                     SET NOCOUNT ON;
+
+                     DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+                     DECLARE @AuditDate DATE = @Today;
+                     DECLARE @Start DATETIME2;
+                     DECLARE @End DATETIME2;
+
+                     IF NOT EXISTS (
+                         SELECT 1
+                         FROM Orders
+                         WHERE IsDeleted = 0
+                           AND PaymentStatus = 'Paid'
+                           AND CreatedAt >= CAST(@AuditDate AS DATETIME2)
+                           AND CreatedAt < DATEADD(DAY, 1, CAST(@AuditDate AS DATETIME2))
+                     )
+                     BEGIN
+                         SELECT TOP 1 @AuditDate = CAST(CreatedAt AS DATE)
+                         FROM Orders
+                         WHERE IsDeleted = 0
+                           AND PaymentStatus = 'Paid'
+                         ORDER BY CreatedAt DESC;
+                     END
+
+                     SET @Start = CAST(@AuditDate AS DATETIME2);
+                     SET @End = DATEADD(DAY, 1, @Start);
+
+                     SELECT od.ProductId,
+                            od.SizeId,
+                            p.ProductName,
+                            s.SizeName,
+                            SUM(od.Quantity) AS SoldQuantity,
+                            MAX(od.UnitPrice) AS UnitPrice,
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
+                            @AuditDate AS AuditDate
+                     FROM OrderDetails od
+                     JOIN Orders o ON o.OrderId = od.OrderId
+                     JOIN Products p ON p.ProductId = od.ProductId
+                     JOIN Sizes s ON s.SizeId = od.SizeId
+                     WHERE od.IsDeleted = 0
+                       AND o.IsDeleted = 0
+                       AND o.PaymentStatus = 'Paid'
+                       AND o.CreatedAt >= @Start
+                       AND o.CreatedAt < @End
+                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
+                     ORDER BY p.ProductName ASC, s.SizeName ASC
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs2 = ps.executeQuery()) {
+            while (rs2.next()) {
+                HashMap<String, Object> row = new HashMap<>();
+                row.put("productId", rs2.getInt("ProductId"));
+                row.put("sizeId", rs2.getInt("SizeId"));
+                row.put("productName", rs2.getString("ProductName"));
+                row.put("sizeName", rs2.getString("SizeName"));
+                row.put("soldQuantity", rs2.getInt("SoldQuantity"));
+                row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
+                row.put("revenue", rs2.getBigDecimal("Revenue"));
+                row.put("auditDate", rs2.getDate("AuditDate"));
+                rows.add(row);
+            }
+        } catch (Exception e) {
+            System.err.println("getTodaySoldProductSizeRows Error: " + e.getMessage());
+        }
+        return rows;
+    }
+
+    public List<HashMap<String, Object>> getSoldProductSizeRowsByDate(LocalDate auditDate) {
+        List<HashMap<String, Object>> rows = new ArrayList<>();
+        String sql = """
+                     DECLARE @AuditDate DATE = ?;
+                     DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
+                     DECLARE @End DATETIME2 = DATEADD(DAY, 1, @Start);
+
+                     SELECT od.ProductId,
+                            od.SizeId,
+                            p.ProductName,
+                            s.SizeName,
+                            SUM(od.Quantity) AS SoldQuantity,
+                            MAX(od.UnitPrice) AS UnitPrice,
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
+                            @AuditDate AS AuditDate
+                     FROM OrderDetails od
+                     JOIN Orders o ON o.OrderId = od.OrderId
+                     JOIN Products p ON p.ProductId = od.ProductId
+                     JOIN Sizes s ON s.SizeId = od.SizeId
+                     WHERE od.IsDeleted = 0
+                       AND o.IsDeleted = 0
+                       AND o.PaymentStatus = 'Paid'
+                       AND o.CreatedAt >= @Start
+                       AND o.CreatedAt < @End
+                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
+                     ORDER BY p.ProductName ASC, s.SizeName ASC
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(auditDate));
+            try (ResultSet rs2 = ps.executeQuery()) {
+                while (rs2.next()) {
+                    HashMap<String, Object> row = new HashMap<>();
+                    row.put("productId", rs2.getInt("ProductId"));
+                    row.put("sizeId", rs2.getInt("SizeId"));
+                    row.put("productName", rs2.getString("ProductName"));
+                    row.put("sizeName", rs2.getString("SizeName"));
+                    row.put("soldQuantity", rs2.getInt("SoldQuantity"));
+                    row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
+                    row.put("revenue", rs2.getBigDecimal("Revenue"));
+                    row.put("auditDate", rs2.getDate("AuditDate"));
+                    rows.add(row);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("getSoldProductSizeRowsByDate Error: " + e.getMessage());
+        }
+        return rows;
+    }
+
+    public Map<String, Object> getCashierDashboard() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("todayRevenue", BigDecimal.ZERO);
+        stats.put("todayOrders", 0);
+        stats.put("pendingOrders", 0);
+        stats.put("newCustomers", 0);
+
+        try {
+            // Doanh thu hom nay
+            String sqlRevenue = """
+                    SELECT SUM(FinalAmount) AS Revenue 
+                    FROM Orders 
+                    WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                                """;
+            PreparedStatement st1 = connection.prepareStatement(sqlRevenue);
+            ResultSet rs1 = st1.executeQuery();
+            if (rs1.next()) {
+                BigDecimal rev = rs1.getBigDecimal("Revenue");
+                if (rev != null) stats.put("todayRevenue", rev);
+            }
+
+            // Don hang hom nay
+            String sqlOrders = """
+                 SELECT COUNT(OrderId) AS OrdersCount 
+                 FROM Orders 
+                 WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                               """;
+            PreparedStatement st2 = connection.prepareStatement(sqlOrders);
+            ResultSet rs2 = st2.executeQuery();
+            if (rs2.next()) {
+                stats.put("todayOrders", rs2.getInt("OrdersCount"));
+            }
+
+            // Don cho xu ly (Pending / Preparing) hom nay
+            String sqlPending = """
+            SELECT COUNT(OrderId) AS PendingCount 
+            FROM Orders 
+            WHERE OrderStatus IN ('Pending', 'Preparing') 
+            AND CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                                """;
+            PreparedStatement st3 = connection.prepareStatement(sqlPending);
+            ResultSet rs3 = st3.executeQuery();
+            if (rs3.next()) {
+                stats.put("pendingOrders", rs3.getInt("PendingCount"));
+            }
+
+            // Khach hang moi hom nay
+            String sqlCust = """
+            SELECT COUNT(CustomerId) AS CustCount 
+            FROM Customers 
+            WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
+                             """;
+            PreparedStatement st4 = connection.prepareStatement(sqlCust);
+            ResultSet rs4 = st4.executeQuery();
+            if (rs4.next()) {
+                stats.put("newCustomers", rs4.getInt("CustCount"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return stats;
     }
 }

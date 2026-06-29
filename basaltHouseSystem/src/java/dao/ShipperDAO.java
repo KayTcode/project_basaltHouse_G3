@@ -69,7 +69,7 @@ public class ShipperDAO extends DBContext {
         }
         return null;
     }
-
+ 
     public List<Order> getPendingShipperOrders() {
         sql = """
               SELECT o.[OrderId], o.[CustomerId], o.[CashierId], o.[ShipperId],
@@ -117,12 +117,12 @@ public class ShipperDAO extends DBContext {
         }
         return list;
     }
-
+ 
     public Order getCurrentShippingOrder(int shipperId) {
         sql = """
               SELECT o.orderId, o.CustomerId, o.CashierId, o.ShipperId,
                                      o.TableSessionId, o.OrderAddressId, o.DiscountId,
-                                     o.OrderType, o.OrderStatus, o.PaymentMethod, o.PaymentStatus
+                                     o.OrderType, o.OrderStatus, o.PaymentMethod, o.PaymentStatus,
                                      o.TotalAmount, o.DiscountAmount, o.FinalAmount,
                                      o.CreatedAt, o.IsDeleted,
                                      ISNULL(c.fullName, 'Khách vãng lai') AS customerName
@@ -165,7 +165,7 @@ public class ShipperDAO extends DBContext {
         }
         return null;
     }
-
+ 
     public OrderAddress getOrderAddressById(int orderAddressId) {
         sql = """
               SELECT [OrderAddressId]
@@ -195,7 +195,7 @@ public class ShipperDAO extends DBContext {
                 oa.setAddressDetail(rs.getString("AddressDetail"));
                 oa.setNote(rs.getString("Note"));
                 oa.setIsDefault(rs.getBoolean("IsDefault"));
-                Timestamp createAt = rs.getTimestamp("CreateAt");
+                Timestamp createAt = rs.getTimestamp("CreatedAt");
                 if (createAt != null) {
                     oa.setCreatedAt(createAt.toLocalDateTime());
                 }
@@ -207,7 +207,7 @@ public class ShipperDAO extends DBContext {
         }
         return null;
     }
-
+ 
     public ProcessOrderResult acceptOrder(int orderId, int shipperId) throws SQLException {
         ProcessOrderResult result = new ProcessOrderResult();
         try {
@@ -227,7 +227,7 @@ public class ShipperDAO extends DBContext {
                                     SET 
                                     ShipperId = ?,
                                     OrderStatus = 'Delivering'
-                                    WHERE OrderId = ? AND OrderStatus = 'PENDING_SHIPPER'
+                                    WHERE OrderId = ? AND OrderStatus = 'Preparing'
                                     """;
             try (PreparedStatement ps = connection.prepareStatement(updateOrderSql)) {
                 ps.setObject(1, shipperId);
@@ -241,7 +241,7 @@ public class ShipperDAO extends DBContext {
             }
             String insertLogSql = """
                                   INSERT INTO DeliveryLogs
-                                  (OrderId, ShipperId, Status, PickedUpAt, CreateAt, IsDeleted)
+                                  (OrderId, ShipperId, Status, PickedUpAt, CreatedAt, IsDeleted)
                                   VALUES (?,?,'Delivering', ?, ?, 0)
                                   """;
             try (PreparedStatement ps = connection.prepareStatement(insertLogSql)) {
@@ -262,15 +262,15 @@ public class ShipperDAO extends DBContext {
         }
         return result;
     }
-
+ 
     public ProcessOrderResult updateDeliveryStatus(int orderId, int shipperId, boolean isSuccess, String note, String proofImageUrl, String failReasion) {
         ProcessOrderResult result = new ProcessOrderResult();
         try {
             connection.setAutoCommit(false);
             try {
-                String newOrderStatus = isSuccess ? "DELIVERED" : "FAILED";
-                String newLogStatus = isSuccess ? "DELIVERED" : "FAILED";
-
+                String newOrderStatus = isSuccess ? "Delivered" : "Failed";
+                String newLogStatus = isSuccess ? "Delivered" : "Failed";
+ 
                 String updateOrderSql = """
                                         UPDATE Orders
                                         SET OrderStatus = ?
@@ -332,7 +332,7 @@ public class ShipperDAO extends DBContext {
         }
         return result;
     }
-
+ 
     private boolean hasActiveShippingOrder(Connection connection, int shipperId) {
         sql = """
                SELECT COUNT(1) 
@@ -348,11 +348,11 @@ public class ShipperDAO extends DBContext {
             throw new RuntimeException(e);
         }
     }
-
+ 
     private boolean isOrderPendingShipper(Connection connection, int orderId) {
         sql = """
               SELECT COUNT(1) FROM Orders
-              WHERE OrderId = ? AND OrderStatus = 'PENDING_SHIPPER' AND IsDeleted = 0
+              WHERE OrderId = ? AND OrderStatus = 'Preparing' AND IsDeleted = 0
               """;
         try {
             ps = connection.prepareStatement(sql);

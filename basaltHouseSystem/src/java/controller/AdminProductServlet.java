@@ -135,7 +135,8 @@ public class AdminProductServlet extends HttpServlet {
                     break;
 
                 case "edit":
-                    String editProductId = request.getParameter("productId");
+                    // Lấy dữ liệu gửi lên từ form Sửa
+                    String editProductId = request.getParameter("productId"); 
                     String editName = request.getParameter("productName");
                     String editDescription = request.getParameter("description");
                     String editCatId = request.getParameter("categoryId");
@@ -149,6 +150,9 @@ public class AdminProductServlet extends HttpServlet {
                     String[] editIngredientNames = request.getParameterValues("ingredientNames");
                     String[] editQuantities = request.getParameterValues("quantities");
                     String[] editUnits = request.getParameterValues("units");
+
+                    // In ra Console để debug nếu lỗi
+                    System.out.println("=== UPDATE SẢN PHẨM ID: " + editProductId + " ===");
 
                     boolean isEditSuccess = productService.processEditProduct(
                             editProductId, editName, editDescription, editCatId, editPrice, editImgUrl, editIsActive,

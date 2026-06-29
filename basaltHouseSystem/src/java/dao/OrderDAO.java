@@ -695,7 +695,7 @@ public class OrderDAO extends DBContext {
             System.err.println("getOrderAddressByOrderAddressId Error: " + e.getMessage());
         }
         return null;
-
+    }
     public List<HashMap<String, Object>> getTodaySoldProductSizeRows() {
         List<HashMap<String, Object>> rows = new ArrayList<>();
         String sql = """

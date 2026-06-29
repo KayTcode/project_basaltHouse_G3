@@ -46,7 +46,7 @@
                class="menu-item ${currentURI.contains('/admin/products') ? 'active' : ''}">
                 ☕ Sản phẩm
             </a>
-<!--            <a href="${pageContext.request.contextPath}/admin/orders" 
+            <a href="${pageContext.request.contextPath}/admin/orders" 
                class="menu-item ${currentURI.contains('/admin/orders') ? 'active' : ''}">
                 🛒 Đơn hàng
             </a>
@@ -57,10 +57,10 @@
             <a href="${pageContext.request.contextPath}/admin/bills" 
                class="menu-item ${currentURI.contains('/admin/bills') ? 'active' : ''}">
                 📋 Bills
-            </a>-->
+            </a>
         </div>
 
-<!--        <div class="menu-section">
+        <div class="menu-section">
             <div class="section-header">KHO VẬN & TÀI CHÍNH</div>
             <a href="${pageContext.request.contextPath}/admin/ingredients" 
                class="menu-item ${currentURI.contains('/admin/ingredients') ? 'active' : ''}">
@@ -102,6 +102,6 @@
                class="menu-item ${currentURI.contains('/admin/settings') ? 'active' : ''}">
                 ⚙️ Cài đặt hệ thống
             </a>
-        </div>-->
+        </div>
     </div>
 </aside>

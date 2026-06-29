@@ -16,53 +16,52 @@ import model.Category;
 public class AdminProductDAO extends DBContext {
 
     public List<ProductDTO> getProductsWithFullDetails(String search, String categoryId, int offset, int limit) {
-        Map<Integer, ProductDTO> productMap = new LinkedHashMap<>();
+    Map<Integer, ProductDTO> productMap = new LinkedHashMap<>();
 
-        StringBuilder sql = new StringBuilder();
-        sql.append("WITH PagedProducts AS ( ");
-        sql.append("    SELECT ProductId FROM Products ");
-        sql.append("    WHERE IsDeleted = 0 ");
+    // Chuyển từ StringBuilder sang String nối chuỗi (+) cho giống phong cách của bạn
+    String sql = "WITH PagedProducts AS ( "
+            + "    SELECT ProductId FROM Products WHERE IsDeleted = 0 ";
 
+    if (search != null && !search.trim().isEmpty()) {
+        sql += " AND ProductName LIKE ? ";
+    }
+    if (categoryId != null && !categoryId.trim().isEmpty()) {
+        sql += " AND CategoryId = ? ";
+    }
+
+    sql += "    ORDER BY CreatedAt DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY "
+            + ") "
+            + "SELECT p.ProductId, p.ProductName, p.CategoryId, p.Price AS BasePrice, p.Description, p.ImageUrl, p.IsActive, p.CreatedAt, p.IsDeleted, "
+            + "       c.CategoryName, "
+            + "       ps.SizeId, ps.Price AS SizePrice, s.SizeName, "
+            + "       r.RecipeId, r.IngredientId, ing.IngredientName, r.QuantityNeeded, ing.Unit "
+            + "FROM Products p "
+            + "INNER JOIN PagedProducts pp ON p.ProductId = pp.ProductId "
+            + "LEFT JOIN Categories c ON p.CategoryId = c.CategoryId "
+            + "LEFT JOIN ProductSizes ps ON p.ProductId = ps.ProductId AND ps.IsDeleted = 0 "
+            + "LEFT JOIN Sizes s ON ps.SizeId = s.SizeId "
+            + "LEFT JOIN Recipes r ON p.ProductId = r.ProductId AND r.SizeId = ps.SizeId AND r.IsDeleted = 0 "
+            + "LEFT JOIN Ingredients ing ON r.IngredientId = ing.IngredientId "
+            + "ORDER BY p.CreatedAt DESC, p.ProductId, ps.SizeId, r.RecipeId";
+
+    try (PreparedStatement st = connection.prepareStatement(sql)) {
+        int paramIndex = 1;
+
+        // Set parameters
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND ProductName LIKE ? ");
+            st.setString(paramIndex++, "%" + search + "%");
         }
         if (categoryId != null && !categoryId.trim().isEmpty()) {
-            sql.append(" AND CategoryId = ? ");
+            st.setInt(paramIndex++, Integer.parseInt(categoryId));
         }
+        st.setInt(paramIndex++, offset);
+        st.setInt(paramIndex, limit);
 
-        sql.append("    ORDER BY CreatedAt DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
-        sql.append(") ");
-        sql.append("SELECT ");
-        sql.append("    p.ProductId, p.ProductName, p.CategoryId, p.Price AS BasePrice, p.Description, p.ImageUrl, p.IsActive, p.CreatedAt, p.IsDeleted, ");
-        sql.append("    c.CategoryName, ");
-        sql.append("    ps.SizeId, ps.Price AS SizePrice, s.SizeName, ");
-        sql.append("    r.RecipeId, r.IngredientId, ing.IngredientName, r.QuantityNeeded, ing.Unit ");
-        sql.append("FROM Products p ");
-        sql.append("INNER JOIN PagedProducts pp ON p.ProductId = pp.ProductId ");
-        sql.append("LEFT JOIN Categories c ON p.CategoryId = c.CategoryId ");
-        sql.append("LEFT JOIN ProductSizes ps ON p.ProductId = ps.ProductId AND ps.IsDeleted = 0 ");
-        sql.append("LEFT JOIN Sizes s ON ps.SizeId = s.SizeId ");
-        sql.append("LEFT JOIN Recipes r ON p.ProductId = r.ProductId AND r.SizeId = ps.SizeId AND r.IsDeleted = 0 ");
-        sql.append("LEFT JOIN Ingredients ing ON r.IngredientId = ing.IngredientId ");
-        sql.append("ORDER BY p.CreatedAt DESC, p.ProductId, ps.SizeId, r.RecipeId");
-
-        try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
-            int paramIndex = 1;
-
-            if (search != null && !search.trim().isEmpty()) {
-                st.setString(paramIndex++, "%" + search + "%");
-            }
-            if (categoryId != null && !categoryId.trim().isEmpty()) {
-                st.setInt(paramIndex++, Integer.parseInt(categoryId));
-            }
-            st.setInt(paramIndex++, offset);
-            st.setInt(paramIndex, limit);
-
-            ResultSet rs = st.executeQuery();
-
+        try (ResultSet rs = st.executeQuery()) {
             while (rs.next()) {
                 int productId = rs.getInt("ProductId");
 
+                // Khởi tạo Product & ProductDTO nếu chưa có trong Map
                 if (!productMap.containsKey(productId)) {
                     Product p = new Product();
                     p.setProductId(productId);
@@ -74,48 +73,36 @@ public class AdminProductDAO extends DBContext {
                     p.setIsActive(rs.getBoolean("IsActive"));
                     p.setIsDeleted(rs.getBoolean("IsDeleted"));
 
-                    Timestamp ts = rs.getTimestamp("CreatedAt");
+                    java.sql.Timestamp ts = rs.getTimestamp("CreatedAt");
                     if (ts != null) {
                         p.setCreatedAt(ts.toLocalDateTime());
                     }
 
-                    ProductDTO dto = new ProductDTO(p, rs.getString("CategoryName"));
-                    productMap.put(productId, dto);
+                    productMap.put(productId, new ProductDTO(p, rs.getString("CategoryName")));
                 }
 
                 ProductDTO currentDTO = productMap.get(productId);
 
+                // Add SizeDTO
                 int sizeId = rs.getInt("SizeId");
                 if (!rs.wasNull()) {
-                    SizeDTO sizeDTO = new SizeDTO(
-                            sizeId,
-                            rs.getString("SizeName"),
-                            rs.getBigDecimal("SizePrice")
-                    );
-                    currentDTO.addSize(sizeDTO);
+                    currentDTO.addSize(new SizeDTO(sizeId, rs.getString("SizeName"), rs.getBigDecimal("SizePrice")));
                 }
 
+                // Add RecipeDTO
                 int recipeId = rs.getInt("RecipeId");
                 if (!rs.wasNull()) {
-                    RecipeDTO recipeDTO = new RecipeDTO(
-                            recipeId,
-                            rs.getInt("IngredientId"),
-                            rs.getDouble("QuantityNeeded"),
-                            rs.getString("Unit"),
-                            rs.getString("IngredientName")
-                    );
-                    currentDTO.addRecipe(recipeDTO);
+                    currentDTO.addRecipe(new RecipeDTO(recipeId, rs.getInt("IngredientId"), rs.getDouble("QuantityNeeded"), rs.getString("Unit"), rs.getString("IngredientName")));
                 }
             }
-        } catch (SQLException e) {
-            // ĐÃ SỬA: in lỗi rõ ràng ra console — bản gốc chỉ printStackTrace,
-            // dễ bị bỏ lỡ khi tên cột sai (đây chính là lý do JSP cũ luôn trống dữ liệu)
-            System.err.println("Lỗi SQL khi lấy danh sách sản phẩm: " + e.getMessage());
-            e.printStackTrace();
         }
-
-        return new ArrayList<>(productMap.values());
+    } catch (SQLException e) {
+        System.err.println("Lỗi SQL khi lấy danh sách sản phẩm: " + e.getMessage());
+        e.printStackTrace();
     }
+
+    return new ArrayList<>(productMap.values());
+}
 
     /**
      * Đếm tổng số lượng sản phẩm dựa trên các bộ lọc (Phục vụ cho phân trang và
@@ -221,7 +208,8 @@ public class AdminProductDAO extends DBContext {
         return list;
     }
 
-    // 3. THÊM SẢN PHẨM MỚI (Sử dụng Transaction để đảm bảo tính toàn vẹn dữ liệu)
+
+// 3. THÊM SẢN PHẨM MỚI (Sử dụng Transaction để đảm bảo tính toàn vẹn dữ liệu)
     public boolean addProductTransaction(Product p, List<SizeDTO> productSizes, List<RecipeDTO> recipes) {
 
         // GIỮ NGUYÊN 100% SQL CỦA BẠN
@@ -311,14 +299,30 @@ public class AdminProductDAO extends DBContext {
                     }
 
                     // 3.2: Insert vào bảng Recipes (Với 5 tham số dấu ?)
-                    try (PreparedStatement pstRecipe = connection.prepareStatement(insertRecipeSQL)) {
-                        pstRecipe.setInt(1, newProductId);
-                        pstRecipe.setInt(2, currentIngredientId);
-                        pstRecipe.setNull(3, java.sql.Types.INTEGER); // SizeId tạm set null vì công thức chung
-                        pstRecipe.setDouble(4, recipe.getQuantity()); // QuantityNeeded
-                        pstRecipe.setString(5, recipe.getUnit());     // Note
-
-                        pstRecipe.executeUpdate(); // Chạy thẳng (không dùng batch vì nằm trong vòng lặp có xử lý IngredientId)
+                    // SỬA: Recipes.SizeId nhiều khả năng là NOT NULL (có FK tới Sizes) nên không thể setNull.
+                    // Nếu sản phẩm có cấu hình Size thì insert 1 dòng Recipe cho MỖI Size đã chọn.
+                    // Nếu sản phẩm không có Size nào (trường hợp hiếm), mới fallback insert NULL.
+                    if (productSizes != null && !productSizes.isEmpty()) {
+                        try (PreparedStatement pstRecipe = connection.prepareStatement(insertRecipeSQL)) {
+                            for (SizeDTO size : productSizes) {
+                                pstRecipe.setInt(1, newProductId);
+                                pstRecipe.setInt(2, currentIngredientId);
+                                pstRecipe.setInt(3, size.getSizeId());        // SizeId thật, không còn NULL
+                                pstRecipe.setDouble(4, recipe.getQuantity()); // QuantityNeeded
+                                pstRecipe.setString(5, recipe.getUnit());     // Note
+                                pstRecipe.addBatch();
+                            }
+                            pstRecipe.executeBatch();
+                        }
+                    } else {
+                        try (PreparedStatement pstRecipe = connection.prepareStatement(insertRecipeSQL)) {
+                            pstRecipe.setInt(1, newProductId);
+                            pstRecipe.setInt(2, currentIngredientId);
+                            pstRecipe.setNull(3, java.sql.Types.INTEGER);
+                            pstRecipe.setDouble(4, recipe.getQuantity());
+                            pstRecipe.setString(5, recipe.getUnit());
+                            pstRecipe.executeUpdate();
+                        }
                     }
                 }
             }
@@ -346,7 +350,7 @@ public class AdminProductDAO extends DBContext {
         }
     }
     
-    public boolean updateProductTransaction(Product p, List<SizeDTO> productSizes, List<RecipeDTO> recipes) {
+   public boolean updateProductTransaction(Product p, List<SizeDTO> productSizes, List<RecipeDTO> recipes) {
 
         String updateProductSQL = "UPDATE Products SET ProductName=?, CategoryId=?, Price=?, Description=?, ImageUrl=?, IsActive=? WHERE ProductId=?";
 
@@ -418,13 +422,27 @@ public class AdminProductDAO extends DBContext {
                         }
                     }
 
-                    try (PreparedStatement pstRecipe = connection.prepareStatement(insertRecipeSQL)) {
-                        pstRecipe.setInt(1, productId);
-                        pstRecipe.setInt(2, currentIngredientId);
-                        pstRecipe.setNull(3, java.sql.Types.INTEGER);
-                        pstRecipe.setDouble(4, recipe.getQuantity());
-                        pstRecipe.setString(5, recipe.getUnit());
-                        pstRecipe.executeUpdate();
+                    if (productSizes != null && !productSizes.isEmpty()) {
+                        try (PreparedStatement pstRecipe = connection.prepareStatement(insertRecipeSQL)) {
+                            for (SizeDTO size : productSizes) {
+                                pstRecipe.setInt(1, productId);
+                                pstRecipe.setInt(2, currentIngredientId);
+                                pstRecipe.setInt(3, size.getSizeId());
+                                pstRecipe.setDouble(4, recipe.getQuantity());
+                                pstRecipe.setString(5, recipe.getUnit());
+                                pstRecipe.addBatch();
+                            }
+                            pstRecipe.executeBatch();
+                        }
+                    } else {
+                        try (PreparedStatement pstRecipe = connection.prepareStatement(insertRecipeSQL)) {
+                            pstRecipe.setInt(1, productId);
+                            pstRecipe.setInt(2, currentIngredientId);
+                            pstRecipe.setNull(3, java.sql.Types.INTEGER);
+                            pstRecipe.setDouble(4, recipe.getQuantity());
+                            pstRecipe.setString(5, recipe.getUnit());
+                            pstRecipe.executeUpdate();
+                        }
                     }
                 }
             }
@@ -440,6 +458,7 @@ public class AdminProductDAO extends DBContext {
             try { connection.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
         }
     }
+
 
     // 5. XÓA MỀM SẢN PHẨM
     public boolean softDeleteProduct(int productId) {

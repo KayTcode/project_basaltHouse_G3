@@ -34,7 +34,7 @@
                     </div>
                 </div>
 
-                <%-- ĐÃ THÊM: Hiển thị thông báo Toast sau khi Thêm/Sửa/Xóa --%>
+                <%-- Hiển thị thông báo Toast sau khi Thêm/Sửa/Xóa --%>
                 <c:if test="${not empty sessionScope.toastMessage}">
                     <div style="background: var(--basalt-emerald-light); color: var(--basalt-emerald); padding: 12px 20px; border-radius: 8px; margin-bottom: 16px; font-weight: 600;">
                         <i class="fa-solid fa-circle-check"></i> ${sessionScope.toastMessage}
@@ -134,7 +134,14 @@
                                             <tr class="account-row-item">
                                                 <td><code>#${item.product.productId}</code></td>
                                                 <td>
-                                                    <img src="${not empty item.product.imageUrl ? item.product.imageUrl : pageContext.request.contextPath+'/images/default-food.png'}" class="product-thumbnail" alt="Product Image"/>
+                                                    <c:choose>
+                                                        <c:when test="${not empty item.product.imageUrl}">
+                                                            <img src="${item.product.imageUrl}" class="product-thumbnail" alt="Product Image"/>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <img src="${pageContext.request.contextPath}/images/default-food.png" class="product-thumbnail" alt="Product Image"/>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                                 <td>
                                                     <div class="user-cell-name">
@@ -169,7 +176,7 @@
                                                         <c:when test="${not empty item.recipes}">
                                                             <c:forEach var="rc" items="${item.recipes}">
                                                                 <div class="recipe-ingredient-item">
-                                                                    <i class="fa-solid fa-angles-right" style="font-size: 9px; color: #94a3b8"></i> 
+                                                                    <i class="fa-solid fa-angles-right" style="font-size: 9px; color: #94a3b8"></i>
                                                                     NL #${rc.ingredientName}: <strong>${rc.quantity}</strong> ${rc.unit}
                                                                 </div>
                                                             </c:forEach>
@@ -190,9 +197,17 @@
                                                 </td>
                                                 <td style="text-align: right; padding-right: 24px;">
                                                     <div class="row-actions-cell" style="justify-content: flex-end;">
-                                                        <%-- ĐÃ SỬA: truyền kèm sizesJson/recipesJson để đổ dữ liệu vào modal Edit --%>
+                                                        <%-- Truyền kèm sizesJson/recipesJson để đổ dữ liệu vào modal Edit.
+                                                             Tên sản phẩm được làm sạch cả dấu " và ' để không phá vỡ thuộc tính onclick. --%>
                                                         <button class="btn-icon-action action-edit" title="Chỉnh sửa sản phẩm"
-                                                                onclick='openEditModal(${item.product.productId}, "${fn:replace(item.product.productName, "\"", "")}", ${item.product.categoryId}, ${item.product.price}, ${item.product.isActive}, ${item.sizesJson}, ${item.recipesJson})'>
+                                                                data-id="${item.product.productId}"
+                                                                data-name="${fn:escapeXml(item.product.productName)}"
+                                                                data-category="${item.product.categoryId}"
+                                                                data-price="${item.product.price}"
+                                                                data-active="${item.product.isActive}"
+                                                                data-sizes="${fn:escapeXml(item.sizesJson)}"
+                                                                data-recipes="${fn:escapeXml(item.recipesJson)}"
+                                                                onclick="openEditModalFromButton(this)">
                                                             <i class="fa-solid fa-pen-to-square"></i>
                                                         </button>
                                                         <form action="${pageContext.request.contextPath}/admin/products" method="POST" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">
@@ -223,7 +238,7 @@
                     <c:if test="${data.totalPages > 1}">
                         <div style="display:flex;gap:6px;justify-content:flex-end;margin:20px 24px;font-size:13px">
                             <c:forEach begin="1" end="${data.totalPages}" var="p">
-                                <a href="?page=${p}&search=${data.oldSearch}&categoryId=${data.oldCategoryId}" 
+                                <a href="?page=${p}&search=${data.oldSearch}&categoryId=${data.oldCategoryId}"
                                    style="padding:6px 12px;border:1px solid #e2e2e2;border-radius:6px;text-decoration:none; ${p == data.currentPage ? 'background:var(--basalt-green);color:#fff;border-color:var(--basalt-green);' : 'color:#555;'}">
                                     ${p}
                                 </a>
@@ -322,7 +337,6 @@
                             </div>
                             <div class="form-field-group">
                                 <label>Danh mục</label>
-                                <%-- ĐÃ SỬA: ${categories} -> ${data.categories} vì categories không tồn tại trong scope --%>
                                 <select name="categoryId" id="edit_category" class="form-select">
                                     <c:forEach var="cat" items="${data.categories}">
                                         <option value="${cat.categoryId}">${cat.categoryName}</option>
@@ -349,7 +363,7 @@
                                 </select>
                             </div>
 
-                            <%-- ĐÃ THÊM: khung cấu hình Size & Recipe cho modal Edit (trước đây chưa có -> không sửa được size) --%>
+                            <%-- Khung cấu hình Size & Recipe cho modal Edit --%>
                             <div class="section-header-add">
                                 <span><i class="fa-solid fa-mug-hot"></i> Cấu Hình Kích Thước (Sizes)</span>
                                 <button type="button" class="btn-primary-action" style="padding: 4px 12px; font-size: 12px;" onclick="addSizeRow('edit-size-container')">
@@ -377,7 +391,7 @@
 
         <script>
             function openAddModal() {
-                // ĐÃ THÊM: reset lại các dòng size/recipe cũ mỗi lần mở modal Thêm mới
+                // Reset lại các dòng size/recipe cũ mỗi lần mở modal Thêm mới
                 document.getElementById('size-container').innerHTML = '';
                 document.getElementById('ingredient-container').innerHTML = '';
                 document.getElementById('addProductModal').classList.add('active');
@@ -386,7 +400,19 @@
                 document.getElementById('addProductModal').classList.remove('active');
             }
 
-            // ĐÃ SỬA: nhận thêm sizesArr, recipesArr để đổ dữ liệu Size/Recipe hiện có vào modal Edit
+            // Đọc dữ liệu an toàn từ data-* attribute trên nút Sửa (tránh lỗi escape dấu nháy khi nhúng JSON thẳng vào onclick)
+            function openEditModalFromButton(btn) {
+                const id = btn.dataset.id;
+                const name = btn.dataset.name; // Trình duyệt đã tự decode HTML entity (&quot; &#39; ...) nên lấy ra là chuỗi gốc, không cần xử lý thêm
+                const categoryId = btn.dataset.category;
+                const price = btn.dataset.price;
+                const isActive = btn.dataset.active === 'true';
+                const sizesArr = btn.dataset.sizes ? JSON.parse(btn.dataset.sizes) : [];
+                const recipesArr = btn.dataset.recipes ? JSON.parse(btn.dataset.recipes) : [];
+                openEditModal(id, name, categoryId, price, isActive, sizesArr, recipesArr);
+            }
+
+            // Nhận thêm sizesArr, recipesArr để đổ dữ liệu Size/Recipe hiện có vào modal Edit
             function openEditModal(id, name, categoryId, price, isActive, sizesArr, recipesArr) {
                 document.getElementById('edit_id').value = id;
                 document.getElementById('edit_notice_title').innerText = "Sản phẩm mã #" + id;
@@ -421,14 +447,14 @@
             function closeEditModal() {
                 document.getElementById('editProductModal').classList.remove('active');
             }
-            
+
             // ── HÀM THÊM ĐỘNG DÒNG KÍCH THƯỚC (SIZES) ──
-            // ĐÃ SỬA: thêm tham số containerId (dùng chung cho cả modal Add và Edit) + tham số fill sẵn giá trị khi Sửa
+            // containerId dùng chung cho cả modal Add và Edit + tham số fill sẵn giá trị khi Sửa
             function addSizeRow(containerId, selectedSizeId, selectedPrice) {
                 const container = document.getElementById(containerId || 'size-container');
                 const row = document.createElement('div');
                 row.className = 'dynamic-row';
-                
+
                 // Móc dữ liệu FormSizes từ Map Backend đẩy sang bằng JSTL
                 let optionsHtml = '';
                 <c:forEach var="sz" items="${data.formSizes}">
@@ -451,7 +477,7 @@
             }
 
             // ── HÀM THÊM ĐỘNG DÒNG NGUYÊN LIỆU (RECIPES) ──
-            // ĐÃ SỬA: thêm tham số containerId + tham số fill sẵn giá trị khi Sửa
+            // containerId + tham số fill sẵn giá trị khi Sửa
             function addIngredientRow(containerId, selectedIngId, selectedQty, selectedUnit) {
                 const container = document.getElementById(containerId || 'ingredient-container');
                 const row = document.createElement('div');
@@ -487,7 +513,7 @@
             function toggleNewIngredientInput(selectElem) {
                 const row = selectElem.parentElement;
                 const newNameInput = row.querySelector('.input-new-ing');
-                
+
                 if (selectElem.value === "0") {
                     // Nếu chọn "Tạo NL mới", hiện ô input tên ra
                     newNameInput.style.display = 'block';

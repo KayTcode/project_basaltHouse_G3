@@ -13,30 +13,30 @@ import java.util.List;
  */
 public class ProcessOrderResult {
 
- 
-        private boolean success;
-        private List<String> errors;
+    private boolean success;
+    private List<String> errors;
 
-        public ProcessOrderResult() {
-            this.success = true;
-            this.errors = new ArrayList<>();
-
-        }
-
-        public void addError(String error) {
-            this.success = false;
-            this.errors.add(error);
-        }
-
-    
-
-        public boolean isSuccess() {
-            return success;
-        }
-
-        public List<String> getErrors() {
-            return errors;
-        }
+    public ProcessOrderResult() {
+        this.success = true;
+        this.errors = new ArrayList<>();
 
     }
 
+    public void addError(String error) {
+        this.success = false;
+        this.errors.add(error);
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public List<String> getErrors() {
+        return errors;
+    }
+
+}

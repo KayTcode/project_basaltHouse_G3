@@ -155,10 +155,88 @@ public class OrderDAO extends DBContext {
                      UPDATE Orders SET OrderStatus = ?
                      WHERE OrderId = ?
                      """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, status);
-            st.setObject(2, orderId);
-            st.executeUpdate();
+            PreparedStatement stUpdate = connection.prepareStatement(sql);
+            stUpdate.setObject(1, status);
+            stUpdate.setObject(2, orderId);
+            stUpdate.executeUpdate();
+            stUpdate.close();
+
+            // Auto-maintain DeliveryLogs table
+            boolean hasLog = false;
+            String checkSql = "SELECT COUNT(*) FROM DeliveryLogs WHERE OrderId = ? AND IsDeleted = 0";
+            try (PreparedStatement psCheck = connection.prepareStatement(checkSql)) {
+                psCheck.setInt(1, orderId);
+                try (ResultSet rsCheck = psCheck.executeQuery()) {
+                    if (rsCheck.next() && rsCheck.getInt(1) > 0) {
+                        hasLog = true;
+                    }
+                }
+            }
+
+            if (!hasLog) {
+                String insertSql = """
+                    INSERT INTO DeliveryLogs (OrderId, ShipperId, Status, CreatedAt, IsDeleted)
+                    VALUES (?, 1, 'Pending', GETDATE(), 0)
+                    """;
+                try (PreparedStatement psInsert = connection.prepareStatement(insertSql)) {
+                    psInsert.setInt(1, orderId);
+                    psInsert.executeUpdate();
+                }
+            }
+
+            if ("Preparing".equals(status) || "In_Progress".equals(status)) {
+                String updateLogSql = """
+                    UPDATE DeliveryLogs 
+                    SET ShipperConfirmedAt = GETDATE(), Status = 'ShipperConfirmed'
+                    WHERE OrderId = ? AND IsDeleted = 0 AND ShipperConfirmedAt IS NULL
+                    """;
+                try (PreparedStatement psUpdate = connection.prepareStatement(updateLogSql)) {
+                    psUpdate.setInt(1, orderId);
+                    psUpdate.executeUpdate();
+                }
+            } else if ("Ready".equals(status) || "Delivering".equals(status)) {
+                String updateLogSql = """
+                    UPDATE DeliveryLogs 
+                    SET PickedUpAt = GETDATE(), Status = 'Delivering'
+                    WHERE OrderId = ? AND IsDeleted = 0 AND PickedUpAt IS NULL
+                    """;
+                try (PreparedStatement psUpdate = connection.prepareStatement(updateLogSql)) {
+                    psUpdate.setInt(1, orderId);
+                    psUpdate.executeUpdate();
+                }
+                // Make sure ShipperConfirmedAt is also populated if it was skipped
+                String backfillSql = """
+                    UPDATE DeliveryLogs 
+                    SET ShipperConfirmedAt = GETDATE()
+                    WHERE OrderId = ? AND IsDeleted = 0 AND ShipperConfirmedAt IS NULL
+                    """;
+                try (PreparedStatement psBackfill = connection.prepareStatement(backfillSql)) {
+                    psBackfill.setInt(1, orderId);
+                    psBackfill.executeUpdate();
+                }
+            } else if ("Completed".equals(status)) {
+                String updateLogSql = """
+                    UPDATE DeliveryLogs 
+                    SET DeliveredAt = GETDATE(), Status = 'Delivered'
+                    WHERE OrderId = ? AND IsDeleted = 0 AND DeliveredAt IS NULL
+                    """;
+                try (PreparedStatement psUpdate = connection.prepareStatement(updateLogSql)) {
+                    psUpdate.setInt(1, orderId);
+                    psUpdate.executeUpdate();
+                }
+                // Make sure all previous timestamps are backfilled if skipped
+                String backfillSql = """
+                    UPDATE DeliveryLogs 
+                    SET ShipperConfirmedAt = COALESCE(ShipperConfirmedAt, GETDATE()),
+                        PickedUpAt = COALESCE(PickedUpAt, GETDATE())
+                    WHERE OrderId = ? AND IsDeleted = 0
+                    """;
+                try (PreparedStatement psBackfill = connection.prepareStatement(backfillSql)) {
+                    psBackfill.setInt(1, orderId);
+                    psBackfill.executeUpdate();
+                }
+            }
+
         } catch (Exception e) {
             System.err.println("Lỗi updateOrderStatus: " + e.getMessage());
         }
@@ -875,5 +953,56 @@ public class OrderDAO extends DBContext {
             e.printStackTrace();
         }
         return stats;
+    }
+
+    public List<model.DeliveryLog> getDeliveryLogsByOrderId(int orderId) {
+        List<model.DeliveryLog> list = new ArrayList<>();
+        String sql = """
+                     SELECT DeliveryLogId, OrderId, ShipperId, Status, FailReason,
+                            EstimatedDeliveryAt, PickedUpAt, ShipperConfirmedAt,
+                            CustomerConfirmedAt, DeliveredAt, IsOverdue, ProofImageUrl,
+                            Note, CreatedAt, IsDeleted
+                     FROM DeliveryLogs
+                     WHERE OrderId = ? AND IsDeleted = 0
+                     ORDER BY CreatedAt ASC
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs2 = ps.executeQuery()) {
+                while (rs2.next()) {
+                    model.DeliveryLog log = new model.DeliveryLog();
+                    log.setDeliveryLogId(rs2.getInt("DeliveryLogId"));
+                    log.setOrderId(rs2.getInt("OrderId"));
+                    log.setShipperId(rs2.getInt("ShipperId"));
+                    log.setStatus(rs2.getString("Status"));
+                    log.setFailReason(rs2.getString("FailReason"));
+                    if (rs2.getTimestamp("EstimatedDeliveryAt") != null) {
+                        log.setEstimatedDeliveryAt(rs2.getTimestamp("EstimatedDeliveryAt").toLocalDateTime());
+                    }
+                    if (rs2.getTimestamp("PickedUpAt") != null) {
+                        log.setPickedUpAt(rs2.getTimestamp("PickedUpAt").toLocalDateTime());
+                    }
+                    if (rs2.getTimestamp("ShipperConfirmedAt") != null) {
+                        log.setShipperConfirmedAt(rs2.getTimestamp("ShipperConfirmedAt").toLocalDateTime());
+                    }
+                    if (rs2.getTimestamp("CustomerConfirmedAt") != null) {
+                        log.setCustomerConfirmedAt(rs2.getTimestamp("CustomerConfirmedAt").toLocalDateTime());
+                    }
+                    if (rs2.getTimestamp("DeliveredAt") != null) {
+                        log.setDeliveredAt(rs2.getTimestamp("DeliveredAt").toLocalDateTime());
+                    }
+                    log.setIsOverdue(rs2.getBoolean("IsOverdue"));
+                    log.setProofImageUrl(rs2.getString("ProofImageUrl"));
+                    log.setNote(rs2.getString("Note"));
+                    if (rs2.getTimestamp("CreatedAt") != null) {
+                        log.setCreatedAt(rs2.getTimestamp("CreatedAt").toLocalDateTime());
+                    }
+                    list.add(log);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("getDeliveryLogsByOrderId Error: " + e.getMessage());
+        }
+        return list;
     }
 }

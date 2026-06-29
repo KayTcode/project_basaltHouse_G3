@@ -13,12 +13,12 @@
         <servlet-class>controller.LogoutServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>CashierDashboardServlet</servlet-name>
-        <servlet-class>controller.CashierDashboardServlet</servlet-class>
+        <servlet-name>POSOrderServlet</servlet-name>
+        <servlet-class>controller.POSOrderServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>CashierPOSServlet</servlet-name>
-        <servlet-class>controller.CashierPOSServlet</servlet-class>
+        <servlet-name>BartenderServlet</servlet-name>
+        <servlet-class>controller.BartenderServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>RegisterServlet</servlet-name>
@@ -109,6 +109,18 @@
         <servlet-class>controller.MomoIpnServlet</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>ShipperDashboardServlet</servlet-name>
+        <servlet-class>controller.ShipperDashboardServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AcceptOrderServlet</servlet-name>
+        <servlet-class>controller.AcceptOrderServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>UpdateDeliveryServlet</servlet-name>
+        <servlet-class>controller.UpdateDeliveryServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>OrderTrackingServlet</servlet-name>
         <servlet-class>controller.OrderTrackingServlet</servlet-class>
     </servlet>
@@ -119,6 +131,14 @@
     <servlet>
         <servlet-name>AdminProductServlet</servlet-name>
         <servlet-class>controller.AdminProductServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>OnlineOrderServlet</servlet-name>
+        <servlet-class>controller.OnlineOrderServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>CartServlet</servlet-name>
+        <servlet-class>controller.CartServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -140,14 +160,7 @@
         <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
-    <servlet>
-        <servlet-name>OnlineOrderServlet</servlet-name>
-        <servlet-class>controller.OnlineOrderServlet</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>CartServlet</servlet-name>
-        <servlet-class>controller.CartServlet</servlet-class>
-    </servlet>
+   
     <servlet-mapping>
         <servlet-name>OnlineOrderServlet</servlet-name>
         <url-pattern>/Order</url-pattern>
@@ -157,12 +170,15 @@
         <url-pattern>/Cart</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>CashierDashboardServlet</servlet-name>
-        <url-pattern>/cashier/dashbroad</url-pattern>
+    <servlet-name>POSOrderServlet</servlet-name>
+    <url-pattern>/cashier/pos</url-pattern>
+    <url-pattern>/cashier/oderview</url-pattern>
+    <url-pattern>/cashier/dashboard</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>CashierPOSServlet</servlet-name>
-        <url-pattern>/cashier/pos</url-pattern>
+    <servlet-name>BartenderServlet</servlet-name>
+    <url-pattern>/bartender/view</url-pattern>
+    <url-pattern>/bartender/history</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>RegisterServlet</servlet-name>
@@ -255,6 +271,18 @@
     <servlet-mapping>
         <servlet-name>MomoIpnServlet</servlet-name>
         <url-pattern>/momo/ipn</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ShipperDashboardServlet</servlet-name>
+        <url-pattern>/shipper/dashboard</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AcceptOrderServlet</servlet-name>
+        <url-pattern>/shipper/accept-order</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UpdateDeliveryServlet</servlet-name>
+        <url-pattern>/shipper/update-delivery</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>AdminProductServlet</servlet-name>

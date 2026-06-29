@@ -11,6 +11,7 @@ public class OrderTrackingDTO {
     private Order order;
     private List<OrderDetail> details;
     private OrderAddress address;
+    private List<model.DeliveryLog> deliveryLogs;
 
     public OrderTrackingDTO() {}
 
@@ -18,6 +19,13 @@ public class OrderTrackingDTO {
         this.order   = order;
         this.details = details;
         this.address = address;
+    }
+
+    public OrderTrackingDTO(Order order, List<OrderDetail> details, OrderAddress address, List<model.DeliveryLog> deliveryLogs) {
+        this.order   = order;
+        this.details = details;
+        this.address = address;
+        this.deliveryLogs = deliveryLogs;
     }
 
     public Order getOrder() {
@@ -42,5 +50,13 @@ public class OrderTrackingDTO {
 
     public void setAddress(OrderAddress a) {
         this.address = a;
+    }
+
+    public List<model.DeliveryLog> getDeliveryLogs() {
+        return deliveryLogs;
+    }
+
+    public void setDeliveryLogs(List<model.DeliveryLog> deliveryLogs) {
+        this.deliveryLogs = deliveryLogs;
     }
 }

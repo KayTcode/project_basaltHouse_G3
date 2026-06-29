@@ -28,13 +28,13 @@
         <div class="logo-text">Basalt<span>House Coffee</span></div>
     </div>
     <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/DashBoard" class="nav-item">
+        <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item">
             <span class="nav-icon material-symbols-outlined">dashboard</span>Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/OrderView" class="nav-item">
+        <a href="${pageContext.request.contextPath}/cashier/oderview" class="nav-item">
             <span class="nav-icon material-symbols-outlined">receipt_long</span>Orders
         </a>
-        <a href="${pageContext.request.contextPath}/PosOrder" class="nav-item active">
+        <a href="${pageContext.request.contextPath}/cashier/pos" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>POS Order
         </a>
         <a href="#" class="nav-item"><span class="nav-icon material-symbols-outlined">settings</span>Settings</a>
@@ -552,7 +552,7 @@ function setCategory(cat, btn) {
 /* Navigate to a category page (server-side pagination) */
 function navCat(cat, page) {
     if (page === undefined) page = 1;
-    var base = '${pageContext.request.contextPath}/PosOrder';
+    var base = '${pageContext.request.contextPath}/cashier/pos';
     window.location.href = base + '?cat=' + encodeURIComponent(cat) + '&productPage=' + page;
 }
 
@@ -647,7 +647,7 @@ function addSize() {
             if (cart[i].qty < maxCups) {
                 cart[i].qty++;
             } else {
-                showToast('Không đủ nguyên liệu! Tối đa ' + maxCups + ' cốcc.');
+                showToast('Không đủ nguyên liệu! Tối đa ' + maxCups + ' cốc.');
                 closeSizeModal(); return;
             }
             found = true; break;
@@ -1103,7 +1103,7 @@ function submitPOSOrder(isNewOrder) {
         formData.append("discountCode", activeCouponCode);
     }
     
-    fetch('${pageContext.request.contextPath}/PosOrder', {
+    fetch('${pageContext.request.contextPath}/cashier/pos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()

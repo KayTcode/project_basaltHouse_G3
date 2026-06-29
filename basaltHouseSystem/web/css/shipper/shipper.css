@@ -1,0 +1,328 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 28, 2026, 8:23:59 PM
+    Author     : KayT
+*/
+
+        /* ── BRAND ────────────────────────────────────────────── */
+        :root {
+            --green:       #005c25;
+            --green-dark:  #003d18;
+            --green-light: #e8f5ee;
+            --green-mid:   #1a7d3e;
+            --amber:       #f59e0b;
+            --red:         #dc2626;
+            --red-light:   #fef2f2;
+            --gray-bg:     #f1f3f1;
+            --card-shadow: 0 1px 5px rgba(0,0,0,0.09);
+        }
+
+        /* ── BASE ─────────────────────────────────────────────── */
+        * { box-sizing: border-box; }
+        body {
+            background: var(--gray-bg);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding-bottom: 24px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ── HEADER ───────────────────────────────────────────── */
+        .s-header {
+            background: linear-gradient(135deg, var(--green-dark), var(--green));
+            color: #fff;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.28);
+            min-height: 60px;
+        }
+        .s-header__left  { display: flex; align-items: center; gap: 10px; }
+        .s-avatar {
+            width: 42px; height: 42px;
+            border-radius: 50%; object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.55);
+            flex-shrink: 0;
+        }
+        .s-avatar-ph {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            background: var(--green-mid);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: #fff;
+            border: 2px solid rgba(255,255,255,0.4);
+            flex-shrink: 0;
+        }
+        .s-header__name { font-weight: 700; font-size: .95rem; line-height: 1.2; }
+        .s-header__role { font-size: .72rem; opacity: .78; }
+        .btn-logout {
+            background: rgba(255,255,255,.15);
+            border: 1px solid rgba(255,255,255,.3);
+            color: #fff;
+            border-radius: 20px;
+            padding: 5px 13px;
+            font-size: .78rem;
+            white-space: nowrap;
+            text-decoration: none;
+            transition: background .2s;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,.28); color: #fff; }
+
+        /* ── FLASH ────────────────────────────────────────────── */
+        .flash-wrap { padding: 12px 14px 0; }
+        .flash-alert {
+            border-radius: 10px;
+            font-size: .88rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 12px 14px;
+        }
+        .flash-alert i { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+        /* ── TABS ─────────────────────────────────────────────── */
+        .tab-bar {
+            background: #fff;
+            border-bottom: 2px solid #e5e7eb;
+            position: sticky;
+            top: 60px;
+            z-index: 900;
+            display: flex;
+        }
+        .tab-btn {
+            flex: 1;
+            border: none;
+            background: none;
+            padding: 13px 8px;
+            font-size: .82rem;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: color .15s, border-color .15s;
+        }
+        .tab-btn.active {
+            color: var(--green);
+            border-bottom-color: var(--green);
+        }
+        .badge-cnt {
+            background: var(--amber); color: #000;
+            font-size: .65rem; border-radius: 10px;
+            padding: 1px 6px; font-weight: 700;
+        }
+        .badge-on {
+            background: var(--green); color: #fff;
+            font-size: .65rem; border-radius: 10px;
+            padding: 1px 6px; font-weight: 700;
+        }
+
+        /* ── PANELS ───────────────────────────────────────────── */
+        .panel { display: none; padding: 14px; }
+        .panel.active { display: block; }
+
+        /* ── ORDER CARD (Tab 1) ───────────────────────────────── */
+        .o-card {
+            background: #fff;
+            border-radius: 12px;
+            border-left: 4px solid var(--amber);
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: var(--card-shadow);
+        }
+        .o-card__meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .o-card__id {
+            font-size: .74rem; font-weight: 700;
+            color: #9ca3af; text-transform: uppercase; letter-spacing: .4px;
+        }
+        .o-card__time { font-size: .74rem; color: #9ca3af; }
+        .o-card__customer {
+            font-weight: 700; font-size: .96rem;
+            color: #111827; margin-bottom: 10px;
+        }
+        .o-card__bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .o-card__amount {
+            font-size: 1.15rem; font-weight: 800; color: var(--green);
+        }
+        .o-card__amount-label { font-size: .7rem; color: #9ca3af; }
+        .badge-pay {
+            font-size: .72rem; padding: 4px 9px; border-radius: 6px;
+            background: #fef3c7; color: #92400e; font-weight: 700;
+        }
+        .btn-accept {
+            width: 100%; margin-top: 12px;
+            background: var(--green); color: #fff;
+            border: none; border-radius: 9px;
+            padding: 11px; font-weight: 700; font-size: .9rem;
+            cursor: pointer; transition: background .2s, transform .1s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .btn-accept:hover   { background: var(--green-dark); }
+        .btn-accept:active  { transform: scale(.97); }
+        .btn-accept:disabled { opacity: .6; cursor: not-allowed; }
+
+        /* ── CURRENT ORDER (Tab 2) ────────────────────────────── */
+        .cur-card {
+            background: #fff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 14px;
+        }
+        .cur-card__head {
+            background: linear-gradient(135deg, var(--green-dark), var(--green));
+            color: #fff; padding: 16px;
+        }
+        .cur-card__head-top {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 10px;
+        }
+        .cur-id-badge {
+            background: rgba(255,255,255,.2);
+            border-radius: 20px; padding: 3px 10px;
+            font-size: .74rem; font-weight: 700;
+        }
+        .cur-status-badge {
+            background: var(--amber); color: #000;
+            border-radius: 6px; padding: 3px 9px;
+            font-size: .74rem; font-weight: 700;
+        }
+        .cur-card__label { font-size: .72rem; opacity: .75; margin-bottom: 2px; }
+        .cur-card__amount { font-size: 1.55rem; font-weight: 900; }
+        .cur-card__method { font-size: .8rem; opacity: .8; margin-top: 3px; }
+
+        .cur-card__body { padding: 14px; }
+        .info-section-title {
+            font-size: .7rem; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: .5px;
+            margin-bottom: 12px;
+        }
+        .info-row {
+            display: flex; gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+            align-items: flex-start;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-icon {
+            width: 32px; height: 32px;
+            background: var(--green-light);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--green); font-size: .95rem; flex-shrink: 0;
+        }
+        .info-label {
+            font-size: .7rem; font-weight: 600;
+            color: #9ca3af; text-transform: uppercase;
+            letter-spacing: .3px; margin-bottom: 3px;
+        }
+        .info-val { font-size: .93rem; font-weight: 600; color: #111827; }
+        .info-note { font-size: .84rem; color: #6b7280; font-style: italic; }
+        .btn-call {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #dcfce7; color: var(--green);
+            border: none; border-radius: 20px;
+            padding: 4px 11px; font-size: .76rem; font-weight: 700;
+            text-decoration: none; margin-left: 8px; white-space: nowrap;
+        }
+
+        /* ── ACTION CARDS (Tab 2) ─────────────────────────────── */
+        .act-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: var(--card-shadow);
+        }
+        .act-card__title {
+            font-weight: 700; font-size: .88rem;
+            color: #374151; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 7px;
+        }
+        .lbl {
+            display: block; font-size: .76rem; font-weight: 600;
+            color: #6b7280; margin-bottom: 5px;
+        }
+        .inp {
+            width: 100%; border: 1.5px solid #e5e7eb;
+            border-radius: 8px; padding: 10px 12px;
+            font-size: .88rem; font-family: inherit;
+            transition: border-color .2s;
+            resize: vertical;
+        }
+        .inp:focus { border-color: var(--green); outline: none;
+            box-shadow: 0 0 0 3px rgba(0,92,37,.1); }
+
+        .btn-delivered {
+            width: 100%; border: none; border-radius: 10px;
+            padding: 13px; font-weight: 800; font-size: .96rem;
+            background: var(--green); color: #fff; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            transition: background .2s, transform .1s;
+        }
+        .btn-delivered:hover  { background: var(--green-dark); }
+        .btn-delivered:active { transform: scale(.97); }
+        .btn-delivered:disabled { opacity: .6; cursor: not-allowed; }
+
+        .btn-failed {
+            width: 100%; border-radius: 10px; padding: 12px;
+            font-weight: 700; font-size: .92rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            background: var(--red-light); color: var(--red);
+            border: 2px solid var(--red);
+            transition: background .2s, color .2s, transform .1s;
+        }
+        .btn-failed:hover  { background: var(--red); color: #fff; }
+        .btn-failed:active { transform: scale(.97); }
+
+        /* ── SPINNER ──────────────────────────────────────────── */
+        .spin {
+            display: none; width: 17px; height: 17px;
+            border: 2px solid rgba(255,255,255,.4);
+            border-top-color: #fff; border-radius: 50%;
+            animation: rot .6s linear infinite;
+        }
+        .spin-red { border-color: rgba(220,38,38,.3); border-top-color: var(--red); }
+        @keyframes rot { to { transform: rotate(360deg); } }
+
+        /* ── EMPTY STATE ──────────────────────────────────────── */
+        .empty {
+            text-align: center; padding: 56px 24px;
+            color: #9ca3af;
+        }
+        .empty i { font-size: 3.2rem; display: block; margin-bottom: 14px; opacity: .35; }
+        .empty strong { display: block; color: #6b7280; font-size: .95rem; margin-bottom: 6px; }
+        .empty span { font-size: .83rem; }
+
+        /* ── MODAL FAIL REASON ────────────────────────────────── */
+        .reason-opt {
+            background: #fff; border: 2px solid #e5e7eb;
+            border-radius: 10px; padding: 11px 13px;
+            margin-bottom: 8px; cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+            transition: border-color .15s, background .15s;
+            font-size: .88rem;
+        }
+        .reason-opt:has(input:checked) {
+            border-color: var(--red); background: var(--red-light);
+        }
+        .reason-opt input { accent-color: var(--red); flex-shrink: 0; }

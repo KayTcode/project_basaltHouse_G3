@@ -113,7 +113,7 @@ public class AuthService {
                 .compact();
     }
 
-    private Claims parseJwtToken(String token) {
+    public Claims parseJwtToken(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(SECRET_KEY)

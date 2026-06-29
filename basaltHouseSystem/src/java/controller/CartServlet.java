@@ -299,7 +299,7 @@ public class CartServlet extends HttpServlet {
         } else {
             // COD: cart đã được clear bởi CartService, redirect trang thành công
             response.sendRedirect(request.getContextPath() + "/Cart?checkoutSuccess=1&code=" + orderCode);
-        }
+        } 
     }
 
     private void handleApplyDiscount(HttpServletRequest request, HttpServletResponse response)

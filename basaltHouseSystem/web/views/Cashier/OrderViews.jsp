@@ -35,13 +35,13 @@
         <div class="logo-text">Basalt<span>House Coffee</span></div>
     </div>
     <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/DashBoard" class="nav-item">
+        <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item">
             <span class="nav-icon material-symbols-outlined">dashboard</span>Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/OrderView" class="nav-item active">
+        <a href="${pageContext.request.contextPath}/cashier/oderview" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">receipt_long</span>Orders
         </a>
-        <a href="${pageContext.request.contextPath}/PosOrder" class="nav-item">
+        <a href="${pageContext.request.contextPath}/cashier/pos" class="nav-item">
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>POS Order
         </a>
         <a href="#" class="nav-item"><span class="nav-icon material-symbols-outlined">settings</span>Settings</a>
@@ -72,9 +72,9 @@
                 <input type="text" id="searchInput" placeholder="Tìm kiếm mã đơn, khách hàng..." oninput="doFilter()">
             </div>
             <div class="filter-tabs">
-                <button type="button" class="filter-tab ${empty currentType || currentType == 'all' ? 'active' : ''}" onclick="window.location.href='OrderView?type=all'">All</button>
-                <button type="button" class="filter-tab ${currentType == 'online' ? 'active' : ''}"        onclick="window.location.href='OrderView?type=online'">Online</button>
-                <button type="button" class="filter-tab ${currentType == 'offline' ? 'active' : ''}"        onclick="window.location.href='OrderView?type=offline'">Offline</button>
+                <button type="button" class="filter-tab ${empty currentType || currentType == 'all' ? 'active' : ''}" onclick="window.location.href='oderview?type=all'">All</button>
+                <button type="button" class="filter-tab ${currentType == 'online' ? 'active' : ''}"        onclick="window.location.href='oderview?type=online'">Online</button>
+                <button type="button" class="filter-tab ${currentType == 'offline' ? 'active' : ''}"        onclick="window.location.href='oderview?type=offline'">Offline</button>
             </div>
             <button type="button" class="btn-filter">
                 <span class="material-symbols-outlined" style="font-size:17px">tune</span>
@@ -104,7 +104,7 @@
                         <td><span class="badge badge-<%=oType%>">${o.orderType}</span></td>
                         <td>${o.customerName}</td>
                         <td id="status-ORD00${o.orderId}"><span class="badge badge-<%=statusClass%>">${o.orderStatus}</span></td>
-                        <td><%=formatTime%></td><td><strong>${o.finalAmount} d</strong></td>
+                        <td><%=formatTime%></td><td><strong>${o.finalAmount} đ</strong></td>
                         <td><button type="button" class="view-btn" onclick="openModal('ORD00${o.orderId}')"><span class="material-symbols-outlined" style="font-size:15px">visibility</span></button></td>
                     </tr>
                 </c:forEach>
@@ -113,15 +113,15 @@
 
         <div class="pagination">
             <c:if test="${currentPage > 1}">
-                <button type="button" class="page-btn" onclick="window.location.href='OrderView?page=${currentPage - 1}&type=${currentType}'">
+                <button type="button" class="page-btn" onclick="window.location.href='oderview?page=${currentPage - 1}&type=${currentType}'">
                     <span class="material-symbols-outlined" style="font-size:14px">chevron_left</span>
                 </button>
             </c:if>
             <c:forEach begin="1" end="${totalPages > 0 ? totalPages : 1}" var="i">
-                <button type="button" class="page-btn ${currentPage == i ? 'active' : ''}" onclick="window.location.href='OrderView?page=${i}&type=${currentType}'">${i}</button>
+                <button type="button" class="page-btn ${currentPage == i ? 'active' : ''}" onclick="window.location.href='oderview?page=${i}&type=${currentType}'">${i}</button>
             </c:forEach>
             <c:if test="${currentPage < totalPages}">
-                <button type="button" class="page-btn" onclick="window.location.href='OrderView?page=${currentPage + 1}&type=${currentType}'">
+                <button type="button" class="page-btn" onclick="window.location.href='oderview?page=${currentPage + 1}&type=${currentType}'">
                     <span class="material-symbols-outlined" style="font-size:14px">chevron_right</span>
                 </button>
             </c:if>
@@ -580,7 +580,7 @@ function confirmOnlineOrder() {
     formData.append("orderId", o.id);
     formData.append("action", "confirm");
 
-    fetch('${pageContext.request.contextPath}/Bartender', {
+    fetch('${pageContext.request.contextPath}/bartender/view', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString()
@@ -589,7 +589,7 @@ function confirmOnlineOrder() {
             o.sentToBartender = true;
             o.status = 'preparing';
             document.getElementById('status-' + currentId).innerHTML = badgeHtml('preparing');
-            showToast('&#127861; Đơn ' + currentId + ' da gui Bartender!');
+            showToast('&#127861; Đơn ' + currentId + ' đã gửi Bartender!');
             buildOnlineModal(o);
         } else {
             alert('Lỗi khi xác nhận đơn trên server!');

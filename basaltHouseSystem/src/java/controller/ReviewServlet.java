@@ -74,10 +74,7 @@ public class ReviewServlet extends HttpServlet {
             out.print("{\"success\":false,\"message\":\"Đơn hàng không hợp lệ.\"}");
             return;
         }
-        if (!"Completed".equals(order.getOrderStatus())) {
-            out.print("{\"success\":false,\"message\":\"Chỉ có thể đánh giá đơn hàng đã hoàn thành.\"}");
-            return;
-        }
+
 
         ReviewDAO reviewDAO = new ReviewDAO();
 

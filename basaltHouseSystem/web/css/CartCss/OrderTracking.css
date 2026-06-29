@@ -467,6 +467,18 @@ h1, h2, h3, h4 { font-family: var(--font-montserrat); }
     font-weight: 600;
 }
 
+.ot-tl-time {
+    font-size: 8px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    text-align: center;
+    white-space: nowrap;
+}
+.ot-tl-step.done .ot-tl-time,
+.ot-tl-step.active .ot-tl-time {
+    color: #4b5563;
+}
+
 /* ── Card Divider ─────────────────────────────────────────────── */
 .ot-card-divider {
     height: 1px;

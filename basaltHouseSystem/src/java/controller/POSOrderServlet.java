@@ -16,11 +16,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import model.Product;
 import model.Category;
+import model.Order;
 import services.OrderService;
 import services.StockService;
 
 
-@WebServlet(name = "POSOrderServlet", urlPatterns = { "/PosOrder","/OrderView","/DashBoard"})
 public class POSOrderServlet extends HttpServlet {
     
    @Override
@@ -28,15 +28,15 @@ public class POSOrderServlet extends HttpServlet {
             throws ServletException, IOException {
         String action = request.getServletPath();
         switch (action) {
-            case "/PosOrder":
+            case "/cashier/pos":
                 handlePosPage(request, response);
                 break;
                 
-            case "/OrderView":
+            case "/cashier/oderview":
                 handlePage(request, response);
                 break;
                 
-            case "/DashBoard":
+            case "/cashier/dashboard":
                 dao.OrderDAO orderDAO = new dao.OrderDAO();
                 Map<String, Object> stats = orderDAO.getCashierDashboard();
                 request.setAttribute("dashboard", stats);
@@ -75,7 +75,7 @@ public class POSOrderServlet extends HttpServlet {
         try {
             OrderService orderService = new OrderService();
             int orderId = orderService.createOfflineOrder(cartData, totalAmountStr, discountAmountStr, finalAmountStr,
-                                                          paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr);
+              paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr);
                                                           
             if (orderId != -1) {
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -108,10 +108,10 @@ public class POSOrderServlet extends HttpServlet {
                 }
 
                 OrderDAO oDao = new OrderDAO();
-                java.util.List<model.Order> fullList = oDao.getAllOrdersWithCustomerName();
+                List<Order> fullList = oDao.getAllOrdersWithCustomerName();
                 
                 if (!"all".equalsIgnoreCase(typeParam)) {
-                    java.util.List<model.Order> filteredList = new java.util.ArrayList<>();
+                    List<model.Order> filteredList = new ArrayList<>();
                     for (model.Order o : fullList) {
                         String oType = o.getOrderType() != null ? o.getOrderType().toLowerCase() : "offline";
                         if (typeParam.equalsIgnoreCase(oType)) {
@@ -130,7 +130,7 @@ public class POSOrderServlet extends HttpServlet {
                 int start = (page - 1) * limit;
                 int end = Math.min(start + limit, totalOrders);
                 
-                java.util.List<model.Order> orderList = fullList.subList(start, end);
+                List<model.Order> orderList = fullList.subList(start, end);
                 
                 request.setAttribute("orderList", orderList);
                 request.setAttribute("currentPage", page);

@@ -164,17 +164,16 @@ public class OrderDAO extends DBContext {
         }
     }
 
-    
     public List<Order> getAllOrdersWithCustomerName() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, tb.TableCode AS TableName, o.Note, c.FullName " +
-                         "FROM Orders o " +
-                         "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId " +
-                         "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId " +
-                         "LEFT JOIN Tables tb ON ts.TableId = tb.TableId " +
-                         "WHERE o.IsDeleted = 0 " +
-                         "ORDER BY o.CreatedAt DESC";
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, tb.TableCode AS TableName, o.Note, c.FullName "
+                    + "FROM Orders o "
+                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
+                    + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
+                    + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
+                    + "WHERE o.IsDeleted = 0 "
+                    + "ORDER BY o.CreatedAt DESC";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -201,8 +200,6 @@ public class OrderDAO extends DBContext {
         }
         return list;
     }
-
-
 
     /**
      * Áp dụng mã giảm giá cho đơn hàng: cập nhật DiscountId, DiscountAmount,
@@ -318,13 +315,13 @@ public class OrderDAO extends DBContext {
     public List<Order> getBartenderOrders() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, tb.TableCode AS TableName, o.Note, c.FullName " +
-                         "FROM Orders o " +
-                         "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId " +
-                         "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId " +
-                         "LEFT JOIN Tables tb ON ts.TableId = tb.TableId " +
-                         "WHERE o.IsDeleted = 0 AND o.OrderStatus IN ('Preparing', 'In_Progress', 'Ready') " +
-                         "ORDER BY CASE o.OrderStatus WHEN 'Preparing' THEN 1 WHEN 'In_Progress' THEN 2 WHEN 'Ready' THEN 3 ELSE 4 END, o.CreatedAt ASC";
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, tb.TableCode AS TableName, o.Note, c.FullName "
+                    + "FROM Orders o "
+                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
+                    + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
+                    + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
+                    + "WHERE o.IsDeleted = 0 AND o.OrderStatus IN ('Preparing', 'In_Progress', 'Ready') "
+                    + "ORDER BY CASE o.OrderStatus WHEN 'Preparing' THEN 1 WHEN 'In_Progress' THEN 2 WHEN 'Ready' THEN 3 ELSE 4 END, o.CreatedAt ASC";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -347,7 +344,6 @@ public class OrderDAO extends DBContext {
         }
         return list;
     }
-
 
     public List<Order> getCompletedOrders() {
         List<Order> list = new ArrayList<>();
@@ -421,7 +417,6 @@ public class OrderDAO extends DBContext {
                 st.setNull(12, java.sql.Types.INTEGER);
             }
             st.executeUpdate();
-
 
             rs = st.getGeneratedKeys();
             if (rs.next()) {
@@ -605,7 +600,6 @@ public class OrderDAO extends DBContext {
         return false;
     }
 
-
     public int getCustomerIdByAccountId(int accountId) {
         String sql = "SELECT CustomerId FROM Customers WHERE AccountId = ? AND IsDeleted = 0";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -620,6 +614,7 @@ public class OrderDAO extends DBContext {
         }
         return -1;
     }
+
     /**
      * Lấy tất cả đơn hàng Online của một khách hàng, sắp xếp mới nhất trước.
      * Dùng cho màn Theo dõi đơn hàng.
@@ -653,7 +648,9 @@ public class OrderDAO extends DBContext {
                         o.setDiscountAmount(rs2.getBigDecimal("DiscountAmount"));
                         o.setFinalAmount(rs2.getBigDecimal("FinalAmount"));
                         Timestamp ts = rs2.getTimestamp("CreatedAt");
-                        if (ts != null) o.setCreatedAt(ts.toLocalDateTime());
+                        if (ts != null) {
+                            o.setCreatedAt(ts.toLocalDateTime());
+                        }
                         list.add(o);
                     }
                 }
@@ -695,6 +692,7 @@ public class OrderDAO extends DBContext {
             System.err.println("getOrderAddressByOrderAddressId Error: " + e.getMessage());
         }
         return null;
+    }
 
     public List<HashMap<String, Object>> getTodaySoldProductSizeRows() {
         List<HashMap<String, Object>> rows = new ArrayList<>();
@@ -745,8 +743,7 @@ public class OrderDAO extends DBContext {
                      GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
                      ORDER BY p.ProductName ASC, s.SizeName ASC
                      """;
-        try (PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs2 = ps.executeQuery()) {
+        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs2 = ps.executeQuery()) {
             while (rs2.next()) {
                 HashMap<String, Object> row = new HashMap<>();
                 row.put("productId", rs2.getInt("ProductId"));
@@ -832,7 +829,9 @@ public class OrderDAO extends DBContext {
             ResultSet rs1 = st1.executeQuery();
             if (rs1.next()) {
                 BigDecimal rev = rs1.getBigDecimal("Revenue");
-                if (rev != null) stats.put("todayRevenue", rev);
+                if (rev != null) {
+                    stats.put("todayRevenue", rev);
+                }
             }
 
             // Don hang hom nay

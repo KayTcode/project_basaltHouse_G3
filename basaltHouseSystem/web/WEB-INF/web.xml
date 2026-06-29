@@ -109,14 +109,36 @@
         <servlet-class>controller.MomoIpnServlet</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>ShipperDashboardServlet</servlet-name>
+        <servlet-class>controller.ShipperDashboardServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AcceptOrderServlet</servlet-name>
+        <servlet-class>controller.AcceptOrderServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>UpdateDeliveryServlet</servlet-name>
+        <servlet-class>controller.UpdateDeliveryServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>OrderTrackingServlet</servlet-name>
         <servlet-class>controller.OrderTrackingServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>ReviewServlet</servlet-name>
         <servlet-class>controller.ReviewServlet</servlet-class>
+    </servlet>
+    <servlet>
         <servlet-name>AdminProductServlet</servlet-name>
         <servlet-class>controller.AdminProductServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>OnlineOrderServlet</servlet-name>
+        <servlet-class>controller.OnlineOrderServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>CartServlet</servlet-name>
+        <servlet-class>controller.CartServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -138,14 +160,7 @@
         <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
-    <servlet>
-        <servlet-name>OnlineOrderServlet</servlet-name>
-        <servlet-class>controller.OnlineOrderServlet</servlet-class>
-    </servlet>
-    <servlet>
-        <servlet-name>CartServlet</servlet-name>
-        <servlet-class>controller.CartServlet</servlet-class>
-    </servlet>
+   
     <servlet-mapping>
         <servlet-name>OnlineOrderServlet</servlet-name>
         <url-pattern>/Order</url-pattern>
@@ -253,6 +268,18 @@
     <servlet-mapping>
         <servlet-name>MomoIpnServlet</servlet-name>
         <url-pattern>/momo/ipn</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ShipperDashboardServlet</servlet-name>
+        <url-pattern>/shipper/dashboard</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AcceptOrderServlet</servlet-name>
+        <url-pattern>/shipper/accept-order</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>UpdateDeliveryServlet</servlet-name>
+        <url-pattern>/shipper/update-delivery</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>AdminProductServlet</servlet-name>

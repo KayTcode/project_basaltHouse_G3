@@ -36,15 +36,15 @@
     </div>
 
     <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/DashBoard" class="nav-item active" id="nav-dashboard">
+        <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item active" id="nav-dashboard">
             <span class="nav-icon material-symbols-outlined">dashboard</span>
             Dashboard
         </a>
-        <a href="${pageContext.request.contextPath}/OrderView" class="nav-item" id="nav-orders">
+        <a href="${pageContext.request.contextPath}/cashier/oderview" class="nav-item" id="nav-orders">
             <span class="nav-icon material-symbols-outlined">receipt_long</span>
             Orders
         </a>
-        <a href="${pageContext.request.contextPath}/PosOrder" class="nav-item" id="nav-create">
+        <a href="${pageContext.request.contextPath}/cashier/pos" class="nav-item" id="nav-create">
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>
             POS Order
         </a>
@@ -122,7 +122,7 @@
     <div class="card">
         <div class="card-header">
             <span class="card-title">Đơn hàng gần đây</span>
-            <a href="${pageContext.request.contextPath}/OrderView" class="card-link">Xem tất cả</a>
+            <a href="${pageContext.request.contextPath}/cashier/oderview" class="card-link">Xem tất cả</a>
         </div>
         <table class="data-table">
             <thead>

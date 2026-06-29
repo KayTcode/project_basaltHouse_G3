@@ -42,10 +42,10 @@
         <div class="logo-text">Basalt<span>House Coffee</span></div>
     </div>
     <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/Bartender" class="nav-item">
+        <a href="${pageContext.request.contextPath}/bartender/view" class="nav-item">
             <span class="nav-icon material-symbols-outlined">view_kanban</span>Prep Board
         </a>
-        <a href="${pageContext.request.contextPath}/BartenderHistory" class="nav-item active">
+        <a href="${pageContext.request.contextPath}/bartender/history" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">history</span>History
         </a>
         <a href="#" class="nav-item">

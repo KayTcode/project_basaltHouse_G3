@@ -165,7 +165,7 @@ public class AdminAccountServlet extends HttpServlet {
         }
 
         // Redirect về trang danh sách để tránh trùng lặp dữ liệu khi F5 (Pattern POST-REDIRECT-GET)
-        response.sendRedirect(request.getContextPath() + "/admin/accounts");
+        response.sendRedirect(request.getContextPath() + "/admin/accounts");// màn hình phụ đưa lại màn hình chính
     }
 
     // 2. Xử lý cập nhật tài khoản

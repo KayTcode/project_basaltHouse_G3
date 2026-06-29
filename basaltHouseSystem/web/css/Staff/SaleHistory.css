@@ -1,0 +1,167 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 25, 2026, 8:28:41 PM
+    Author     : admin
+*/
+
+   .sales-audit-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .sales-audit-card {
+        min-height: 94px;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: var(--r-card);
+        padding: 17px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        box-shadow: var(--sh-sm);
+    }
+
+    .sales-audit-card .material-symbols-outlined {
+        width: 42px;
+        height: 42px;
+        border-radius: var(--r-input);
+        display: grid;
+        place-items: center;
+        background: var(--mint-100);
+        color: var(--mint-600);
+        font-size: 23px;
+    }
+
+    .sales-audit-card p {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .sales-audit-card strong {
+        color: var(--text);
+        font-size: 22px;
+        font-weight: 850;
+    }
+
+    .audit-note {
+        margin-bottom: 18px;
+        border: 1px solid #bbf7d0;
+        border-left: 4px solid var(--mint-600);
+        border-radius: var(--r-input);
+        background: #f0fdf4;
+        color: #166534;
+        padding: 13px 15px;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .audit-table {
+        width: 100%;
+        min-width: 980px;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .audit-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 28px;
+        border-radius: 999px;
+        padding: 0 10px;
+        font-size: 11.5px;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .audit-status.ok {
+        background: var(--mint-100);
+        color: var(--mint-600);
+    }
+
+    .audit-status.warning {
+        background: var(--amber-100);
+        color: #92400e;
+    }
+
+    .audit-status.danger {
+        background: var(--red-100);
+        color: #991b1b;
+    }
+
+    .audit-status .material-symbols-outlined {
+        font-size: 16px;
+    }
+
+    .audit-formula {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+        line-height: 1.55;
+    }
+
+    .usage-line + .usage-line {
+        margin-top: 6px;
+    }
+
+    .audit-balance {
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 850;
+        line-height: 1.55;
+        white-space: nowrap;
+    }
+
+    .audit-date-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .audit-date-form input[type="date"] {
+        min-width: 170px;
+        color: var(--text);
+        font-weight: 700;
+    }
+
+    .audit-date-btn {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: var(--r-input);
+        background: linear-gradient(135deg, var(--brand-600), var(--brand-700));
+        color: #ffffff;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(53, 106, 230, 0.22);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .audit-date-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 11px 22px rgba(53, 106, 230, 0.28);
+    }
+
+    .audit-date-btn .material-symbols-outlined {
+        font-size: 20px;
+    }
+
+    @media (max-width: 1180px) {
+        .sales-audit-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 620px) {
+        .sales-audit-grid {
+            grid-template-columns: 1fr;
+        }
+    }

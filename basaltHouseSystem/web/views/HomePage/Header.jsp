@@ -305,7 +305,7 @@
                                                         <span class="material-symbols-outlined">person</span>
                                                         Thông tin tài khoản
                                                     </a>
-                                                    <a href="${pageContext.request.contextPath}/customer/orders"
+                                                    <a href="${pageContext.request.contextPath}/my-orders"
                                                        class="dropdown-item-link" role="menuitem">
                                                         <span class="material-symbols-outlined">shopping_bag</span>
                                                         Đơn hàng

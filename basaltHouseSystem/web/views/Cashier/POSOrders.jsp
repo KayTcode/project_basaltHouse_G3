@@ -1,38 +1,13 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ page import="services.StockService" %>
 <%@ page import="dao.IngredientDAO" %>
 <%@ page import="model.Product" %>
 <%@ page import="model.Ingredient" %>
 <%@ page import="java.util.HashMap" %>
-<%@page import="java.util.Map"%>
-<%@ page import="dao.ProductDAO" %>
-<%@ page import="dao.CategoryDAO" %>
-<%@ page import="model.Category" %>
-<%@ page import="java.util.List" %>
-<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<%
-    ProductDAO pDao = new ProductDAO();
-    List<Product> productList = pDao.getAllProductsForPOS();
-    request.setAttribute("productList", productList);
-    
-    CategoryDAO cDao = new CategoryDAO();
-    List<Category> categoryList = cDao.getAllCategories();
-    request.setAttribute("categoryList", categoryList);
-
-    // Pre-calculate max stock for initial display
-    StockService ssInit = new StockService();
-    HashMap<Product, HashMap<String, Integer>> stockMapInit = ssInit.calculateProduct();
-    HashMap<Integer, Integer> maxStockMap = new HashMap<>();
-    for(Map.Entry<Product, HashMap<String, Integer>> entry : stockMapInit.entrySet()) {
-        int max = 0;
-        for(Integer val : entry.getValue().values()) {
-            if(val > max) max = val;
-        }
-        maxStockMap.put(entry.getKey().getProductId(), max);
-    }
-    request.setAttribute("maxStockMap", maxStockMap);
-%>
+<%@ page import="java.util.Map" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -41,8 +16,8 @@
     <title>Tao Don Hang | Coffee House</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=2" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/CashierCss/POSOrders.css?v=4" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=3" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/CashierCss/POSOrders.css?v=8" rel="stylesheet">
 </head>
 <body>
 
@@ -62,7 +37,6 @@
         <a href="${pageContext.request.contextPath}/PosOrder" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>POS Order
         </a>
-        <a href="#" class="nav-item"><span class="nav-icon material-symbols-outlined">bar_chart</span>Reports</a>
         <a href="#" class="nav-item"><span class="nav-icon material-symbols-outlined">settings</span>Settings</a>
     </nav>
     <div class="sidebar-footer">
@@ -93,9 +67,9 @@
     <!-- Inventory Warning Bar -->
     <div class="inv-warning-bar" id="invWarningBar" onclick="openInventoryModal()">
         <span class="inv-warn-icon">&#9888;&#65039;</span>
-        <span class="inv-warn-text" id="invWarnText">Co nguyen lieu sap het!</span>
+        <span class="inv-warn-text" id="invWarnText">Có nguyên liệu sắp hết!</span>
         <span class="inv-warn-count" id="invWarnCount">0</span>
-        <button type="button" class="inv-warn-btn">Xem chi tiet &rarr;</button>
+        <button type="button" class="inv-warn-btn">Xem chi tiết &rarr;</button>
     </div>
 
     <div class="co-layout">
@@ -105,18 +79,28 @@
             <div class="co-cats-title">Menu</div>
             <div class="co-search">
                 <span class="material-symbols-outlined" style="font-size:15px;color:#b0b0c0">search</span>
-                <input type="text" id="menuSearch" placeholder="Tim mon..." oninput="filterMenu()">
+                <input type="text" id="menuSearch" placeholder="Tìm món..." oninput="filterMenu()">
             </div>
-            <button type="button" class="cat-btn active" onclick="setCategory('all',   this)">All</button>
+            <button type="button" class="cat-btn<c:if test="${currentCat == 'all'}"> active</c:if>"
+                    onclick="navCat('all')">All</button>
             <c:forEach items="${categoryList}" var="c">
-                <button type="button" class="cat-btn" onclick="setCategory('cat-${c.categoryId}', this)">${c.categoryName}</button>
+                <c:set var="catIdStr"><c:out value="${c.categoryId}"/></c:set>
+                <button type="button"
+                        class="cat-btn<c:if test="${currentCat == catIdStr}"> active</c:if>"
+                        onclick="navCat('${c.categoryId}')">${c.categoryName}</button>
             </c:forEach>
         </div>
 
-        <!-- MIDDLE: Menu items -->
         <div class="co-menu">
+            <%-- Page info bar --%>
+            <c:if test="${totalProductPages > 1}">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:13px;color:#8a8a9a;font-weight:500;">
+                <span>Hiển thị trang <strong style="color:#1a1a2e">${productPage}</strong> / ${totalProductPages}</span>
+                <span>${fn:length(pagedProducts)} sản phẩm trên trang này</span>
+            </div>
+            </c:if>
             <div class="menu-grid" id="menuGrid">
-                <c:forEach items="${productList}" var="p">
+                <c:forEach items="${pagedProducts}" var="p">
                     <div class="menu-card" data-cat="cat-${p.categoryId}" data-name="${p.productName}" data-stock="${maxStockMap[p.productId] != null ? maxStockMap[p.productId] : 0}">
                         <div class="menu-card-img" style="background:linear-gradient(135deg,#d4a96a,#8b5e3c); display: flex; align-items: center; justify-content: center; overflow: hidden;">
                             <c:if test="${not empty p.imageUrl}">
@@ -127,38 +111,63 @@
                             </c:if>
                         </div>
                         <div class="menu-card-name">${p.productName}</div>
-                        <div class="menu-card-price"><fmt:formatNumber value="${p.price}" pattern="#,###"/> d</div>
+                        <div class="menu-card-price"><fmt:formatNumber value="${p.price}" pattern="#,###"/> đ</div>
                         <button type="button" class="btn-add" onclick="addItem('${p.productName}', ${p.price})">+</button>
                     </div>
                 </c:forEach>
             </div>
+
+            <%-- ── Pagination UI ── --%>
+            <c:if test="${totalProductPages > 1}">
+            <div class="prod-pagination">
+                <c:if test="${productPage > 1}">
+                    <button type="button" class="prod-page-btn"
+                            onclick="navCat('${currentCat}', ${productPage - 1})">
+                        <span class="material-symbols-outlined" style="font-size:15px">chevron_left</span>
+                    </button>
+                </c:if>
+
+                <c:forEach begin="1" end="${totalProductPages}" var="i">
+                    <button type="button"
+                            class="prod-page-btn<c:if test="${productPage == i}"> active</c:if>"
+                            onclick="navCat('${currentCat}', ${i})">${i}</button>
+                </c:forEach>
+
+                <c:if test="${productPage < totalProductPages}">
+                    <button type="button" class="prod-page-btn"
+                            onclick="navCat('${currentCat}', ${productPage + 1})">
+                        <span class="material-symbols-outlined" style="font-size:15px">chevron_right</span>
+                    </button>
+                </c:if>
+            </div>
+            </c:if>
         </div>
 
         <!-- RIGHT: Order panel -->
         <div class="co-order">
             <div class="co-order-hd">
-                <span class="co-order-hd-title">Don hang (<span id="itemCount">0</span>)</span>
-                <button type="button" class="btn-choose-table" id="tableBtn" onclick="chooseTable()">Chon ban</button>
+                <span class="co-order-hd-title">Đơn hàng (<span id="itemCount">0</span>)</span>
+                <button type="button" class="btn-choose-table" id="tableBtn" onclick="chooseTable()">Chọn bàn</button>
             </div>
 
             <div class="co-items" id="orderPanel">
                 <div class="empty-cart" id="emptyMsg">
                     <div class="ec-icon">&#128722;</div>
-                    <div class="ec-text">Chua co mon nao</div>
+                    <div class="ec-text">Chưa có món nào</div>
                 </div>
             </div>
 
             <!-- Membership check -->
             <div class="co-membership">
                 <div class="mem-header">
-                    <div class="mem-label">&#128100; Kiem tra thanh vien</div>
+                    <div class="mem-label">&#128100; Kiểm tra thành viên</div>
                 </div>
                 <div class="mem-lookup-row">
                     <input type="text" class="mem-phone-input" id="memberPhone"
-                           placeholder="Nhap SDT thanh vien..."
+                           placeholder="Nhập SDT thành viên..."
                            onkeydown="if(event.key==='Enter') lookupMember()">
                     <button type="button" class="btn-lookup" onclick="lookupMember()">
-                        <span class="material-symbols-outlined" style="font-size:14px">search</span>Tim
+                        <span class="material-symbols-outlined" style="font-size:14px">search</span>Tìm
                     </button>
                 </div>
                 <div class="mem-result" id="memResult"></div>
@@ -166,29 +175,29 @@
 
             <!-- Discount code -->
             <div class="co-discount">
-                <div class="disc-label">Ma giam gia</div>
+                <div class="disc-label">Mã giảm giá</div>
                 <div class="disc-row">
-                    <input type="text" class="disc-input" id="discountCode" placeholder="Nhap ma giam gia...">
-                    <button type="button" class="btn-apply-disc" onclick="applyDiscount()">Ap dung</button>
+                    <input type="text" class="disc-input" id="discountCode" placeholder="Nhập mã giảm giá...">
+                    <button type="button" class="btn-apply-disc" onclick="applyDiscount()">Áp dụng</button>
                 </div>
                 <div class="disc-msg" id="discMsg"></div>
             </div>
 
             <!-- Note -->
             <div class="co-note">
-                <textarea id="orderNote" placeholder="Them ghi chu..."></textarea>
+                <textarea id="orderNote" placeholder="Thêm ghi chú..."></textarea>
             </div>
 
             <!-- Totals -->
             <div class="co-totals">
-                <div class="co-tot-row"><span>Tam tinh</span><span id="subtotal">0 d</span></div>
-                <div class="co-tot-row"><span>Giam gia</span><span id="discountAmt" style="color:#16a34a;">0 d</span></div>
-                <div class="co-tot-row grand"><span>Tong tien</span><span id="grandTotal">0 d</span></div>
+                <div class="co-tot-row"><span>Tạm tính</span><span id="subtotal">0 đ</span></div>
+                <div class="co-tot-row"><span>Giảm giá</span><span id="discountAmt" style="color:#16a34a;">0 đ</span></div>
+                <div class="co-tot-row grand"><span>Tổng tiền</span><span id="grandTotal">0 đ</span></div>
             </div>
 
             <div class="co-actions">
-                <button type="button" class="btn-save" onclick="saveOrder()">Luu tam</button>
-                <button type="button" class="btn-pay"  onclick="openPayModal()">Thanh toan</button>
+                <button type="button" class="btn-save" onclick="saveOrder()">Lưu tạm</button>
+                <button type="button" class="btn-pay"  onclick="openPayModal()">Thanh toán</button>
             </div>
         </div>
     </div>
@@ -200,8 +209,8 @@
 <div class="modal-overlay" id="payModal" onclick="closeIfOverlay(event,'payModal')">
     <div class="modal-box">
         <button type="button" class="modal-close-btn" onclick="closeModal('payModal')">&#x2715;</button>
-        <div class="modal-title">Chon phuong thuc thanh toan</div>
-        <div class="modal-sub" id="payModalSub">Don hang tai Coffee House</div>
+        <div class="modal-title">Chọn phương thức thanh toán</div>
+        <div class="modal-sub" id="payModalSub">Đơn hàng tại Basalt Coffee House</div>
 
         <!-- Order summary -->
         <div class="pay-summary" id="paySummary"></div>
@@ -210,7 +219,7 @@
         <div class="pay-method-grid">
             <div class="pay-method-card" id="pm-cash" onclick="selectPayMethod('cash')">
                 <span class="pay-method-icon">&#128181;</span>
-                <div class="pay-method-label">Tien mat</div>
+                <div class="pay-method-label">Tiền mặt</div>
             </div>
             <div class="pay-method-card" id="pm-qr" onclick="selectPayMethod('qr')">
                 <span class="pay-method-icon">&#128241;</span>
@@ -220,25 +229,25 @@
 
         <!-- Cash details -->
         <div class="cash-section" id="cashSection">
-            <div class="cash-due">Khach can tra: <span id="cashDue"></span></div>
-            <div style="font-size:12px;font-weight:600;color:#8a8a9a;margin-bottom:6px;">So tien nhanh:</div>
+            <div class="cash-due">Khách cần trả: <span id="cashDue"></span></div>
+            <div style="font-size:12px;font-weight:600;color:#8a8a9a;margin-bottom:6px;">Số tiền nhanh:</div>
             <div class="cash-quick" id="cashQuick"></div>
             <div class="cash-input-row">
-                <input type="number" class="cash-input" id="cashInput" placeholder="Nhap so tien khach dua..." oninput="calcChange()">
+                <input type="number" class="cash-input" id="cashInput" placeholder="Nhập số tiền khách đưa..." oninput="calcChange()">
                 <span class="cash-unit">d</span>
             </div>
-            <div class="cash-change" id="cashChange">Tien thoi: <strong id="changeAmt"></strong></div>
+            <div class="cash-change" id="cashChange">Tiền thối: <strong id="changeAmt"></strong></div>
         </div>
 
         <!-- QR details -->
         <div class="qr-section" id="qrSection">
-            <div class="qr-amount-label">So tien can chuyen: <strong id="qrAmt"></strong></div>
+            <div class="qr-amount-label">Số tiền cần chuyển: <strong id="qrAmt"></strong></div>
             <img class="qr-img" id="qrImg" src="" alt="QR Code">
-            <div class="qr-bank">Ngan hang: <strong>VietcomBank</strong><br>So TK: <strong>0123 4567 8901</strong><br>Ten: <strong>COFFEE HOUSE</strong></div>
+            <div class="qr-bank">Ngân hàng: <strong>VietcomBank</strong><br>Số TK: <strong>0123 4567 8901</strong><br>Tên: <strong>COFFEE HOUSE</strong></div>
         </div>
 
         <button type="button" class="btn-confirm-pay" id="btnConfirmPay" onclick="confirmPayment()" disabled>
-            Xac nhan thanh toan
+            Xác nhận thanh toán
         </button>
     </div>
 </div>
@@ -255,8 +264,8 @@
         </div>
 
         <div class="bill-actions">
-            <button type="button" class="btn-print" onclick="submitPOSOrder(false)"><span class="material-symbols-outlined" style="font-size:18px">check_circle</span> Xac nhan</button>
-            <button type="button" class="btn-new-order" onclick="submitPOSOrder(true)"><span class="material-symbols-outlined" style="font-size:18px">add_circle</span> Don moi</button>
+            <button type="button" class="btn-print" onclick="submitPOSOrder(false)"><span class="material-symbols-outlined" style="font-size:18px">check_circle</span> Xác nhận</button>
+            <button type="button" class="btn-new-order" onclick="submitPOSOrder(true)"><span class="material-symbols-outlined" style="font-size:18px">add_circle</span> Đơn mới</button>
         </div>
     </div>
 </div>
@@ -266,8 +275,8 @@
 ============================================================ -->
 <div class="size-modal-overlay" id="sizeModal" onclick="closeSizeIfOverlay(event)">
     <div class="size-modal-box">
-        <div class="size-modal-title" id="sizeModalTitle">Chon size</div>
-        <div class="size-modal-sub">Chon kich co coc ban muon</div>
+        <div class="size-modal-title" id="sizeModalTitle">Chọn size</div>
+        <div class="size-modal-sub">Chọn kích cỡ cốc bạn muốn</div>
         <div class="size-grid">
             <div class="size-card" id="sz-S" onclick="pickSize('S')">
                 <div class="size-icon" style="font-size:22px">&#9749;</div>
@@ -301,7 +310,7 @@
             <div class="table-modal-title">&#127860; Chon ban</div>
             <button type="button" class="table-modal-close" onclick="closeTableModal()">&#x2715;</button>
         </div>
-        <iframe id="tableIframe" class="table-modal-iframe" src="" title="Chon ban"></iframe>
+        <iframe id="tableIframe" class="table-modal-iframe" src="" title="Chọn bàn"></iframe>
     </div>
 </div>
 
@@ -313,26 +322,26 @@
         <div class="inv-modal-hd">
             <div class="inv-modal-title">
                 <span class="material-symbols-outlined" style="font-size:20px">inventory_2</span>
-                Quan ly kho nguyen lieu
+                Quản lý kho nguyên liệu
             </div>
             <button type="button" class="inv-modal-close" onclick="closeInventoryModal()">&#x2715;</button>
         </div>
         <div class="inv-modal-tabs">
-            <button type="button" class="inv-tab active" onclick="switchInvTab('all', this)">Tat ca</button>
-            <button type="button" class="inv-tab" onclick="switchInvTab('warning', this)">&#9888; Sap het</button>
-            <button type="button" class="inv-tab" onclick="switchInvTab('danger', this)">&#10060; Het hang</button>
+            <button type="button" class="inv-tab active" onclick="switchInvTab('all', this)">Tất cả</button>
+            <button type="button" class="inv-tab" onclick="switchInvTab('warning', this)">&#9888; Sắp hết</button>
+            <button type="button" class="inv-tab" onclick="switchInvTab('danger', this)">&#10060; Hết hàng</button>
         </div>
         <div class="inv-modal-body">
             <div class="inv-summary" id="invSummary"></div>
             <table class="inv-table">
                 <thead>
                     <tr>
-                        <th>Nguyen lieu</th>
-                        <th>Don vi</th>
-                        <th>Ton kho</th>
-                        <th>Nguong</th>
-                        <th>Trang thai</th>
-                        <th>Muc ton</th>
+                        <th>Nguyên liệu</th>
+                        <th>Đơn vị</th>
+                        <th>Tồn kho</th>
+                        <th>Ngưỡng</th>
+                        <th>Trạng thái</th>
+                        <th>Mức tồn</th>
                     </tr>
                 </thead>
                 <tbody id="invTableBody"></tbody>
@@ -379,6 +388,7 @@ console.log("DB Loaded Stock:", PRODUCT_STOCK);
 var cart = [];
 var selectedTable  = null;
 var selectedTableId = null;
+var selectedTableSessionId = null;
 var subtotalVal    = 0;
 var couponDiscount = 0;   // percentage from coupon code
 var activeCouponCode = '';
@@ -433,8 +443,8 @@ function getInvStatus(ig) {
 }
 
 function getStatusLabel(s) {
-    if (s === 'danger')  return '<span class="inv-status danger">&#10060; Het hang</span>';
-    if (s === 'warning') return '<span class="inv-status warning">&#9888; Sap het</span>';
+    if (s === 'danger')  return '<span class="inv-status danger">&#10060; Hết hàng</span>';
+    if (s === 'warning') return '<span class="inv-status warning">&#9888; Sắp hết</span>';
     return '<span class="inv-status ok">&#9989; Du hang</span>';
 }
 
@@ -457,10 +467,10 @@ function renderInventoryWarning() {
         badge.style.display = 'inline';
 
         var parts = [];
-        if (dangers.length > 0) parts.push(dangers.length + ' het hang');
-        if (warnings.length > 0) parts.push(warnings.length + ' sap het');
+        if (dangers.length > 0) parts.push(dangers.length + ' hết hàng');
+        if (warnings.length > 0) parts.push(warnings.length + ' sắp hết');
         document.getElementById('invWarnText').textContent =
-            'Canh bao kho: ' + parts.join(', ') + ' — can nhap them!';
+            'Canh bao kho: ' + parts.join(', ') + ' — cần nhập thêm!';
     } else {
         bar.classList.remove('show');
         badge.style.display = 'none';
@@ -477,9 +487,9 @@ function renderInventoryModal() {
         else danger++;
     }
     document.getElementById('invSummary').innerHTML =
-        '<div class="inv-sum-card ok"><div class="inv-sum-val">' + ok + '</div><div class="inv-sum-label">Du hang</div></div>' +
-        '<div class="inv-sum-card warning"><div class="inv-sum-val">' + warn + '</div><div class="inv-sum-label">Sap het</div></div>' +
-        '<div class="inv-sum-card danger"><div class="inv-sum-val">' + danger + '</div><div class="inv-sum-label">Het hang</div></div>';
+        '<div class="inv-sum-card ok"><div class="inv-sum-val">' + ok + '</div><div class="inv-sum-label">Dư hàng</div></div>' +
+        '<div class="inv-sum-card warning"><div class="inv-sum-val">' + warn + '</div><div class="inv-sum-label">Sắp hết</div></div>' +
+        '<div class="inv-sum-card danger"><div class="inv-sum-val">' + danger + '</div><div class="inv-sum-label">Hết hàng</div></div>';
 
     // Table rows
     var tbody = document.getElementById('invTableBody');
@@ -539,15 +549,20 @@ function setCategory(cat, btn) {
     filterMenu();
 }
 
+/* Navigate to a category page (server-side pagination) */
+function navCat(cat, page) {
+    if (page === undefined) page = 1;
+    var base = '${pageContext.request.contextPath}/PosOrder';
+    window.location.href = base + '?cat=' + encodeURIComponent(cat) + '&productPage=' + page;
+}
+
 function filterMenu() {
     var q = document.getElementById('menuSearch').value.toLowerCase();
     var cards = document.querySelectorAll('#menuGrid .menu-card');
     for (var i = 0; i < cards.length; i++) {
         var c    = cards[i];
-        var cat  = c.getAttribute('data-cat');
         var name = c.getAttribute('data-name').toLowerCase();
-        c.style.display = ((activeCat === 'all' || cat === activeCat) &&
-                           (q === '' || name.indexOf(q) >= 0)) ? '' : 'none';
+        c.style.display = (q === '' || name.indexOf(q) >= 0) ? '' : 'none';
     }
 }
 
@@ -556,19 +571,19 @@ var pendingItem = null;
 var pendingSize = 'M';    
 
 var SIZE_MODS = { S: -5000, M: 0, L: 10000 };
-var SIZE_LABELS = { S: 'Nho', M: 'Vua', L: 'Lon' };
+var SIZE_LABELS = { S: 'Nhỏ', M: 'Vừa', L: 'Lớn' };
 
 function addItem(name, price) {
     /* Mo modal chon size */
     pendingItem = { name: name, basePrice: price };
-    document.getElementById('sizeModalTitle').textContent = name + ' — Chon size';
+    document.getElementById('sizeModalTitle').textContent = name + ' — Chọn size';
     
     var firstAvailableSize = null;
     
     /* Update price & stock labels */
     ['S','M','L'].forEach(function(s) {
         var p = price + SIZE_MODS[s];
-        document.getElementById('sz-' + s + '-price').textContent = p.toLocaleString('vi-VN') + ' d';
+        document.getElementById('sz-' + s + '-price').textContent = p.toLocaleString('vi-VN') + ' đ';
         
         // Stock logic based on DB injection
         var hasRecipe = (PRODUCT_STOCK[name] && (s in PRODUCT_STOCK[name]));
@@ -578,20 +593,20 @@ function addItem(name, price) {
         
         if (!hasRecipe) {
             cardEl.style.display = '';
-            stockEl.textContent = 'Khong co size nay';
+            stockEl.textContent = 'Không có size này';
             stockEl.style.color = '#9ca3af';
             cardEl.style.opacity = '0.4';
             cardEl.style.pointerEvents = 'none';
         } else {
             cardEl.style.display = '';
             if (cups > 0) {
-                stockEl.textContent = 'Con pha dc: ' + cups + ' coc';
+                stockEl.textContent = 'Còn pha được: ' + cups + ' cốc';
                 stockEl.style.color = '#16a34a';
                 cardEl.style.opacity = '1';
                 cardEl.style.pointerEvents = 'auto';
                 if (!firstAvailableSize) firstAvailableSize = s;
             } else {
-                stockEl.textContent = 'Het nguyen lieu';
+                stockEl.textContent = 'Hết nguyên liệu';
                 stockEl.style.color = '#dc2626';
                 cardEl.style.opacity = '0.5';
                 cardEl.style.pointerEvents = 'none';
@@ -600,7 +615,7 @@ function addItem(name, price) {
     });
     
     if (!firstAvailableSize) {
-        showToast('Mon nay da het nguyen lieu cho tat ca cac size! (Het pha duoc roi)');
+        showToast('Món này đã hết nguyên liệu cho tất cả các size!');
         console.warn("Item out of stock:", name, "PRODUCT_STOCK=", PRODUCT_STOCK[name]);
         return;
     }
@@ -632,7 +647,7 @@ function addSize() {
             if (cart[i].qty < maxCups) {
                 cart[i].qty++;
             } else {
-                showToast('Khong du nguyen lieu! Toi da ' + maxCups + ' coc.');
+                showToast('Không đủ nguyên liệu! Tối đa ' + maxCups + ' cốcc.');
                 closeSizeModal(); return;
             }
             found = true; break;
@@ -642,7 +657,7 @@ function addSize() {
         if (1 <= maxCups) {
             cart.push({ name: pendingItem.name, price: unitPrice, size: pendingSize, qty: 1, key: key });
         } else {
-            showToast('Khong du nguyen lieu!');
+            showToast('Không đủ nguyên liệu!');
             closeSizeModal(); return;
         }
     }
@@ -664,7 +679,7 @@ function changeQty(name, delta) {
         if (cart[i].key === name || cart[i].name === name) {
             var maxCups = (PRODUCT_STOCK[cart[i].name] && PRODUCT_STOCK[cart[i].name][cart[i].size]) ? PRODUCT_STOCK[cart[i].name][cart[i].size] : 0;
             if (delta > 0 && cart[i].qty >= maxCups) {
-                showToast('Khong du nguyen lieu! Toi da ' + maxCups + ' coc.');
+                showToast('Không đủ nguyên liệu! Tối đa ' + maxCups + ' cốc.');
                 return;
             }
             cart[i].qty += delta;
@@ -680,7 +695,7 @@ function removeItem(name) {
     }
 }
 
-function fmt(n) { return n.toLocaleString('vi-VN') + ' d'; }
+function fmt(n) { return n.toLocaleString('vi-VN') + ' đ'; }
 
 function renderCart() {
     var panel = document.getElementById('orderPanel');
@@ -701,13 +716,13 @@ function renderCart() {
 
     document.getElementById('itemCount').textContent   = cart.length;
     document.getElementById('subtotal').textContent    = fmt(subtotalVal);
-    document.getElementById('discountAmt').textContent = discountVal > 0 ? '-' + fmt(discountVal) : '0 d';
+    document.getElementById('discountAmt').textContent = discountVal > 0 ? '-' + fmt(discountVal) : '0 đ';
     document.getElementById('grandTotal').textContent  = fmt(grandTotalVal);
 
       if (cart.length === 0) {
           panel.innerHTML = '<div class="empty-cart" id="emptyMsg" style="display:block;">' +
                             '<div class="ec-icon">&#128722;</div>' +
-                            '<div class="ec-text">Chua co mon nao</div>' +
+                            '<div class="ec-text">Chưa có món nào</div>' +
                             '</div>';
           return;
       }
@@ -754,7 +769,7 @@ function lookupMember() {
 
     if (!phone) {
         resDiv.className = 'mem-result show';
-        resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">Vui long nhap so dien thoai.</div>';
+        resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">Vui lòng nhập số điện thoại.</div>';
         return;
     }
 
@@ -765,7 +780,7 @@ function lookupMember() {
             activeMember = null;
             memberDiscount = 0;
             resDiv.className = 'mem-result show';
-            resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">&#10007; Khong tim thay thanh vien voi SDT: <strong>' + phone + '</strong></div>';
+            resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">&#10007; Không tìm thấy thành viên với SDT: <strong>' + phone + '</strong></div>';
             renderCart();
             return;
         }
@@ -791,7 +806,7 @@ function lookupMember() {
                 '<div class="mem-disc-tag ' + tierClass + '">' + (data.pct > 0 ? '-' + data.pct + '%' : '0%') + '</div>' +
             '</div>' +
             '<div style="font-size:11.5px;color:#16a34a;font-weight:600;">' +
-                (data.pct > 0 ? '&#10003; ' + discInfo + ' ap dung tren tong don' : 'Thanh vien co ban') +
+                (data.pct > 0 ? '&#10003; ' + discInfo + ' áp dụng trên tổng đơn' : 'Thành viên có bàn') +
             '</div>';
 
         renderCart();
@@ -799,7 +814,7 @@ function lookupMember() {
     .catch(err => {
         console.error(err);
         resDiv.className = 'mem-result show';
-        resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">Loi ket noi!</div>';
+        resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">Lỗi kết nối!</div>';
     });
 }
 
@@ -809,7 +824,7 @@ function lookupMember() {
 function applyDiscount() {
     var code = document.getElementById('discountCode').value.trim().toUpperCase();
     var msg  = document.getElementById('discMsg');
-    if (!code) { msg.className = 'disc-msg err'; msg.textContent = 'Vui long nhap ma giam gia.'; return; }
+    if (!code) { msg.className = 'disc-msg err'; msg.textContent = 'Vui lòng nhập mã giảm giá.'; return; }
     
     fetch('${pageContext.request.contextPath}/CheckPromotion?action=discount&code=' + encodeURIComponent(code))
     .then(response => response.json())
@@ -818,7 +833,7 @@ function applyDiscount() {
             couponDiscount = data.pct / 100.0;
             activeCouponCode = code;
             msg.className = 'disc-msg ok';
-            msg.textContent = '\u2713 Ma hop le! Giam ' + data.pct + '%';
+            msg.textContent = '\u2713 Mã hợp lệ! Giảm ' + data.pct + '%';
         } else {
             couponDiscount = 0;
             activeCouponCode = '';
@@ -830,7 +845,7 @@ function applyDiscount() {
     .catch(err => {
         console.error(err);
         msg.className = 'disc-msg err';
-        msg.textContent = '\u2717 Loi ket noi!';
+        msg.textContent = '\u2717 Lỗi kết nối!';
     });
 }
 
@@ -855,15 +870,20 @@ function closeTableIfOverlay(e) {
 /* Listen for TABLE_SELECTED message from iframe */
 window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'TABLE_SELECTED') {
-        selectedTable = e.data.tableCode;
-        selectedTableId = e.data.tableId;
+        selectedTable          = e.data.tableCode;
+        selectedTableId        = e.data.tableId;
+        selectedTableSessionId = e.data.tableSessionId || null;
+
         var btn = document.getElementById('tableBtn');
-        btn.textContent = e.data.tableCode + (e.data.area ? ' \u2014 ' + e.data.area : '');
-        btn.style.background = '#2c1a0e';
-        btn.style.color = '#fff';
+        var label = e.data.tableCode;
+        if (e.data.area) label += ' \u2014 ' + e.data.area;
+        btn.textContent  = label;
+        btn.style.background  = '#2c1a0e';
+        btn.style.color       = '#fff';
         btn.style.borderColor = '#2c1a0e';
+
         closeTableModal();
-        showToast('\u2713 Da chon ' + e.data.tableCode);
+        showToast('\u2713 Đã chọn ' + e.data.tableCode + (e.data.area ? ' (' + e.data.area + ')' : ''));
     }
 });
 
@@ -876,15 +896,15 @@ function showToast(msg) {
 }
 
 function saveOrder() {
-    if (cart.length === 0) { alert('Chua co mon nao trong don!'); return; }
-    alert('Da luu tam ' + cart.length + ' mon. Tong: ' + fmt(grandTotalVal));
+    if (cart.length === 0) { alert('Chưa có món nào trong đơn!'); return; }
+    alert('Đã lưu tạm ' + cart.length + ' món. Tổng: ' + fmt(grandTotalVal));
 }
 
 /* ============================================================
    PAYMENT FLOW
 ============================================================ */
 function openPayModal() {
-    if (cart.length === 0) { alert('Vui long them mon truoc!'); return; }
+    if (cart.length === 0) { alert('Vui lòng thêm món trước!'); return; }
     selectedPayMethod = null;
 
     // Hide all method sections
@@ -893,14 +913,14 @@ function openPayModal() {
     document.getElementById('btnConfirmPay').disabled = true;
 
     // Fill summary
-    var sum = '<div class="pay-sum-row"><span>Ban</span><span>' + (selectedTable || 'Walk-in') + '</span></div>';
+    var sum = '<div class="pay-sum-row"><span>Bàn</span><span>' + (selectedTable || 'Walk-in') + '</span></div>';
     for (var i = 0; i < cart.length; i++) {
         sum += '<div class="pay-sum-row"><span>' + cart[i].name + ' x' + cart[i].qty + '</span><span>' + fmt(cart[i].price * cart[i].qty) + '</span></div>';
     }
     if (discountVal > 0) {
-        sum += '<div class="pay-sum-row" style="color:#16a34a"><span>Giam gia</span><span>-' + fmt(discountVal) + '</span></div>';
+        sum += '<div class="pay-sum-row" style="color:#16a34a"><span>Giảm giá</span><span>-' + fmt(discountVal) + '</span></div>';
     }
-    sum += '<div class="pay-sum-row total"><span>Tong tien</span><span>' + fmt(grandTotalVal) + '</span></div>';
+    sum += '<div class="pay-sum-row total"><span>Tổng tiền</span><span>' + fmt(grandTotalVal) + '</span></div>';
     document.getElementById('paySummary').innerHTML = sum;
 
     document.getElementById('payModal').classList.add('open');
@@ -981,10 +1001,10 @@ function calcChange() {
 }
 
 function confirmPayment() {
-    if (!selectedPayMethod) { alert('Vui long chon phuong thuc thanh toan!'); return; }
+    if (!selectedPayMethod) { alert('Vui lòng chọn phương thức thanh toán!'); return; }
     if (selectedPayMethod === 'cash') {
         var got = parseInt(document.getElementById('cashInput').value) || 0;
-        if (got < grandTotalVal) { alert('So tien chua du!'); return; }
+        if (got < grandTotalVal) { alert('Số tiền chưa đủ!'); return; }
     }
     closeModal('payModal');
     showBill();
@@ -999,7 +1019,7 @@ function showBill() {
     var now     = new Date();
     var dateStr = now.getDate() + '/' + (now.getMonth()+1) + '/' + now.getFullYear()
                 + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-    var methodNames = { cash: 'Tien mat', qr: 'QR Code' };
+    var methodNames = { cash: 'Tiền mặt', qr: 'QR Code' };
 
     var itemRows = '';
     for (var i = 0; i < cart.length; i++) {
@@ -1013,10 +1033,10 @@ function showBill() {
     }
 
     var discRow = discountVal > 0
-        ? '<div class="receipt-total-row" style="color:#16a34a"><span>Giam gia</span><span>-' + fmt(discountVal) + '</span></div>'
+        ? '<div class="receipt-total-row" style="color:#16a34a"><span>Giảm giá</span><span>-' + fmt(discountVal) + '</span></div>'
         : '';
     var changeRow = (selectedPayMethod === 'cash')
-        ? '<div class="receipt-total-row" style="color:#888"><span>Tien thoi</span><span>' + fmt((parseInt(document.getElementById('cashInput').value)||0) - grandTotalVal) + '</span></div>'
+        ? '<div class="receipt-total-row" style="color:#888"><span>Tiền thối</span><span>' + fmt((parseInt(document.getElementById('cashInput').value)||0) - grandTotalVal) + '</span></div>'
         : '';
 
     var html =
@@ -1044,29 +1064,7 @@ function showBill() {
     document.getElementById('billModal').classList.add('open');
 }
 
-function printBill() {
-    window.print();
-}
 
-function newOrder() {
-    closeModal('billModal');
-    cart = [];
-    couponDiscount = 0;
-    activeCouponCode = '';
-    memberDiscount = 0;
-    discountVal    = 0;
-    activeMember   = null;
-    selectedTable  = null;
-    selectedTableId = null;
-    document.getElementById('tableBtn').textContent = 'Chon ban';
-    document.getElementById('discountCode').value  = '';
-    document.getElementById('discMsg').textContent  = '';
-    document.getElementById('memberPhone').value    = '';
-    document.getElementById('memResult').className  = 'mem-result';
-    document.getElementById('memResult').innerHTML  = '';
-    document.getElementById('orderNote').value      = '';
-    renderCart();
-}
 
 /* ============================================================
    MODAL HELPERS
@@ -1074,7 +1072,7 @@ function newOrder() {
 function submitPOSOrder(isNewOrder) {
     try {
         if (cart.length === 0) {
-            showToast("Gio hang trong!");
+            showToast("Giỏ hàng trống!");
             return;
         }
     var cartData = cart.map(function(item) {
@@ -1093,7 +1091,7 @@ function submitPOSOrder(isNewOrder) {
     formData.append("finalAmount", grandTotalVal);
     formData.append("paymentMethod", finalPayMethod);
     formData.append("tableName", selectedTable || 'Walk-in');
-    if (selectedTableId) {
+    if (typeof selectedTableId !== 'undefined' && selectedTableId !== null) {
         formData.append("tableId", selectedTableId);
     }
     formData.append("note", noteVal);
@@ -1112,7 +1110,7 @@ function submitPOSOrder(isNewOrder) {
     })
     .then(function(response) {
         if (response.ok) {
-            showToast("Tao don thanh cong!");
+            showToast("Tạo đơn thành công!");
             closeModal('billModal');
             setTimeout(function() { window.location.reload(); }, 600);
         } else {
@@ -1122,7 +1120,7 @@ function submitPOSOrder(isNewOrder) {
         }
     })
     .catch(function(err) {
-        showToast("Loi ket noi!");
+        showToast("Lỗi kết nối!");
         alert("Lỗi mạng / Lỗi gọi API: " + err);
         console.error(err);
     });
@@ -1132,24 +1130,7 @@ function submitPOSOrder(isNewOrder) {
     }
 }
 
-function resetAll() {
-    cart = [];
-    selectedTable = null;
-    selectedTableId = null;
-    couponDiscount = 0;
-    activeCouponCode = '';
-    activeMember = null;
-    
-    document.getElementById('tableBtn').textContent = 'Chon ban';
-    document.getElementById('tableBtn').style = '';
-    document.getElementById('memberPhone').value = '';
-    document.getElementById('memResult').classList.remove('show');
-    document.getElementById('discountCode').value = '';
-    document.getElementById('discMsg').textContent = '';
-    if(document.getElementById('orderNote')) document.getElementById('orderNote').value = '';
-    
-    renderCart();
-}
+
 
 function closeModal(id) {
     document.getElementById(id).classList.remove('open');

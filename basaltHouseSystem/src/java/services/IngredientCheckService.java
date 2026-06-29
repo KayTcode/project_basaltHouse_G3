@@ -9,6 +9,7 @@ import dao.OrderDAO;
 import dao.RecipeDAO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,6 +96,38 @@ public class IngredientCheckService {
                 s.put("error", "Cập nhật StockQuantity thất bại ");
             }
         } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return s;
+    }
+
+    public HashMap<String, Object> updateIngredientQuantity(int id, BigDecimal needStock) {
+        HashMap<String, Object> s = new HashMap<>();
+        try {
+            boolean exits = i.updateIngredientQuantity(id, needStock);
+            if (exits) {
+                s.put("success", true);
+            } else {
+                s.put("error", "Cập nhật StockQuantity thất bại ");
+            }
+        } catch (Exception e) {
+            s.put("error", e.getMessage());
+            System.err.println(e.getMessage());
+        }
+        return s;
+    }
+
+    public HashMap<String, Object> getStockSnapshotByDate(LocalDate auditDate) {
+        HashMap<String, Object> s = new HashMap<>();
+        try {
+            List<HashMap<String, Object>> list = i.getStockSnapshotByDate(auditDate);
+            if (list == null) {
+                s.put("error", "Danh sách tồn kho theo ngày lỗi");
+            } else {
+                s.put("success", list);
+            }
+        } catch (Exception e) {
+            s.put("error", e.getMessage());
             System.err.println(e.getMessage());
         }
         return s;

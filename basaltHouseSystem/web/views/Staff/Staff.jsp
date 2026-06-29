@@ -1,38 +1,50 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
+<c:url var="staffImportUrl" value="/staff/import"/>
+<c:set var="activeStaffPage" value="${staffPage}" scope="request"/>
+<c:set var="pageEyebrow" value="${staffPageEyebrow}"/>
+<c:set var="pageTitle" value="${staffPageTitle}"/>
+<c:set var="pageSubtitle" value="${staffPageSubtitle}"/>
 <!DOCTYPE html>
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quản lý nguyên liệu | Staff</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <title><c:out value="${pageTitle}"/> | Staff</title>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-        <link href="${pageContext.request.contextPath}/css/Staff/Staff.css?v=9" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/css/Staff/Staff.css?v=14" rel="stylesheet">
     </head>
-    <body>
+    <body class="staff-page staff-page-${activeStaffPage}">
         <aside class="staff-sidebar">
             <div class="sidebar-logo">
                 <div class="logo-icon">
                     <span class="material-symbols-outlined">local_cafe</span>
                 </div>
-                <div class="logo-text">BasaltHouse<span>Staff workspace</span></div>
+                <div class="logo-text">BasaltHouse<span>Không gian nhân viên</span></div>
             </div>
 
             <nav class="sidebar-nav">
-                <button type="button" class="nav-item active" data-view-link="inventory" onclick="showStaffView('inventory')">
+                <a class="nav-item ${activeStaffPage eq 'ingredient' ? 'active' : ''}"
+                   href="${pageContext.request.contextPath}/staff/ingredient">
                     <span class="material-symbols-outlined">inventory_2</span>
                     Kho nguyên liệu
-                </button>
-                <button type="button" class="nav-item" data-view-link="import" onclick="showStaffView('import')">
+                </a>
+                <a class="nav-item ${activeStaffPage eq 'import' ? 'active' : ''}"
+                   href="${pageContext.request.contextPath}/staff/import">
                     <span class="material-symbols-outlined">add_shopping_cart</span>
                     Nhập nguyên liệu
-                </button>
-                <button type="button" class="nav-item" data-view-link="history" onclick="showStaffView('history')">
+                </a>
+                <a class="nav-item ${activeStaffPage eq 'history' ? 'active' : ''}"
+                   href="${pageContext.request.contextPath}/staff/history">
                     <span class="material-symbols-outlined">history</span>
                     Lịch sử nhập
-                </button>
+                </a>
+                <a class="nav-item ${activeStaffPage eq 'sales-history' ? 'active' : ''}"
+                   href="${pageContext.request.contextPath}/staff/sales-history">
+                    <span class="material-symbols-outlined">point_of_sale</span>
+                    Lịch sử bán hàng
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -62,24 +74,23 @@
         <main class="staff-content">
             <header class="page-header">
                 <div>
-                    <p class="eyebrow" id="staffHeaderEyebrow">Staff / Inventory</p>
-                    <h1 id="staffHeaderTitle">Quản lý nguyên liệu</h1>
-                    <p class="page-subtitle" id="staffHeaderSubtitle">Theo dõi tồn kho, cảnh báo sắp hết và nhập thêm nguyên liệu.</p>
+                    <p class="eyebrow">
+                        <c:choose>
+                            <c:when test="${activeStaffPage eq 'import'}">Nhân viên / Nhập nguyên liệu</c:when>
+                            <c:when test="${activeStaffPage eq 'history'}">Nhân viên / Lịch sử nhập kho</c:when>
+                            <c:when test="${activeStaffPage eq 'sales-history'}">Nhân viên / Kiểm kê bán hàng</c:when>
+                            <c:otherwise>Nhân viên / Kho nguyên liệu</c:otherwise>
+                        </c:choose>
+                    </p>
+                    <h1><c:out value="${pageTitle}"/></h1>
+                    <p class="page-subtitle"><c:out value="${pageSubtitle}"/></p>
                 </div>
-                <div class="view-switch">
-                    <button type="button" class="view-switch-btn active" data-view-link="inventory" onclick="showStaffView('inventory')">
-                        <span class="material-symbols-outlined">inventory_2</span>
-                        Kho nguyên liệu
-                    </button>
-                    <button type="button" class="view-switch-btn" data-view-link="import" onclick="showStaffView('import')">
+                <c:if test="${activeStaffPage eq 'ingredient'}">
+                    <a class="header-action header-action-primary" href="${pageContext.request.contextPath}/staff/import">
                         <span class="material-symbols-outlined">add_circle</span>
-                        Nhập nguyên liệu
-                    </button>
-                    <button type="button" class="view-switch-btn" data-view-link="history" onclick="showStaffView('history')">
-                        <span class="material-symbols-outlined">history</span>
-                        Lịch sử nhập
-                    </button>
-                </div>
+                        Nhập thêm nguyên liệu
+                    </a>
+                </c:if>
             </header>
 
             <c:if test="${not empty successMessage}">
@@ -103,462 +114,134 @@
                 </div>
             </c:if>
 
+            <c:if test="${activeStaffPage eq 'ingredient' or activeStaffPage eq 'import'}">
             <section class="stats-grid" aria-label="Tổng quan kho">
-                <div class="stat-card">
+                <button class="stat-card stat-filter-card is-selected" type="button"
+                        data-stock-filter="all" onclick="applyStockFilter('all', this)" aria-pressed="true">
                     <span class="material-symbols-outlined stat-icon">category</span>
                     <div>
                         <p>Tổng nguyên liệu</p>
                         <strong>${fn:length(ingredients)}</strong>
+                        <span class="stat-hint">Xem tất cả</span>
                     </div>
-                </div>
-                <div class="stat-card stat-warning">
+                </button>
+                <button class="stat-card stat-warning stat-filter-card" type="button"
+                        data-stock-filter="warning" onclick="applyStockFilter('warning', this)" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">warning</span>
                     <div>
                         <p>Sắp hết</p>
                         <strong><c:out value="${warningCount}"/></strong>
+                        <span class="stat-hint">Cần theo dõi</span>
                     </div>
-                </div>
-                <div class="stat-card stat-danger">
+                </button>
+                <button class="stat-card stat-danger stat-filter-card" type="button"
+                        data-stock-filter="danger" onclick="applyStockFilter('danger', this)" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">error</span>
                     <div>
                         <p>Hết hàng</p>
                         <strong><c:out value="${outCount}"/></strong>
+                        <span class="stat-hint">Cần nhập ngay</span>
                     </div>
-                </div>
-                <div class="stat-card stat-ok">
+                </button>
+                <button class="stat-card stat-ok stat-filter-card" type="button"
+                        data-stock-filter="ok" onclick="applyStockFilter('ok', this)" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">task_alt</span>
                     <div>
                         <p>Đủ hàng</p>
                         <strong><c:out value="${okCount}"/></strong>
+                        <span class="stat-hint">Kho ổn định</span>
                     </div>
-                </div>
+                </button>
             </section>
 
-            <c:if test="${not empty warnings}">
-                <section class="warning-strip">
-                    <div class="warning-strip-title">
-                        <span class="material-symbols-outlined">priority_high</span>
-                        Cảnh báo nguyên liệu cần nhập
+                <section class="warning-strip ${empty warnings ? 'is-clear' : ''}" aria-labelledby="stockWarningTitle">
+                    <div class="warning-strip-header">
+                        <div class="warning-strip-title">
+                            <span class="material-symbols-outlined">${empty warnings ? 'verified' : 'warning'}</span>
+                            <div>
+                                <c:choose>
+                                    <c:when test="${empty warnings}">
+                                        <h2 id="stockWarningTitle">Tồn kho đang ở mức an toàn</h2>
+                                        <p>Chưa có nguyên liệu nào chạm ngưỡng cần nhập thêm.</p>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <h2 id="stockWarningTitle">Nguyên liệu cần nhập thêm</h2>
+                                        <p><c:out value="${warningCount + outCount}"/> nguyên liệu đang dưới mức tồn kho an toàn.</p>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
+                        <a class="warning-strip-action" href="${activeStaffPage eq 'import' ? '#importForm' : staffImportUrl}">
+                            <span class="material-symbols-outlined">add_shopping_cart</span>
+                            Nhập thêm ngay
+                        </a>
                     </div>
+                    <c:if test="${activeStaffPage eq 'import'}">
+                        <div class="warning-filter-row" role="group" aria-label="Lọc nguyên liệu cần nhập">
+                            <button class="warning-filter-btn active" type="button" data-warning-filter="all"
+                                    onclick="setImportWarningFilter('all', this)">Tất cả cần nhập</button>
+                            <button class="warning-filter-btn" type="button" data-warning-filter="warning"
+                                    onclick="setImportWarningFilter('warning', this)">Sắp hết</button>
+                            <button class="warning-filter-btn" type="button" data-warning-filter="danger"
+                                    onclick="setImportWarningFilter('danger', this)">Hết hàng</button>
+                        </div>
+                    </c:if>
                     <div class="warning-list">
                         <c:forEach var="item" items="${warnings}">
-                            <span class="warning-chip ${item.status}">
-                                <c:out value="${item.name}"/>:
-                                <strong><c:out value="${item.stockText}"/> <c:out value="${item.unit}"/></strong>
-                            </span>
+                            <div class="warning-chip ${item.status}" data-warning-status="${item.status}">
+                                <span class="material-symbols-outlined"><c:out value="${item.statusIcon}"/></span>
+                                <div>
+                                    <strong><c:out value="${item.name}"/></strong>
+                                    <span>Còn <c:out value="${item.stockText}"/> <c:out value="${item.unit}"/></span>
+                                </div>
+                            </div>
                         </c:forEach>
                     </div>
+                    <p class="warning-filter-empty" id="warningFilterEmpty" hidden>Không có nguyên liệu ở trạng thái này.</p>
                 </section>
+
             </c:if>
 
-            <section class="staff-view active" id="inventoryView">
-                <div class="panel inventory-panel">
-                    <div class="panel-header">
-                        <div>
-                            <h2>Tồn kho nguyên liệu</h2>
-                            <p>Cập nhật theo số lượng đang còn trong kho.</p>
-                        </div>
-                        <div class="search-box">
-                            <span class="material-symbols-outlined">search</span>
-                            <input id="ingredientSearch" type="search" placeholder="Tìm nguyên liệu" oninput="filterIngredients()">
-                        </div>
-                    </div>
-
-                    <div class="tab-row" role="tablist">
-                        <button class="tab-btn active" type="button" data-filter="all" onclick="setFilter(this)">Tất cả</button>
-                        <button class="tab-btn" type="button" data-filter="warning" onclick="setFilter(this)">Sắp hết</button>
-                        <button class="tab-btn" type="button" data-filter="danger" onclick="setFilter(this)">Hết hàng</button>
-                    </div>
-
-                    <div class="table-wrap">
-                        <table class="inventory-table">
-                            <thead>
-                                <tr>
-                                    <th>Nguyên liệu</th>
-                                    <th>Nhà cung cấp</th>
-                                    <th>Còn lại</th>
-                                    <th>Ngưỡng</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ingredientRows">
-                                <c:forEach var="item" items="${ingredients}">
-                                    <tr class="ingredient-row" data-status="${item.status}" data-name="${item.name}">
-                                        <td>
-                                            <div class="ingredient-name"><c:out value="${item.name}"/></div>
-                                            <div class="ingredient-unit">Đơn vị: <c:out value="${item.unit}"/></div>
-                                        </td>
-                                        <td><c:out value="${item.supplierName}"/></td>
-                                        <td>
-                                            <strong><c:out value="${item.stockText}"/> <c:out value="${item.unit}"/></strong>
-                                            <div class="stock-bar">
-                                                <span class="${item.status}" style="width:${item.barPercent}%"></span>
-                                            </div>
-                                        </td>
-                                        <td><c:out value="${item.minStockText}"/> <c:out value="${item.unit}"/></td>
-                                        <td>
-                                            <span class="status-pill ${item.status}">
-                                                <span class="material-symbols-outlined"><c:out value="${item.statusIcon}"/></span>
-                                                <c:out value="${item.statusLabel}"/>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="table-footer">
-                        <span class="result-count" id="inventoryResultText">0 nguyên liệu</span>
-                        <div class="pagination">
-                            <button type="button" class="page-btn" id="inventoryPrevBtn" onclick="changeInventoryPage(-1)" aria-label="Trang trước">
-                                <span class="material-symbols-outlined">chevron_left</span>
-                            </button>
-                            <span class="page-indicator" id="inventoryPageText">Trang 1 / 1</span>
-                            <button type="button" class="page-btn" id="inventoryNextBtn" onclick="changeInventoryPage(1)" aria-label="Trang sau">
-                                <span class="material-symbols-outlined">chevron_right</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="staff-view" id="importView">
-                <aside class="panel import-panel" id="importForm">
-                    <div class="panel-header compact">
-                        <div>
-                            <h2>Nhập thêm nguyên liệu</h2>
-                            <p>Phiếu nhập sẽ tạo hóa đơn và ghi lịch sử kho.</p>
-                        </div>
-                    </div>
-
-                    <form method="post"
-                          action="${pageContext.request.contextPath}/staff"
-                          class="import-form"
-                          oninput="updateInvoicePreview()">
-                        <input type="hidden" name="action" value="importIngredient">
-                        <input type="hidden" id="quantityInput" name="quantity">
-
-                        <div class="form-section">
-                            <div class="form-section-title">
-                                <span class="material-symbols-outlined">receipt_long</span>
-                                <h3>Phiếu nhập</h3>
-                            </div>
-
-                            <div class="form-grid-3">
-                                <label>
-                                    <span>Mã phiếu nhập</span>
-                                    <input type="text" name="importCode" placeholder="IMP-YYYYMMDD-001">
-                                </label>
-                                <label>
-                                    <span>Mã hóa đơn NCC</span>
-                                    <input type="text" name="supplierInvoiceCode" value="${param.supplierInvoiceCode}" placeholder="SUP-INV-001">
-                                </label>
-                                <label>
-                                    <span>Trạng thái</span>
-                                    <select name="status" id="importStatus">
-                                        <option value="Confirmed">Đã nhận</option>
-                                        <option value="Pending">Chờ nhận</option>
-                                    </select>
-                                </label>
-                            </div>
-
-                            <label>
-                                <span>Nhà cung cấp</span>
-                                <select name="supplierId" id="supplierSelect" required>
-                                    <option value="">Theo nguyên liệu</option>
-                                    <c:forEach var="supplier" items="${suppliers}">
-                                        <option value="${supplier.id}"><c:out value="${supplier.name}"/></option>
-                                    </c:forEach>
-                                </select>
-                            </label>
-
-                            <div class="form-grid-3">
-                                <label>
-                                    <span>Ngày đặt</span>
-                                    <input type="datetime-local" name="orderedDate" value="${currentDateInput}" required>
-                                </label>
-                                <label>
-                                    <span>Ngày dự kiến</span>
-                                    <input type="datetime-local" name="expectedDate">
-                                </label>
-                                <label>
-                                    <span>Ngày nhận</span>
-                                    <input type="datetime-local" name="receivedDate" value="${currentDateInput}">
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-section">
-                            <div class="form-section-title">
-                                <span class="material-symbols-outlined">inventory_2</span>
-                                <h3>Chi tiết nguyên liệu</h3>
-                            </div>
-
-                            <label>
-                                <span>Nguyên liệu</span>
-                                <select name="ingredientId" id="ingredientSelect" required>
-                                    <option value="">Chọn nguyên liệu</option>
-                                    <c:forEach var="item" items="${ingredients}">
-                                        <option value="${item.id}"
-                                                data-name="${item.name}"
-                                                data-unit="${item.unit}"
-                                                data-stock="${item.stockText}"
-                                                data-supplier="${item.supplierId}">
-                                            <c:out value="${item.name}"/> - còn <c:out value="${item.stockText}"/> <c:out value="${item.unit}"/>
-                                        </option>
-                                    </c:forEach>
-                                </select>
-                            </label>
-
-                            <div class="form-grid-3">
-                                <label>
-                                    <span>Số lượng đặt</span>
-                                    <input type="number" id="orderedQuantityInput" name="orderedQuantity" min="0.01" step="0.01" required>
-                                </label>
-                                <label>
-                                    <span>Số lượng nhận</span>
-                                    <input type="number" id="receivedQuantityInput" name="receivedQuantity" min="0" step="0.01" required>
-                                </label>
-                                <label>
-                                    <span>Đơn giá</span>
-                                    <input type="number" id="unitPriceInput" name="unitPrice" min="0" step="100" value="0" required>
-                                </label>
-                            </div>
-
-                            <label>
-                                <span>Chênh lệch</span>
-                                <textarea name="discrepancyNote" rows="2" placeholder="Ghi nhận thiếu, thừa hoặc hàng lỗi"></textarea>
-                            </label>
-
-                            <label>
-                                <span>Ghi chú</span>
-                                <textarea name="note" rows="3" placeholder="Ghi chú phiếu nhập"></textarea>
-                            </label>
-
-                            <button class="submit-btn" type="submit">
-                                <span class="material-symbols-outlined">save</span>
-                                Lưu phiếu nhập
-                            </button>
-                        </div>
-
-                        <div class="invoice-preview">
-                            <div>
-                                <span class="preview-label">Tóm tắt phiếu nhập</span>
-                                <strong id="previewIngredient">Chưa chọn nguyên liệu</strong>
-                            </div>
-                            <div class="preview-line">
-                                <span>Số lượng đặt</span>
-                                <b id="previewOrderedQuantity">0</b>
-                            </div>
-                            <div class="preview-line">
-                                <span>Số lượng nhận</span>
-                                <b id="previewReceivedQuantity">0</b>
-                            </div>
-                            <div class="preview-line">
-                                <span>Tổng đặt</span>
-                                <b id="previewOrderedTotal">0 đ</b>
-                            </div>
-                            <div class="preview-line">
-                                <span>Tổng nhận</span>
-                                <b id="previewReceivedTotal">0 đ</b>
-                            </div>
-                        </div>
-
-                    </form>
-                </aside>
-            </section>
-
-            <section class="staff-view" id="historyView">
-                <div class="panel history-panel" id="history">
-                    <div class="panel-header">
-                        <div>
-                            <h2>Lịch sử nhập nguyên liệu</h2>
-                            <p>Theo dõi phiếu nhập, số lượng nhận, giá trị và tồn kho sau khi cập nhật.</p>
-                        </div>
-                        <div class="search-box history-search">
-                            <span class="material-symbols-outlined">search</span>
-                            <input id="historySearch" type="search" placeholder="Tìm hóa đơn, nguyên liệu" oninput="filterHistories()">
-                        </div>
-                    </div>
-
-                    <div class="history-summary">
-                        <div class="history-summary-item">
-                            <span class="material-symbols-outlined">receipt_long</span>
-                            <div>
-                                <p>Dòng lịch sử</p>
-                                <strong>${fn:length(listP)}</strong>
-                            </div>
-                        </div>
-                        <div class="history-summary-item">
-                            <span class="material-symbols-outlined">inventory</span>
-                            <div>
-                                <p>Phiếu nhập</p>
-                                <strong>${fn:length(listP)}</strong>
-                            </div>
-                        </div>
-                        <div class="history-summary-item">
-                            <span class="material-symbols-outlined">payments</span>
-                            <div>
-                                <p>Theo dữ liệu</p>
-                                <strong>Import</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="table-wrap">
-                        <table class="history-table">
-                            <thead>
-                                <tr>
-                                    <th>Ngày đặt</th>
-                                    <th>Phiếu nhập</th>
-                                    <th>Nguyên liệu</th>
-                                    <th>Nhà cung cấp</th>
-                                    <th>Số lượng nhận</th>
-                                    <th>Đơn giá</th>
-                                    <th>Thành tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Người tạo</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyRows">
-                                <c:if test="${empty listP}">
-                                    <tr>
-                                        <td class="empty-cell" colspan="10">Chưa có lịch sử nhập nguyên liệu.</td>
-                                    </tr>
-                                </c:if>
-
-                                <c:forEach var="row" items="${listP}">
-                                    <tr class="history-row" data-history-text="${row.importCode} ${row.ingredientName} ${row.sppliendName} ${row.status} ${row.staffName}">
-                                        <td><strong><c:out value="${row.orderedDate}"/></strong></td>
-                                        <td>
-                                            <strong><c:out value="${row.importCode}"/></strong>
-                                            <span class="invoice-sub">#<c:out value="${row.importId}"/></span>
-                                        </td>
-                                        <td>
-                                            <div class="ingredient-name"><c:out value="${row.ingredientName}"/></div>
-                                        </td>
-                                        <td><c:out value="${row.sppliendName}"/></td>
-                                        <td>
-                                            <div class="history-metric">
-                                                <span>Nhận</span>
-                                                <strong><c:out value="${row.receivedQuantity}"/></strong>
-                                            </div>
-                                        </td>
-                                        <td><c:out value="${row.unitPrice}"/></td>
-                                        <td><strong><c:out value="${row.totalReceivedAmount}"/></strong></td>
-                                        <td>
-                                            <span class="status-pill history-status ${row.status}">
-                                                <span class="material-symbols-outlined">
-                                                    <c:choose>
-                                                        <c:when test="${row.status eq 'Pending'}">schedule</c:when>
-                                                        <c:otherwise>check_circle</c:otherwise>
-                                                    </c:choose>
-                                                </span>
-                                                <c:out value="${row.status}"/>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="history-staff">
-                                                <strong><c:out value="${row.staffName}"/></strong>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <input type="hidden" name="importId" value="${row.importId}">
-                                            <a class="history-view-btn"
-                                               href="${pageContext.request.contextPath}/viewimportvoice?id=${row.importId}">
-                                                <span class="material-symbols-outlined">visibility</span>
-                                                Xem
-                                            </a>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="table-footer">
-                        <span class="result-count" id="historyResultText">0 dòng lịch sử</span>
-                        <div class="pagination">
-                            <button type="button" class="page-btn" id="historyPrevBtn" onclick="changeHistoryPage(-1)" aria-label="Trang trước">
-                                <span class="material-symbols-outlined">chevron_left</span>
-                            </button>
-                            <span class="page-indicator" id="historyPageText">Trang 1 / 1</span>
-                            <button type="button" class="page-btn" id="historyNextBtn" onclick="changeHistoryPage(1)" aria-label="Trang sau">
-                                <span class="material-symbols-outlined">chevron_right</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <c:choose>
+                <c:when test="${activeStaffPage eq 'import'}">
+                    <jsp:include page="ImportInVoice.jsp" />
+                </c:when>
+                <c:when test="${activeStaffPage eq 'history'}">
+                    <jsp:include page="HistoryImportInVoice.jsp" />
+                </c:when>
+                <c:when test="${activeStaffPage eq 'sales-history'}">
+                    <jsp:include page="HistoryBuyProduct.jsp" />
+                </c:when>
+                <c:otherwise>
+                    <jsp:include page="Ingredient.jsp" />
+                </c:otherwise>
+            </c:choose>
         </main>
 
         <script>
             var activeFilter = 'all';
+            var activeImportWarningFilter = 'all';
             var inventoryPage = 1;
             var historyPage = 1;
+            var salesProductPage = 1;
+            var salesIngredientPage = 1;
             var inventoryPageSize = 8;
             var historyPageSize = 7;
-            var staffViewHeaders = {
-                inventory: {
-                    eyebrow: 'Staff / Inventory',
-                    title: 'Quản lý nguyên liệu',
-                    subtitle: 'Theo dõi tồn kho, cảnh báo sắp hết và nhập thêm nguyên liệu.'
-                },
-                import: {
-                    eyebrow: 'Staff / Import',
-                    title: 'Nhập nguyên liệu',
-                    subtitle: 'Tạo phiếu nhập mới, chọn nhà cung cấp và cập nhật số lượng nhập kho.'
-                },
-                history: {
-                    eyebrow: 'Staff / Import history',
-                    title: 'Lịch sử nhập nguyên liệu',
-                    subtitle: 'Theo dõi các phiếu nhập, trạng thái nhận hàng và người tạo phiếu.'
-                }
-            };
-
-            function showStaffView(viewName) {
-                var views = document.querySelectorAll('.staff-view');
-                var controls = document.querySelectorAll('[data-view-link]');
-
-                for (var i = 0; i < views.length; i++) {
-                    views[i].classList.remove('active');
-                }
-
-                for (var j = 0; j < controls.length; j++) {
-                    controls[j].classList.toggle('active', controls[j].getAttribute('data-view-link') === viewName);
-                }
-
-                var target = document.getElementById(viewName + 'View');
-                if (target) {
-                    target.classList.add('active');
-                }
-
-                updateStaffHeader(viewName);
-            }
-
-            function updateStaffHeader(viewName) {
-                var header = staffViewHeaders[viewName] || staffViewHeaders.inventory;
-                var eyebrow = document.getElementById('staffHeaderEyebrow');
-                var title = document.getElementById('staffHeaderTitle');
-                var subtitle = document.getElementById('staffHeaderSubtitle');
-
-                if (eyebrow) {
-                    eyebrow.textContent = header.eyebrow;
-                }
-                if (title) {
-                    title.textContent = header.title;
-                }
-                if (subtitle) {
-                    subtitle.textContent = header.subtitle;
-                }
-            }
+            var salesPageSize = 7;
 
             function toggleAccountMenu(event) {
-                event.stopPropagation();
+                if (event) {
+                    event.stopPropagation();
+                }
                 var menu = document.getElementById('accountMenu');
+                if (!menu) {
+                    return;
+                }
                 var trigger = menu.querySelector('.account-trigger');
                 var isOpen = menu.classList.toggle('open');
-                trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (trigger) {
+                    trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                }
             }
 
             document.addEventListener('click', function (event) {
@@ -573,53 +256,111 @@
             });
 
             function setFilter(button) {
-                activeFilter = button.getAttribute('data-filter');
-                var tabs = document.querySelectorAll('.tab-btn');
-                for (var i = 0; i < tabs.length; i++) {
-                    tabs[i].classList.remove('active');
+                if (!button) {
+                    return;
                 }
-                button.classList.add('active');
+                activeFilter = button.getAttribute('data-filter');
+                updateStockFilterControls(activeFilter);
                 inventoryPage = 1;
                 renderInventoryRows();
             }
 
-            function filterIngredients() {
+            function applyStockFilter(filter) {
+                activeFilter = filter || 'all';
                 inventoryPage = 1;
+                updateStockFilterControls(activeFilter);
                 renderInventoryRows();
+                if (document.getElementById('importView')) {
+                    setImportWarningFilter(activeFilter);
+                }
+            }
+
+            function updateStockFilterControls(filter) {
+                var tabs = document.querySelectorAll('.tab-btn');
+                for (var i = 0; i < tabs.length; i++) {
+                    tabs[i].classList.toggle('active', tabs[i].getAttribute('data-filter') === filter);
+                }
+
+                var cards = document.querySelectorAll('.stat-filter-card');
+                for (var j = 0; j < cards.length; j++) {
+                    var selected = cards[j].getAttribute('data-stock-filter') === filter;
+                    cards[j].classList.toggle('is-selected', selected);
+                    cards[j].setAttribute('aria-pressed', selected ? 'true' : 'false');
+                }
             }
 
             function renderInventoryRows() {
-                var searchInput = document.getElementById('ingredientSearch');
-                var search = searchInput ? searchInput.value.toLowerCase().trim() : '';
-                var rows = document.querySelectorAll('.ingredient-row');
-                var matchedRows = [];
-
-                for (var i = 0; i < rows.length; i++) {
-                    var row = rows[i];
-                    var status = row.getAttribute('data-status');
-                    var name = (row.getAttribute('data-name') || '').toLowerCase();
-                    var matchStatus = activeFilter === 'all' || status === activeFilter;
-                    var matchSearch = !search || name.indexOf(search) !== -1;
-                    if (matchStatus && matchSearch) {
-                        matchedRows.push(row);
-                    }
-                    row.style.display = 'none';
+                var container = document.getElementById('ingredientRows');
+                if (!container) {
+                    return;
                 }
 
-                var totalPages = Math.max(1, Math.ceil(matchedRows.length / inventoryPageSize));
-                inventoryPage = Math.max(1, Math.min(inventoryPage, totalPages));
-                renderPagedRows(matchedRows, inventoryPage, inventoryPageSize);
+                var rows = Array.prototype.slice.call(container.querySelectorAll('.ingredient-row'));
+                var filteredRows = rows.filter(function (row) {
+                    return activeFilter === 'all' || row.getAttribute('data-status') === activeFilter;
+                });
 
+                for (var i = 0; i < rows.length; i++) {
+                    rows[i].style.display = 'none';
+                }
+
+                var totalPages = Math.max(1, Math.ceil(filteredRows.length / inventoryPageSize));
+                inventoryPage = Math.max(1, Math.min(inventoryPage, totalPages));
+                renderPagedRows(filteredRows, inventoryPage, inventoryPageSize);
+
+                var emptyRow = document.getElementById('inventoryFilterEmpty');
+                if (emptyRow) {
+                    emptyRow.style.display = filteredRows.length === 0 && rows.length > 0 ? '' : 'none';
+                }
+
+                var filterLabels = {
+                    all: 'nguyên liệu',
+                    warning: 'nguyên liệu sắp hết',
+                    danger: 'nguyên liệu hết hàng',
+                    ok: 'nguyên liệu đủ hàng'
+                };
                 updatePaginationInfo(
                         'inventoryResultText',
                         'inventoryPageText',
                         'inventoryPrevBtn',
                         'inventoryNextBtn',
-                        matchedRows.length,
+                        filteredRows.length,
                         inventoryPage,
                         totalPages,
-                        'nguyên liệu'
+                        filterLabels[activeFilter] || 'nguyên liệu'
                         );
+            }
+
+            function setImportWarningFilter(filter, button) {
+                var warningList = document.querySelector('.warning-list');
+                if (!warningList) {
+                    return;
+                }
+
+                activeImportWarningFilter = filter || 'all';
+                var chips = warningList.querySelectorAll('.warning-chip');
+                var visibleCount = 0;
+                for (var i = 0; i < chips.length; i++) {
+                    var visible = activeImportWarningFilter === 'all'
+                            || chips[i].getAttribute('data-warning-status') === activeImportWarningFilter;
+                    chips[i].style.display = visible ? 'flex' : 'none';
+                    if (visible) {
+                        visibleCount++;
+                    }
+                }
+
+                var filterButtons = document.querySelectorAll('.warning-filter-btn');
+                for (var j = 0; j < filterButtons.length; j++) {
+                    filterButtons[j].classList.toggle(
+                            'active',
+                            filterButtons[j].getAttribute('data-warning-filter') === activeImportWarningFilter
+                            );
+                }
+
+                var emptyMessage = document.getElementById('warningFilterEmpty');
+                if (emptyMessage) {
+                    emptyMessage.hidden = visibleCount > 0;
+                }
             }
 
             function changeInventoryPage(delta) {
@@ -627,37 +368,16 @@
                 renderInventoryRows();
             }
 
-            function filterHistories() {
-                historyPage = 1;
-                renderHistoryRows();
-            }
-
             function renderHistoryRows() {
-                var input = document.getElementById('historySearch');
-                var search = input ? input.value.toLowerCase().trim() : '';
-                var rows = document.querySelectorAll('.history-row');
-                var matchedRows = [];
-
-                for (var i = 0; i < rows.length; i++) {
-                    var text = (rows[i].getAttribute('data-history-text') || '').toLowerCase();
-                    if (!search || text.indexOf(search) !== -1) {
-                        matchedRows.push(rows[i]);
-                    }
-                    rows[i].style.display = 'none';
-                }
-
-                var totalPages = Math.max(1, Math.ceil(matchedRows.length / historyPageSize));
-                historyPage = Math.max(1, Math.min(historyPage, totalPages));
-                renderPagedRows(matchedRows, historyPage, historyPageSize);
-
-                updatePaginationInfo(
+                historyPage = renderSimplePagedRows(
+                        'historyRows',
+                        '.history-row',
+                        historyPage,
+                        historyPageSize,
                         'historyResultText',
                         'historyPageText',
                         'historyPrevBtn',
                         'historyNextBtn',
-                        matchedRows.length,
-                        historyPage,
-                        totalPages,
                         'dòng lịch sử'
                         );
             }
@@ -665,6 +385,70 @@
             function changeHistoryPage(delta) {
                 historyPage += delta;
                 renderHistoryRows();
+            }
+
+            function renderSalesProductRows() {
+                salesProductPage = renderSimplePagedRows(
+                        'salesProductRows',
+                        '.sales-product-row',
+                        salesProductPage,
+                        salesPageSize,
+                        'salesProductResultText',
+                        'salesProductPageText',
+                        'salesProductPrevBtn',
+                        'salesProductNextBtn',
+                        'dòng bán hàng'
+                        );
+            }
+
+            function changeSalesProductPage(delta) {
+                salesProductPage += delta;
+                renderSalesProductRows();
+            }
+
+            function renderSalesIngredientRows() {
+                salesIngredientPage = renderSimplePagedRows(
+                        'salesIngredientRows',
+                        '.sales-ingredient-row',
+                        salesIngredientPage,
+                        salesPageSize,
+                        'salesIngredientResultText',
+                        'salesIngredientPageText',
+                        'salesIngredientPrevBtn',
+                        'salesIngredientNextBtn',
+                        'dòng đối chiếu'
+                        );
+            }
+
+            function changeSalesIngredientPage(delta) {
+                salesIngredientPage += delta;
+                renderSalesIngredientRows();
+            }
+
+            function renderSimplePagedRows(containerId, rowSelector, page, pageSize,
+                    resultId, pageId, prevId, nextId, label) {
+                var container = document.getElementById(containerId);
+                if (!container) {
+                    return page;
+                }
+                var rows = container.querySelectorAll(rowSelector);
+                for (var i = 0; i < rows.length; i++) {
+                    rows[i].style.display = 'none';
+                }
+                var totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+                var normalizedPage = Math.max(1, Math.min(page, totalPages));
+                renderPagedRows(rows, normalizedPage, pageSize);
+                updatePaginationInfo(
+                        resultId,
+                        pageId,
+                        prevId,
+                        nextId,
+                        rows.length,
+                        normalizedPage,
+                        totalPages,
+                        label
+                        );
+                return normalizedPage;
             }
 
             function renderPagedRows(rows, page, pageSize) {
@@ -700,48 +484,207 @@
                 return new Intl.NumberFormat('vi-VN').format(value || 0) + ' đ';
             }
 
-            function updateInvoicePreview() {
-                var select = document.getElementById('ingredientSelect');
-                var option = select.options[select.selectedIndex];
-                var orderedInput = document.getElementById('orderedQuantityInput');
-                var receivedInput = document.getElementById('receivedQuantityInput');
-                var orderedQuantity = parseFloat(orderedInput.value || '0');
-                var receivedQuantity = parseFloat(receivedInput.value || '0');
-                var price = parseFloat(document.getElementById('unitPriceInput').value || '0');
-                var unit = option ? (option.getAttribute('data-unit') || '') : '';
-                var ingredient = option && option.value ? option.getAttribute('data-name') : 'Chưa chọn nguyên liệu';
-                var quantityInput = document.getElementById('quantityInput');
-
-                if (document.activeElement === orderedInput && !receivedInput.value) {
-                    receivedInput.value = orderedInput.value;
-                    receivedQuantity = orderedQuantity;
+            function setText(id, value) {
+                var element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
                 }
+            }
 
-                document.getElementById('previewIngredient').textContent = ingredient;
-                document.getElementById('previewOrderedQuantity').textContent = orderedQuantity + (unit ? ' ' + unit : '');
-                document.getElementById('previewReceivedQuantity').textContent = receivedQuantity + (unit ? ' ' + unit : '');
-                document.getElementById('previewOrderedTotal').textContent = formatMoney(orderedQuantity * price);
-                document.getElementById('previewReceivedTotal').textContent = formatMoney(receivedQuantity * price);
+            function getImportDetailRows() {
+                return Array.prototype.slice.call(document.querySelectorAll('.import-detail-row'));
+            }
 
-                if (quantityInput) {
-                    quantityInput.value = receivedQuantity;
-                }
-
-                var supplierId = option ? option.getAttribute('data-supplier') : '';
-                var supplierSelect = document.getElementById('supplierSelect');
-                if (supplierId && !supplierSelect.value) {
-                    for (var i = 0; i < supplierSelect.options.length; i++) {
-                        if (supplierSelect.options[i].value === supplierId) {
-                            supplierSelect.selectedIndex = i;
-                            break;
-                        }
+            function updateImportDetailControls() {
+                var rows = getImportDetailRows();
+                for (var i = 0; i < rows.length; i++) {
+                    var title = rows[i].querySelector('.import-detail-title');
+                    var removeButton = rows[i].querySelector('.remove-import-detail');
+                    if (title) {
+                        title.textContent = 'Nguyên liệu ' + (i + 1);
+                    }
+                    if (removeButton) {
+                        removeButton.hidden = rows.length === 1;
                     }
                 }
             }
 
-            updateInvoicePreview();
+            function addImportDetail() {
+                var container = document.getElementById('importDetailRows');
+                var source = container ? container.querySelector('.import-detail-row') : null;
+                if (!container || !source) {
+                    return;
+                }
+
+                var row = source.cloneNode(true);
+                var fields = row.querySelectorAll('select, input, textarea');
+                for (var i = 0; i < fields.length; i++) {
+                    if (fields[i].classList.contains('unit-price-input')) {
+                        fields[i].value = '0';
+                    } else {
+                        fields[i].value = '';
+                    }
+                    delete fields[i].dataset.userEdited;
+                }
+                container.appendChild(row);
+                updateImportDetailControls();
+                updateInvoicePreview();
+
+                var ingredientSelect = row.querySelector('.import-ingredient-select');
+                if (ingredientSelect) {
+                    ingredientSelect.focus();
+                }
+            }
+
+            function removeImportDetail(button) {
+                var rows = getImportDetailRows();
+                if (rows.length <= 1) {
+                    return;
+                }
+                button.closest('.import-detail-row').remove();
+                updateImportDetailControls();
+                updateInvoicePreview();
+            }
+
+            function loadSupplierIngredients(supplierSelect) {
+                if (!supplierSelect) {
+                    return;
+                }
+
+                var supplierId = supplierSelect.value;
+                var ingredientSelects = document.querySelectorAll('.import-ingredient-select');
+                var hint = document.querySelector('.field-hint');
+                if (!supplierId) {
+                    replaceIngredientOptions(ingredientSelects, []);
+                    if (hint) {
+                        hint.textContent = 'Chọn nhà cung cấp để tải danh sách nguyên liệu.';
+                        hint.hidden = false;
+                    }
+                    updateInvoicePreview();
+                    return;
+                }
+
+                supplierSelect.disabled = true;
+                for (var i = 0; i < ingredientSelects.length; i++) {
+                    ingredientSelects[i].disabled = true;
+                    ingredientSelects[i].setAttribute('aria-busy', 'true');
+                }
+
+                fetch('${pageContext.request.contextPath}/staff/import?action=ingredients&supplierId='
+                        + encodeURIComponent(supplierId), {
+                    headers: {'Accept': 'application/json'}
+                })
+                        .then(function (response) {
+                            if (!response.ok) {
+                                throw new Error('Không tải được nguyên liệu của nhà cung cấp.');
+                            }
+                            return response.json();
+                        })
+                        .then(function (data) {
+                            var ingredients = data.ingredients || [];
+                            replaceIngredientOptions(ingredientSelects, ingredients);
+                            if (hint) {
+                                hint.textContent = ingredients.length
+                                        ? '' : 'Nhà cung cấp này chưa có nguyên liệu đang hoạt động.';
+                                hint.hidden = ingredients.length > 0;
+                            }
+                            updateInvoicePreview();
+                        })
+                        .catch(function (error) {
+                            window.alert(error.message || 'Không tải được danh sách nguyên liệu.');
+                        })
+                        .finally(function () {
+                            supplierSelect.disabled = false;
+                            for (var j = 0; j < ingredientSelects.length; j++) {
+                                ingredientSelects[j].disabled = false;
+                                ingredientSelects[j].removeAttribute('aria-busy');
+                            }
+                        });
+            }
+
+            function replaceIngredientOptions(selects, ingredients) {
+                for (var i = 0; i < selects.length; i++) {
+                    selects[i].replaceChildren();
+                    var placeholder = document.createElement('option');
+                    placeholder.value = '';
+                    placeholder.textContent = ingredients.length
+                            ? 'Chọn nguyên liệu' : 'Chưa có nguyên liệu';
+                    selects[i].appendChild(placeholder);
+
+                    for (var j = 0; j < ingredients.length; j++) {
+                        var item = ingredients[j];
+                        var option = document.createElement('option');
+                        option.value = item.id;
+                        option.textContent = item.name + ' - còn ' + item.stockText + ' ' + item.unit;
+                        option.setAttribute('data-name', item.name);
+                        option.setAttribute('data-unit', item.unit);
+                        option.setAttribute('data-stock', item.stockText);
+                        selects[i].appendChild(option);
+                    }
+                }
+            }
+
+            function toggleImportRejectReason(statusSelect) {
+                var field = document.getElementById('importRejectReasonField');
+                if (!field) {
+                    return;
+                }
+                var textarea = field.querySelector('textarea');
+                var rejected = statusSelect && statusSelect.value === 'Rejected';
+                field.hidden = !rejected;
+                if (textarea) {
+                    textarea.required = rejected;
+                    textarea.disabled = !rejected;
+                    if (!rejected) {
+                        textarea.value = '';
+                    }
+                }
+            }
+
+            function updateInvoicePreview(event) {
+                var target = event ? event.target : null;
+                var activeRow = target && target.closest ? target.closest('.import-detail-row') : null;
+
+                if (activeRow && target.classList.contains('received-quantity-input')) {
+                    target.dataset.userEdited = target.value ? 'true' : '';
+                }
+                if (activeRow && target.classList.contains('ordered-quantity-input')) {
+                    var activeReceived = activeRow.querySelector('.received-quantity-input');
+                    if (activeReceived && activeReceived.dataset.userEdited !== 'true') {
+                        activeReceived.value = target.value;
+                    }
+                }
+
+                var rows = getImportDetailRows();
+                var orderedTotal = 0;
+                var receivedTotal = 0;
+                for (var i = 0; i < rows.length; i++) {
+                    var orderedQuantity = parseFloat(rows[i].querySelector('.ordered-quantity-input').value) || 0;
+                    var receivedQuantity = parseFloat(rows[i].querySelector('.received-quantity-input').value) || 0;
+                    var price = parseFloat(rows[i].querySelector('.unit-price-input').value) || 0;
+                    orderedTotal += orderedQuantity * price;
+                    receivedTotal += receivedQuantity * price;
+                }
+
+                var supplierSelect = document.getElementById('supplierSelect');
+                var supplierOption = supplierSelect && supplierSelect.selectedIndex >= 0
+                        ? supplierSelect.options[supplierSelect.selectedIndex] : null;
+                setText('previewIngredientCount', rows.length + ' nguyên liệu');
+                setText('previewSupplier', supplierOption && supplierOption.value
+                        ? supplierOption.textContent.trim() : 'Chưa chọn');
+                setText('previewOrderedTotal', formatMoney(orderedTotal));
+                setText('previewReceivedTotal', formatMoney(receivedTotal));
+            }
             renderInventoryRows();
             renderHistoryRows();
+            renderSalesProductRows();
+            renderSalesIngredientRows();
+            if (document.getElementById('importView')) {
+                setImportWarningFilter('all');
+            }
+            toggleImportRejectReason(document.getElementById('importStatus'));
+            updateImportDetailControls();
+            updateInvoicePreview();
         </script>
     </body>
 </html>

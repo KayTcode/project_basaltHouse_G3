@@ -8,6 +8,7 @@ import dao.RecipeDAO;
 import dao.SizeDAO;
 import dao.TableSessionDAO;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +55,6 @@ public class OrderService {
                 dao.TableSessionDAO tsDao = new dao.TableSessionDAO();
                 int sessionId = tsDao.getActiveSessionId(tableId);
                 if (sessionId == -1) {
-                    // Tu dong tao Session moi
                     tsDao.createSession(tableId, tableName != null ? tableName : "", 1, null);
                     sessionId = tsDao.getActiveSessionId(tableId);
                 }
@@ -191,6 +191,38 @@ public class OrderService {
         order.setOrderType("Dine-In");
         order.setPaymentStatus("Unpaid");
         return dao.createOfflineOrder(order);
+    }
+
+    public HashMap<String, Object> getTodaySoldProductSizeRows() {
+        HashMap<String, Object> result = new HashMap<>();
+        try {
+            List<HashMap<String, Object>> list = dao.getTodaySoldProductSizeRows();
+            if (list == null) {
+                result.put("error", "Danh sách bán hàng hôm nay lỗi");
+            } else {
+                result.put("success", list);
+            }
+        } catch (Exception e) {
+            result.put("error", e.getMessage());
+            System.err.println(e.getMessage());
+        }
+        return result;
+    }
+
+    public HashMap<String, Object> getSoldProductSizeRowsByDate(LocalDate auditDate) {
+        HashMap<String, Object> result = new HashMap<>();
+        try {
+            List<HashMap<String, Object>> list = dao.getSoldProductSizeRowsByDate(auditDate);
+            if (list == null) {
+                result.put("error", "Danh sách bán hàng theo ngày lỗi");
+            } else {
+                result.put("success", list);
+            }
+        } catch (Exception e) {
+            result.put("error", e.getMessage());
+            System.err.println(e.getMessage());
+        }
+        return result;
     }
 
     public boolean updateOfflineOrderStatus(int orderId, String status) {

@@ -5,7 +5,6 @@
 package services;
 
 import dao.ImportVoiceDAO;
-import java.math.BigDecimal;
 import java.util.HashMap;
 
 /**
@@ -19,13 +18,14 @@ public class StaffService {
         HashMap<String, Object> s = new HashMap<>();
         try {
             Integer  staffId = dao.getStaffIdByAccountId(id);
-              if(staffId!=null){
+              if(staffId != null && staffId > 0){
               s.put("success",staffId );
               
               }else{
               s.put("error", "Không tìm thấy id ");
               }
         } catch (Exception e) {
+            s.put("error", e.getMessage());
             System.err.println(e.getMessage());
         }
         return s;

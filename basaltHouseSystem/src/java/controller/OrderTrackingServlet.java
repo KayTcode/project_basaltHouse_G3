@@ -61,7 +61,8 @@ public class OrderTrackingServlet extends HttpServlet {
                 addr = orderDAO.getOrderAddressByOrderAddressId(o.getOrderAddressId());
             }
 
-            orders.add(new OrderTrackingDTO(o, details, addr));
+            List<model.DeliveryLog> logs = orderDAO.getDeliveryLogsByOrderId(o.getOrderId());
+            orders.add(new OrderTrackingDTO(o, details, addr, logs));
 
             String status = o.getOrderStatus();
             if ("Pending".equals(status) || "Preparing".equals(status)

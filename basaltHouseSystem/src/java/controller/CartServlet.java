@@ -131,6 +131,17 @@ public class CartServlet extends HttpServlet {
                     }
                 }
 
+                // Đọc số lượng từ form (mặc định 1 nếu không có hoặc không hợp lệ)
+                int requestedQty = 1;
+                String qtyStr = request.getParameter("quantity");
+                if (qtyStr != null && !qtyStr.trim().isEmpty()) {
+                    try {
+                        requestedQty = Integer.parseInt(qtyStr.trim());
+                        if (requestedQty < 1) requestedQty = 1;
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+
                 int stock = 0;
                 if (!sizeName.isEmpty()) {
                     try {
@@ -153,15 +164,21 @@ public class CartServlet extends HttpServlet {
                 CartItem existing = cart.get(key);
                 if (existing == null) {
                     if (stock > 0) {
-                        CartItem newItem = new CartItem(productId, productName, price, 1, sizeName, stock);
+                        // Giới hạn số lượng theo tồn kho
+                        int addQty = (stock > 0) ? Math.min(requestedQty, stock) : requestedQty;
+                        CartItem newItem = new CartItem(productId, productName, price, addQty, sizeName, stock);
                         newItem.setCartKey(key);
                         cart.put(key, newItem);
                     }
                 } else {
-                    // Cùng sản phẩm + cùng size → chỉ tăng số lượng
-                    if (existing.getStock() <= 0 || existing.getQuantity() < existing.getStock()) {
-                        existing.setQuantity(existing.getQuantity() + 1);
+                    // Cùng sản phẩm + cùng size → cộng thêm số lượng yêu cầu
+                    int currentQty = existing.getQuantity();
+                    int maxQty = existing.getStock();
+                    int newQty = currentQty + requestedQty;
+                    if (maxQty > 0) {
+                        newQty = Math.min(newQty, maxQty);
                     }
+                    existing.setQuantity(newQty);
                 }
 
                 String redirectTarget = request.getParameter("redirect");

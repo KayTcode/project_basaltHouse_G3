@@ -13,7 +13,7 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-        <link href="${pageContext.request.contextPath}/css/CartCss/Cart.css" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/css/CartCss/Cart.css?v=1.2" rel="stylesheet">
         <link rel="stylesheet"
               href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
@@ -231,50 +231,20 @@
                                                             onclick="applyDiscount()">Áp dụng</button>
                                                      <button type="button" id="btnRemoveDiscount"
                                                              onclick="removeDiscount()"
-                                                             style="display: none; padding: 8px 14px; background: #ef4444; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: 'Inter', sans-serif; margin-left: 5px;">Xóa</button>
+                                                             class="btn-remove-discount">Xóa</button>
                                                 </div>
                                                 <div id="discountMsg" class="discount-msg"></div>
-                                                <%-- Danh sách voucher của tài khoản --%>
-                                                <c:choose>
-                                                    <c:when test="${not empty myVouchers}">
-                                                        <div style="margin-top:10px;">
-                                                            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Voucher của bạn</div>
-                                                            <c:forEach var="v" items="${myVouchers}">
-                                                                <div onclick="useVoucher('${v.code}')"
-                                                                     style="display:flex;align-items:center;justify-content:space-between;gap:8px;border:1.5px dashed #16a34a;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;background:#f0fdf4;transition:background .15s;"
-                                                                     onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
-                                                                    <div>
-                                                                        <div style="font-size:13px;font-weight:700;color:#15803d;font-family:'Montserrat',sans-serif;">
-                                                                            <span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle;">confirmation_number</span>
-                                                                            ${v.code}
-                                                                        </div>
-                                                                        <div style="font-size:11px;color:#374151;margin-top:2px;">
-                                                                            <c:choose>
-                                                                                <c:when test="${v.discountPercent != null and v.discountPercent > 0}">Giảm <strong>${v.discountPercent}%</strong></c:when>
-                                                                                <c:otherwise>Giảm <strong><fmt:formatNumber value="${v.discountAmount}" pattern="#,###"/>₫</strong></c:otherwise>
-                                                                            </c:choose>
-                                                                            <c:if test="${v.dayTotal >= 0}"> &middot; còn <strong>${v.dayTotal}</strong> ngày</c:if>
-                                                                        </div>
-                                                                    </div>
-                                                                    <span style="font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap;">Dùng ngay</span>
-                                                                </div>
-                                                            </c:forEach>
-                                                        </div>
-                                                        <c:if test="${empty sessionScope.currentUser}">
-                                                            <div style="margin-top:8px;font-size:11px;color:#9ca3af;font-style:italic;">
-                                                                Đăng nhập để xem thêm voucher cá nhân.
-                                                            </div>
+                                                <%-- Nút kích hoạt Modal chọn voucher --%>
+                                                <div class="voucher-trigger-row">
+                                                    <button type="button" onclick="openVoucherModal()" class="voucher-trigger-btn">
+                                                        <span class="material-symbols-outlined">confirmation_number</span>
+                                                        <span style="flex: 1;">Chọn hoặc nhập mã giảm giá khác</span>
+                                                        <c:if test="${not empty myVouchers}">
+                                                            <span class="voucher-count-badge">${myVouchers.size()}</span>
                                                         </c:if>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <div style="margin-top:8px;font-size:11px;color:#9ca3af;font-style:italic;">
-                                                            <c:choose>
-                                                                <c:when test="${empty sessionScope.currentUser}">Đăng nhập để xem voucher của bạn.</c:when>
-                                                                <c:otherwise>Bạn chưa có voucher nào.</c:otherwise>
-                                                            </c:choose>
-                                                        </div>
-                                                    </c:otherwise>
-                                                </c:choose>
+                                                        <span class="material-symbols-outlined" style="font-size: 16px; opacity: 0.6;">chevron_right</span>
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <%-- Totals block --%>
@@ -321,6 +291,77 @@
                 </c:choose>
             </div>
         </main>
+
+        <%-- Modal Chọn Voucher --%>
+        <div id="voucherModal" class="voucher-modal">
+            <div class="voucher-modal-content">
+                <%-- Header --%>
+                <div class="voucher-modal-header">
+                    <h3 class="voucher-modal-title">Khuyến mãi của bạn</h3>
+                    <button type="button" onclick="closeVoucherModal()" class="voucher-modal-close">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <%-- Body (scrollable list) --%>
+                <div class="voucher-modal-body">
+                    <c:choose>
+                        <c:when test="${not empty myVouchers}">
+                            <c:forEach var="v" items="${myVouchers}">
+                                <div class="voucher-card">
+                                    <%-- Left stamp column --%>
+                                    <div class="voucher-stamp">
+                                        <span class="material-symbols-outlined voucher-stamp-icon">confirmation_number</span>
+                                        <div class="voucher-stamp-text">Voucher</div>
+                                    </div>
+                                    <%-- Right info column --%>
+                                    <div class="voucher-info">
+                                        <div class="voucher-code">${v.code}</div>
+                                        <div class="voucher-desc">
+                                            <c:out value="${v.description}"/>
+                                        </div>
+                                        <div class="voucher-meta">
+                                            <span class="voucher-value">
+                                                <c:choose>
+                                                    <c:when test="${v.discountPercent != null and v.discountPercent > 0}">Giảm ${v.discountPercent}%</c:when>
+                                                    <c:otherwise>Giảm <fmt:formatNumber value="${v.discountAmount}" pattern="#,###"/>₫</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                            <c:if test="${v.dayTotal >= 0}">
+                                                <span class="voucher-expiry">Còn ${v.dayTotal} ngày</span>
+                                            </c:if>
+                                        </div>
+                                    </div>
+                                    <%-- Apply action link --%>
+                                    <div class="voucher-action">
+                                        <button type="button" onclick="useVoucherFromModal('${v.code}')" class="btn-use-voucher">
+                                            Dùng
+                                        </button>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                            <c:if test="${empty sessionScope.currentUser}">
+                                <div class="voucher-login-prompt">
+                                    <a href="${pageContext.request.contextPath}/login">Đăng nhập</a> để mở khóa thêm voucher cá nhân của bạn.
+                                </div>
+                            </c:if>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="voucher-empty-msg">
+                                <span class="material-symbols-outlined">sentiment_dissatisfied</span>
+                                <div class="voucher-empty-text">
+                                    <c:choose>
+                                        <c:when test="${empty sessionScope.currentUser}">
+                                            Vui lòng <a href="${pageContext.request.contextPath}/login">Đăng nhập</a> để xem các voucher cá nhân.
+                                        </c:when>
+                                        <c:otherwise>Bạn không có mã giảm giá nào khả dụng lúc này.</c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </div>
+        </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
@@ -427,6 +468,28 @@
                     dcInput.value = code;
                     applyDiscount();
                 }
+            }
+
+            /* Modal voucher */
+            function openVoucherModal() {
+                const modal = document.getElementById('voucherModal');
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.querySelector('.voucher-modal-content').style.transform = 'scale(1)';
+                }, 10);
+            }
+
+            function closeVoucherModal() {
+                const modal = document.getElementById('voucherModal');
+                modal.querySelector('.voucher-modal-content').style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 200);
+            }
+
+            function useVoucherFromModal(code) {
+                closeVoucherModal();
+                useVoucher(code);
             }
         </script>
     </body>

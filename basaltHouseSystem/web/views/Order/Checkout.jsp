@@ -206,7 +206,7 @@
                                 <div class="co-summary-divider"></div>
                                 <div class="co-pricing-row total">
                                     <span>Thành tiền</span>
-                                    <span><fmt:formatNumber value="${finalAmount > 0 ? finalAmount : totalAmount}" pattern="#,###"/>₫</span>
+                                    <span><fmt:formatNumber value="${finalAmount}" pattern="#,###"/>₫</span>
                                 </div>
                             </div>
                         </div>

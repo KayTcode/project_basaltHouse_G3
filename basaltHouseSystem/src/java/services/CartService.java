@@ -14,15 +14,57 @@ public class CartService {
 
     private final OnlineOrderService onlineOrderService = new OnlineOrderService();
 
-    public void addProduct(Map<String, CartItem> cart, String productId, String productName, int price) {
+    public void addProduct(Map<String, CartItem> cart, String productId, String productName, int price, int sizeId, int requestedQty) {
         if (productId == null || productId.trim().isEmpty()) {
             return;
         }
-        CartItem item = cart.get(productId);
-        if (item == null) {
-            cart.put(productId, new CartItem(productId, productName, price, 1));
+
+        String sizeName = "";
+        if (sizeId > 0) {
+            try {
+                SizeDAO sizeDAO = new SizeDAO();
+                HashMap<Integer, String> sizeMap = sizeDAO.getSize();
+                sizeName = sizeMap.getOrDefault(sizeId, "");
+            } catch (Exception ignored) {
+            }
+        }
+
+        int stock = 0;
+        if (!sizeName.isEmpty()) {
+            try {
+                int pId = Integer.parseInt(productId.trim());
+                services.StockService stockSvc = new services.StockService();
+                HashMap<model.Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
+                for (Map.Entry<model.Product, HashMap<String, Integer>> e : rawStock.entrySet()) {
+                    if (e.getKey().getProductId() == pId) {
+                        stock = e.getValue().getOrDefault(sizeName, 0);
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error checking stock in CartService: " + e.getMessage());
+            }
         } else {
-            item.setQuantity(item.getQuantity() + 1);
+            stock = 9999;
+        }
+
+        String key = sizeName.isEmpty() ? productId : productId + "_" + sizeName;
+        CartItem existing = cart.get(key);
+        if (existing == null) {
+            if (stock > 0) {
+                int addQty = Math.min(requestedQty, stock);
+                CartItem newItem = new CartItem(productId, productName, price, addQty, sizeName, stock);
+                newItem.setCartKey(key);
+                cart.put(key, newItem);
+            }
+        } else {
+            int currentQty = existing.getQuantity();
+            int maxQty = existing.getStock();
+            int newQty = currentQty + requestedQty;
+            if (maxQty > 0) {
+                newQty = Math.min(newQty, maxQty);
+            }
+            existing.setQuantity(newQty);
         }
     }
 
@@ -171,9 +213,5 @@ public class CartService {
             return "BH-" + orderId;
         }
         return null;
-    }
-
-    public String checkout(Map<String, CartItem> cart, String note) {
-        return checkout(cart, note, null, null, null, "COD", null);
     }
 }

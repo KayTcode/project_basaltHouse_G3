@@ -234,6 +234,47 @@
                                                              style="display: none; padding: 8px 14px; background: #ef4444; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: 'Inter', sans-serif; margin-left: 5px;">Xóa</button>
                                                 </div>
                                                 <div id="discountMsg" class="discount-msg"></div>
+                                                <%-- Danh sách voucher của tài khoản --%>
+                                                <c:choose>
+                                                    <c:when test="${not empty myVouchers}">
+                                                        <div style="margin-top:10px;">
+                                                            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Voucher của bạn</div>
+                                                            <c:forEach var="v" items="${myVouchers}">
+                                                                <div onclick="useVoucher('${v.code}')"
+                                                                     style="display:flex;align-items:center;justify-content:space-between;gap:8px;border:1.5px dashed #16a34a;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;background:#f0fdf4;transition:background .15s;"
+                                                                     onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                                                                    <div>
+                                                                        <div style="font-size:13px;font-weight:700;color:#15803d;font-family:'Montserrat',sans-serif;">
+                                                                            <span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle;">confirmation_number</span>
+                                                                            ${v.code}
+                                                                        </div>
+                                                                        <div style="font-size:11px;color:#374151;margin-top:2px;">
+                                                                            <c:choose>
+                                                                                <c:when test="${v.discountPercent != null and v.discountPercent > 0}">Giảm <strong>${v.discountPercent}%</strong></c:when>
+                                                                                <c:otherwise>Giảm <strong><fmt:formatNumber value="${v.discountAmount}" pattern="#,###"/>₫</strong></c:otherwise>
+                                                                            </c:choose>
+                                                                            <c:if test="${v.dayTotal >= 0}"> &middot; còn <strong>${v.dayTotal}</strong> ngày</c:if>
+                                                                        </div>
+                                                                    </div>
+                                                                    <span style="font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap;">Dùng ngay</span>
+                                                                </div>
+                                                            </c:forEach>
+                                                        </div>
+                                                        <c:if test="${empty sessionScope.currentUser}">
+                                                            <div style="margin-top:8px;font-size:11px;color:#9ca3af;font-style:italic;">
+                                                                Đăng nhập để xem thêm voucher cá nhân.
+                                                            </div>
+                                                        </c:if>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <div style="margin-top:8px;font-size:11px;color:#9ca3af;font-style:italic;">
+                                                            <c:choose>
+                                                                <c:when test="${empty sessionScope.currentUser}">Đăng nhập để xem voucher của bạn.</c:when>
+                                                                <c:otherwise>Bạn chưa có voucher nào.</c:otherwise>
+                                                            </c:choose>
+                                                        </div>
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </div>
 
                                             <%-- Totals block --%>
@@ -377,6 +418,15 @@
                 dcInput.addEventListener('keydown', e => {
                     if (e.key === 'Enter') { e.preventDefault(); applyDiscount(); }
                 });
+            }
+
+            /* Click chọn voucher từ danh sách */
+            function useVoucher(code) {
+                const dcInput = document.getElementById('discountCodeInput');
+                if (dcInput) {
+                    dcInput.value = code;
+                    applyDiscount();
+                }
             }
         </script>
     </body>

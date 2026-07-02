@@ -101,7 +101,7 @@
                                 </div>
                                 <div class="voucher-code-box">
                                     <strong><c:out value="${p.code}"/></strong>
-                                    <a href="${pageContext.request.contextPath}/category" class="voucher-use-btn">
+                                    <a href="${pageContext.request.contextPath}/apply-voucher?code=${p.code}" class="voucher-use-btn">
                                         <span class="material-symbols-outlined">shopping_cart_checkout</span>
                                         Dùng ngay
                                     </a>
@@ -137,7 +137,7 @@
                                 </div>
                                 <div class="voucher-code-box">
                                     <strong><c:out value="${c.code}"/></strong>
-                                    <a href="${pageContext.request.contextPath}/category" class="voucher-use-btn">
+                                    <a href="${pageContext.request.contextPath}/apply-voucher?code=${c.code}" class="voucher-use-btn">
                                         <span class="material-symbols-outlined">shopping_cart_checkout</span>
                                         Dùng ngay
                                     </a>

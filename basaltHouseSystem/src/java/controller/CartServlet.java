@@ -1,7 +1,5 @@
 package controller;
 
-import dao.SizeDAO;
-import dao.DiscountCodeDAO;
 import dto.UserLoginDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -9,15 +7,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.HashMap;
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import model.CartItem;
-import model.CustomerDiscountCode;
-import model.Product;
 import services.CartService;
-import services.StockService;
 
 public class CartServlet extends HttpServlet {
 
@@ -61,50 +55,27 @@ public class CartServlet extends HttpServlet {
             totalAmount += item.getSubtotal();
             totalQty += item.getQuantity();
         }
-        try {
-            StockService stockSvc = new StockService();
-            HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
-            HashMap<Integer, HashMap<String, Integer>> stockMap = new HashMap<>();
-            for (Map.Entry<Product, HashMap<String, Integer>> e : rawStock.entrySet()) {
-                stockMap.put(e.getKey().getProductId(), e.getValue());
-            }
-            request.setAttribute("stockMap", stockMap);
-        } catch (Exception ignored) {
-        }
+        // Build stockMap
+        request.setAttribute("stockMap", cartService.getStockMap());
 
         request.setAttribute("cartItems", cart.values());
         request.setAttribute("totalAmount", totalAmount);
         request.setAttribute("totalQty", totalQty);
 
-        // Load cả public vouchers và customer-specific vouchers
-        List<CustomerDiscountCode> myVouchers = new java.util.ArrayList<>();
-        DiscountCodeDAO discountDAO = new DiscountCodeDAO();
-        try {
-            List<model.DiscountCode> publicVouchers = discountDAO.getDiscountCode();
-            if (publicVouchers != null) {
-                for (model.DiscountCode d : publicVouchers) {
-                    myVouchers.add(new CustomerDiscountCode(
-                        0, 0, d.getDiscountId(),
-                        d.getDiscountPercent(), d.getDiscountAmount(),
-                        d.getStartDate(), d.getEndDate(),
-                        false, null, d.getDescription(),
-                        d.getTotalDay(), d.getCode(), 1
-                    ));
-                }
-            }
-        } catch (Exception ignored) {}
-
-        HttpSession session2 = request.getSession(false);
-        if (session2 != null && session2.getAttribute("currentUser") instanceof UserLoginDTO) {
-            UserLoginDTO user = (UserLoginDTO) session2.getAttribute("currentUser");
-            try {
-                List<CustomerDiscountCode> personal = discountDAO.getVoucherById(user.getAccountId());
-                if (personal != null) {
-                    myVouchers.addAll(personal);
-                }
-            } catch (Exception ignored) {}
+        // ── Đọc mã voucher được chọn từ trang Voucher / HomePage (one-shot) ──
+        String pendingVoucher = (String) session.getAttribute(ApplyVoucherServlet.PENDING_VOUCHER_KEY);
+        if (pendingVoucher != null && !pendingVoucher.isEmpty()) {
+            request.setAttribute("discountCode", pendingVoucher);
+            // Xóa khỏi session sau khi đã truyền sang Cart (dùng một lần)
+            session.removeAttribute(ApplyVoucherServlet.PENDING_VOUCHER_KEY);
         }
-        request.setAttribute("myVouchers", myVouchers);
+
+        // Load vouchers (public + personal)
+        Integer accountId = null;
+        if (session.getAttribute("currentUser") instanceof UserLoginDTO) {
+            accountId = ((UserLoginDTO) session.getAttribute("currentUser")).getAccountId();
+        }
+        request.setAttribute("myVouchers", cartService.getAvailableVouchers(accountId));
 
         request.getRequestDispatcher("views/Order/Cart.jsp").forward(request, response);
     }
@@ -234,14 +205,10 @@ public class CartServlet extends HttpServlet {
 
         // Tính giảm giá nếu có mã
         String discountCode = request.getParameter("discountCode");
+        Map<String, Object> discountResult = cartService.applyDiscountResult(discountCode, cart);
         long discountAmount = 0;
-        if (discountCode != null && !discountCode.trim().isEmpty()) {
-            try {
-                java.math.BigDecimal total = new java.math.BigDecimal(totalAmount);
-                services.PromotionService ps = new services.PromotionService();
-                discountAmount = ps.calculateDiscount(discountCode.trim(), total).longValue();
-            } catch (Exception ignored) {
-            }
+        if (Boolean.TRUE.equals(discountResult.get("success"))) {
+            discountAmount = ((BigDecimal) discountResult.get("discountAmount")).longValue();
         }
         long finalAmount = Math.max(totalAmount - discountAmount, 0);
 
@@ -269,13 +236,9 @@ public class CartServlet extends HttpServlet {
         String customerIdStr = null;
         Object currentUser = session.getAttribute("currentUser");
         if (currentUser instanceof UserLoginDTO) {
-            UserLoginDTO user = (UserLoginDTO) currentUser;
-            int accountId = user.getAccountId();
-            dao.OrderDAO orderDAO = new dao.OrderDAO();
-            int customerId = orderDAO.getCustomerIdByAccountId(accountId);
-            if (customerId > 0) {
-                customerIdStr = String.valueOf(customerId);
-            }
+            int aid = ((UserLoginDTO) currentUser).getAccountId();
+            int cid = cartService.resolveCustomerId(aid);
+            if (cid > 0) customerIdStr = String.valueOf(cid);
         }
 
         String orderNote = request.getParameter("orderNote");    // ghi chú từ Cart.jsp → Orders.Note
@@ -314,48 +277,26 @@ public class CartServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
 
         String code = request.getParameter("discountCode");
-        if (code == null || code.trim().isEmpty()) {
-            response.getWriter().write("{\"success\":false,\"error\":\"Vui lòng nhập mã giảm giá.\"}");
-            return;
-        }
-
-        // Validate mã qua PromotionService
-        services.PromotionService ps = new services.PromotionService();
-        String checkJson = ps.checkDiscount(code.trim());
-
-        if (checkJson.contains("\"valid\": false") || checkJson.contains("\"valid\":false")) {
-            // Lấy msg từ JSON thủ công
-            String msg = "Mã không hợp lệ hoặc đã hết hạn.";
-            int msgIdx = checkJson.indexOf("\"msg\":");
-            if (msgIdx >= 0) {
-                int start = checkJson.indexOf('"', msgIdx + 6) + 1;
-                int end   = checkJson.indexOf('"', start);
-                if (start > 0 && end > start) msg = checkJson.substring(start, end);
-            }
-            response.getWriter().write("{\"success\":false,\"error\":\"" + msg + "\"}");
-            return;
-        }
-
-        // Tính tổng tiền từ cart hiện tại
         HttpSession session = request.getSession(false);
         @SuppressWarnings("unchecked")
         Map<String, CartItem> cart = session != null
                 ? (Map<String, CartItem>) session.getAttribute("cart") : null;
 
-        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
-        if (cart != null) {
-            for (CartItem item : cart.values()) {
-                total = total.add(new java.math.BigDecimal(item.getPrice())
-                        .multiply(new java.math.BigDecimal(item.getQuantity())));
-            }
+        Map<String, Object> result = cartService.applyDiscountResult(code, cart);
+
+        if (!Boolean.TRUE.equals(result.get("success"))) {
+            String error = (String) result.getOrDefault("error", "Mã không hợp lệ.");
+            response.getWriter().write("{\"success\":false,\"error\":\"" + error + "\"}");
+            return;
         }
 
-        java.math.BigDecimal discountAmt = ps.calculateDiscount(code.trim(), total);
-        java.math.BigDecimal finalAmt    = total.subtract(discountAmt).max(java.math.BigDecimal.ZERO);
+        BigDecimal discountAmt = (BigDecimal) result.get("discountAmount");
+        BigDecimal finalAmt    = (BigDecimal) result.get("finalAmount");
+        String codeName        = (String)     result.get("codeName");
 
         response.getWriter().write(String.format(
                 "{\"success\":true,\"codeName\":\"%s\",\"discountAmount\":%s,\"finalAmount\":%s}",
-                code.trim().replace("\"", "\\\""),
+                codeName.replace("\"", "\\\""),
                 discountAmt.toPlainString(),
                 finalAmt.toPlainString()
         ));

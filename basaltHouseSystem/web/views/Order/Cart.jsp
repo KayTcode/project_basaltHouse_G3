@@ -491,6 +491,17 @@
                 closeVoucherModal();
                 useVoucher(code);
             }
+
+            /* ── Auto-apply nếu mã voucher đã được điền sẵn từ session ── */
+            window.addEventListener('DOMContentLoaded', function () {
+                const preFilledCode = document.getElementById('discountCodeInput');
+                if (preFilledCode && preFilledCode.value.trim() !== '') {
+                    // Delay nhỏ để đảm bảo các element khác đã render xong
+                    setTimeout(function () {
+                        applyDiscount();
+                    }, 300);
+                }
+            });
         </script>
     </body>
 </html>

@@ -1,5 +1,7 @@
 package services;
 
+import dao.DiscountCodeDAO;
+import dao.OrderDAO;
 import dao.SizeDAO;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -7,8 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import model.CartItem;
+import model.CustomerDiscountCode;
 import model.Order;
 import model.OrderDetail;
+import model.Product;
 
 public class CartService {
 
@@ -213,5 +217,95 @@ public class CartService {
             return "BH-" + orderId;
         }
         return null;
+    }
+
+    public HashMap<Integer, HashMap<String, Integer>> getStockMap() {
+        HashMap<Integer, HashMap<String, Integer>> stockMap = new HashMap<>();
+        try {
+            StockService stockSvc = new StockService();
+            HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
+            for (Map.Entry<Product, HashMap<String, Integer>> e : rawStock.entrySet()) {
+                stockMap.put(e.getKey().getProductId(), e.getValue());
+            }
+        } catch (Exception ignored) {}
+        return stockMap;
+    }
+
+    public List<CustomerDiscountCode> getAvailableVouchers(Integer accountId) {
+        List<CustomerDiscountCode> vouchers = new ArrayList<>();
+        DiscountCodeDAO discountDAO = new DiscountCodeDAO();
+        try {
+            List<model.DiscountCode> publicList = discountDAO.getDiscountCode();
+            if (publicList != null) {
+                for (model.DiscountCode d : publicList) {
+                    vouchers.add(new CustomerDiscountCode(
+                        0, 0, d.getDiscountId(),
+                        d.getDiscountPercent(), d.getDiscountAmount(),
+                        d.getStartDate(), d.getEndDate(),
+                        false, null, d.getDescription(),
+                        d.getTotalDay(), d.getCode(), 1
+                    ));
+                }
+            }
+        } catch (Exception ignored) {}
+
+        if (accountId != null) {
+            try {
+                List<CustomerDiscountCode> personal = discountDAO.getVoucherById(accountId);
+                if (personal != null) vouchers.addAll(personal);
+            } catch (Exception ignored) {}
+        }
+        return vouchers;
+    }
+
+    public Map<String, Object> applyDiscountResult(String code, Map<String, CartItem> cart) {
+        Map<String, Object> result = new HashMap<>();
+        if (code == null || code.trim().isEmpty()) {
+            result.put("success", false);
+            result.put("error", "Vui lòng nhập mã giảm giá.");
+            return result;
+        }
+
+        PromotionService ps = new PromotionService();
+        String checkJson = ps.checkDiscount(code.trim());
+
+        if (checkJson.contains("\"valid\": false") || checkJson.contains("\"valid\":false")) {
+            String msg = "Mã không hợp lệ hoặc đã hết hạn.";
+            int msgIdx = checkJson.indexOf("\"msg\":");
+            if (msgIdx >= 0) {
+                int start = checkJson.indexOf('"', msgIdx + 6) + 1;
+                int end   = checkJson.indexOf('"', start);
+                if (start > 0 && end > start) msg = checkJson.substring(start, end);
+            }
+            result.put("success", false);
+            result.put("error", msg);
+            return result;
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+        if (cart != null) {
+            for (CartItem item : cart.values()) {
+                total = total.add(new BigDecimal(item.getPrice())
+                        .multiply(new BigDecimal(item.getQuantity())));
+            }
+        }
+        BigDecimal discountAmt = ps.calculateDiscount(code.trim(), total);
+        BigDecimal finalAmt    = total.subtract(discountAmt).max(BigDecimal.ZERO);
+
+        result.put("success", true);
+        result.put("codeName", code.trim());
+        result.put("discountAmount", discountAmt);
+        result.put("finalAmount", finalAmt);
+        return result;
+    }
+
+    /**
+     * Lấy customerId từ accountId. Trả về -1 nếu không tìm thấy.
+     */
+    public int resolveCustomerId(int accountId) {
+        try {
+            return new OrderDAO().getCustomerIdByAccountId(accountId);
+        } catch (Exception ignored) {}
+        return -1;
     }
 }

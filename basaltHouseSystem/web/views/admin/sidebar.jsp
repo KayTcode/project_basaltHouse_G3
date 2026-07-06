@@ -33,11 +33,11 @@
 <!--            <a href="${pageContext.request.contextPath}/admin/staffs" 
                class="menu-item ${currentURI.contains('/admin/staffs') ? 'active' : ''}">
                 👥 Nhân sự
-            </a>
-            <a href="${pageContext.request.contextPath}/admin/customers" 
-               class="menu-item ${currentURI.contains('/admin/customers') ? 'active' : ''}">
-                🛍️ Khách hàng
             </a>-->
+            <a href="${pageContext.request.contextPath}/views/admin/admin_customer.jsp" 
+               class="menu-item ${currentURI.contains('/admin/customers') || currentURI.contains('/views/admin/admin_customer.jsp') ? 'active' : ''}">
+                🛍️ Khách hàng
+            </a>
         </div>
 
         <div class="menu-section">

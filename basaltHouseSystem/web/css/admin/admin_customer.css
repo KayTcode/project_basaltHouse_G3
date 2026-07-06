@@ -1,0 +1,508 @@
+
+:root {
+    --primary-color: #006e2f;
+    --primary-hover: #005c25;
+    --border-subtle: #cbd5e1;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --bg-light: #f8fafc;
+    --font-inter: 'Inter', sans-serif;
+    --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+}
+
+.account-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.overview-card-item {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.overview-card-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    border-color: var(--primary-color);
+}
+
+.card-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.card-metrics-data {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metric-label {
+    font-family: var(--font-inter);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.metric-count {
+    font-family: var(--font-jakarta);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-dark);
+    line-height: 1;
+}
+
+
+.data-management-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+    border: 1.5px solid #e2e8f0;
+    overflow: hidden;
+    margin-top: 28px;
+}
+
+.panel-header-toolbar {
+    background: linear-gradient(135deg, var(--primary-color), #004d22);
+    padding: 20px 28px;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.panel-header-toolbar h2 {
+    font-family: var(--font-jakarta);
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff !important;
+    margin: 0;
+}
+
+/* Add Customer button in primary green header */
+.panel-header-toolbar .btn-primary-action {
+    background-color: #ffffff;
+    color: var(--primary-color);
+    border: 1.5px solid #ffffff;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-family: var(--font-inter);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-header-toolbar .btn-primary-action:hover {
+    background-color: #f1f5f9;
+    color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* ===================================================================
+   SEARCH & FILTER BELT (SLATE BG)
+   =================================================================== */
+
+.search-filter-belt {
+    padding: 16px 28px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    border-bottom: 1.5px solid #e2e8f0;
+    background: var(--bg-light);
+    flex-wrap: wrap;
+}
+
+.search-input-box {
+    flex-shrink: 0;
+}
+
+#searchCustomerInput {
+    padding: 10px 14px 10px 14px;
+    width: 280px;
+    height: 40px;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 6px;
+    font-family: var(--font-inter);
+    font-size: 13.5px;
+    color: var(--text-dark);
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    box-sizing: border-box;
+}
+
+#searchCustomerInput:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 110, 47, 0.1);
+}
+
+.filter-controls-group {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-grow: 1;
+}
+
+.select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.select-wrapper label {
+    font-family: var(--font-inter);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.filter-select {
+    padding: 8px 36px 8px 12px;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 6px;
+    height: 40px;
+    font-family: var(--font-inter);
+    font-size: 13.5px;
+    color: var(--text-dark);
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    box-sizing: border-box;
+}
+
+.filter-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 110, 47, 0.1);
+}
+
+.btn-filter-submit {
+    background: #475569;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 0 18px;
+    height: 40px;
+    font-family: var(--font-inter);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.btn-filter-submit:hover {
+    background-color: #334155;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+}
+
+/* ===================================================================
+   CUSTOM TABLE DESIGN
+   =================================================================== */
+
+.basalt-custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-inter);
+}
+
+.basalt-custom-table th {
+    background-color: var(--bg-light);
+    color: var(--text-muted);
+    font-family: var(--font-jakarta);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 16px 20px;
+    text-align: left;
+}
+
+.basalt-custom-table td {
+    padding: 16px 20px;
+    font-size: 13.5px;
+    color: var(--text-dark);
+    border-bottom: 1.5px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.account-row-item {
+    transition: background-color 0.2s ease;
+}
+
+.account-row-item:hover {
+    background-color: #f1f5f9;
+}
+
+/* Rank Badges */
+.rank-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.rank-badge.rank-1, .rank-badge.rank-bronze {
+    background-color: #fcf6f0;
+    color: #a0522d;
+    border: 1.5px solid #f0d5c3;
+}
+
+.rank-badge.rank-2, .rank-badge.rank-silver {
+    background-color: #f1f3f5;
+    color: #495057;
+    border: 1.5px solid #dee2e6;
+}
+
+.rank-badge.rank-3, .rank-badge.rank-gold {
+    background-color: #fff9db;
+    color: #f59f00;
+    border: 1.5px solid #ffe066;
+}
+
+.rank-badge.rank-4, .rank-badge.rank-diamond {
+    background-color: #e3fafc;
+    color: #0c8599;
+    border: 1.5px solid #99e9f2;
+}
+
+/* Spent text styling */
+.spent-text {
+    font-family: var(--font-jakarta);
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+/* Customer Avatar Initial Circle */
+.customer-avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #004d22 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* ===================================================================
+   MODAL CARD & FORM OVERRIDES (MATCHING THE CHECKOUT DESIGN)
+   =================================================================== */
+
+.modal-card {
+    max-width: 600px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    border: 1.5px solid #cbd5e1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Modal Header (Green Forest Gradient matching Checkout) */
+.modal-card-header {
+    background: linear-gradient(135deg, var(--primary-color), #004d22);
+    padding: 20px 24px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: none;
+}
+
+.modal-card-header h3 {
+    font-family: var(--font-jakarta);
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff !important;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-card-header .close-modal-x {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 24px;
+    font-weight: 400;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s ease;
+}
+
+.modal-card-header .close-modal-x:hover {
+    color: #ffffff;
+}
+
+/* Modal Body spacing */
+.modal-card-body {
+    padding: 24px 28px;
+    background-color: #ffffff;
+}
+
+/* Stack styling inside form */
+.modal-form-flex-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Form Label matches Checkout co-field label */
+.form-field-group label {
+    font-family: var(--font-inter);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+/* Inputs & Dropdowns matching Checkout.css */
+.form-field-group .form-input-text,
+.form-field-group .form-select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: var(--font-inter);
+    color: var(--text-dark);
+    background-color: var(--bg-light);
+    outline: none;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+/* Focus states (Green glow matching Checkout) */
+.form-field-group .form-input-text:focus,
+.form-field-group .form-select:focus {
+    border-color: var(--primary-color);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 110, 47, 0.1);
+}
+
+.form-field-group .form-input-text::placeholder {
+    color: #94a3b8;
+}
+
+/* Select option colors */
+.form-field-group .form-select {
+    cursor: pointer;
+}
+
+/* Notice for account editing */
+.edit-account-notice {
+    background-color: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    color: #1d4ed8;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+/* Modal Footer */
+.modal-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 28px;
+    background-color: var(--bg-light);
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Buttons inside modal */
+.btn-cancel {
+    background-color: #ffffff;
+    color: #475569;
+    border: 1.5px solid var(--border-subtle);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: var(--font-inter);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+.modal-card-footer .btn-primary-action {
+    background: var(--primary-color);
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: var(--font-inter);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.25s, transform 0.2s, box-shadow 0.25s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.modal-card-footer .btn-primary-action:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 110, 47, 0.2);
+}

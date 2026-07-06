@@ -164,8 +164,8 @@
                                         <td>
                                             <div class="user-cell-name" style="display:flex; align-items:center; gap:10px;">
                                                 <c:choose>
-                                                    <c:when test="${not empty item.account.avatarUrl}">
-                                                        <img src="${item.account.avatarUrl}" alt="avatar" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #ddd;">
+                                                    <c:when test="${not empty item.avatarUrl}">
+                                                        <img src="${item.avatarUrl}" alt="avatar" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid #ddd;">
                                                     </c:when>
                                                     <c:otherwise>
                                                         <div class="customer-avatar-circle">

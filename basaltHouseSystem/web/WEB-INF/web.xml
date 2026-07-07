@@ -13,8 +13,8 @@
         <servlet-class>controller.LogoutServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>POSOrderServlet</servlet-name>
-        <servlet-class>controller.POSOrderServlet</servlet-class>
+        <servlet-name>CashierServlet</servlet-name>
+        <servlet-class>controller.CashierServlet</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>BartenderServlet</servlet-name>
@@ -160,7 +160,6 @@
         <servlet-name>LogoutServlet</servlet-name>
         <url-pattern>/logout</url-pattern>
     </servlet-mapping>
-   
     <servlet-mapping>
         <servlet-name>OnlineOrderServlet</servlet-name>
         <url-pattern>/Order</url-pattern>
@@ -170,15 +169,16 @@
         <url-pattern>/Cart</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-    <servlet-name>POSOrderServlet</servlet-name>
-    <url-pattern>/cashier/pos</url-pattern>
-    <url-pattern>/cashier/oderview</url-pattern>
-    <url-pattern>/cashier/dashboard</url-pattern>
+        <servlet-name>CashierServlet</servlet-name>
+        <url-pattern>/cashier/pos</url-pattern>
+        <url-pattern>/cashier/oderview</url-pattern>
+        <url-pattern>/cashier/dashboard</url-pattern>
+        <url-pattern>/cashier/shippers</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-    <servlet-name>BartenderServlet</servlet-name>
-    <url-pattern>/bartender/view</url-pattern>
-    <url-pattern>/bartender/history</url-pattern>
+        <servlet-name>BartenderServlet</servlet-name>
+        <url-pattern>/bartender/view</url-pattern>
+        <url-pattern>/bartender/history</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>RegisterServlet</servlet-name>

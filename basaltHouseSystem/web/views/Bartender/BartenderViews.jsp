@@ -39,41 +39,25 @@
     <meta name="description" content="Bảng pha chế Bartender - Basalt House Coffee">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderNew.css?v=5" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderViews.css?v=7" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderNew.css?v=6" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderViews.css?v=9" rel="stylesheet">
 </head>
 <body>
 
-<!-- ── SIDEBAR ── -->
-<aside class="sidebar">
-    <div class="sidebar-logo">
-        <div class="logo-icon">&#9749;</div>
-        <div class="logo-text">Basalt<span>House Coffee</span></div>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/bartender/view" class="nav-item active">
-            <span class="nav-icon material-symbols-outlined">view_kanban</span>Prep Board
-        </a>
-        <a href="${pageContext.request.contextPath}/bartender/history" class="nav-item">
-            <span class="nav-icon material-symbols-outlined">history</span>History
-        </a>
-        <a href="#" class="nav-item">
-            <span class="nav-icon material-symbols-outlined">settings</span>Settings
-        </a>
-    </nav>
-    <div class="sidebar-footer">
-        <div class="staff-card">
-            <div class="staff-avatar"><span class="material-symbols-outlined" style="font-size:18px">person</span></div>
-            <div class="staff-info">
-                <div class="staff-name">Bartender</div>
-                <div class="staff-status"><div class="status-dot"></div>Online</div>
-            </div>
-        </div>
-    </div>
-</aside>
-
 <!-- ── CONTENT ── -->
 <div class="content-area">
+
+    <!-- ── TOP ACTIONS ── -->
+    <div class="bartender-top-actions">
+        <a href="${pageContext.request.contextPath}/cashier/pos" class="btn-top-action pos">
+            <span class="material-symbols-outlined">point_of_sale</span>
+            Quay lại máy POS
+        </a>
+        <a href="${pageContext.request.contextPath}/bartender/history" class="btn-top-action history">
+            <span class="material-symbols-outlined">history</span>
+            Xem lịch sử
+        </a>
+    </div>
 
     <!-- Stats bar — giá trị TỔNG từ Servlet, không phụ thuộc trang hiện tại -->
     <div class="stats-bar">
@@ -107,22 +91,16 @@
         </div>
     </div>
 
-    <!-- Filter bar — khi chọn filter sẽ redirect về trang 1 với filter param -->
+    <!-- Search bar -->
     <div class="filter-bar">
-        <span class="filter-label">&#127979; Lọc:</span>
-        <div class="filter-chips" id="filterChips">
-            <button class="fchip ${empty currentFilter || currentFilter == 'all' ? 'active' : ''}"
-                    data-filter="all" onclick="applyFilter('all')">Tất cả</button>
-            <c:forEach items="${tablesList}" var="t">
-                <button class="fchip ${currentFilter == t.tableCode ? 'active' : ''}"
-                        data-filter="${t.tableCode}"
-                        onclick="applyFilter('${t.tableCode}')">${t.tableCode}</button>
-            </c:forEach>
-            <button class="fchip ${currentFilter == 'Online' ? 'active' : ''}"
-                    data-filter="Online" onclick="applyFilter('Online')">Online</button>
-            <button class="fchip ${currentFilter == 'Take Away' ? 'active' : ''}"
-                    data-filter="Take Away" onclick="applyFilter('Take Away')">Take Away</button>
+        <span class="filter-label">&#128269; Tìm kiếm:</span>
+        <div style="position:relative;flex:1;max-width:320px;">
+            <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#8a8a9a;pointer-events:none;">search</span>
+            <input type="text" id="orderSearchInput" placeholder="Nhập mã đơn (#ORD00...)" oninput="searchOrders(this.value)"
+                style="width:100%;padding:9px 14px 9px 38px;border:1px solid rgba(0,0,0,0.1);border-radius:24px;font-size:13.5px;font-family:inherit;background:#fff;outline:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:border-color 0.2s;"
+                onfocus="this.style.borderColor='#006e2f'" onblur="this.style.borderColor='rgba(0,0,0,0.1)'">
         </div>
+        <button onclick="searchOrders('')" style="padding:8px 14px;border-radius:24px;border:1px solid rgba(0,0,0,0.1);background:#fff;font-size:13px;cursor:pointer;color:#8a8a9a;font-family:inherit;display:none;" title="Xóa tìm kiếm" id="clearSearchBtn">&#x2715; Xóa</button>
     </div>
 
     <!-- Kanban columns -->
@@ -509,13 +487,28 @@ function completeOrder(id) {
 /* ============================================================
    FILTER — server-side: redirect với filter param, reset về trang 1
 ============================================================ */
-function applyFilter(f) {
-    var params = new URLSearchParams();
-    params.set('page_pending', 1);
-    params.set('page_preparing', 1);
-    params.set('page_ready', 1);
-    if (f && f !== 'all') params.set('filter', f);
-    window.location.href = window.location.pathname + '?' + params.toString();
+function searchOrders(q) {
+    var clearBtn = document.getElementById('clearSearchBtn');
+    q = q.trim().toLowerCase();
+    if (clearBtn) clearBtn.style.display = q ? 'inline-flex' : 'none';
+    if (document.getElementById('orderSearchInput')) {
+        document.getElementById('orderSearchInput').value = q ? document.getElementById('orderSearchInput').value : '';
+    }
+    ['col-pending','col-preparing','col-ready'].forEach(function(colId) {
+        var col = document.getElementById(colId);
+        if (!col) return;
+        var cards = col.querySelectorAll('.order-card');
+        var anyVisible = false;
+        cards.forEach(function(card) {
+            var id = (card.id || '').toLowerCase(); // e.g. "card-ord0018"
+            var match = !q || id.indexOf(q) >= 0;
+            card.style.display = match ? '' : 'none';
+            if (match) anyVisible = true;
+        });
+        // show/hide empty state
+        var empty = col.querySelector('.empty-col');
+        if (empty) empty.style.display = (!anyVisible && !q) ? '' : (anyVisible ? 'none' : '');
+    });
 }
 
 /* Refresh wait badges every 30s (chỉ cập nhật badge, không reload toàn bộ) */

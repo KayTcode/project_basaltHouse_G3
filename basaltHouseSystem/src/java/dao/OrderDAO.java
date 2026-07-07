@@ -775,7 +775,6 @@ public class OrderDAO extends DBContext {
         }
         return null;
     }
-
     public List<HashMap<String, Object>> getTodaySoldProductSizeRows() {
         List<HashMap<String, Object>> rows = new ArrayList<>();
         String sql = """

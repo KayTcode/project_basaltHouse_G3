@@ -6,7 +6,8 @@
     request.setAttribute("pageTitle", "Danh mục sản phẩm - BasaltHouse");
 %>
 <jsp:include page="/views/HomePage/Header.jsp" />
-<link href="${pageContext.request.contextPath}/css/Categoty/Categorie.css" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/css/Categoty/Categorie.css?v=20260709-1" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-2" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 
 <%-- Toast notification container --%>

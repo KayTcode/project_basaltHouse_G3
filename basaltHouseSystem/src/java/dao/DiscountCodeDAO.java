@@ -11,9 +11,29 @@ import model.CustomerDiscountCode;
 
 public class DiscountCodeDAO extends DBContext {
 
+    public int markExpiredVouchersAsDeleted() {
+        try {
+            String sql = """
+                         UPDATE DiscountCodes
+                         SET IsDeleted = 1,
+                             IsActive = 0
+                         WHERE IsDeleted = 0
+                           AND EndDate IS NOT NULL
+                           AND EndDate < GETDATE()
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            return st.executeUpdate();
+        } catch (Exception e) {
+            System.err.println("markExpiredVouchersAsDeleted Error: " + e.getMessage());
+        }
+
+        return 0;
+    }
+
     public DiscountCode checkDiscountCode(String code) {
         DiscountCode dto = null;
         try {
+            markExpiredVouchersAsDeleted();
             String sql = """
                          SELECT DiscountId, Code, DiscountPercent, DiscountAmount 
                          FROM DiscountCodes 
@@ -66,6 +86,7 @@ public class DiscountCodeDAO extends DBContext {
     public List<DiscountCode> getDiscountCode() {
         List<DiscountCode> list = new ArrayList<>();
         try {
+            markExpiredVouchersAsDeleted();
             String sql = """
                          SELECT DiscountId,
                                                          Code,
@@ -101,6 +122,7 @@ public class DiscountCodeDAO extends DBContext {
     public List<CustomerDiscountCode> getVoucherById(int accountId) {
         List<CustomerDiscountCode> list = new ArrayList<>();
         try {
+            markExpiredVouchersAsDeleted();
             String sql = """
                          SELECT cd.CustomerDiscountId,
                                 cd.AccountId,
@@ -152,6 +174,7 @@ public class DiscountCodeDAO extends DBContext {
 
     public CustomerDiscountCode getCustomerVoucherByCode(int accountId, String code) {
         try {
+            markExpiredVouchersAsDeleted();
             String sql = """
                          SELECT cd.CustomerDiscountId,
                                 cd.AccountId,

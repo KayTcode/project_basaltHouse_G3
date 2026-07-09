@@ -6,7 +6,9 @@
 <jsp:include page="/views/HomePage/Header.jsp"/>
 
 <link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/AboutUs/AboutUs.css">
+      href="${pageContext.request.contextPath}/css/AboutUs/AboutUs.css?v=20260709-1">
+<link rel="stylesheet"
+      href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-1">
 
 <main class="about-page">
     <section class="about-hero">

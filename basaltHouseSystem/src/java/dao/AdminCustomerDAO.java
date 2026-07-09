@@ -2,6 +2,8 @@ package dao;
 
 import dto.CustomerViewDTO;
 import model.Account;
+import model.MembershipRank;
+import utils.PasswordUtils;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -83,5 +85,120 @@ public class AdminCustomerDAO extends DBContext {
                 rs.getNString("RankName"),
                 totalSpent
         );
+    }
+
+    public List<MembershipRank> getAllRanks() {
+        List<MembershipRank> list = new ArrayList<>();
+        try {
+            String sql = "SELECT RankId, RankName FROM MembershipRanks WHERE IsDeleted = 0 ORDER BY RankId";
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                MembershipRank r = new MembershipRank();
+                r.setRankId(rs.getInt("RankId"));
+                r.setRankName(rs.getString("RankName"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.getAllRanks] " + e.getMessage());
+        }
+        return list;
+    }
+
+    public boolean addCustomer(String email, String rawPassword, String fullName, String phone, int rankId, double totalSpent) {
+        AdminAccountDAO accountDAO = new AdminAccountDAO();
+        try {
+            Account acc = new Account();
+            acc.setRoleId(2); // Customer
+            acc.setEmail(email);
+            acc.setPasswordHash(PasswordUtils.hashSHA256(rawPassword));
+            acc.setIsEmailVerified(true);
+            acc.setIsActive(true);
+
+            boolean created = accountDAO.addAccount(acc, fullName, phone);
+            if (!created) return false;
+
+            // Lấy accountId vừa tạo
+            int accountId = getAccountIdByEmail(email);
+            if (accountId == -1) return false;
+
+            // Tạo membership với rank và totalSpent
+            String sqlMs = """
+                INSERT INTO CustomerMemberships (CustomerId, RankId, TotalSpent)
+                SELECT c.CustomerId, ?, ?
+                FROM Customers c
+                WHERE c.AccountId = ? AND c.IsDeleted = 0
+                """;
+            st = connection.prepareStatement(sqlMs);
+            st.setInt(1, rankId);
+            st.setDouble(2, totalSpent);
+            st.setInt(3, accountId);
+            st.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.addCustomer] " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean updateCustomer(int accountId, String email, String fullName, String phone,
+                                   int rankId, double totalSpent, boolean isLocked) {
+        AdminAccountDAO accountDAO = new AdminAccountDAO();
+        try {
+            Account acc = new Account();
+            acc.setAccountId(accountId);
+            acc.setRoleId(2);
+            acc.setEmail(email);
+            acc.setIsActive(true);
+            acc.setIsLocked(isLocked);
+
+            boolean updated = accountDAO.updateAccount(acc, fullName, phone, 2);
+            if (!updated) return false;
+
+            // Cập nhật membership (rank + totalSpent)
+            String sqlMs = """
+                UPDATE cm SET cm.RankId = ?, cm.TotalSpent = ?
+                FROM CustomerMemberships cm
+                JOIN Customers c ON c.CustomerId = cm.CustomerId
+                WHERE c.AccountId = ? AND c.IsDeleted = 0
+                """;
+            st = connection.prepareStatement(sqlMs);
+            st.setInt(1, rankId);
+            st.setDouble(2, totalSpent);
+            st.setInt(3, accountId);
+            int rows = st.executeUpdate();
+
+            // Nếu chưa có membership record (LEFT JOIN null) thì tạo mới
+            if (rows == 0) {
+                String sqlInsert = """
+                    INSERT INTO CustomerMemberships (CustomerId, RankId, TotalSpent)
+                    SELECT c.CustomerId, ?, ?
+                    FROM Customers c
+                    WHERE c.AccountId = ? AND c.IsDeleted = 0
+                    """;
+                st = connection.prepareStatement(sqlInsert);
+                st.setInt(1, rankId);
+                st.setDouble(2, totalSpent);
+                st.setInt(3, accountId);
+                st.executeUpdate();
+            }
+            return true;
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.updateCustomer] " + e.getMessage());
+            return false;
+        }
+    }
+
+    private int getAccountIdByEmail(String email) {
+        try {
+            String sql = "SELECT AccountId FROM Accounts WHERE Email = ? AND IsDeleted = 0";
+            st = connection.prepareStatement(sql);
+            st.setString(1, email);
+            rs = st.executeQuery();
+            if (rs.next()) return rs.getInt("AccountId");
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.getAccountIdByEmail] " + e.getMessage());
+        }
+        return -1;
     }
 }

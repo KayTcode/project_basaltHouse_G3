@@ -2,6 +2,7 @@ package services;
 
 import dao.AdminCustomerDAO;
 import dto.CustomerViewDTO;
+import model.MembershipRank;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,10 @@ public class AdminCustomerService {
         if (all == null) {
             all = Collections.emptyList();
         }
+
+        // 1b. Lấy danh sách hạng thành viên từ DB
+        List<MembershipRank> ranks = dao.getAllRanks();
+        pageData.put("ranks", ranks);
 
         // 2. Tính thống kê trên toàn bộ danh sách (trước khi lọc)
         Map<String, Long> stats = new HashMap<>();
@@ -116,5 +121,45 @@ public class AdminCustomerService {
         pageData.put("oldStatus", cleanStatus);
 
         return pageData;
+    }
+
+    public boolean processAddCustomer(String email, String password, String fullName,
+            String phone, String rankIdStr, String spentStr) {
+        // Service tự kiểm tra và parse tham số
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            return false;
+        }
+        int rankId = parseIntSafe(rankIdStr, 1);
+        double totalSpent = parseDoubleSafe(spentStr, 0);
+        return dao.addCustomer(email.trim(), password.trim(), fullName, phone, rankId, totalSpent);
+    }
+
+    public boolean processUpdateCustomer(String accountIdStr, String email, String fullName,
+            String phone, String rankIdStr, String spentStr, String isLockedStr) {
+        int accountId = parseIntSafe(accountIdStr, -1);
+        if (accountId == -1 || email == null || email.isBlank()) {
+            return false;
+        }
+        int rankId = parseIntSafe(rankIdStr, 1);
+        double totalSpent = parseDoubleSafe(spentStr, 0);
+        boolean isLocked = "true".equalsIgnoreCase(isLockedStr);
+        return dao.updateCustomer(accountId, email.trim(), fullName, phone, rankId, totalSpent, isLocked);
+    }
+
+    // ─ Helpers nội bộ 
+    private int parseIntSafe(String val, int def) {
+        try {
+            return Integer.parseInt(val.trim());
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    private double parseDoubleSafe(String val, double def) {
+        try {
+            return Double.parseDouble(val.trim());
+        } catch (Exception e) {
+            return def;
+        }
     }
 }

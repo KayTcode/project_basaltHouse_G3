@@ -120,10 +120,9 @@
                                 <label for="filterRankSelect">Hạng thành viên:</label>
                                 <select id="filterRankSelect" name="rankId" onchange="this.form.submit()" class="filter-select">
                                     <option value="" ${empty customerData.oldRankId ? 'selected' : ''}>-- Tất cả hạng --</option>
-                                    <option value="1" ${customerData.oldRankId == '1' ? 'selected' : ''}>Đồng (Bronze)</option>
-                                    <option value="2" ${customerData.oldRankId == '2' ? 'selected' : ''}>Bạc (Silver)</option>
-                                    <option value="3" ${customerData.oldRankId == '3' ? 'selected' : ''}>Vàng (Gold)</option>
-                                    <option value="4" ${customerData.oldRankId == '4' ? 'selected' : ''}>Kim Cương (Diamond)</option>
+                                    <c:forEach var="rank" items="${customerData.ranks}">
+                                        <option value="${rank.rankId}" ${customerData.oldRankId == rank.rankId ? 'selected' : ''}>${rank.rankName}</option>
+                                    </c:forEach>
                                 </select>
                             </div>
 
@@ -221,25 +220,6 @@
                                                         onclick="openEditModal('${item.account.accountId}', '${item.fullName}', '${item.phone}', '${item.account.email}', '${item.rankId}', '${item.totalSpent}', '${item.account.isLocked}')">
                                                     <i class="fa-regular fa-pen-to-square"></i>
                                                 </button>
-
-                                                <!-- Khóa/Mở khóa nhanh -->
-                                                <form method="post" action="${pageContext.request.contextPath}/admin/customers" style="display:inline">
-                                                    <input type="hidden" name="action" value="toggleLock" />
-                                                    <input type="hidden" name="accountId" value="${item.account.accountId}" />
-                                                    <input type="hidden" name="isLocked" value="${!item.account.isLocked}" />
-                                                    <button type="submit" class="btn-icon-action" style="color: ${item.account.isLocked ? 'var(--basalt-emerald)' : 'var(--basalt-red)'}" title="${item.account.isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}">
-                                                        <i class="fa-solid ${item.account.isLocked ? 'fa-lock-open' : 'fa-lock'}"></i>
-                                                    </button>
-                                                </form>
-
-                                                <!-- Xoá (Soft Delete) -->
-                                                <form method="post" action="${pageContext.request.contextPath}/admin/customers" style="display:inline" onsubmit="return confirm('Bạn chắc chắn muốn XOÁ khách hàng này khỏi danh sách quản lý?')">
-                                                    <input type="hidden" name="action" value="delete" />
-                                                    <input type="hidden" name="accountId" value="${item.account.accountId}" />
-                                                    <button type="submit" class="btn-icon-action" style="color:var(--basalt-red);" title="Xoá khách hàng">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </button>
-                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -300,10 +280,9 @@
                             <div class="form-field-group">
                                 <label>Hạng Thành Viên Ban Đầu</label>
                                 <select name="rankId" class="form-select">
-                                    <option value="1">Đồng (Bronze)</option>
-                                    <option value="2">Bạc (Silver)</option>
-                                    <option value="3">Vàng (Gold)</option>
-                                    <option value="4">Kim Cương (Diamond)</option>
+                                    <c:forEach var="rank" items="${customerData.ranks}">
+                                        <option value="${rank.rankId}">${rank.rankName}</option>
+                                    </c:forEach>
                                 </select>
                             </div>
                             <div class="form-field-group">
@@ -356,10 +335,9 @@
                                 <div class="form-field-group">
                                     <label>Hạng Thành Viên</label>
                                     <select name="rankId" id="edit_rank" class="form-select">
-                                        <option value="1">Đồng (Bronze)</option>
-                                        <option value="2">Bạc (Silver)</option>
-                                        <option value="3">Vàng (Gold)</option>
-                                        <option value="4">Kim Cương (Diamond)</option>
+                                        <c:forEach var="rank" items="${customerData.ranks}">
+                                            <option value="${rank.rankId}">${rank.rankName}</option>
+                                        </c:forEach>
                                     </select>
                                 </div>
                                 <div class="form-field-group">

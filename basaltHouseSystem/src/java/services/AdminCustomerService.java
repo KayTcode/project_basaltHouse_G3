@@ -61,39 +61,8 @@ public class AdminCustomerService {
             }
         }
 
-        // 4. Áp dụng bộ lọc bằng Stream API
-        final Integer finalRankId = rankId;
-        List<CustomerViewDTO> filtered = all.stream()
-                // Lọc theo ô tìm kiếm (tên, email, số điện thoại)
-                .filter(c -> {
-                    if (cleanSearch.isEmpty()) {
-                        return true;
-                    }
-                    String name = c.getFullName() != null ? c.getFullName().toLowerCase() : "";
-                    String email = c.getAccount().getEmail() != null
-                            ? c.getAccount().getEmail().toLowerCase() : "";
-                    String phone = c.getPhone() != null ? c.getPhone() : "";
-                    return name.contains(cleanSearch)
-                            || email.contains(cleanSearch)
-                            || phone.contains(cleanSearch);
-                })
-                // Lọc theo hạng thành viên
-                .filter(c -> finalRankId == null || c.getRankId() == finalRankId)
-                // Lọc theo trạng thái tài khoản
-                .filter(c -> {
-                    if (cleanStatus.isEmpty()) {
-                        return true;
-                    }
-                    return switch (cleanStatus) {
-                        case "Active" ->
-                            !c.getAccount().isIsLocked();
-                        case "Locked" ->
-                            c.getAccount().isIsLocked();
-                        default ->
-                            true;
-                    };
-                })
-                .collect(Collectors.toList());
+        // 4. Áp dụng bộ lọc trực tiếp ở SQL thông qua DAO
+        List<CustomerViewDTO> filtered = dao.getAllCustomersFiltered(cleanSearch, rankId, cleanStatus);
 
         // 5. Phân trang
         int totalFiltered = filtered.size();

@@ -241,6 +241,85 @@ public class AdminCustomerDAO extends DBContext {
         return list;
     }
 
+    public List<CustomerViewDTO> getAllCustomersFiltered(String search, Integer rankId, String status) {
+        List<CustomerViewDTO> list = new ArrayList<>();
+        String sql = """
+            SELECT
+                a.AccountId, a.RoleId, a.Email, a.PasswordHash,
+                a.IsEmailVerified, a.IsActive, a.CreatedAt,
+                a.IsDeleted, a.FailedAttempts, a.IsLocked,
+                c.FullName, c.Phone, c.AvatarUrl,
+                COALESCE(mr.RankId, 1)                  AS RankId,
+                COALESCE(mr.RankName, N'Đồng (Bronze)')  AS RankName,
+                COALESCE(cm.TotalSpent, 0)              AS TotalSpent
+            FROM Accounts a
+            JOIN Customers c
+                ON c.AccountId = a.AccountId
+                AND c.IsDeleted = 0
+            LEFT JOIN CustomerMemberships cm
+                ON cm.CustomerId = c.CustomerId
+            LEFT JOIN MembershipRanks mr
+                ON mr.RankId = cm.RankId
+            WHERE a.RoleId = 2
+              AND a.IsDeleted = 0
+            """;
+
+        // 1. Lọc theo tên, email hoặc số điện thoại sử dụng LIKE
+        if (search != null && !search.trim().isEmpty()) {
+            sql += """
+                   AND (c.FullName LIKE ? OR a.Email LIKE ? OR c.Phone LIKE ?)
+                   """;
+        }
+
+        // 2. Lọc theo hạng thành viên
+        if (rankId != null) {
+            sql += """
+                   AND COALESCE(mr.RankId, 1) = ?
+                   """;
+        }
+
+        // 3. Lọc theo trạng thái tài khoản
+        if ("Active".equalsIgnoreCase(status)) {
+            sql += """
+                   AND a.IsLocked = 0
+                   """;
+        } else if ("Locked".equalsIgnoreCase(status)) {
+            sql += """
+                   AND a.IsLocked = 1
+                   """;
+        }
+
+        // Sắp xếp giảm dần theo ngày tạo tài khoản
+        sql += """
+               ORDER BY a.CreatedAt DESC
+               """;
+
+        try {
+            st = connection.prepareStatement(sql);
+            int index = 1;
+
+            if (search != null && !search.trim().isEmpty()) {
+                String searchPattern = "%" + search.trim() + "%";
+                st.setString(index++, searchPattern);
+                st.setString(index++, searchPattern);
+                st.setString(index++, searchPattern);
+            }
+
+            if (rankId != null) {
+                st.setInt(index++, rankId);
+            }
+
+            rs = st.executeQuery();
+            while (rs.next()) {
+                list.add(mapRow(rs));
+            }
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.getAllCustomersFiltered] LỖI: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // Lấy nhanh tên + email khách hàng theo accountId để hiển thị tiêu đề trang history
     public String[] getCustomerBasicInfo(int accountId) {
         try {

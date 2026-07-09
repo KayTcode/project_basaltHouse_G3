@@ -113,6 +113,9 @@
                                         <option value="EXPIRED" ${filterStatus == 'EXPIRED' ? 'selected' : ''}>Đã hết hạn</option>
                                     </select>
                                 </div>
+                                <button type="submit" class="btn-filter-submit">
+                                    <i class="fa-solid fa-filter"></i> Lọc kết quả
+                                </button>
                             </div>
                         </div>
                     </form>

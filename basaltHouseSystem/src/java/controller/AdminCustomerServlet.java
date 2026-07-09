@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 import services.AdminCustomerService;
 
+
 @WebServlet(name = "AdminCustomerServlet", urlPatterns = {"/admin/customers"})
 public class AdminCustomerServlet extends HttpServlet {
 
@@ -22,13 +23,19 @@ public class AdminCustomerServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
+        String action = request.getParameter("action");
+
+        if ("history".equals(action)) {
+            handleOrderHistory(request, response);
+            return;
+        }
+
         try {
-            String search = request.getParameter("search");
+            String search  = request.getParameter("search");
             String rankStr = request.getParameter("rankId");
-            String status = request.getParameter("status");
+            String status  = request.getParameter("status");
             String pageStr = request.getParameter("page");
 
-            // Giao toàn bộ xử lý nghiệp vụ cho Service
             Map<String, Object> customerData = customerService
                     .getCustomerDashboardPage(search, rankStr, status, pageStr, PAGE_SIZE);
 
@@ -36,8 +43,6 @@ public class AdminCustomerServlet extends HttpServlet {
 
         } catch (Exception e) {
             System.err.println("[AdminCustomerServlet.doGet] " + e.getMessage());
-            request.getSession().setAttribute("errorMessage",
-                    "Không thể tải danh sách khách hàng. Vui lòng thử lại sau!");
         }
 
         request.getRequestDispatcher("/views/admin/admin_customer.jsp").forward(request, response);
@@ -51,29 +56,32 @@ public class AdminCustomerServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "";
-        }
+        if (action == null) action = "";
 
         switch (action) {
-            case "add" ->
-                handleAddCustomer(request, response);
-            case "update" ->
-                handleUpdateCustomer(request, response);
-            default ->
-                response.sendRedirect(request.getContextPath() + "/admin/customers");
+            case "add"    -> handleAddCustomer(request, response);
+            case "update" -> handleUpdateCustomer(request, response);
+            default       -> response.sendRedirect(request.getContextPath() + "/admin/customers");
         }
     }
 
-    private void handleAddCustomer(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String email = request.getParameter("email");
-        String password = request.getParameter("password");
-        String fullName = request.getParameter("fullName");
-        String phone = request.getParameter("phone");
-        String rankIdStr = request.getParameter("rankId");
-        String spentStr = request.getParameter("totalSpent");
+    private void handleOrderHistory(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String accountIdStr = request.getParameter("accountId");
+        java.util.Map<String, Object> historyData = customerService.processGetOrderHistoryPage(accountIdStr);
+        request.setAttribute("historyData", historyData);
+        request.getRequestDispatcher("/views/admin/admin_customer_history.jsp").forward(request, response);
+    }
 
-        // Đẩy toàn bộ tham số thô sang Service tự ép kiểu và xử lý DB
+
+    private void handleAddCustomer(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String email     = request.getParameter("email");
+        String password  = request.getParameter("password");
+        String fullName  = request.getParameter("fullName");
+        String phone     = request.getParameter("phone");
+        String rankIdStr = request.getParameter("rankId");
+        String spentStr  = request.getParameter("totalSpent");
+
         boolean ok = customerService.processAddCustomer(email, password, fullName, phone, rankIdStr, spentStr);
         if (ok) {
             request.getSession().setAttribute("toastMessage", "Thêm khách hàng thành công!");
@@ -86,14 +94,13 @@ public class AdminCustomerServlet extends HttpServlet {
 
     private void handleUpdateCustomer(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String accountIdStr = request.getParameter("accountId");
-        String email = request.getParameter("email");
-        String fullName = request.getParameter("fullName");
-        String phone = request.getParameter("phone");
-        String rankIdStr = request.getParameter("rankId");
-        String spentStr = request.getParameter("totalSpent");
-        String isLockedStr = request.getParameter("isLocked");
+        String email        = request.getParameter("email");
+        String fullName     = request.getParameter("fullName");
+        String phone        = request.getParameter("phone");
+        String rankIdStr    = request.getParameter("rankId");
+        String spentStr     = request.getParameter("totalSpent");
+        String isLockedStr  = request.getParameter("isLocked");
 
-        // Giao Service xử lý logic cập nhật thông tin và membership
         boolean ok = customerService.processUpdateCustomer(accountIdStr, email, fullName, phone, rankIdStr, spentStr, isLockedStr);
         if (ok) {
             request.getSession().setAttribute("toastMessage", "Cập nhật thông tin thành công!");

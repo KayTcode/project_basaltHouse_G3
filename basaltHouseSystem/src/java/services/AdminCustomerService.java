@@ -3,6 +3,7 @@ package services;
 import dao.AdminCustomerDAO;
 import dto.CustomerViewDTO;
 import model.MembershipRank;
+import model.Order;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -161,5 +162,15 @@ public class AdminCustomerService {
         } catch (Exception e) {
             return def;
         }
+    }
+
+    public Map<String, Object> processGetOrderHistoryPage(String accountIdStr) {
+        Map<String, Object> data = new HashMap<>();
+        int accountId = parseIntSafe(accountIdStr, -1);
+        data.put("orders", accountId == -1 ? Collections.emptyList() : dao.getOrderHistoryByAccountId(accountId));
+        String[] info = accountId == -1 ? new String[]{"Khách hàng", ""} : dao.getCustomerBasicInfo(accountId);
+        data.put("customerName", info[0]);
+        data.put("email",        info[1]);
+        return data;
     }
 }

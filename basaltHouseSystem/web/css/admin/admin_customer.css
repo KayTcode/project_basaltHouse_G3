@@ -506,3 +506,66 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 110, 47, 0.2);
 }
+
+/* ===================================================================
+   HISTORY MODAL — Order table helpers
+   =================================================================== */
+
+.modal-card--wide {
+    max-width: 780px;
+    width: 95%;
+}
+
+.history-loading-state,
+.history-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #aaa;
+    font-size: 13px;
+}
+
+.history-loading-state i,
+.history-empty-state i {
+    font-size: 26px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.history-table-wrapper {
+    overflow-x: auto;
+}
+
+.history-table-wrapper .basalt-custom-table {
+    margin: 0;
+}
+
+.cell-center { text-align: center; }
+.cell-right  { text-align: right; }
+
+.history-status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.order-status--completed { color: var(--basalt-emerald, #2eb872); background: #e6f5ea; }
+.order-status--cancelled { color: var(--basalt-red, #dc3545);     background: #fdecea; }
+.order-status--pending   { color: #f59f00; background: #fff9db; }
+.order-status--progress  { color: #4c6ef5; background: #edf2ff; }
+.order-status--ready     { color: #0c8599; background: #e3fafc; }
+
+.pay-status--paid   { color: var(--basalt-emerald, #2eb872); background: #e6f5ea; }
+.pay-status--unpaid { color: var(--basalt-red, #dc3545);     background: #fdecea; }
+
+.history-amount {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.history-time {
+    color: #64748b;
+    font-size: 12px;
+}

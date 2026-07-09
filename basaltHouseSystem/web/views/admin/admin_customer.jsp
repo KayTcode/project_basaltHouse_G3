@@ -214,7 +214,12 @@
                                             </c:if>
                                         </td>
                                         <td style="text-align: right; padding-right: 24px;">
-                                            <div class="row-actions-cell" style="justify-content: flex-end; display: flex; gap: 8px;">
+                                            <div class="row-actions-cell" style="justify-content: flex-end; display: flex; gap: 8px; align-items: center;">
+                                                <!-- Xem lịch sử mua hàng -->
+                                                <a href="${pageContext.request.contextPath}/admin/customers?action=history&accountId=${item.account.accountId}"
+                                                   class="btn-icon-action btn-icon-history" title="Lịch sử mua hàng">
+                                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                                </a>
                                                 <!-- Chi tiết & Cập nhật -->
                                                 <button class="btn-icon-action action-edit" title="Xem &amp; Sửa thông tin" 
                                                         onclick="openEditModal('${item.account.accountId}', '${item.fullName}', '${item.phone}', '${item.account.email}', '${item.rankId}', '${item.totalSpent}', '${item.account.isLocked}')">
@@ -364,34 +369,21 @@
         </div>
 
         <script>
-            function openAddModal() {
-                document.getElementById('addCustomerModal').classList.add('active');
-            }
-            function closeAddModal() {
-                document.getElementById('addCustomerModal').classList.remove('active');
-            }
+            function openAddModal()  { document.getElementById('addCustomerModal').classList.add('active'); }
+            function closeAddModal() { document.getElementById('addCustomerModal').classList.remove('active'); }
 
             function openEditModal(id, fullName, phone, email, rankId, totalSpent, isLocked) {
-                document.getElementById('edit_id').value = id;
-                document.getElementById('edit_notice_title').innerText = "Khách hàng #" + id;
-                document.getElementById('edit_fullName').value = fullName;
-                document.getElementById('edit_phone').value = phone;
-                document.getElementById('edit_email').value = email;
-                document.getElementById('edit_rank').value = rankId;
-                
-                // Loại bỏ phần thập phân nếu có trong totalSpent
-                let spentValue = parseFloat(totalSpent) || 0;
-                document.getElementById('edit_totalSpent').value = Math.round(spentValue);
-
-                let lockStatus = (isLocked === true || isLocked === 'true' || isLocked === 1 || isLocked === '1') ? 'true' : 'false';
-                document.getElementById('edit_status').value = lockStatus;
-
+                document.getElementById('edit_id').value              = id;
+                document.getElementById('edit_notice_title').innerText = 'Khách hàng #' + id;
+                document.getElementById('edit_fullName').value        = fullName;
+                document.getElementById('edit_phone').value           = phone;
+                document.getElementById('edit_email').value           = email;
+                document.getElementById('edit_rank').value            = rankId;
+                document.getElementById('edit_totalSpent').value      = Math.round(parseFloat(totalSpent) || 0);
+                document.getElementById('edit_status').value          = (isLocked === 'true' || isLocked === '1') ? 'true' : 'false';
                 document.getElementById('editCustomerModal').classList.add('active');
             }
-
-            function closeEditModal() {
-                document.getElementById('editCustomerModal').classList.remove('active');
-            }
+            function closeEditModal() { document.getElementById('editCustomerModal').classList.remove('active'); }
         </script>
     </body>
 </html>

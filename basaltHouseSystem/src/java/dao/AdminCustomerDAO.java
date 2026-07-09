@@ -3,11 +3,13 @@ package dao;
 import dto.CustomerViewDTO;
 import model.Account;
 import model.MembershipRank;
+import model.Order;
 import utils.PasswordUtils;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -200,5 +202,63 @@ public class AdminCustomerDAO extends DBContext {
             System.err.println("[AdminCustomerDAO.getAccountIdByEmail] " + e.getMessage());
         }
         return -1;
+    }
+
+ 
+    public List<Order> getOrderHistoryByAccountId(int accountId) {
+        List<Order> list = new ArrayList<>();
+        try {
+            String sql = """
+                SELECT o.OrderId, o.OrderType, o.OrderStatus,
+                       o.PaymentMethod, o.PaymentStatus,
+                       o.TotalAmount, o.DiscountAmount, o.FinalAmount,
+                       o.CreatedAt
+                FROM Orders o
+                JOIN Customers c ON c.CustomerId = o.CustomerId
+                WHERE c.AccountId = ? AND o.IsDeleted = 0
+                ORDER BY o.CreatedAt DESC
+                """;
+            st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                Order o = new Order();
+                o.setOrderId(rs.getInt("OrderId"));
+                o.setOrderType(rs.getString("OrderType"));
+                o.setOrderStatus(rs.getString("OrderStatus"));
+                o.setPaymentMethod(rs.getString("PaymentMethod"));
+                o.setPaymentStatus(rs.getString("PaymentStatus"));
+                o.setTotalAmount(rs.getBigDecimal("TotalAmount"));
+                o.setDiscountAmount(rs.getBigDecimal("DiscountAmount"));
+                o.setFinalAmount(rs.getBigDecimal("FinalAmount"));
+                Timestamp ts = rs.getTimestamp("CreatedAt");
+                if (ts != null) o.setCreatedAt(ts.toLocalDateTime());
+                list.add(o);
+            }
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.getOrderHistoryByAccountId] " + e.getMessage());
+        }
+        return list;
+    }
+
+    // Lấy nhanh tên + email khách hàng theo accountId để hiển thị tiêu đề trang history
+    public String[] getCustomerBasicInfo(int accountId) {
+        try {
+            String sql = """
+                SELECT c.FullName, a.Email
+                FROM Customers c
+                JOIN Accounts a ON a.AccountId = c.AccountId
+                WHERE c.AccountId = ? AND c.IsDeleted = 0
+                """;
+            st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            rs = st.executeQuery();
+            if (rs.next()) {
+                return new String[]{ rs.getString("FullName"), rs.getString("Email") };
+            }
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.getCustomerBasicInfo] " + e.getMessage());
+        }
+        return new String[]{ "Khách hàng #" + accountId, "" };
     }
 }

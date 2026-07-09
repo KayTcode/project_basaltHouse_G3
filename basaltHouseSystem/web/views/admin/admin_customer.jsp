@@ -15,7 +15,7 @@
 
         <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_common.css?v=2">
         <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_account.css?v=2">
-        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_customer.css?v=3">
+        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_customer.css?v=6">
     </head>
     <body class="admin-dashboard-body">
 
@@ -217,7 +217,7 @@
                                             <div class="row-actions-cell" style="justify-content: flex-end; display: flex; gap: 8px; align-items: center;">
                                                 <!-- Xem lịch sử mua hàng -->
                                                 <a href="${pageContext.request.contextPath}/admin/customers?action=history&accountId=${item.account.accountId}"
-                                                   class="btn-icon-action btn-icon-history" title="Lịch sử mua hàng">
+                                                   class="btn-icon-action action-history" title="Lịch sử mua hàng">
                                                     <i class="fa-solid fa-clock-rotate-left"></i>
                                                 </a>
                                                 <!-- Chi tiết & Cập nhật -->

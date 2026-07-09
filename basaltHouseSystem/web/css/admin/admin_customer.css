@@ -569,3 +569,25 @@
     color: #64748b;
     font-size: 12px;
 }
+
+/* ── ACTION HISTORY BUTTON STYLES ── */
+.btn-icon-action.action-history {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 6px !important;
+    border: 1px solid var(--basalt-border, #e3e7e5) !important;
+    background-color: var(--basalt-white, #ffffff) !important;
+    color: #495057 !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+    transition: all 0.15s ease !important;
+}
+
+.btn-icon-action.action-history:hover {
+    border-color: var(--basalt-blue, #1c7ed6) !important;
+    color: var(--basalt-blue, #1c7ed6) !important;
+    background-color: #f8f9fa !important;
+}

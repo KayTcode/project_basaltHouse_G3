@@ -16,7 +16,6 @@ public class AdminDiscountServlet extends HttpServlet {
 
     private final AdminDiscountService discountService = new AdminDiscountService();
 
-    // ── GET: hiển thị danh sách mã giảm giá ────────────────────────────────
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -48,7 +47,6 @@ public class AdminDiscountServlet extends HttpServlet {
         request.getRequestDispatcher("/views/admin/admin_discount.jsp").forward(request, response);
     }
 
-    // ── POST: xử lý add / update / delete ──────────────────────────────────
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -110,7 +108,6 @@ public class AdminDiscountServlet extends HttpServlet {
         response.sendRedirect(redirectUrl);
     }
 
-    /** Lấy accountId của admin đang đăng nhập từ session. Trả về 0 nếu không có. */
     private int getAdminId(HttpServletRequest request) {
         Object obj = request.getSession(false) != null
                 ? request.getSession(false).getAttribute("currentUser")

@@ -8,19 +8,12 @@ import java.util.List;
 import java.util.Map;
 import model.DiscountCode;
 
-/**
- * Service layer cho chức năng admin quản lý mã giảm giá.
- * Chịu trách nhiệm: validate input, parse dữ liệu, gọi DAO.
- * Servlet chỉ đọc tham số request và gọi service.
- */
 public class AdminDiscountService {
 
-    private static final DateTimeFormatter DT_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    private static final DateTimeFormatter DT_FORMATTER
+            = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
     private final AdminDiscountDAO discountDAO = new AdminDiscountDAO();
-
-    // ── READ ────────────────────────────────────────────────────────────────
 
     public List<DiscountCode> getAllDiscounts(String search, String filterType, String filterStatus) {
         return discountDAO.getAllDiscounts(search, filterType, filterStatus);
@@ -30,46 +23,49 @@ public class AdminDiscountService {
         return discountDAO.getDiscountStats();
     }
 
-    // ── ADD ─────────────────────────────────────────────────────────────────
-
-    /**
-     * Thêm mã giảm giá mới.
-     * @return "success" nếu OK, hoặc chuỗi mô tả lỗi validate / lỗi DB.
-     */
     public String addDiscount(String code, String discountType,
-                              String discountPercentStr, String discountAmountStr,
-                              String startDateStr, String endDateStr,
-                              String description, boolean isActive, int createdBy) {
+            String discountPercentStr, String discountAmountStr,
+            String startDateStr, String endDateStr,
+            String description, boolean isActive, int createdBy) {
 
         // --- Validate ---
-        if (code == null || code.isBlank())
+        if (code == null || code.isBlank()) {
             return "Mã code không được để trống.";
+        }
 
-        if (!"PERCENT".equals(discountType) && !"AMOUNT".equals(discountType))
+        if (!"PERCENT".equals(discountType) && !"AMOUNT".equals(discountType)) {
             return "Loại giảm giá không hợp lệ.";
+        }
 
         BigDecimal discountPercent = null;
-        BigDecimal discountAmount  = null;
+        BigDecimal discountAmount = null;
 
         if ("PERCENT".equals(discountType)) {
             discountPercent = parseBigDecimal(discountPercentStr);
             if (discountPercent == null || discountPercent.compareTo(BigDecimal.ONE) < 0
-                    || discountPercent.compareTo(new BigDecimal("100")) > 0)
+                    || discountPercent.compareTo(new BigDecimal("100")) > 0) {
                 return "Phần trăm giảm phải từ 1 đến 100.";
+            }
         } else {
             discountAmount = parseBigDecimal(discountAmountStr);
-            if (discountAmount == null || discountAmount.compareTo(BigDecimal.ZERO) <= 0)
+            if (discountAmount == null || discountAmount.compareTo(BigDecimal.ZERO) <= 0) {
                 return "Số tiền giảm phải lớn hơn 0.";
+            }
         }
 
         LocalDateTime startDate = parseDateTime(startDateStr);
-        LocalDateTime endDate   = parseDateTime(endDateStr);
+        LocalDateTime endDate = parseDateTime(endDateStr);
 
-        if (startDate == null) return "Thời gian bắt đầu không hợp lệ.";
-        if (endDate == null)   return "Thời gian kết thúc không hợp lệ.";
-        if (!endDate.isAfter(startDate)) return "Thời gian kết thúc phải sau thời gian bắt đầu.";
+        if (startDate == null) {
+            return "Thời gian bắt đầu không hợp lệ.";
+        }
+        if (endDate == null) {
+            return "Thời gian kết thúc không hợp lệ.";
+        }
+        if (!endDate.isAfter(startDate)) {
+            return "Thời gian kết thúc phải sau thời gian bắt đầu.";
+        }
 
-        // --- Gọi DAO ---
         boolean ok = discountDAO.addDiscount(
                 code, discountType, discountPercent, discountAmount,
                 startDate, endDate, description, isActive, createdBy);
@@ -77,44 +73,51 @@ public class AdminDiscountService {
         return ok ? "success" : "Thêm mã thất bại. Mã có thể đã tồn tại hoặc lỗi cơ sở dữ liệu.";
     }
 
-    // ── UPDATE ──────────────────────────────────────────────────────────────
-
-    /**
-     * Cập nhật mã giảm giá.
-     * @return "success" nếu OK, hoặc chuỗi mô tả lỗi.
-     */
     public String updateDiscount(String discountIdStr, String code, String discountType,
-                                 String discountPercentStr, String discountAmountStr,
-                                 String startDateStr, String endDateStr,
-                                 String description, boolean isActive) {
+            String discountPercentStr, String discountAmountStr,
+            String startDateStr, String endDateStr,
+            String description, boolean isActive) {
 
         int discountId = parseInt(discountIdStr, -1);
-        if (discountId <= 0) return "ID mã giảm giá không hợp lệ.";
+        if (discountId <= 0) {
+            return "ID mã giảm giá không hợp lệ.";
+        }
 
-        if (code == null || code.isBlank()) return "Mã code không được để trống.";
-        if (!"PERCENT".equals(discountType) && !"AMOUNT".equals(discountType))
+        if (code == null || code.isBlank()) {
+            return "Mã code không được để trống.";
+        }
+        if (!"PERCENT".equals(discountType) && !"AMOUNT".equals(discountType)) {
             return "Loại giảm giá không hợp lệ.";
+        }
 
         BigDecimal discountPercent = null;
-        BigDecimal discountAmount  = null;
+        BigDecimal discountAmount = null;
 
         if ("PERCENT".equals(discountType)) {
             discountPercent = parseBigDecimal(discountPercentStr);
             if (discountPercent == null || discountPercent.compareTo(BigDecimal.ONE) < 0
-                    || discountPercent.compareTo(new BigDecimal("100")) > 0)
+                    || discountPercent.compareTo(new BigDecimal("100")) > 0) {
                 return "Phần trăm giảm phải từ 1 đến 100.";
+            }
         } else {
             discountAmount = parseBigDecimal(discountAmountStr);
-            if (discountAmount == null || discountAmount.compareTo(BigDecimal.ZERO) <= 0)
+            if (discountAmount == null || discountAmount.compareTo(BigDecimal.ZERO) <= 0) {
                 return "Số tiền giảm phải lớn hơn 0.";
+            }
         }
 
         LocalDateTime startDate = parseDateTime(startDateStr);
-        LocalDateTime endDate   = parseDateTime(endDateStr);
+        LocalDateTime endDate = parseDateTime(endDateStr);
 
-        if (startDate == null) return "Thời gian bắt đầu không hợp lệ.";
-        if (endDate == null)   return "Thời gian kết thúc không hợp lệ.";
-        if (!endDate.isAfter(startDate)) return "Thời gian kết thúc phải sau thời gian bắt đầu.";
+        if (startDate == null) {
+            return "Thời gian bắt đầu không hợp lệ.";
+        }
+        if (endDate == null) {
+            return "Thời gian kết thúc không hợp lệ.";
+        }
+        if (!endDate.isAfter(startDate)) {
+            return "Thời gian kết thúc phải sau thời gian bắt đầu.";
+        }
 
         boolean ok = discountDAO.updateDiscount(
                 discountId, code, discountType, discountPercent, discountAmount,
@@ -123,37 +126,46 @@ public class AdminDiscountService {
         return ok ? "success" : "Cập nhật thất bại. Lỗi cơ sở dữ liệu.";
     }
 
-    // ── DELETE ──────────────────────────────────────────────────────────────
-
-    /**
-     * Xóa mềm mã giảm giá.
-     * @return "success" hoặc chuỗi mô tả lỗi.
-     */
     public String deleteDiscount(String discountIdStr) {
         int discountId = parseInt(discountIdStr, -1);
-        if (discountId <= 0) return "ID mã giảm giá không hợp lệ.";
+        if (discountId <= 0) {
+            return "ID mã giảm giá không hợp lệ.";
+        }
 
         boolean ok = discountDAO.deleteDiscount(discountId);
         return ok ? "success" : "Xóa mã thất bại. Lỗi cơ sở dữ liệu.";
     }
 
-    // ── HELPERS ─────────────────────────────────────────────────────────────
-
     private LocalDateTime parseDateTime(String s) {
-        if (s == null || s.isBlank()) return null;
-        try { return LocalDateTime.parse(s, DT_FORMATTER); }
-        catch (Exception e) { return null; }
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(s, DT_FORMATTER);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private BigDecimal parseBigDecimal(String s) {
-        if (s == null || s.isBlank()) return null;
-        try { return new BigDecimal(s.trim()); }
-        catch (Exception e) { return null; }
+        if (s == null || s.isBlank()) {
+            return null;
+        }
+        try {
+            return new BigDecimal(s.trim());
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private int parseInt(String s, int defaultVal) {
-        if (s == null || s.isBlank()) return defaultVal;
-        try { return Integer.parseInt(s.trim()); }
-        catch (Exception e) { return defaultVal; }
+        if (s == null || s.isBlank()) {
+            return defaultVal;
+        }
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (Exception e) {
+            return defaultVal;
+        }
     }
 }

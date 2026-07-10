@@ -74,7 +74,12 @@
                     <div class="user-avatar-wrapper">
                         <div class="avatar-letter">A</div>
                         <div class="user-info">
-                            <span class="user-name">${sessionScope.adminName != null ? sessionScope.adminName : "Quản trị viên"}</span>
+                            <span class="user-name">
+                                <c:choose>
+                                    <c:when test="${sessionScope.currentUser != null}">${sessionScope.currentUser.fullName}</c:when>
+                                    <c:otherwise>Quản trị viên</c:otherwise>
+                                </c:choose>
+                            </span>
                             <span class="user-status-dot">● Trực tuyến</span>
                         </div>
                     </div>
@@ -268,7 +273,8 @@
                                                                 '${d.discountTypeName == "PERCENT" ? d.discountPercent : d.discountAmount}',
                                                                 '${d.startDate}',
                                                                 '${d.endDate}',
-                                                                '${d.isActive}'
+                                                                '${d.isActive}',
+                                                                `${d.description}`
                                                             )">
                                                         <i class="fa-solid fa-pen-to-square"></i>
                                                     </button>
@@ -350,7 +356,7 @@
                             <div class="form-field-group">
                                 <label for="formDescription">Mô tả chương trình</label>
                                 <textarea id="formDescription" name="description" class="form-input-text"
-                                          rows="3" placeholder="Chi tiết nội dung khuyến mãi..." style="resize: none;" maxlength="250"></textarea>
+                                          rows="3" placeholder="Chi tiết nội dung khuyến mãi..." maxlength="250"></textarea>
                             </div>
 
                             <div class="form-field-group">
@@ -434,15 +440,16 @@
                 openModal(discountModal);
             }
 
-            function openEditModal(id, code, type, value, startDate, endDate, isActive) {
+            function openEditModal(id, code, type, value, startDate, endDate, isActive, description) {
                 document.getElementById('modalTitleText').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa mã khuyến mãi';
                 document.getElementById('formAction').value     = 'update';
                 document.getElementById('formDiscountId').value = id;
                 document.getElementById('formCode').value       = code;
                 document.getElementById('formIsActive').checked = (isActive === 'true');
+                document.getElementById('formDescription').value = description || '';
 
                 // Format LocalDateTime to datetime-local compatible string
-                const fmtDate = s => s ? s.replace('T', 'T').substring(0, 16) : '';
+                const fmtDate = s => s ? s.substring(0, 16) : '';
                 document.getElementById('formStartDate').value  = fmtDate(startDate);
                 document.getElementById('formEndDate').value    = fmtDate(endDate);
 

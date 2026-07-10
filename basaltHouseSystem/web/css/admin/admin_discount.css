@@ -578,6 +578,8 @@
 
 .form-input-text::placeholder { color: #94a3b8; }
 
+textarea.form-input-text { resize: none; }
+
 .form-grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;

@@ -12,9 +12,51 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_common.css?v=2">
         <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_account.css?v=2">
-        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_discount.css?v=1.0">
+        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_discount.css?v=1.1">
     </head>
     <body class="admin-dashboard-body">
+
+        <%-- Toast Notification --%>
+        <c:set var="toast" value="${param.toast}" />
+        <c:if test="${not empty toast}">
+            <c:choose>
+                <c:when test="${toast == 'add_success'}">
+                    <div class="toast-notification toast-success" id="toastMsg">
+                        <i class="fa-solid fa-circle-check"></i> Thêm mã khuyến mãi thành công!
+                    </div>
+                </c:when>
+                <c:when test="${toast == 'add_fail'}">
+                    <div class="toast-notification toast-error" id="toastMsg">
+                        <i class="fa-solid fa-circle-xmark"></i> Thêm mã thất bại. Mã có thể đã tồn tại.
+                    </div>
+                </c:when>
+                <c:when test="${toast == 'update_success'}">
+                    <div class="toast-notification toast-success" id="toastMsg">
+                        <i class="fa-solid fa-circle-check"></i> Cập nhật mã khuyến mãi thành công!
+                    </div>
+                </c:when>
+                <c:when test="${toast == 'update_fail'}">
+                    <div class="toast-notification toast-error" id="toastMsg">
+                        <i class="fa-solid fa-circle-xmark"></i> Cập nhật mã thất bại.
+                    </div>
+                </c:when>
+                <c:when test="${toast == 'delete_success'}">
+                    <div class="toast-notification toast-success" id="toastMsg">
+                        <i class="fa-solid fa-circle-check"></i> Đã xóa mã khuyến mãi thành công!
+                    </div>
+                </c:when>
+                <c:when test="${toast == 'delete_fail'}">
+                    <div class="toast-notification toast-error" id="toastMsg">
+                        <i class="fa-solid fa-circle-xmark"></i> Xóa mã thất bại.
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="toast-notification toast-error" id="toastMsg">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Đã xảy ra lỗi, vui lòng thử lại.
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </c:if>
 
         <jsp:include page="header.jsp" />
 
@@ -434,6 +476,17 @@
                 el.classList.remove('active');
                 setTimeout(() => { el.style.display = 'none'; }, 250);
             }
+
+            // ====== Toast auto-show & auto-hide ======
+            (function() {
+                const toast = document.getElementById('toastMsg');
+                if (!toast) return;
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 350);
+                }, 3500);
+            })();
         </script>
     </body>
 </html>

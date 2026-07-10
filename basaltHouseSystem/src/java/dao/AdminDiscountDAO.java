@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import model.DiscountCode;
+import java.math.BigDecimal;
 
 public class AdminDiscountDAO extends DBContext {
 
     public List<DiscountCode> getAllDiscounts(String search, String filterType, String filterStatus) {
         List<DiscountCode> list = new ArrayList<>();
         
-        // Khởi tạo câu SQL bằng Text Block
         String sql = """
             SELECT DiscountId, Code, DiscountPercent, DiscountAmount,
                    StartDate, EndDate, IsActive, IsDeleted, Description,
@@ -127,5 +127,90 @@ public class AdminDiscountDAO extends DBContext {
             System.err.println("[AdminDiscountDAO.getDiscountStats] Lỗi: " + e.getMessage());
         }
         return stats;
+    }
+
+    public boolean addDiscount(String code, String discountType,
+                               BigDecimal discountPercent, BigDecimal discountAmount,
+                               LocalDateTime startDate, LocalDateTime endDate,
+                               String description, boolean isActive, int createdBy) {
+        String sql = """
+            INSERT INTO DiscountCodes
+                (Code, DiscountPercent, DiscountAmount, StartDate, EndDate,
+                 Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, GETDATE())
+            """;
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, code.trim().toUpperCase());
+            if ("PERCENT".equals(discountType)) {
+                st.setBigDecimal(2, discountPercent);
+                st.setNull(3, java.sql.Types.DECIMAL);
+            } else {
+                st.setNull(2, java.sql.Types.DECIMAL);
+                st.setBigDecimal(3, discountAmount);
+            }
+            st.setObject(4, startDate);
+            st.setObject(5, endDate);
+            st.setString(6, description);
+            st.setBoolean(7, isActive);
+            // Nếu không có id admin hợp lệ thì để NULL (tránh FK violation)
+            if (createdBy > 0) {
+                st.setInt(8, createdBy);
+            } else {
+                st.setNull(8, java.sql.Types.INTEGER);
+            }
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.err.println("[AdminDiscountDAO.addDiscount] Lỗi: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateDiscount(int discountId, String code, String discountType,
+                                  BigDecimal discountPercent, BigDecimal discountAmount,
+                                  LocalDateTime startDate, LocalDateTime endDate,
+                                  String description, boolean isActive) {
+        String sql = """
+            UPDATE DiscountCodes
+            SET Code = ?, DiscountPercent = ?, DiscountAmount = ?,
+                StartDate = ?, EndDate = ?, Description = ?, IsActive = ?
+            WHERE DiscountId = ? AND IsDeleted = 0
+            """;
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, code.trim().toUpperCase());
+            if ("PERCENT".equals(discountType)) {
+                st.setBigDecimal(2, discountPercent);
+                st.setNull(3, java.sql.Types.DECIMAL);
+            } else {
+                st.setNull(2, java.sql.Types.DECIMAL);
+                st.setBigDecimal(3, discountAmount);
+            }
+            st.setObject(4, startDate);
+            st.setObject(5, endDate);
+            st.setString(6, description);
+            st.setBoolean(7, isActive);
+            st.setInt(8, discountId);
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.err.println("[AdminDiscountDAO.updateDiscount] Lỗi: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+   
+    public boolean deleteDiscount(int discountId) {
+        String sql = "UPDATE DiscountCodes SET IsDeleted = 1 WHERE DiscountId = ?";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, discountId);
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.err.println("[AdminDiscountDAO.deleteDiscount] Lỗi: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }

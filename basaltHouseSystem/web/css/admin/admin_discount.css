@@ -851,3 +851,34 @@
 
 .toggle-switch input:checked + .toggle-slider { background: var(--basalt-emerald); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* ── TOAST NOTIFICATION ── */
+.toast-notification {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-family: var(--font-inter);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-success { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.toast-error   { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+.toast-notification i { font-size: 1.1rem; }

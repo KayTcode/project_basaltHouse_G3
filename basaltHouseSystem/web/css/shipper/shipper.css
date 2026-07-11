@@ -322,6 +322,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
             transition: border-color .15s, background .15s;
             font-size: .88rem;
         }
+        
         .reason-opt:has(input:checked) {
             border-color: var(--red); background: var(--red-light);
         }

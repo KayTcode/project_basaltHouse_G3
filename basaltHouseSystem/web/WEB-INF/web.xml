@@ -140,6 +140,10 @@
         <servlet-name>CartServlet</servlet-name>
         <servlet-class>controller.CartServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ApplyVoucherServlet</servlet-name>
+        <servlet-class>controller.ApplyVoucherServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
@@ -174,6 +178,14 @@
         <url-pattern>/cashier/oderview</url-pattern>
         <url-pattern>/cashier/dashboard</url-pattern>
         <url-pattern>/cashier/shippers</url-pattern>
+        <servlet-name>ApplyVoucherServlet</servlet-name>
+        <url-pattern>/apply-voucher</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+    <servlet-name>POSOrderServlet</servlet-name>
+    <url-pattern>/cashier/pos</url-pattern>
+    <url-pattern>/cashier/oderview</url-pattern>
+    <url-pattern>/cashier/dashboard</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>BartenderServlet</servlet-name>

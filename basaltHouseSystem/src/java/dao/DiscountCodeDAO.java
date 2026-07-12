@@ -120,7 +120,7 @@ public class DiscountCodeDAO extends DBContext {
                          WHERE d.IsActive = 1
                            AND d.IsDeleted = 0
                            AND cd.AccountId = ?
-                           AND cd.[Status] = 1
+                           AND ISNULL(cd.IsUsed, 0) = 0
                          ORDER BY d.EndDate ASC
                          """;
             PreparedStatement st = connection.prepareStatement(sql);

@@ -7,7 +7,9 @@
 %>
 <jsp:include page="/views/HomePage/Header.jsp" />
 <link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/HomePageCss/HomePage.css">
+      href="${pageContext.request.contextPath}/css/HomePageCss/HomePage.css?v=20260709-1">
+<link rel="stylesheet"
+      href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-1">
 <main>
     <!-- Hero Section -->
     <section class="hero-section">

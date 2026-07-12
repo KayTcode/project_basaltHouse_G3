@@ -13,7 +13,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><c:out value="${pageTitle}"/> | Staff</title>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-        <link href="${pageContext.request.contextPath}/css/Staff/Staff.css?v=14" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/css/Staff/Staff.css?v=20260709-1" rel="stylesheet">
     </head>
     <body class="staff-page staff-page-${activeStaffPage}">
         <aside class="staff-sidebar">

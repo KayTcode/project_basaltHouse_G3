@@ -7,7 +7,9 @@
 <jsp:include page="/views/HomePage/Header.jsp"/>
 
 <link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/Voucher/Voucher.css">
+      href="${pageContext.request.contextPath}/css/Voucher/Voucher.css?v=20260709-1">
+<link rel="stylesheet"
+      href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-1">
 
 <main class="voucher-page">
     <c:if test="${not empty success}">

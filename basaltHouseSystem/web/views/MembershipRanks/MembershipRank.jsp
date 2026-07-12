@@ -11,7 +11,9 @@
 <jsp:include page="/views/HomePage/Header.jsp"/>
 
 <link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/MembershipRank/MembershipRank.css">
+      href="${pageContext.request.contextPath}/css/MembershipRank/MembershipRank.css?v=20260709-1">
+<link rel="stylesheet"
+      href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-1">
 
 <main class="membership-page">
     <section class="membership-hero">

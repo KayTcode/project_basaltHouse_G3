@@ -41,10 +41,7 @@
                             <button class="fin-period-btn active" id="btnMonth" onclick="switchPeriod('month')">Tháng này</button>
                             <button class="fin-period-btn" id="btnYear" onclick="switchPeriod('year')">Năm nay</button>
                         </div>
-                        <button class="fin-export-btn" id="btnExportReport" title="Xuất báo cáo Excel">
-                            <i class="fa-solid fa-file-arrow-down"></i>
-                            Xuất báo cáo
-                        </button>
+
                     </div>
                 </div>
 
@@ -161,17 +158,12 @@
                             <div class="fin-donut-item">
                                 <span class="fin-donut-dot" style="background:#006e2f;"></span>
                                 <span class="fin-donut-label">Tại quầy</span>
-                                <span class="fin-donut-pct">52%</span>
+                                <span class="fin-donut-pct">60%</span>
                             </div>
                             <div class="fin-donut-item">
                                 <span class="fin-donut-dot" style="background:#2eb872;"></span>
                                 <span class="fin-donut-label">Online</span>
-                                <span class="fin-donut-pct">31%</span>
-                            </div>
-                            <div class="fin-donut-item">
-                                <span class="fin-donut-dot" style="background:#7c3aed;"></span>
-                                <span class="fin-donut-label">POS / Bàn</span>
-                                <span class="fin-donut-pct">17%</span>
+                                <span class="fin-donut-pct">40%</span>
                             </div>
                         </div>
                     </div>
@@ -212,29 +204,13 @@
                                     <i class="fa-solid fa-mobile-screen-button"></i>
                                 </div>
                                 <div class="fin-payment-info">
-                                    <span class="fin-payment-name">MoMo</span>
-                                    <span class="fin-payment-count">412 giao dịch</span>
+                                    <span class="fin-payment-name">MoMo / Chuyển khoản</span>
+                                    <span class="fin-payment-count">563 giao dịch</span>
                                 </div>
                                 <div class="fin-payment-right">
-                                    <span class="fin-payment-amount">49,440,000đ</span>
+                                    <span class="fin-payment-amount">70,120,000đ</span>
                                     <div class="fin-pay-bar-wrap">
-                                        <div class="fin-pay-bar fin-bar-momo" style="width: 33%;"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="fin-payment-row">
-                                <div class="fin-payment-icon-wrap fin-pay-transfer">
-                                    <i class="fa-solid fa-building-columns"></i>
-                                </div>
-                                <div class="fin-payment-info">
-                                    <span class="fin-payment-name">Chuyển khoản</span>
-                                    <span class="fin-payment-count">151 giao dịch</span>
-                                </div>
-                                <div class="fin-payment-right">
-                                    <span class="fin-payment-amount">20,680,000đ</span>
-                                    <div class="fin-pay-bar-wrap">
-                                        <div class="fin-pay-bar fin-bar-transfer" style="width: 14%;"></div>
+                                        <div class="fin-pay-bar fin-bar-momo" style="width: 47%;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -470,10 +446,10 @@
                 new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Tại quầy', 'Online', 'POS / Bàn'],
+                        labels: ['Tại quầy', 'Online'],
                         datasets: [{
-                            data: [52, 31, 17],
-                            backgroundColor: ['#006e2f', '#2eb872', '#7c3aed'],
+                            data: [60, 40],
+                            backgroundColor: ['#006e2f', '#2eb872'],
                             borderWidth: 0,
                             hoverOffset: 8
                         }]

@@ -245,13 +245,15 @@ public class OrderDAO extends DBContext {
     public List<Order> getAllOrdersWithCustomerName() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, tb.TableCode AS TableName, o.Note, c.FullName "
-                    + "FROM Orders o "
-                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
-                    + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
-                    + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
-                    + "WHERE o.IsDeleted = 0 "
-                    + "ORDER BY o.CreatedAt DESC";
+            String sql = """
+                    SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, o.ShipperId, tb.TableCode AS TableName, o.Note, c.FullName, sh.FullName AS ShipperName
+                    FROM Orders o 
+                    LEFT JOIN Customers c ON o.CustomerId = c.CustomerId 
+                    LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId
+                    LEFT JOIN Tables tb ON ts.TableId = tb.TableId
+                    LEFT JOIN Shippers sh ON o.ShipperId = sh.ShipperId
+                    WHERE o.IsDeleted = 0 
+                    ORDER BY o.CreatedAt DESC""";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -271,6 +273,8 @@ public class OrderDAO extends DBContext {
                 o.setPaymentMethod(rs.getString("PaymentMethod"));
                 o.setTableName(rs.getString("TableName"));
                 o.setNote(rs.getString("Note"));
+                o.setShipperId(rs.getObject("ShipperId") != null ? rs.getInt("ShipperId") : null);
+                o.setShipperName(rs.getString("ShipperName"));
                 list.add(o);
             }
         } catch (Exception e) {

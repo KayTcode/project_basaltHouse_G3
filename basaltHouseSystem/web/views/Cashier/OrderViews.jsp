@@ -30,10 +30,11 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-    <div class="sidebar-logo">
+    <!-- [MODIFIED] - Wrap logo in anchor to link back to home -->
+    <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
         <div class="logo-icon">&#9749;</div>
         <div class="logo-text">Basalt<span>House Coffee</span></div>
-    </div>
+    </a>
     <nav class="sidebar-nav">
         <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item">
             <span class="nav-icon material-symbols-outlined">dashboard</span>Dashboard
@@ -44,13 +45,16 @@
         <a href="${pageContext.request.contextPath}/cashier/pos" class="nav-item">
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>POS Order
         </a>
-        <a href="#" class="nav-item"><span class="nav-icon material-symbols-outlined">settings</span>Settings</a>
+        <a href="${pageContext.request.contextPath}/bartender/view" class="nav-item">
+            <span class="nav-icon material-symbols-outlined">sports_bar</span>Bartending
+        </a>
     </nav>
     <div class="sidebar-footer">
         <div class="staff-card">
             <div class="staff-avatar"><span class="material-symbols-outlined" style="font-size:18px">person</span></div>
             <div class="staff-info">
-                <div class="staff-name">Cashier</div>
+                <!-- [MODIFIED] - Replace hardcoded 'Cashier' with session fullName -->
+                <div class="staff-name">${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : 'Cashier'}</div>
                 <div class="staff-status"><div class="status-dot"></div>Online</div>
             </div>
         </div>
@@ -154,7 +158,7 @@ var ORDERS = {
         type: '${o.orderType != null ? o.orderType.toLowerCase() : "offline"}',
         customer: '${o.customerName}',
         table: '${o.tableName != null ? o.tableName : "Walk-in"}',
-        cashier: 'Cashier',
+        cashier: '${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : "Cashier"}',
         time: '${o.createdAt}',
         note: '${o.note != null ? o.note : "---"}',
         payMethod: '${o.paymentMethod != null ? o.paymentMethod : "Cash"}',
@@ -163,6 +167,8 @@ var ORDERS = {
         subtotal: ${o.totalAmount != null ? o.totalAmount : o.finalAmount},
         discount: ${o.discountAmount != null ? o.discountAmount : 0},
         status: '${o.orderStatus != null ? o.orderStatus.toLowerCase() : "preparing"}',
+        shipperId: ${o.shipperId != null ? o.shipperId : 0},
+        shipperName: '${o.shipperName != null ? o.shipperName : ""}',
         items: [
             <% 
                Order orderObj = (Order) pageContext.getAttribute("o");
@@ -240,7 +246,7 @@ function openModal(id) {
 ============================================================ */
 function statusLabelAndClass(s) {
     var map = { preparing:['Preparing','preparing'], pending_payment:['Pending Payment','pending'],
-                ready:['Ready','ready'], completed:['Completed','completed'], paid:['Paid','paid'] };
+                ready:['Ready','ready'], delivering:['Delivering','ready'], completed:['Completed','completed'], paid:['Paid','paid'] };
     return map[s] || [s, 'pending'];
 }
 
@@ -463,10 +469,10 @@ function buildOnlineModal(o) {
     /* ── Status timeline (chi hien sau khi cashier xac nhan) ── */
     var statusSection = '';
     if (confirmed) {
-        var STEPS       = ['preparing','in_progress','ready','completed'];
-        var STEP_LABELS = { preparing:'Chờ xác nhận', in_progress:'Pha chế', ready:'Sẵn sàng', completed:'Hoàn thành' };
+        var STEPS       = ['preparing','in_progress','ready','delivering','completed'];
+        var STEP_LABELS = { preparing:'Chờ xác nhận', in_progress:'Pha chế', ready:'Sẵn sàng', delivering:'Đang giao', completed:'Hoàn thành' };
         var curIdx = STEPS.indexOf(o.status);
-        if (o.status === 'paid') curIdx = 3;
+        if (o.status === 'paid') curIdx = 4; // treated as completed
 
         var tlHtml = '<div class="off-timeline">';
         for (var s = 0; s < STEPS.length; s++) {
@@ -502,6 +508,18 @@ function buildOnlineModal(o) {
                 '<button type="button" onclick="confirmOnlineOrder()" style="width:100%;padding:13px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
                     '<span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>Xác nhận đơn đặt' +
                 '</button>' +
+            '</div>';
+    } else if (o.shipperId > 0 || o.status === 'delivering') {
+        /* Da giao cho shipper */
+        footerHtml =
+            '<div style="padding:8px 20px 16px;">' +
+                '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
+                    '<span style="font-size:16px;">&#10003;</span>' +
+                    '<span style="font-size:13px;font-weight:700;color:#15803d;">Đơn đang được giao</span>' +
+                '</div>' +
+                '<div style="width:100%;padding:13px;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;">' +
+                    '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Đã giao cho: ' + (o.shipperName || 'Shipper #' + o.shipperId) +
+                '</div>' +
             '</div>';
     } else if (o.status === 'completed' || o.status === 'paid') {
         /* Hoan thanh */
@@ -601,7 +619,9 @@ function confirmOnlineOrder() {
 }
 
 function createDelivery() {
-    showToast('&#128666; Đang tạo đơn giao hàng cho ' + currentId + '...');
+    var o = ORDERS[currentId];
+    if (!o) return;
+    window.location.href = '${pageContext.request.contextPath}/cashier/shippers?orderId=' + o.id;
 }
 
 

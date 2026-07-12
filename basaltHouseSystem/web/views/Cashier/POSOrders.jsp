@@ -23,10 +23,11 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-    <div class="sidebar-logo">
+    <!-- [MODIFIED] - Wrap logo in anchor to link back to home -->
+    <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
         <div class="logo-icon">&#9749;</div>
         <div class="logo-text">Basalt<span>House Coffee</span></div>
-    </div>
+    </a>
     <nav class="sidebar-nav">
         <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item">
             <span class="nav-icon material-symbols-outlined">dashboard</span>Dashboard
@@ -37,13 +38,14 @@
         <a href="${pageContext.request.contextPath}/cashier/pos" class="nav-item active">
             <span class="nav-icon material-symbols-outlined">point_of_sale</span>POS Order
         </a>
-        <a href="#" class="nav-item"><span class="nav-icon material-symbols-outlined">settings</span>Settings</a>
+        <a href="${pageContext.request.contextPath}/bartender/view" class="nav-item"><span class="nav-icon material-symbols-outlined">sports_bar</span>Bartending</a>
     </nav>
     <div class="sidebar-footer">
         <div class="staff-card">
             <div class="staff-avatar"><span class="material-symbols-outlined" style="font-size:18px">person</span></div>
             <div class="staff-info">
-                <div class="staff-name">Cashier</div>
+                <!-- [MODIFIED] - Replace hardcoded 'Cashier' with session fullName -->
+                <div class="staff-name">${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : 'Cashier'}</div>
                 <div class="staff-status"><div class="status-dot"></div>Online</div>
             </div>
         </div>
@@ -307,7 +309,7 @@
 <div class="table-modal-overlay" id="tableModal" onclick="closeTableIfOverlay(event)">
     <div class="table-modal-box">
         <div class="table-modal-hd">
-            <div class="table-modal-title">&#127860; Chon ban</div>
+            <div class="table-modal-title">&#127860; Chọn bàn</div>
             <button type="button" class="table-modal-close" onclick="closeTableModal()">&#x2715;</button>
         </div>
         <iframe id="tableIframe" class="table-modal-iframe" src="" title="Chọn bàn"></iframe>

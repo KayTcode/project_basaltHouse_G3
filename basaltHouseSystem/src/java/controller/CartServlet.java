@@ -1,6 +1,5 @@
 package controller;
 
-import dao.SizeDAO;
 import dto.UserLoginDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -8,13 +7,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.HashMap;
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import model.CartItem;
-import model.Product;
 import services.CartService;
-import services.StockService;
 
 public class CartServlet extends HttpServlet {
 
@@ -58,20 +55,27 @@ public class CartServlet extends HttpServlet {
             totalAmount += item.getSubtotal();
             totalQty += item.getQuantity();
         }
-        try {
-            StockService stockSvc = new StockService();
-            HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
-            HashMap<Integer, HashMap<String, Integer>> stockMap = new HashMap<>();
-            for (Map.Entry<Product, HashMap<String, Integer>> e : rawStock.entrySet()) {
-                stockMap.put(e.getKey().getProductId(), e.getValue());
-            }
-            request.setAttribute("stockMap", stockMap);
-        } catch (Exception ignored) {
-        }
+        // Build stockMap
+        request.setAttribute("stockMap", cartService.getStockMap());
 
         request.setAttribute("cartItems", cart.values());
         request.setAttribute("totalAmount", totalAmount);
         request.setAttribute("totalQty", totalQty);
+
+        // ── Đọc mã voucher được chọn từ trang Voucher / HomePage (one-shot) ──
+        String pendingVoucher = (String) session.getAttribute(ApplyVoucherServlet.PENDING_VOUCHER_KEY);
+        if (pendingVoucher != null && !pendingVoucher.isEmpty()) {
+            request.setAttribute("discountCode", pendingVoucher);
+            // Xóa khỏi session sau khi đã truyền sang Cart (dùng một lần)
+            session.removeAttribute(ApplyVoucherServlet.PENDING_VOUCHER_KEY);
+        }
+
+        // Load vouchers (public + personal)
+        Integer accountId = null;
+        if (session.getAttribute("currentUser") instanceof UserLoginDTO) {
+            accountId = ((UserLoginDTO) session.getAttribute("currentUser")).getAccountId();
+        }
+        request.setAttribute("myVouchers", cartService.getAvailableVouchers(accountId));
 
         request.getRequestDispatcher("views/Order/Cart.jsp").forward(request, response);
     }
@@ -110,59 +114,36 @@ public class CartServlet extends HttpServlet {
 
         switch (action) {
             case "add": {
-                String productId = cartKey; // lúc add, cartKey chứa productId thuần
+                String productId = cartKey;
                 String productName = request.getParameter("productName");
                 String priceStr = request.getParameter("price");
                 String sizeIdStr = request.getParameter("sizeId");
+                String qtyStr = request.getParameter("quantity");
+
                 int price = 0;
                 try {
                     price = new java.math.BigDecimal(priceStr.trim()).intValue();
                 } catch (Exception ignored) {
                 }
 
-                String sizeName = "";
+                int sizeId = -1;
                 if (sizeIdStr != null && !sizeIdStr.trim().isEmpty()) {
                     try {
-                        int sizeId = Integer.parseInt(sizeIdStr.trim());
-                        SizeDAO sizeDAO = new SizeDAO();
-                        HashMap<Integer, String> sizeMap = sizeDAO.getSize();
-                        sizeName = sizeMap.getOrDefault(sizeId, "");
+                        sizeId = Integer.parseInt(sizeIdStr.trim());
                     } catch (Exception ignored) {
                     }
                 }
 
-                int stock = 0;
-                if (!sizeName.isEmpty()) {
+                int requestedQty = 1;
+                if (qtyStr != null && !qtyStr.trim().isEmpty()) {
                     try {
-                        int pId = Integer.parseInt(productId.trim());
-                        StockService stockSvc = new StockService();
-                        HashMap<Product, HashMap<String, Integer>> rawStock = stockSvc.calculateProduct();
-                        for (Map.Entry<Product, HashMap<String, Integer>> e : rawStock.entrySet()) {
-                            if (e.getKey().getProductId() == pId) {
-                                stock = e.getValue().getOrDefault(sizeName, 0);
-                                break;
-                            }
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        requestedQty = Integer.parseInt(qtyStr.trim());
+                        if (requestedQty < 1) requestedQty = 1;
+                    } catch (NumberFormatException ignored) {
                     }
                 }
 
-                // Composite key: "productId_sizeName" để phân biệt cùng sản phẩm khác size
-                String key = sizeName.isEmpty() ? productId : productId + "_" + sizeName;
-                CartItem existing = cart.get(key);
-                if (existing == null) {
-                    if (stock > 0) {
-                        CartItem newItem = new CartItem(productId, productName, price, 1, sizeName, stock);
-                        newItem.setCartKey(key);
-                        cart.put(key, newItem);
-                    }
-                } else {
-                    // Cùng sản phẩm + cùng size → chỉ tăng số lượng
-                    if (existing.getStock() <= 0 || existing.getQuantity() < existing.getStock()) {
-                        existing.setQuantity(existing.getQuantity() + 1);
-                    }
-                }
+                cartService.addProduct(cart, productId, productName, price, sizeId, requestedQty);
 
                 String redirectTarget = request.getParameter("redirect");
                 if ("cart".equals(redirectTarget)) {
@@ -224,14 +205,10 @@ public class CartServlet extends HttpServlet {
 
         // Tính giảm giá nếu có mã
         String discountCode = request.getParameter("discountCode");
+        Map<String, Object> discountResult = cartService.applyDiscountResult(discountCode, cart);
         long discountAmount = 0;
-        if (discountCode != null && !discountCode.trim().isEmpty()) {
-            try {
-                java.math.BigDecimal total = new java.math.BigDecimal(totalAmount);
-                services.PromotionService ps = new services.PromotionService();
-                discountAmount = ps.calculateDiscount(discountCode.trim(), total).longValue();
-            } catch (Exception ignored) {
-            }
+        if (Boolean.TRUE.equals(discountResult.get("success"))) {
+            discountAmount = ((BigDecimal) discountResult.get("discountAmount")).longValue();
         }
         long finalAmount = Math.max(totalAmount - discountAmount, 0);
 
@@ -259,13 +236,9 @@ public class CartServlet extends HttpServlet {
         String customerIdStr = null;
         Object currentUser = session.getAttribute("currentUser");
         if (currentUser instanceof UserLoginDTO) {
-            UserLoginDTO user = (UserLoginDTO) currentUser;
-            int accountId = user.getAccountId();
-            dao.OrderDAO orderDAO = new dao.OrderDAO();
-            int customerId = orderDAO.getCustomerIdByAccountId(accountId);
-            if (customerId > 0) {
-                customerIdStr = String.valueOf(customerId);
-            }
+            int aid = ((UserLoginDTO) currentUser).getAccountId();
+            int cid = cartService.resolveCustomerId(aid);
+            if (cid > 0) customerIdStr = String.valueOf(cid);
         }
 
         String orderNote = request.getParameter("orderNote");    // ghi chú từ Cart.jsp → Orders.Note
@@ -273,8 +246,6 @@ public class CartServlet extends HttpServlet {
         String discountCode = request.getParameter("discountCode");
         String deliveryAddress = request.getParameter("deliveryAddress");
         String paymentMethod = request.getParameter("paymentMethod");
-//        String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
-
         // ── Lấy phương thức thanh toán từ form, mặc định COD ─────────────
         if (paymentMethod == null || paymentMethod.trim().isEmpty()
                 || (!"COD".equals(paymentMethod) && !"MOMO".equals(paymentMethod))) {
@@ -282,7 +253,6 @@ public class CartServlet extends HttpServlet {
         }
 
         // ── Tạo đơn hàng trong DB ─────────────────────────────────────────
-        // CartService sẽ KHÔNG clear cart nếu là VNPAY (clear khi confirm)
         String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
 
         if (orderCode == null) {
@@ -307,48 +277,26 @@ public class CartServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
 
         String code = request.getParameter("discountCode");
-        if (code == null || code.trim().isEmpty()) {
-            response.getWriter().write("{\"success\":false,\"error\":\"Vui lòng nhập mã giảm giá.\"}");
-            return;
-        }
-
-        // Validate mã qua PromotionService
-        services.PromotionService ps = new services.PromotionService();
-        String checkJson = ps.checkDiscount(code.trim());
-
-        if (checkJson.contains("\"valid\": false") || checkJson.contains("\"valid\":false")) {
-            // Lấy msg từ JSON thủ công
-            String msg = "Mã không hợp lệ hoặc đã hết hạn.";
-            int msgIdx = checkJson.indexOf("\"msg\":");
-            if (msgIdx >= 0) {
-                int start = checkJson.indexOf('"', msgIdx + 6) + 1;
-                int end   = checkJson.indexOf('"', start);
-                if (start > 0 && end > start) msg = checkJson.substring(start, end);
-            }
-            response.getWriter().write("{\"success\":false,\"error\":\"" + msg + "\"}");
-            return;
-        }
-
-        // Tính tổng tiền từ cart hiện tại
         HttpSession session = request.getSession(false);
         @SuppressWarnings("unchecked")
         Map<String, CartItem> cart = session != null
                 ? (Map<String, CartItem>) session.getAttribute("cart") : null;
 
-        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
-        if (cart != null) {
-            for (CartItem item : cart.values()) {
-                total = total.add(new java.math.BigDecimal(item.getPrice())
-                        .multiply(new java.math.BigDecimal(item.getQuantity())));
-            }
+        Map<String, Object> result = cartService.applyDiscountResult(code, cart);
+
+        if (!Boolean.TRUE.equals(result.get("success"))) {
+            String error = (String) result.getOrDefault("error", "Mã không hợp lệ.");
+            response.getWriter().write("{\"success\":false,\"error\":\"" + error + "\"}");
+            return;
         }
 
-        java.math.BigDecimal discountAmt = ps.calculateDiscount(code.trim(), total);
-        java.math.BigDecimal finalAmt    = total.subtract(discountAmt).max(java.math.BigDecimal.ZERO);
+        BigDecimal discountAmt = (BigDecimal) result.get("discountAmount");
+        BigDecimal finalAmt    = (BigDecimal) result.get("finalAmount");
+        String codeName        = (String)     result.get("codeName");
 
         response.getWriter().write(String.format(
                 "{\"success\":true,\"codeName\":\"%s\",\"discountAmount\":%s,\"finalAmount\":%s}",
-                code.trim().replace("\"", "\\\""),
+                codeName.replace("\"", "\\\""),
                 discountAmt.toPlainString(),
                 finalAmt.toPlainString()
         ));

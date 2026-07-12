@@ -109,16 +109,16 @@ public class AuthDAO extends DBContext {
 
             case 4:
                 sql = """
-                      SELECT FullName, AvatarUrl
-                      FROM Shippers
-                      WHERE AccountId = ?
+                     SELECT FullName, AvatarUrl
+                     FROM Cashiers
+                     WHERE AccountId = ?
                       """;
                 break;
 
             case 5:
                 sql = """
                       SELECT FullName, AvatarUrl
-                      FROM Cashiers
+                      FROM Shippers
                       WHERE AccountId = ?
                       """;
                 break;

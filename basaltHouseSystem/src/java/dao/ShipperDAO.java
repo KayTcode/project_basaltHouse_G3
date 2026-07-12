@@ -273,7 +273,9 @@ public class ShipperDAO extends DBContext {
  
                 String updateOrderSql = """
                                         UPDATE Orders
-                                        SET OrderStatus = ?
+                                        SET 
+                                        OrderStatus = ?,
+                                        PaymentStatus = 'Paid'
                                         WHERE OrderId = ? AND ShipperId = ? AND OrderStatus = 'Delivering'
                                         """;
                 try (PreparedStatement ps = connection.prepareStatement(updateOrderSql)) {

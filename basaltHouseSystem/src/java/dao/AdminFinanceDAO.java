@@ -13,13 +13,18 @@ public class AdminFinanceDAO extends DBContext {
 
     // Helper: build điều kiện WHERE theo kỳ
     private String periodCondition(String period) {
+        return periodCondition(period, "");
+    }
+
+    private String periodCondition(String period, String alias) {
+        String prefix = (alias == null || alias.isEmpty()) ? "" : alias + ".";
         return switch (period) {
             case "week" ->
-                "CreatedAt >= DATEADD(DAY, -6, CAST(GETDATE() AS DATE))";
+                prefix + "CreatedAt >= DATEADD(DAY, -6, CAST(GETDATE() AS DATE))";
             case "year" ->
-                "YEAR(CreatedAt) = YEAR(GETDATE())";
+                "YEAR(" + prefix + "CreatedAt) = YEAR(GETDATE())";
             default ->
-                "YEAR(CreatedAt) = YEAR(GETDATE()) AND MONTH(CreatedAt) = MONTH(GETDATE())";
+                "YEAR(" + prefix + "CreatedAt) = YEAR(GETDATE()) AND MONTH(" + prefix + "CreatedAt) = MONTH(GETDATE())";
         };
     }
 
@@ -139,61 +144,116 @@ public class AdminFinanceDAO extends DBContext {
         return result;
     }
 
-    // 5. Doanh thu & chi phí theo tuần trong tháng (cho biểu đồ cột)
-    public List<Map<String, Object>> getWeeklyBreakdown() {
+    // 5. Doanh thu & chi phí theo tuần/tháng/ngày tùy theo period (cho biểu đồ cột/đường)
+    public List<Map<String, Object>> getChartData(String period) {
         List<Map<String, Object>> list = new ArrayList<>();
         try {
-            // Doanh thu từng tuần trong tháng hiện tại
-            String sqlRev = """
-                            SELECT 'Tuần ' + CAST(
-                                       DATEPART(WEEK, CreatedAt)
-                                     - DATEPART(WEEK, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
-                                     + 1 AS NVARCHAR) AS WeekLabel,
-                                   ISNULL(SUM(FinalAmount), 0) AS Revenue
-                            FROM Orders
-                            WHERE YEAR(CreatedAt)  = YEAR(GETDATE())
-                              AND MONTH(CreatedAt) = MONTH(GETDATE())
-                              AND PaymentStatus = 'Paid'
-                              AND IsDeleted = 0
-                            GROUP BY DATEPART(WEEK, CreatedAt)
-                            ORDER BY DATEPART(WEEK, CreatedAt)
-                            """;
-            Map<String, BigDecimal> revenueMap = new HashMap<>();
-            List<String> weekOrder = new ArrayList<>();
-            PreparedStatement stRev = connection.prepareStatement(sqlRev);
-            ResultSet rsRev = stRev.executeQuery();
-            while (rsRev.next()) {
-                String lbl = rsRev.getString("WeekLabel");
-                revenueMap.put(lbl, rsRev.getBigDecimal("Revenue"));
-                weekOrder.add(lbl);
-            }
-
-            // Chi phí nhập kho từng tuần
-            String sqlCost = """
-                             SELECT 'Tuần ' + CAST(
-                                        DATEPART(WEEK, ReceivedDate)
-                                      - DATEPART(WEEK, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
-                                      + 1 AS NVARCHAR) AS WeekLabel,
-                                    ISNULL(SUM(TotalReceivedAmount), 0) AS Cost
-                             FROM ImportInvoices
-                             WHERE YEAR(ReceivedDate)  = YEAR(GETDATE())
-                               AND MONTH(ReceivedDate) = MONTH(GETDATE())
-                               AND Status = 'Received'
-                               AND IsDeleted = 0
-                             GROUP BY DATEPART(WEEK, ReceivedDate)
-                             ORDER BY DATEPART(WEEK, ReceivedDate)
-                             """;
-            Map<String, BigDecimal> costMap = new HashMap<>();
-            PreparedStatement stCost = connection.prepareStatement(sqlCost);
-            ResultSet rsCost = stCost.executeQuery();
-            while (rsCost.next()) {
-                costMap.put(rsCost.getString("WeekLabel"), rsCost.getBigDecimal("Cost"));
-            }
-
-            // Gộp lại
-            for (String lbl : weekOrder) {
-                BigDecimal rev = revenueMap.getOrDefault(lbl, BigDecimal.ZERO);
-                BigDecimal cost = costMap.getOrDefault(lbl, BigDecimal.ZERO);
+            String sql = switch (period) {
+                case "week" ->
+                    """
+                               WITH Rev AS (
+                                   SELECT FORMAT(CreatedAt, 'dd/MM') AS Label,
+                                          CAST(CreatedAt AS DATE) AS SortDate,
+                                          ISNULL(SUM(FinalAmount), 0) AS Revenue
+                                   FROM Orders
+                                   WHERE CreatedAt >= DATEADD(DAY, -6, CAST(GETDATE() AS DATE))
+                                     AND PaymentStatus = 'Paid'
+                                     AND IsDeleted = 0
+                                   GROUP BY FORMAT(CreatedAt, 'dd/MM'), CAST(CreatedAt AS DATE)
+                               ),
+                               Cost AS (
+                                   SELECT FORMAT(ReceivedDate, 'dd/MM') AS Label,
+                                          CAST(ReceivedDate AS DATE) AS SortDate,
+                                          ISNULL(SUM(TotalReceivedAmount), 0) AS Cost
+                                   FROM ImportInvoices
+                                   WHERE ReceivedDate >= DATEADD(DAY, -6, CAST(GETDATE() AS DATE))
+                                     AND Status = 'Received'
+                                     AND IsDeleted = 0
+                                   GROUP BY FORMAT(ReceivedDate, 'dd/MM'), CAST(ReceivedDate AS DATE)
+                               )
+                               SELECT COALESCE(r.Label, c.Label) AS Label,
+                                      COALESCE(r.SortDate, c.SortDate) AS SortOrder,
+                                      ISNULL(r.Revenue, 0) AS Revenue,
+                                      ISNULL(c.Cost, 0) AS Cost
+                               FROM Rev r
+                               FULL OUTER JOIN Cost c ON r.Label = c.Label
+                               ORDER BY SortOrder ASC
+                               """;
+                case "year" ->
+                    """
+                               WITH Rev AS (
+                                   SELECT N'Tháng ' + CAST(MONTH(CreatedAt) AS NVARCHAR) AS Label,
+                                          MONTH(CreatedAt) AS SortMonth,
+                                          ISNULL(SUM(FinalAmount), 0) AS Revenue
+                                   FROM Orders
+                                   WHERE YEAR(CreatedAt) = YEAR(GETDATE())
+                                     AND PaymentStatus = 'Paid'
+                                     AND IsDeleted = 0
+                                   GROUP BY MONTH(CreatedAt)
+                               ),
+                               Cost AS (
+                                   SELECT N'Tháng ' + CAST(MONTH(ReceivedDate) AS NVARCHAR) AS Label,
+                                          MONTH(ReceivedDate) AS SortMonth,
+                                          ISNULL(SUM(TotalReceivedAmount), 0) AS Cost
+                                   FROM ImportInvoices
+                                   WHERE YEAR(ReceivedDate) = YEAR(GETDATE())
+                                     AND Status = 'Received'
+                                     AND IsDeleted = 0
+                                   GROUP BY MONTH(ReceivedDate)
+                               )
+                               SELECT COALESCE(r.Label, c.Label) AS Label,
+                                      COALESCE(r.SortMonth, c.SortMonth) AS SortOrder,
+                                      ISNULL(r.Revenue, 0) AS Revenue,
+                                      ISNULL(c.Cost, 0) AS Cost
+                               FROM Rev r
+                               FULL OUTER JOIN Cost c ON r.Label = c.Label
+                               ORDER BY SortOrder ASC
+                               """;
+                default ->
+                    """
+                           WITH Rev AS (
+                               SELECT N'Tuần ' + CAST(
+                                          DATEPART(WEEK, CreatedAt)
+                                        - DATEPART(WEEK, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
+                                        + 1 AS NVARCHAR) AS Label,
+                                      DATEPART(WEEK, CreatedAt) AS SortWeek,
+                                      ISNULL(SUM(FinalAmount), 0) AS Revenue
+                               FROM Orders
+                               WHERE YEAR(CreatedAt)  = YEAR(GETDATE())
+                                 AND MONTH(CreatedAt) = MONTH(GETDATE())
+                                 AND PaymentStatus = 'Paid'
+                                 AND IsDeleted = 0
+                               GROUP BY DATEPART(WEEK, CreatedAt)
+                           ),
+                           Cost AS (
+                               SELECT N'Tuần ' + CAST(
+                                          DATEPART(WEEK, ReceivedDate)
+                                        - DATEPART(WEEK, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1))
+                                        + 1 AS NVARCHAR) AS Label,
+                                      DATEPART(WEEK, ReceivedDate) AS SortWeek,
+                                      ISNULL(SUM(TotalReceivedAmount), 0) AS Cost
+                               FROM ImportInvoices
+                               WHERE YEAR(ReceivedDate)  = YEAR(GETDATE())
+                                 AND MONTH(ReceivedDate) = MONTH(GETDATE())
+                                 AND Status = 'Received'
+                                 AND IsDeleted = 0
+                               GROUP BY DATEPART(WEEK, ReceivedDate)
+                           )
+                           SELECT COALESCE(r.Label, c.Label) AS Label,
+                                  COALESCE(r.SortWeek, c.SortWeek) AS SortOrder,
+                                  ISNULL(r.Revenue, 0) AS Revenue,
+                                  ISNULL(c.Cost, 0) AS Cost
+                           FROM Rev r
+                           FULL OUTER JOIN Cost c ON r.Label = c.Label
+                           ORDER BY SortOrder ASC
+                           """;
+            };
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                String lbl = rs.getString("Label");
+                BigDecimal rev = rs.getBigDecimal("Revenue");
+                BigDecimal cost = rs.getBigDecimal("Cost");
                 Map<String, Object> row = new HashMap<>();
                 row.put("label", lbl);
                 row.put("revenue", rev);
@@ -202,7 +262,7 @@ public class AdminFinanceDAO extends DBContext {
                 list.add(row);
             }
         } catch (Exception e) {
-            System.err.println("[FinanceDAO] getWeeklyBreakdown: " + e.getMessage());
+            System.err.println("[FinanceDAO] getChartData: " + e.getMessage());
         }
         return list;
     }
@@ -299,20 +359,20 @@ public class AdminFinanceDAO extends DBContext {
         List<Map<String, Object>> list = new ArrayList<>();
         try {
             String sql = """
-                         SELECT TOP (?) p.ProductName,
-                                SUM(od.Quantity) AS TotalQty,
-                                SUM(od.Quantity * od.UnitPrice) AS TotalRevenue
-                         FROM OrderDetails od
-                         JOIN Products p ON p.ProductId = od.ProductId
-                         JOIN Orders   o ON o.OrderId   = od.OrderId
-                         WHERE o.%s
-                           AND o.PaymentStatus = 'Paid'
-                           AND o.IsDeleted  = 0
-                           AND od.IsDeleted = 0
-                           AND p.IsDeleted  = 0
-                         GROUP BY p.ProductId, p.ProductName
-                         ORDER BY TotalRevenue DESC
-                         """.formatted(periodCondition(period));
+                          SELECT TOP (?) p.ProductName,
+                                 SUM(od.Quantity) AS TotalQty,
+                                 SUM(od.Quantity * od.UnitPrice) AS TotalRevenue
+                          FROM OrderDetails od
+                          JOIN Products p ON p.ProductId = od.ProductId
+                          JOIN Orders   o ON o.OrderId   = od.OrderId
+                          WHERE %s
+                            AND o.PaymentStatus = 'Paid'
+                            AND o.IsDeleted  = 0
+                            AND od.IsDeleted = 0
+                            AND p.IsDeleted  = 0
+                          GROUP BY p.ProductId, p.ProductName
+                          ORDER BY TotalRevenue DESC
+                          """.formatted(periodCondition(period, "o"));
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, limit);
             ResultSet rs = st.executeQuery();

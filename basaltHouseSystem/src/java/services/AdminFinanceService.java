@@ -14,7 +14,7 @@ public class AdminFinanceService {
     public Map<String, Object> getFinanceData(String period) {
         Map<String, Object> data = new HashMap<>();
 
-        // ── 1. KPI Cards ─────────────────────────────────────────────────────
+        // 1. KPI Cards 
         BigDecimal totalRevenue = dao.getTotalRevenue(period);
         BigDecimal prevRevenue = dao.getPrevRevenue(period);
         BigDecimal totalCost = dao.getTotalImportCost(period);
@@ -44,11 +44,11 @@ public class AdminFinanceService {
                 : BigDecimal.ZERO;
         data.put("avgOrder", avgOrder);
 
-        // ── 2. Biểu đồ cột: Doanh thu & Chi phí theo tuần ───────────────────
-        List<Map<String, Object>> weeklyBreakdown = dao.getWeeklyBreakdown();
+        //  2. Biểu đồ cột: Doanh thu & Chi phí theo tuần/tháng/ngày 
+        List<Map<String, Object>> weeklyBreakdown = dao.getChartData(period);
         data.put("weeklyBreakdown", weeklyBreakdown);
 
-        // ── 3. Cơ cấu doanh thu theo kênh (Donut chart) ──────────────────────
+        // 3. Cơ cấu doanh thu theo kênh (Donut chart) 
         List<Map<String, Object>> channelRevenue = dao.getRevenueByChannel(period);
         // Tính % cho mỗi kênh
         BigDecimal totalCh = channelRevenue.stream()
@@ -64,7 +64,7 @@ public class AdminFinanceService {
         }
         data.put("channelRevenue", channelRevenue);
 
-        // ── 4. Phương thức thanh toán ─────────────────────────────────────────
+        //  4. Phương thức thanh toán
         List<Map<String, Object>> paymentStats = dao.getPaymentMethodStats(period);
         // Tính % thanh toán so với tổng doanh thu cho progress bar
         for (Map<String, Object> pm : paymentStats) {
@@ -77,15 +77,15 @@ public class AdminFinanceService {
         }
         data.put("paymentStats", paymentStats);
 
-        // ── 5. Top 5 sản phẩm theo doanh thu ─────────────────────────────────
+        //  5. Top 5 sản phẩm theo doanh thu 
         List<Map<String, Object>> topProducts = dao.getTopProductsByRevenue(period, 5);
         data.put("topProducts", topProducts);
 
-        // ── 6. Phiếu nhập kho gần nhất ───────────────────────────────────────
+        //  6. Phiếu nhập kho gần nhất 
         List<Map<String, Object>> recentImports = dao.getRecentImports(5);
         data.put("recentImports", recentImports);
 
-        // ── 7. Kỳ hiện tại (để JSP hiển thị tab active) ──────────────────────
+        //7. Kỳ hiện tại (để JSP hiển thị tab active)
         data.put("period", period);
 
         return data;

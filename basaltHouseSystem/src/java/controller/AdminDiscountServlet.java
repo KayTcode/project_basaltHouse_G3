@@ -23,20 +23,24 @@ public class AdminDiscountServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            String search       = request.getParameter("search");
-            String filterType   = request.getParameter("filterType");
+            String search = request.getParameter("search");
+            String filterType = request.getParameter("filterType");
             String filterStatus = request.getParameter("filterStatus");
 
-            if (filterType   == null || filterType.isEmpty())   filterType   = "ALL";
-            if (filterStatus == null || filterStatus.isEmpty()) filterStatus = "ALL";
+            if (filterType == null || filterType.isEmpty()) {
+                filterType = "ALL";
+            }
+            if (filterStatus == null || filterStatus.isEmpty()) {
+                filterStatus = "ALL";
+            }
 
             List<DiscountCode> discounts = discountService.getAllDiscounts(search, filterType, filterStatus);
-            Map<String, Integer> stats   = discountService.getDiscountStats();
+            Map<String, Integer> stats = discountService.getDiscountStats();
 
-            request.setAttribute("discounts",    discounts);
-            request.setAttribute("stats",        stats);
-            request.setAttribute("search",       search);
-            request.setAttribute("filterType",   filterType);
+            request.setAttribute("discounts", discounts);
+            request.setAttribute("stats", stats);
+            request.setAttribute("search", search);
+            request.setAttribute("filterType", filterType);
             request.setAttribute("filterStatus", filterStatus);
 
         } catch (Exception e) {
@@ -53,7 +57,7 @@ public class AdminDiscountServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        String action      = request.getParameter("action");
+        String action = request.getParameter("action");
         String redirectUrl = request.getContextPath() + "/admin/discounts";
         String result;
 

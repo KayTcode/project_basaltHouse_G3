@@ -4,7 +4,7 @@ body{font-family:'Inter',sans-serif;background:#f4f1ec;display:flex;min-height:1
 
 
 /* ─── CONTENT ─── */
-.content-area{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.content-area{margin-left:0;flex:1;min-height:100vh;display:flex;flex-direction:column;}
 
 /* ─── TOP BAR ─── */
 .topbar{background:#fff;padding:16px 28px;border-bottom:1px solid rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}

@@ -222,18 +222,18 @@
                         <div class="col-md-7 text-center text-md-start">
                             <h2 class="promo-title">Ưu đãi hôm nay</h2>
                             <c:forEach var="c" items="${Listd}">
-                                
-                            
                                 <p class="promo-desc text-white-50" style="font-size: 30px">${c.description} </p>
+                            </c:forEach>
                         </div>
                         <div class="col-md-5">
                             <div class="d-flex align-items-center justify-content-center justify-content-md-end gap-3 flex-wrap">
+                                <c:forEach var="c" items="${Listd}">
                                 <div class="promo-code-container">
                                     <div class="promo-code-label">Mã giảm giá</div>
                                     <div class="promo-code-value">${c.code}</div>
                                 </div>
+                                <a class="btn-use-code" href="${pageContext.request.contextPath}/apply-voucher?code=${c.code}">Sử dụng ngay</a>
                                 </c:forEach>
-                                <a class="btn-use-code" href="${pageContext.request.contextPath}/category">Sử dụng ngay</a>
                             </div>
                         </div>
                     </div>

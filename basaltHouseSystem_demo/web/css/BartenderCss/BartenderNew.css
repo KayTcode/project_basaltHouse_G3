@@ -1,0 +1,405 @@
+/* ===================================================
+   BartenderNew.css – Coffee House POS (Bartender)
+   Matches design: sidebar nav + preparation board
+   =================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --brown-900: #002911;
+  --brown-800: #006e2f;
+  --brown-700: #005b26;
+  --brown-600: #004d22;
+  --brown-400: #00b04f;
+  --brown-300: #33c772;
+  --cream-100: #fdf6ee;
+  --cream-200: #f5ead8;
+  --bg-main: #f4f1ec;
+  --white: #ffffff;
+  --text-dark: #1a1a2e;
+  --text-muted: #8a8a9a;
+  --text-light: #b0b0c0;
+  --sidebar-w: 220px;
+  --success: #22c55e;
+  --success-light: #dcfce7;
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --danger: #ef4444;
+  --danger-light: #fee2e2;
+  --info: #3b82f6;
+  --info-light: #dbeafe;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-main);
+  color: var(--text-dark);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--brown-800) !important;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-logo .logo-icon {
+  width: 40px; height: 40px;
+  background: var(--brown-600);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+.sidebar-logo .logo-text {
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+}
+.sidebar-logo .logo-text span {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255,255,255,0.5);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 20px 14px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border: 1px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-color: rgba(255,255,255,0.05);
+  transform: translateX(4px);
+}
+
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+  color: #fff;
+  font-weight: 600;
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
+  width: 4px;
+  background: var(--brown-300);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px var(--brown-300);
+}
+
+.nav-item .nav-icon {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.15) rotate(-3deg);
+}
+
+.nav-item.active .nav-icon {
+  color: var(--brown-300);
+  transform: scale(1.05);
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.staff-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.staff-avatar {
+  width: 36px; height: 36px;
+  background: var(--brown-600);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: #fff;
+}
+
+.staff-info .staff-name {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.staff-info .staff-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+/* ─── CONTENT AREA ─── */
+.content-area {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+}
+
+/* ─── PREP BOARD HEADER ─── */
+.board-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.board-title h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 3px;
+}
+
+.board-title p {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.board-badge {
+  position: relative;
+}
+
+.notif-btn {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--white);
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: all 0.2s;
+}
+
+.notif-btn:hover { background: var(--brown-800) !important; color: #fff; }
+
+.notif-count {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-main);
+}
+
+/* ─── STATUS SECTIONS ─── */
+.status-section {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.section-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+
+.section-dot.pending { background: var(--warning); }
+.section-dot.preparing { background: var(--info); }
+.section-dot.ready { background: var(--success); }
+
+.section-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.section-link {
+  font-size: 12.5px;
+  color: var(--brown-600);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.section-link:hover { opacity: 0.7; }
+
+/* ─── ORDER ROW ─── */
+.order-row {
+  display: flex;
+  align-items: center;
+  padding: 13px 20px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  gap: 12px;
+  transition: background 0.15s;
+}
+
+.order-row:last-child { border-bottom: none; }
+.order-row:hover { background: #fafaf8; }
+
+.order-id {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+  min-width: 64px;
+}
+
+.order-desc {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.order-location {
+  font-size: 12.5px;
+  color: var(--text-dark);
+  font-weight: 500;
+  min-width: 55px;
+  text-align: center;
+}
+
+.order-time {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  min-width: 42px;
+  text-align: center;
+}
+
+/* ─── ACTION BUTTONS ─── */
+.btn-start {
+  padding: 7px 18px;
+  background: var(--brown-800) !important;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-start:hover { background: var(--brown-600); }
+
+.btn-mark-ready {
+  padding: 7px 14px;
+  background: transparent;
+  border: 1.5px solid var(--info);
+  color: var(--info);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-mark-ready:hover { background: var(--info); color: #fff; }
+
+.btn-complete {
+  padding: 7px 14px;
+  background: transparent;
+  border: 1.5px solid var(--success);
+  color: var(--success);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-complete:hover { background: var(--success); color: #fff; }
+
+/* ─── SECTION COLORS ─── */
+.section-pending .section-header { background: #fffbf0; }
+.section-preparing .section-header { background: #eff6ff; }
+.section-ready .section-header { background: #f0fdf4; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.status-section {
+  animation: fadeInUp 0.3s ease both;
+}
+
+.status-section:nth-child(2) { animation-delay: 0.05s; }
+.status-section:nth-child(3) { animation-delay: 0.1s; }

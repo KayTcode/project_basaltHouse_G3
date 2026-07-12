@@ -49,7 +49,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
         <!-- Material Symbols Outlined -->
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-        <link href="${pageContext.request.contextPath}/css/HomePageCss/HomePage.css" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/css/HomePageCss/HomePage.css?v=20260709-1" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-2" rel="stylesheet">
 
 
     </head>

@@ -979,3 +979,136 @@ input[readonly] {
         margin-bottom: 17px;
     }
 }
+
+/* ===================================================================
+   STAFF INVOICE GREEN-WHITE ALIGNMENT
+   Keeps this standalone invoice page consistent with Staff/Customer UI.
+   =================================================================== */
+:root {
+    --brand-700: #0f6937;
+    --brand-600: #178447;
+    --brand-500: #2a9d5b;
+    --brand-100: #dcebe1;
+    --brand-50: #f3f8f4;
+    --green-900: #123326;
+    --green-800: #0f4f2f;
+    --green-700: #0f6937;
+    --green-600: #178447;
+    --mint-100: #dcebe1;
+    --mint-600: #178447;
+    --blue-700: #178447;
+    --blue-100: #dcebe1;
+    --amber-100: #fbf1d8;
+    --amber-700: #9b6a11;
+    --red-100: #f7e5df;
+    --red-700: #a34b4b;
+    --surface: #ffffff;
+    --line: #dfe8e2;
+    --line-soft: #eef4f0;
+    --text: #17231c;
+    --muted: #5f6d64;
+    --muted-soft: #92a399;
+    --shadow: 0 6px 18px rgba(18, 51, 38, 0.07);
+    --shadow-raised: 0 14px 36px rgba(18, 51, 38, 0.1);
+}
+
+body {
+    background:
+        radial-gradient(circle at 82% 2%, rgba(23, 132, 71, 0.12), transparent 24rem),
+        radial-gradient(circle at 42% 100%, rgba(220, 235, 225, 0.72), transparent 30rem),
+        #fdfdfb !important;
+}
+
+.invoice-hero {
+    background:
+        radial-gradient(circle at 92% 20%, rgba(23, 132, 71, 0.13), transparent 16rem),
+        linear-gradient(135deg, #f3f8f4, #ffffff 68%) !important;
+    border: 1px solid var(--line) !important;
+    color: var(--text) !important;
+    box-shadow: var(--shadow) !important;
+}
+
+.invoice-hero::before {
+    background: rgba(23, 132, 71, 0.06) !important;
+}
+
+.eyebrow,
+.panel-head p,
+.hero-copy h1,
+.ingredient-unit {
+    color: var(--brand-600) !important;
+}
+
+.hero-copy p:last-child,
+.meta-label,
+.summary-list span,
+.empty-state p {
+    color: var(--muted) !important;
+}
+
+.hero-back {
+    border-color: rgba(23, 132, 71, 0.28) !important;
+    background: var(--brand-50) !important;
+    color: var(--brand-700) !important;
+}
+
+.hero-back:hover {
+    background: var(--brand-100) !important;
+}
+
+.panel,
+.summary-card,
+.empty-state,
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+    border-color: var(--line) !important;
+    box-shadow: var(--shadow) !important;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+    border-color: var(--brand-500) !important;
+    box-shadow: 0 0 0 4px rgba(23, 132, 71, 0.1) !important;
+}
+
+.status-badge.confirmed,
+.notice-success,
+.ingredient-unit {
+    background: var(--mint-100) !important;
+    color: var(--mint-600) !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
+    box-shadow: 0 8px 20px rgba(23, 132, 71, 0.18) !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--brand-700), #0b4f2b) !important;
+    box-shadow: 0 11px 24px rgba(23, 132, 71, 0.22) !important;
+}
+
+.btn-secondary,
+.empty-state a {
+    border-color: rgba(23, 132, 71, 0.34) !important;
+    background: var(--brand-50) !important;
+    color: var(--brand-700) !important;
+}
+
+.btn-secondary:hover,
+.empty-state a:hover {
+    background: var(--brand-100) !important;
+}
+
+.empty-state {
+    background:
+        radial-gradient(circle at 50% 25%, rgba(23, 132, 71, 0.09), transparent 15rem),
+        #ffffff !important;
+}
+
+.empty-state > .material-symbols-outlined {
+    background: var(--brand-100) !important;
+    color: var(--brand-600) !important;
+}

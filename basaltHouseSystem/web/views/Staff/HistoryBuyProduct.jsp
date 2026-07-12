@@ -1,6 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
-<link href="${pageContext.request.contextPath}/css/Staff/SaleHistory.css?v=11" rel="stylesheet">
+<link href="${pageContext.request.contextPath}/css/Staff/SaleHistory.css?v=20260709-1" rel="stylesheet">
 
 <section class="staff-view active" id="salesHistoryView">
     <section class="sales-audit-grid" aria-label="Tổng quan bán hàng">

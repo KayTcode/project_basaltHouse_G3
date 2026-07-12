@@ -99,7 +99,7 @@
                                         <span class="item-rank-badge">${status.index + 1}</span>
                                         <span class="item-text-name">${item.productName}</span>
                                     </div>
-                                    <span class="item-sales-count">${item.totalQuantitySold} ly</span>
+                                    <span class="item-sales-count">${item.totalSold} ly</span>
                                 </div>
                             </c:forEach>
                             <c:if test="${empty topSellingProducts}">

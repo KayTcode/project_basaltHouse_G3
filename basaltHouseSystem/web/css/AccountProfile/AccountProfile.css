@@ -763,3 +763,337 @@
         padding: 14px;
     }
 }
+
+/* ===================================================================
+   ACCOUNT PROFILE REFINEMENT - green/white customer system
+   This final layer intentionally loads after CustomerTheme.css.
+   =================================================================== */
+.account-inform-page {
+    --profile-green-900: #123326;
+    --profile-green-800: #0f4f2f;
+    --profile-green-700: #0f6937;
+    --profile-green-600: #178447;
+    --profile-green-100: #dcebe1;
+    --profile-green-50: #f3f8f4;
+    --profile-canvas: #fdfdfb;
+    --profile-soft: #f2eee6;
+    --profile-line: #dfe8e2;
+    --profile-line-strong: #cbd7cf;
+    --profile-ink: #17231c;
+    --profile-muted: #5f6d64;
+    --profile-shadow: 0 16px 44px rgba(18, 51, 38, 0.08);
+    --profile-shadow-hover: 0 22px 54px rgba(18, 51, 38, 0.12);
+    min-height: calc(100vh - 72px);
+    background:
+        radial-gradient(circle at 84% 4%, rgba(23, 132, 71, 0.1), transparent 26rem),
+        linear-gradient(180deg, #ffffff 0%, var(--profile-canvas) 48%, #f5f4ef 100%) !important;
+    color: var(--profile-ink);
+}
+
+.account-inform-page .container {
+    max-width: 1320px !important;
+}
+
+.account-hero {
+    min-height: auto;
+    padding: clamp(56px, 7vw, 88px) 0 clamp(84px, 8vw, 118px) !important;
+    background:
+        radial-gradient(circle at 78% 22%, rgba(23, 132, 71, 0.13), transparent 22rem),
+        linear-gradient(135deg, #ffffff 0%, #f3f8f4 55%, #edf3ee 100%) !important;
+    border-bottom: 1px solid var(--profile-line);
+}
+
+.account-hero::before {
+    background-image:
+        linear-gradient(90deg, rgba(23, 132, 71, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(23, 132, 71, 0.06) 1px, transparent 1px) !important;
+    background-size: 92px 92px;
+    opacity: 0.42;
+}
+
+.account-hero::after {
+    height: 80px;
+    background:
+        linear-gradient(180deg, transparent, rgba(253, 253, 251, 0.76)),
+        linear-gradient(174deg, transparent 0 54%, var(--profile-canvas) 55% 100%) !important;
+}
+
+.account-hero-inner {
+    align-items: center;
+}
+
+.account-hero-copy {
+    max-width: 760px;
+    padding-left: clamp(18px, 2vw, 28px);
+}
+
+.account-hero-copy::before {
+    width: 5px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--profile-green-600), var(--profile-green-900)) !important;
+    box-shadow: 0 0 0 7px rgba(23, 132, 71, 0.08);
+}
+
+.account-kicker {
+    border: 1px solid rgba(23, 132, 71, 0.18);
+    border-radius: 3px;
+    background: #ffffff;
+    color: var(--profile-green-700);
+    letter-spacing: 0.02em;
+    text-transform: none;
+    box-shadow: 0 8px 22px rgba(18, 51, 38, 0.05);
+}
+
+.account-kicker .material-symbols-outlined {
+    color: var(--profile-green-600);
+}
+
+.account-hero h1 {
+    max-width: 720px;
+    color: var(--profile-ink) !important;
+    font-size: clamp(42px, 5vw, 68px);
+    font-weight: 800;
+    letter-spacing: -0.055em;
+    line-height: 0.98;
+    text-shadow: none;
+}
+
+.account-hero p {
+    max-width: 650px;
+    color: var(--profile-muted) !important;
+    font-size: clamp(15px, 1.4vw, 18px);
+    line-height: 1.8;
+}
+
+.account-content-section {
+    margin-top: -58px;
+    padding: 0 0 clamp(70px, 8vw, 104px) !important;
+    background:
+        linear-gradient(180deg, transparent 0%, var(--profile-canvas) 18%, var(--profile-soft) 100%) !important;
+    border-bottom: 1px solid #ddd8ce;
+}
+
+.account-layout {
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    gap: clamp(18px, 2vw, 30px);
+}
+
+.account-profile-card,
+.account-detail-panel {
+    border: 1px solid var(--profile-line);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.96) !important;
+    box-shadow: var(--profile-shadow);
+}
+
+.account-profile-card::before,
+.account-detail-panel::before {
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 0;
+    background: linear-gradient(90deg, var(--profile-green-700), var(--profile-green-600), transparent);
+}
+
+.account-profile-card {
+    top: 92px;
+    padding: clamp(22px, 2.6vw, 30px);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 247, 0.98)),
+        radial-gradient(circle at 50% 0%, rgba(23, 132, 71, 0.1), transparent 13rem) !important;
+}
+
+.account-avatar-wrap {
+    width: 142px;
+    height: 142px;
+    border: 1px solid rgba(23, 132, 71, 0.14);
+    border-radius: 3px;
+    background: linear-gradient(135deg, #ffffff, var(--profile-green-50));
+    box-shadow: 0 18px 40px rgba(18, 51, 38, 0.1);
+}
+
+.account-avatar-wrap::after {
+    inset: 10px;
+    border-color: rgba(23, 132, 71, 0.16);
+    border-radius: 2px;
+}
+
+.account-avatar-wrap:hover {
+    box-shadow: 0 24px 46px rgba(18, 51, 38, 0.14);
+}
+
+.account-avatar-edit {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 1px solid rgba(23, 132, 71, 0.16);
+    border-radius: 3px;
+    color: var(--profile-green-700);
+}
+
+.account-avatar-fallback {
+    color: var(--profile-green-600);
+}
+
+.account-avatar-url-panel,
+.account-mini-stats > div,
+.account-detail-item {
+    border: 1px solid var(--profile-line);
+    border-radius: 3px;
+    background: #ffffff;
+}
+
+.account-avatar-url-panel {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
+}
+
+.account-avatar-url-row input,
+.account-password-form input {
+    border: 1px solid var(--profile-line);
+    border-radius: 3px;
+    background: #ffffff;
+}
+
+.account-avatar-url-row input:focus,
+.account-password-form input:focus {
+    border-color: var(--profile-green-600);
+    box-shadow: 0 0 0 4px rgba(23, 132, 71, 0.1);
+}
+
+.account-avatar-url-row button,
+.account-password-form button {
+    border-radius: 3px;
+    background: var(--profile-green-700);
+    box-shadow: 0 12px 26px rgba(23, 132, 71, 0.16);
+}
+
+.account-avatar-url-row button:hover,
+.account-password-form button:hover {
+    background: var(--profile-green-900);
+    box-shadow: 0 16px 34px rgba(18, 51, 38, 0.2);
+}
+
+.account-status-chip {
+    border: 1px solid rgba(23, 132, 71, 0.16);
+    border-radius: 3px;
+    background: var(--profile-green-50);
+    color: var(--profile-green-700);
+}
+
+.account-profile-info h2,
+.account-panel-head h2,
+.account-detail-item strong,
+.account-mini-stats strong {
+    color: var(--profile-ink);
+    letter-spacing: -0.025em;
+}
+
+.account-profile-info p,
+.account-mini-stats small,
+.account-detail-item small,
+.account-avatar-url-panel small,
+.account-panel-head p {
+    color: var(--profile-muted);
+}
+
+.account-mini-stats > div {
+    display: grid;
+    gap: 4px;
+    padding: 16px;
+    text-align: left;
+}
+
+.account-mini-stats .material-symbols-outlined,
+.account-panel-icon,
+.account-detail-item > .material-symbols-outlined {
+    background: var(--profile-green-50);
+    color: var(--profile-green-600);
+}
+
+.account-detail-panel {
+    padding: clamp(22px, 3vw, 34px);
+}
+
+.account-panel-head {
+    margin-bottom: 28px;
+    border-bottom-color: var(--profile-line);
+}
+
+.account-panel-head h2::after {
+    right: 38%;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--profile-green-600);
+}
+
+.account-panel-icon,
+.account-detail-item > .material-symbols-outlined {
+    border-radius: 3px;
+}
+
+.account-detail-grid {
+    gap: 16px;
+}
+
+.account-detail-item {
+    padding: 18px;
+    box-shadow: none;
+}
+
+.account-detail-item:hover {
+    border-color: rgba(23, 132, 71, 0.24);
+    box-shadow: var(--profile-shadow-hover);
+}
+
+.account-password-item {
+    background:
+        linear-gradient(135deg, var(--profile-green-50), #ffffff 72%) !important;
+}
+
+.account-password-form {
+    align-items: end;
+    gap: 16px;
+}
+
+.account-form-alert {
+    border-radius: 3px;
+}
+
+.account-form-alert--success {
+    border-color: rgba(23, 132, 71, 0.22);
+    background: var(--profile-green-50);
+    color: var(--profile-green-700);
+}
+
+.account-form-alert--error {
+    border-color: rgba(163, 75, 75, 0.24);
+    background: #f9efec;
+    color: #8f3f3f;
+}
+
+@media (max-width: 991.98px) {
+    .account-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .account-profile-card {
+        position: relative;
+        top: auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .account-hero h1 {
+        font-size: clamp(34px, 12vw, 46px);
+    }
+
+    .account-avatar-wrap {
+        width: 116px;
+        height: 116px;
+    }
+
+    .account-detail-panel,
+    .account-profile-card {
+        padding: 18px;
+    }
+}

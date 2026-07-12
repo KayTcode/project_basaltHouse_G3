@@ -48,8 +48,8 @@ public class AdminAccountDAO extends DBContext{
                 Account acc = mapResultSetToAccount(rs);
                 AccountViewDTO dto = new AccountViewDTO(
                     acc,
-                    rs.getNString("RoleName"),
-                    rs.getNString("FullName"),
+                    rs.getString("RoleName"),
+                    rs.getString("FullName"),
                     rs.getString("Phone")
                 );
                 list.add(dto);
@@ -227,7 +227,10 @@ public class AdminAccountDAO extends DBContext{
         acc.setPasswordHash(rs.getString("PasswordHash"));
         acc.setIsEmailVerified(rs.getBoolean("IsEmailVerified"));
         acc.setIsActive(rs.getBoolean("IsActive"));
-        acc.setCreatedAt(rs.getTimestamp("CreatedAt").toLocalDateTime());
+        java.sql.Timestamp createdAtTimestamp = rs.getTimestamp("CreatedAt");
+        if (createdAtTimestamp != null) {
+            acc.setCreatedAt(createdAtTimestamp.toLocalDateTime());
+        }
         acc.setIsDeleted(rs.getBoolean("IsDeleted"));
         acc.setFailedAttempts(rs.getInt("FailedAttempts"));
         acc.setIsLocked(rs.getBoolean("IsLocked"));

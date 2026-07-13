@@ -3,78 +3,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<%-- ══════════════════════════════════════════════════════════════════════════
-     MOCK DATA FALLBACK (Khi chưa chạy qua Servlet)
-     ══════════════════════════════════════════════════════════════════════════ --%>
-<%
-    if (request.getAttribute("reviews") == null) {
-        java.util.List<java.util.Map<String, Object>> mockReviews = new java.util.ArrayList<>();
-        
-        java.util.Map<String, Object> r1 = new java.util.HashMap<>();
-        r1.put("reviewedId", 101);
-        r1.put("customerName", "Nguyễn Văn A");
-        r1.put("orderId", 1245);
-        r1.put("productName", "Cà phê sữa đá");
-        r1.put("rating", 5);
-        r1.put("comment", "Cà phê rất đậm vị, giao hàng nhanh chóng và đóng gói cẩn thận. Sẽ tiếp tục ủng hộ quán!");
-        r1.put("createdAt", java.time.LocalDateTime.now().minusHours(2));
-        r1.put("isVisible", true);
-        mockReviews.add(r1);
-        
-        java.util.Map<String, Object> r2 = new java.util.HashMap<>();
-        r2.put("reviewedId", 102);
-        r2.put("customerName", "Trần Thị B");
-        r2.put("orderId", 1240);
-        r2.put("productName", "Trà đào cam sả");
-        r2.put("rating", 4);
-        r2.put("comment", "Trà đào thơm ngon, nhiều đào. Tuy nhiên hơi ngọt so với khẩu vị của mình.");
-        r2.put("createdAt", java.time.LocalDateTime.now().minusHours(5));
-        r2.put("isVisible", true);
-        mockReviews.add(r2);
-
-        java.util.Map<String, Object> r3 = new java.util.HashMap<>();
-        r3.put("reviewedId", 103);
-        r3.put("customerName", "Phạm Minh C");
-        r3.put("orderId", 1238);
-        r3.put("productName", "Bạc xỉu");
-        r3.put("rating", 2);
-        r3.put("comment", "Đồ uống quá nhạt, đá tan hết khi giao tới nơi. Đề nghị quán cải thiện chất lượng.");
-        r3.put("createdAt", java.time.LocalDateTime.now().minusDays(1));
-        r3.put("isVisible", false);
-        mockReviews.add(r3);
-
-        java.util.Map<String, Object> r4 = new java.util.HashMap<>();
-        r4.put("reviewedId", 104);
-        r4.put("customerName", "Lê Hoàng D");
-        r4.put("orderId", 1235);
-        r4.put("productName", "Bánh sừng bò");
-        r4.put("rating", 5);
-        r4.put("comment", "Bánh giòn, thơm bơ. Ăn kèm cà phê rất hợp vị.");
-        r4.put("createdAt", java.time.LocalDateTime.now().minusDays(2));
-        r4.put("isVisible", true);
-        mockReviews.add(r4);
-        
-        request.setAttribute("reviews", mockReviews);
-        request.setAttribute("avgRating", 4.0);
-        request.setAttribute("totalReviews", 4);
-        request.setAttribute("positiveRate", 75);
-        request.setAttribute("hiddenReviews", 1);
-        
-        request.setAttribute("star5Count", 2);
-        request.setAttribute("star4Count", 1);
-        request.setAttribute("star3Count", 0);
-        request.setAttribute("star2Count", 1);
-        request.setAttribute("star1Count", 0);
-        
-        request.setAttribute("star5Pct", 50);
-        request.setAttribute("star4Pct", 25);
-        request.setAttribute("star3Pct", 0);
-        request.setAttribute("star2Pct", 25);
-        request.setAttribute("star1Pct", 0);
-        request.setAttribute("currentPage", 1);
-        request.setAttribute("totalPages", 1);
-    }
-%>
+<%@ page import="java.time.LocalDateTime, java.time.format.DateTimeFormatter" %>
 
 <!DOCTYPE html>
 <html>
@@ -248,7 +177,7 @@
                         </thead>
                         <tbody>
                             <c:forEach var="r" items="${reviews}">
-                                <tr id="review-row-${r.reviewedId}">
+                                <tr id="review-row-${r.reviewedId}" data-review-id="${r.reviewedId}">
                                     <td>
                                         <div class="customer-cell">
                                             <span class="customer-name">${r.customerName}</span>
@@ -270,29 +199,48 @@
                                     <td>
                                         <div class="comment-text">${r.comment}</div>
                                         <div class="date-text">
-                                            <c:choose>
-                                                <c:when test="${fn:contains(r.createdAt, '/')}">
-                                                    ${r.createdAt}
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <fmt:parseDate value="${r.createdAt}" pattern="yyyy-MM-dd'T'HH:mm" var="parsedDate" type="both"/>
-                                                    <fmt:formatDate value="${parsedDate}" pattern="dd/MM/yyyy HH:mm"/>
-                                                </c:otherwise>
-                                            </c:choose>
+                                            <%
+                                                Object rawDate = ((java.util.Map<?,?>)pageContext.findAttribute("r")).get("createdAt");
+                                                if (rawDate instanceof java.time.LocalDateTime) {
+                                                    java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                                                    out.print(((java.time.LocalDateTime) rawDate).format(dtf));
+                                                } else if (rawDate != null) {
+                                                    out.print(rawDate.toString());
+                                                } else {
+                                                    out.print("—");
+                                                }
+                                            %>
                                         </div>
                                     </td>
                                     <td style="text-align: center; vertical-align: middle;">
-                                        <label class="toggle-switch-label">
-                                            <input type="checkbox" ${r.isVisible ? 'checked' : ''} onchange="toggleReviewVisibility(${r.reviewedId}, this.checked)">
-                                            <span class="toggle-slider"></span>
-                                        </label>
+                                        <form action="${pageContext.request.contextPath}/admin/reviews" method="POST" style="margin: 0;">
+                                            <input type="hidden" name="action" value="toggle">
+                                            <input type="hidden" name="id" value="${r.reviewedId}">
+                                            <input type="hidden" name="visible" value="${!r.isVisible}">
+                                            <input type="hidden" name="search" value="<c:out value='${param.search}'/>">
+                                            <input type="hidden" name="rating" value="<c:out value='${param.rating}'/>">
+                                            <input type="hidden" name="status" value="<c:out value='${param.status}'/>">
+                                            <input type="hidden" name="page" value="<c:out value='${param.page}'/>">
+                                            <label class="toggle-switch-label">
+                                                <input type="checkbox" ${r.isVisible ? 'checked' : ''} onchange="this.form.submit()">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </form>
                                     </td>
                                     <td style="text-align: center; vertical-align: middle;">
-                                        <div class="action-btn-group">
-                                            <button type="button" class="btn-icon-only btn-delete-rev" onclick="deleteReview(${r.reviewedId})" title="Xóa đánh giá">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </button>
-                                        </div>
+                                        <form action="${pageContext.request.contextPath}/admin/reviews" method="POST" style="margin: 0;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này?')">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="${r.reviewedId}">
+                                            <input type="hidden" name="search" value="<c:out value='${param.search}'/>">
+                                            <input type="hidden" name="rating" value="<c:out value='${param.rating}'/>">
+                                            <input type="hidden" name="status" value="<c:out value='${param.status}'/>">
+                                            <input type="hidden" name="page" value="<c:out value='${param.page}'/>">
+                                            <div class="action-btn-group">
+                                                <button type="submit" class="btn-icon-only btn-delete-rev" title="Xóa đánh giá">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </form>
                                     </td>
                                 </tr>
                             </c:forEach>
@@ -328,77 +276,11 @@
 
         <%-- ── ACTIONS JAVASCRIPT ── --%>
         <script>
-            function toggleReviewVisibility(reviewId, isChecked) {
-                // Gửi request AJAX/Fetch đến servlet để cập nhật trạng thái hiển thị
-                const url = '${pageContext.request.contextPath}/admin/reviews?action=toggle';
-                
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `id=${reviewId}&visible=${isChecked}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Cập nhật trạng thái hiển thị thành công.');
-                    } else {
-                        alert(data.message || 'Cập nhật thất bại. Vui lòng thử lại.');
-                        // Revert trạng thái checkbox nếu lỗi
-                        window.location.reload();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Lỗi kết nối máy chủ!');
-                    window.location.reload();
-                });
-            }
-
-            function deleteReview(reviewId) {
-                if (!confirm('Bạn có chắc chắn muốn xóa đánh giá này không? Đánh giá bị xóa sẽ không xuất hiện lại.')) {
-                    return;
-                }
-                
-                const url = '${pageContext.request.contextPath}/admin/reviews?action=delete';
-                
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `id=${reviewId}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Xóa dòng hiển thị trên UI
-                        const row = document.getElementById(`review-row-${reviewId}`);
-                        if (row) {
-                            row.style.opacity = '0';
-                            row.style.transform = 'scale(0.9)';
-                            row.style.transition = 'all 0.3s ease';
-                            setTimeout(() => {
-                                row.remove();
-                                // Tự động reload để cập nhật các chỉ số KPI
-                                window.location.reload();
-                            }, 300);
-                        }
-                    } else {
-                        alert(data.message || 'Xóa đánh giá thất bại.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Lỗi kết nối máy chủ!');
-                });
-            }
-
+            // ── Phân trang ────────────────────────────────────────────
             function changePage(page) {
-                const urlParams = new URLSearchParams(window.location.search);
-                urlParams.set('page', page);
-                window.location.search = urlParams.toString();
+                const params = new URLSearchParams(window.location.search);
+                params.set('page', page);
+                window.location.search = params.toString();
             }
         </script>
     </body>

@@ -28,10 +28,9 @@ public class Order {
     private BigDecimal finalAmount;
     private LocalDateTime createdAt;
     private boolean isDeleted;
-    
-    // Additional fields for display
     private String customerName;
     private String tableName;
+    private String shipperName;
     private String note;
 
     public Order() {
@@ -204,7 +203,13 @@ public class Order {
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
+    public String getShipperName() {
+        return shipperName;
+    }
 
+    public void setShipperName(String shipperName) {
+        this.shipperName = shipperName;
+    }
     public String getNote() {
         return note;
     }

@@ -30,41 +30,25 @@
     <meta name="description" content="Lịch sử pha chế Bartender">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderNew.css?v=5" rel="stylesheet">
-    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderViews.css?v=8" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderNew.css?v=6" rel="stylesheet">
+    <link href="${pageContext.request.contextPath}/css/BartenderCss/BartenderViews.css?v=9" rel="stylesheet">
 </head>
 <body>
 
-<!-- ── SIDEBAR ── -->
-<aside class="sidebar">
-    <div class="sidebar-logo">
-        <div class="logo-icon">&#9749;</div>
-        <div class="logo-text">Basalt<span>House Coffee</span></div>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="${pageContext.request.contextPath}/bartender/view" class="nav-item">
-            <span class="nav-icon material-symbols-outlined">view_kanban</span>Prep Board
-        </a>
-        <a href="${pageContext.request.contextPath}/bartender/history" class="nav-item active">
-            <span class="nav-icon material-symbols-outlined">history</span>History
-        </a>
-        <a href="#" class="nav-item">
-            <span class="nav-icon material-symbols-outlined">settings</span>Settings
-        </a>
-    </nav>
-    <div class="sidebar-footer">
-        <div class="staff-card">
-            <div class="staff-avatar"><span class="material-symbols-outlined" style="font-size:18px">person</span></div>
-            <div class="staff-info">
-                <div class="staff-name">Bartender</div>
-                <div class="staff-status"><div class="status-dot"></div>Online</div>
-            </div>
-        </div>
-    </div>
-</aside>
-
 <!-- ── CONTENT ── -->
 <div class="content-area">
+
+    <!-- ── TOP ACTIONS ── -->
+    <div class="bartender-top-actions">
+        <a href="${pageContext.request.contextPath}/cashier/pos" class="btn-top-action pos">
+            <span class="material-symbols-outlined">point_of_sale</span>
+            Quay lại máy POS
+        </a>
+        <a href="${pageContext.request.contextPath}/bartender/view" class="btn-top-action history">
+            <span class="material-symbols-outlined">view_kanban</span>
+            Bảng pha chế (Prep Board)
+        </a>
+    </div>
 
     <!-- Stats bar -->
     <div class="stats-bar">

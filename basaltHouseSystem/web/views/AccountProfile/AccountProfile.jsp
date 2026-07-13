@@ -13,7 +13,9 @@
 <jsp:include page="/views/HomePage/Header.jsp"/>
 
 <link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/AccountProfile/AccountProfile.css">
+      href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-1">
+<link rel="stylesheet"
+      href="${pageContext.request.contextPath}/css/AccountProfile/AccountProfile.css?v=20260709-2">
 
 <main class="account-inform-page">
     <section class="account-hero">

@@ -351,6 +351,56 @@ public class ShipperDAO extends DBContext {
         }
     }
  
+   
+    public boolean assignShipper(int orderId, int shipperId) {
+        sql = """
+              UPDATE [dbo].[Orders]
+              SET [ShipperId] = ?, [OrderStatus] = 'Delivering'
+              WHERE [OrderId] = ? AND [IsDeleted] = 0
+              """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, shipperId);
+            ps.setInt(2, orderId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    
+    public List<Shipper> getActiveShippers() {
+        sql = """
+              SELECT [ShipperId],[AccountId],[FullName],[Phone],[Address],
+                     [AvatarUrl],[IsAvailable],[CreatedAt],[IsDeleted]
+              FROM [dbo].[Shippers]
+              WHERE [IsAvailable] = 1 AND [IsDeleted] = 0
+              ORDER BY [FullName] ASC
+              """;
+        List<Shipper> list = new ArrayList<>();
+        try {
+            ps = connection.prepareStatement(sql);
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                Shipper s = new Shipper();
+                s.setShipperId(rs.getInt("ShipperId"));
+                s.setAccountId(rs.getInt("AccountId"));
+                s.setFullName(rs.getString("FullName"));
+                s.setPhone(rs.getString("Phone"));
+                s.setAddress(rs.getString("Address"));
+                s.setAvatarUrl(rs.getString("AvatarUrl"));
+                s.setIsAvailable(rs.getBoolean("IsAvailable"));
+                java.sql.Timestamp createAt = rs.getTimestamp("CreatedAt");
+                if (createAt != null) s.setCreatedAt(createAt.toLocalDateTime());
+                s.setIsDeleted(rs.getBoolean("IsDeleted"));
+                list.add(s);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return list;
+    }
+
     private boolean isOrderPendingShipper(Connection connection, int orderId) {
         sql = """
               SELECT COUNT(1) FROM Orders

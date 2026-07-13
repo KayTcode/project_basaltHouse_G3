@@ -27,13 +27,14 @@
 
 <!-- ── SIDEBAR ── -->
 <aside class="sidebar">
-    <div class="sidebar-logo">
+    <!-- [MODIFIED] - Wrap logo in anchor to link back to home -->
+    <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
         <div class="logo-icon">☕</div>
         <div class="logo-text">
             Basalt
             <span>House Coffee</span>
         </div>
-    </div>
+    </a>
 
     <nav class="sidebar-nav">
         <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item active" id="nav-dashboard">
@@ -49,9 +50,9 @@
             POS Order
         </a>
 
-        <a href="#" class="nav-item" id="nav-settings">
-            <span class="nav-icon material-symbols-outlined">settings</span>
-            Settings
+        <a href="${pageContext.request.contextPath}/bartender/view" class="nav-item" id="nav-bartending">
+            <span class="nav-icon material-symbols-outlined">sports_bar</span>
+            Bartending
         </a>
     </nav>
 
@@ -61,7 +62,8 @@
                 <span class="material-symbols-outlined" style="font-size:18px">person</span>
             </div>
             <div class="staff-info">
-                <div class="staff-name">Cashier</div>
+                <!-- [MODIFIED] - Replace hardcoded 'Cashier' with session fullName -->
+                <div class="staff-name">${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : 'Cashier'}</div>
                 <div class="staff-status">
                     <div class="status-dot"></div>
                     Online

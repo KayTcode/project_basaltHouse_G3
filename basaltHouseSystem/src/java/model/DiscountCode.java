@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
  * @author KayT
  */
 public class DiscountCode {
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DecimalFormat MONEY_FORMATTER = new DecimalFormat("#,###");
 
     private int discountId;
@@ -119,12 +119,21 @@ public class DiscountCode {
         return endDate;
     }
 
-    public String getEndDateFormatted() {
-        if (endDate == null) {
-            return "";
-        }
+    public String getStartDateFormatted() {
+        if (startDate == null) return "--";
+        return startDate.format(DATE_FORMATTER);
+    }
 
+    public String getEndDateFormatted() {
+        if (endDate == null) return "--";
         return endDate.format(DATE_FORMATTER);
+    }
+
+    public String getDiscountTypeName() {
+        if (discountPercent != null && discountPercent.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            return "PERCENT";
+        }
+        return "AMOUNT";
     }
 
     public void setEndDate(LocalDateTime endDate) {

@@ -12,6 +12,26 @@ import java.util.Map;
 
 public class AdminReviewDAO extends DBContext {
 
+    private List<String> getOrderProductNames(int orderId) {
+        List<String> products = new ArrayList<>();
+        String sql = """
+            SELECT p.ProductName
+            FROM OrderDetails od
+            JOIN Products p ON od.ProductId = p.ProductId
+            WHERE od.OrderId = ? AND od.IsDeleted = 0
+            """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    products.add(rs.getString("ProductName"));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[AdminReviewDAO] getOrderProductNames error: " + e.getMessage());
+        }
+        return products;
+    }
 
     public List<Map<String, Object>> getReviews(String search, Integer rating, String status, int page, int pageSize) {
         List<Map<String, Object>> list = new ArrayList<>();
@@ -66,8 +86,20 @@ public class AdminReviewDAO extends DBContext {
                 Map<String, Object> row = new HashMap<>();
                 row.put("reviewedId", rs.getInt("ReviewId"));
                 row.put("customerName", rs.getString("customerName") != null ? rs.getString("customerName") : "Ẩn danh");
-                row.put("orderId", rs.getInt("OrderId"));
-                row.put("productName", rs.getString("ProductName") != null ? rs.getString("ProductName") : "—");
+                int orderId = rs.getInt("OrderId");
+                row.put("orderId", orderId);
+
+                String productDisplay = "";
+                if (orderId > 0) {
+                    List<String> prodList = getOrderProductNames(orderId);
+                    if (!prodList.isEmpty()) {
+                        productDisplay = String.join(", ", prodList);
+                    }
+                }
+                if (productDisplay.isEmpty()) {
+                    productDisplay = rs.getString("ProductName") != null ? rs.getString("ProductName") : "—";
+                }
+                row.put("productName", productDisplay);
                 row.put("rating", rs.getInt("Rating"));
                 row.put("comment", rs.getString("Comment") != null ? rs.getString("Comment") : "");
                 row.put("isVisible", rs.getBoolean("IsVisible"));

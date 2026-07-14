@@ -246,20 +246,14 @@
                                                     </c:if>
                                                 </td>
                                                 <td>
-                                                    <div class="toggle-switch-wrap">
-                                                        <label class="toggle-switch">
-                                                            <input type="checkbox" ${d.isActive ? 'checked' : ''} disabled>
-                                                            <span class="toggle-slider"></span>
-                                                        </label>
-                                                        <c:choose>
-                                                            <c:when test="${d.isActive}">
-                                                                <span class="status-badge badge-active">Kích hoạt</span>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <span class="status-badge badge-inactive">Ngừng hoạt động</span>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                    </div>
+                                                    <c:choose>
+                                                        <c:when test="${d.isActive}">
+                                                            <span class="status-badge badge-active">Kích hoạt</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="status-badge badge-inactive">Ngừng hoạt động</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                                 <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${d.description}">
                                                     <c:out value="${d.description}" default="--"/>

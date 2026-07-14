@@ -254,6 +254,9 @@
                                                             <span class="status-badge badge-inactive">Ngừng hoạt động</span>
                                                         </c:otherwise>
                                                     </c:choose>
+                                                    <c:if test="${d.isPublic}">
+                                                        <span class="status-badge" style="background:#eff6ff;color:#2563eb;margin-top:4px;display:inline-block;">Công khai</span>
+                                                    </c:if>
                                                 </td>
                                                 <td style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${d.description}">
                                                     <c:out value="${d.description}" default="--"/>
@@ -268,6 +271,7 @@
                                                                 '${d.startDate}',
                                                                 '${d.endDate}',
                                                                 '${d.isActive}',
+                                                                '${d.isPublic}',
                                                                 `${d.description}`
                                                             )">
                                                         <i class="fa-solid fa-pen-to-square"></i>
@@ -363,6 +367,19 @@
                                 </div>
                             </div>
 
+                            <div class="form-field-group">
+                                <div class="toggle-switch-wrap">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="formIsPublic" name="isPublic" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <label for="formIsPublic" style="font-weight: 600; cursor: pointer;">
+                                        <i class="fa-solid fa-globe" style="color:#2563eb;margin-right:5px;"></i>
+                                        Hiển thị công khai trên trang khửp mã
+                                    </label>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                     <div class="modal-card-footer">
@@ -434,12 +451,13 @@
                 openModal(discountModal);
             }
 
-            function openEditModal(id, code, type, value, startDate, endDate, isActive, description) {
+            function openEditModal(id, code, type, value, startDate, endDate, isActive, isPublic, description) {
                 document.getElementById('modalTitleText').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa mã khuyến mãi';
                 document.getElementById('formAction').value     = 'update';
                 document.getElementById('formDiscountId').value = id;
                 document.getElementById('formCode').value       = code;
                 document.getElementById('formIsActive').checked = (isActive === 'true');
+                document.getElementById('formIsPublic').checked = (isPublic === 'true');
                 document.getElementById('formDescription').value = description || '';
 
                 // Format LocalDateTime to datetime-local compatible string

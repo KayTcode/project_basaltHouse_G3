@@ -74,6 +74,7 @@ public class AdminDiscountServlet extends HttpServlet {
                             request.getParameter("endDate"),
                             request.getParameter("description"),
                             "on".equals(request.getParameter("isActive")),
+                            "on".equals(request.getParameter("isPublic")),
                             getAdminId(request)
                     );
                     redirectUrl += "success".equals(result) ? "?toast=add_success" : "?toast=add_fail";
@@ -89,7 +90,8 @@ public class AdminDiscountServlet extends HttpServlet {
                             request.getParameter("startDate"),
                             request.getParameter("endDate"),
                             request.getParameter("description"),
-                            "on".equals(request.getParameter("isActive"))
+                            "on".equals(request.getParameter("isActive")),
+                            "on".equals(request.getParameter("isPublic"))
                     );
                     redirectUrl += "success".equals(result) ? "?toast=update_success" : "?toast=update_fail";
                     break;

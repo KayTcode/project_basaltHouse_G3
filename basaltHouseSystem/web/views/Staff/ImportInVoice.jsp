@@ -23,6 +23,21 @@
                     <h3>Phiếu nhập</h3>
                 </div>
 
+                <label>
+                    <span>Nhà cung cấp</span>
+                    <select name="supplierId"
+                            id="supplierSelect"
+                            onchange="loadSupplierIngredients(this)"
+                            required>
+                        <option value="">Chọn nhà cung cấp</option>
+                        <c:forEach var="supplier" items="${suppliers}">
+                            <option value="${supplier.id}" ${supplier.id == selectedSupplierId ? 'selected' : ''}>
+                                <c:out value="${supplier.name}"/>
+                            </option>
+                        </c:forEach>
+                    </select>
+                </label>
+
                 <div class="form-grid-3">
                     <label>
                         <span>Mã phiếu nhập</span>
@@ -41,31 +56,13 @@
 
                     <label>
                         <span>Trạng thái</span>
-                        <select name="status"
-                                id="importStatus"
-                                onchange="toggleImportRejectReason(this)">
-                            <option value="Pending" ${param.status eq 'Pending' ? 'selected' : ''}>
+                        <select name="status">
+                            <option value="Pending">
                                 Chờ nhận
                             </option>
                         </select>
                     </label>
                 </div>
-
-                <label>
-                    <span>Nhà cung cấp</span>
-                    <select name="supplierId"
-                            id="supplierSelect"
-                            onchange="loadSupplierIngredients(this)"
-                            required>
-                        <option value="">Chọn nhà cung cấp</option>
-
-                        <c:forEach var="supplier" items="${suppliers}">
-                            <option value="${supplier.id}" ${supplier.id == selectedSupplierId ? 'selected' : ''}>
-                                <c:out value="${supplier.name}"/>
-                            </option>
-                        </c:forEach>
-                    </select>
-                </label>
 
                 <div class="form-grid-3">
                     <label>
@@ -120,10 +117,7 @@
                                 <option value="">Chọn nguyên liệu</option>
 
                                 <c:forEach var="item" items="${importIngredients}">
-                                    <option value="${item.id}"
-                                            data-name="${item.name}"
-                                            data-unit="${item.unit}"
-                                            data-stock="${item.stockText}">
+                                    <option value="${item.id}">
                                         <c:out value="${item.name}"/>
                                         - còn
                                         <c:out value="${item.stockText}"/>
@@ -203,17 +197,8 @@
                               placeholder="Ghi chú phiếu nhập"></textarea>
                 </label>
 
-                <label class="reject-reason-field"
-                       id="importRejectReasonField"
-                       hidden>
-                    <span>Lý do từ chối</span>
-                    <textarea name="rejectReason"
-                              rows="3"
-                              placeholder="Nhập lý do từ chối phiếu hàng"><c:out value="${param.rejectReason}"/></textarea>
-                </label>
-
                 <button class="submit-btn"
-                        type="submit">
+                        type="submit" ${empty selectedSupplierId ? 'disabled' : ''}>
                     <span class="material-symbols-outlined">save</span>
                     Lưu phiếu nhập
                 </button>

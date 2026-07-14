@@ -15,9 +15,7 @@ public class SalesAuditContext {
     public final Map<Integer, List<String>> usageDetailsByIngredient = new HashMap<>();
     public Map<Integer, HashMap<String, Object>> stockSnapshotByIngredient = new HashMap<>();
     public Map<Integer, BigDecimal> importedByIngredient = new HashMap<>();
-    public LocalDate selectedDate;
     public LocalDate auditDate = LocalDate.now();
-    public boolean showingLatestSaleDate;
     public String dataError;
     public int totalSoldCups;
     public BigDecimal totalRevenue = BigDecimal.ZERO;

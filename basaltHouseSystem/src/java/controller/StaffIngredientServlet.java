@@ -11,7 +11,7 @@ import services.StockService;
 
 public class StaffIngredientServlet extends HttpServlet {
 
-    private static final StockService stockService = new StockService();
+    private final StockService stockService = new StockService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -20,7 +20,7 @@ public class StaffIngredientServlet extends HttpServlet {
         try {
 
             String key = request.getParameter("search");
-            HashMap<String, Object> dashboardData = stockService.getStaffDashboardData(key, true);
+            HashMap<String, Object> dashboardData = stockService.getStaffDashboardData(key, false);
             request.setAttribute("key", key);
             for (Map.Entry<String, Object> entry : dashboardData.entrySet()) {
                 request.setAttribute(entry.getKey(), entry.getValue());

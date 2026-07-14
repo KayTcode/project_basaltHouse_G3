@@ -17,7 +17,6 @@ import services.DiscountCodeService;
 
 public class VoucherServlet extends HttpServlet {
 
-    private static final String USER_SESSION_KEY = "currentUser";
     private static final DiscountCodeService discountCodeService = new DiscountCodeService();
     private static final ActivityLogService activeService = new ActivityLogService();
 
@@ -53,11 +52,11 @@ public class VoucherServlet extends HttpServlet {
                 request.getParameter("voucherCode"), user1.getAccountId());
 
         if (result.containsKey("voucher")) {
-            request.getSession().setAttribute("voucher", result.get("voucher"));
+            session.setAttribute("voucher", result.get("voucher"));
         }
 
         if (result.containsKey("success")) {
-            HashMap<String,Object>s = activeService.ctreatActiveLog(new ActivityLog(user1.getAccountId(),
+            activeService.ctreatActiveLog(new ActivityLog(user1.getAccountId(),
                     "Apply Voucher Code",
                     "CustomerDiscountcode",
                     user1.getAccountId(),
@@ -76,7 +75,9 @@ public class VoucherServlet extends HttpServlet {
 
     private UserLoginDTO getCurrentUser(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        return session != null ? (UserLoginDTO) session.getAttribute(USER_SESSION_KEY) : null;
+        return session != null
+                ? (UserLoginDTO) session.getAttribute(AuthService.USER_SESSION_KEY)
+                : null;
     }
 
     @Override

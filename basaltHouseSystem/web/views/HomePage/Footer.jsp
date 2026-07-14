@@ -5,9 +5,7 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<!DOCTYPE html>
-<html>
-           <!-- Footer -->
+        <!-- Footer -->
         <footer class="footer-coffeely">
             <div class="container">
                 <div class="row g-4">
@@ -85,9 +83,6 @@
                                                 alert('Đã thêm "' + itemName + '" vào giỏ hàng! Giá: ' + price.toLocaleString('vi-VN') + 'đ');
                                             }
 
-                                            function applyPromo() {
-                                                alert('Mã giảm giá COFFEE20 đã được lưu! Giảm 20% khi quý khách thanh toán đơn hàng tiếp theo từ 100K.');
-                                            }
         </script>
     </body>
 

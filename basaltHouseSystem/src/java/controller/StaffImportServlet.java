@@ -29,21 +29,16 @@ public class StaffImportServlet extends HttpServlet {
 
     private static final DateTimeFormatter IMPORT_CODE_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-    private static final ImportVoiceService importService = new ImportVoiceService();
-    private static final StaffService staffService = new StaffService();
-    private static final ActivityLogService activityService = new ActivityLogService();
+    private final ImportVoiceService importService = new ImportVoiceService();
+    private final StaffService staffService = new StaffService();
+    private final ActivityLogService activityService = new ActivityLogService();
+    private final StockService stockService = new StockService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        if ("ingredients".equals(request.getParameter("action"))) {
-            writeSupplierIngredients(request, response);
-            return;
-        }
-
         StaffServlet.prepareStaffPage(request, "import");
         try {
-            StockService stockService = new StockService();
             HashMap<String, Object> dashboardData = stockService.getStaffDashboardData(null, true);
             for (Map.Entry<String, Object> entry : dashboardData.entrySet()) {
                 request.setAttribute(entry.getKey(), entry.getValue());
@@ -57,61 +52,18 @@ public class StaffImportServlet extends HttpServlet {
                     throw new IllegalArgumentException("Nhà cung cấp không hợp lệ.");
                 }
                 request.setAttribute("selectedSupplierId", selectedSupplierId);
-                request.setAttribute("importIngredients",
-                        stockService.getImportIngredientOptionsBySupplier(selectedSupplierId));
+                HashMap<String, Object> ingredientResult
+                        = staffService.getIngredientsBySupplier(selectedSupplierId);
+                if (ingredientResult.containsKey("error")) {
+                    request.setAttribute("dataError", ingredientResult.get("error"));
+                } else {
+                    request.setAttribute("importIngredients", ingredientResult.get("success"));
+                }
             }
         } catch (Exception e) {
             request.setAttribute("dataError", e.getMessage());
         }
         request.getRequestDispatcher("/views/Staff/Staff.jsp").forward(request, response);
-    }
-
-    private void writeSupplierIngredients(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("application/json");
-        response.setHeader("Cache-Control", "no-store");
-
-        String supplierValue = trimToNull(request.getParameter("supplierId"));
-        int supplierId;
-        try {
-            supplierId = supplierValue == null ? 0 : Integer.parseInt(supplierValue);
-        } catch (NumberFormatException e) {
-            supplierId = 0;
-        }
-        if (supplierId <= 0) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\":\"Nhà cung cấp không hợp lệ.\"}");
-            return;
-        }
-
-        List<HashMap<String, Object>> ingredients =
-                new StockService().getImportIngredientOptionsBySupplier(supplierId);
-        StringBuilder json = new StringBuilder("{\"ingredients\":[");
-        for (int index = 0; index < ingredients.size(); index++) {
-            HashMap<String, Object> item = ingredients.get(index);
-            if (index > 0) {
-                json.append(',');
-            }
-            json.append("{\"id\":").append(item.get("id"))
-                    .append(",\"name\":\"").append(escapeJson(item.get("name"))).append('"')
-                    .append(",\"unit\":\"").append(escapeJson(item.get("unit"))).append('"')
-                    .append(",\"stockText\":\"").append(escapeJson(item.get("stockText"))).append("\"}");
-        }
-        json.append("]}");
-        response.getWriter().write(json.toString());
-    }
-
-    private String escapeJson(Object value) {
-        if (value == null) {
-            return "";
-        }
-        return value.toString()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\r", "\\r")
-                .replace("\n", "\\n")
-                .replace("\t", "\\t");
     }
 
     @Override
@@ -174,7 +126,7 @@ public class StaffImportServlet extends HttpServlet {
             for (int i = 0; i < ingredientIds.length; i++) {
                 int ingredientId = Integer.parseInt(ingredientIds[i]);
                 if (!uniqueIngredientIds.add(ingredientId)) {
-                    throw new IllegalArgumentException("Mỗi nguyên liệnpx skills list -a codexu chỉ được thêm một lần trong phiếu nhập.");
+                    throw new IllegalArgumentException("Mỗi nguyên liệu chỉ được thêm một lần trong phiếu nhập.");
                 }
 
                 BigDecimal orderedQuantity = parseBigDecimal(orderedQuantities[i]);

@@ -4,7 +4,6 @@
  */
 package controller;
 
-import dao.DiscountCodeDAO;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -28,11 +27,11 @@ public class BenefitServlet extends HttpServlet {
             throws ServletException, IOException {
         HashMap<String, Object> s = dService.getDiscountCode();
         List<DiscountCode> publicVouchers = null;
-        if (s.containsKey("errorr")) {
+        if (s.containsKey("error")) {
             request.setAttribute("error", s.get("error").toString());
 
         } else {
-            publicVouchers =(List<DiscountCode>)s.get("success");
+            publicVouchers = (List<DiscountCode>) s.get("success");
         }
 
         request.setAttribute("publicVouchers", publicVouchers);

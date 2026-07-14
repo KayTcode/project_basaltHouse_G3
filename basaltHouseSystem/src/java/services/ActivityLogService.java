@@ -13,22 +13,29 @@ import model.ActivityLog;
  * @author admin
  */
 public class ActivityLogService {
-    private static final ActiveLogDAO dao = new ActiveLogDAO();
-    
-    public HashMap<String,Object> ctreatActiveLog(ActivityLog a){
-        HashMap<String,Object> s = new HashMap<>();
-        try {
-            boolean exits = dao.ctreatActiveLog(a);
-            if(exits){
-               s.put("success", true);
-            }else{
-               s.put("error", "Tạo Activity Log không thành công");
-            }
-            
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+
+    private final ActiveLogDAO dao = new ActiveLogDAO();
+
+    public HashMap<String, Object> ctreatActiveLog(ActivityLog activityLog) {
+        HashMap<String, Object> result = new HashMap<>();
+
+        if (activityLog == null) {
+            result.put("error", "Activity Log không hợp lệ");
+            return result;
         }
-        return s;
-              
+
+      
+        try {
+            if (dao.ctreatActiveLog(activityLog)) {
+                result.put("success", true);
+            } else {
+                result.put("error", "Tạo Activity Log không thành công");
+            }
+        } catch (Exception e) {
+            System.err.println("Activity Log insert failed: " + e.getMessage());
+            result.put("error", "Tạo Activity Log không thành công");
+        }
+
+        return result;
     }
 }

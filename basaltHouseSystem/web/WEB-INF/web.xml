@@ -173,26 +173,21 @@
         <url-pattern>/Cart</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-<<<<<<< HEAD
         <servlet-name>CashierServlet</servlet-name>
         <url-pattern>/cashier/pos</url-pattern>
         <url-pattern>/cashier/oderview</url-pattern>
         <url-pattern>/cashier/dashboard</url-pattern>
         <url-pattern>/cashier/shippers</url-pattern>
-        <servlet-name>ApplyVoucherServlet</servlet-name>
-        <url-pattern>/apply-voucher</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
     <servlet-name>POSOrderServlet</servlet-name>
     <url-pattern>/cashier/pos</url-pattern>
     <url-pattern>/cashier/oderview</url-pattern>
     <url-pattern>/cashier/dashboard</url-pattern>
-=======
-        <servlet-name>POSOrderServlet</servlet-name>
-        <url-pattern>/cashier/pos</url-pattern>
-        <url-pattern>/cashier/oderview</url-pattern>
-        <url-pattern>/cashier/dashboard</url-pattern>
->>>>>>> 8df9014 (feat admin membership)
+      </servlet-mapping>
+      <servlet-mapping>
+    <servlet-name>ApplyVoucherServlet</servlet-name>
+    <url-pattern>/apply-voucher</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>BartenderServlet</servlet-name>

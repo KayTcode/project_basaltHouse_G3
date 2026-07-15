@@ -3,17 +3,11 @@
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
 <%
     request.setAttribute("pageTitle", "Membership Rank - BasaltHouse");
+    request.setAttribute("pageStylesheet", "/css/MembershipRank/MembershipRank.css?v=20260709-1");
 %>
 
-
-
-
 <jsp:include page="/views/HomePage/Header.jsp"/>
-
-<link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/MembershipRank/MembershipRank.css?v=20260709-1">
-<link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-1">
+<c:set var="hasNextRank" value="${not empty cus.nextRank and not empty cus.nextRankMinSpent}"/>
 
 <main class="membership-page">
     <section class="membership-hero">
@@ -58,8 +52,16 @@
                 </article>
                 <article class="membership-stat-card">
                     <span class="material-symbols-outlined">trending_up</span>
-                    <small>Còn lại đến <c:out value="${cus.nextRank}"/></small>
-                    <strong><fmt:formatNumber value="${cus.nextRankMinSpent}" pattern="#,###"/> đ</strong>
+                    <c:choose>
+                        <c:when test="${hasNextRank}">
+                            <small>Còn lại đến <c:out value="${cus.nextRank}"/></small>
+                            <strong><fmt:formatNumber value="${cus.needSpent}" pattern="#,###"/> đ</strong>
+                        </c:when>
+                        <c:otherwise>
+                            <small>Trạng thái hạng</small>
+                            <strong>Hạng cao nhất</strong>
+                        </c:otherwise>
+                    </c:choose>
                 </article>
             </div>
 
@@ -67,23 +69,32 @@
                 <div class="membership-panel-head">
                     <div>
                         <p>Lộ trình nâng hạng</p>
-                        <h2><c:out value="${cus.name}"/> → <c:out value="${cus.nextRank}"/></h2>
+                        <h2>
+                            <c:out value="${cus.name}"/>
+                            <c:if test="${hasNextRank}"> → <c:out value="${cus.nextRank}"/></c:if>
+                        </h2>
                     </div>
                     <span class="membership-panel-icon material-symbols-outlined">moving</span>
                 </div>
 
                 <div class="membership-progress-row">
                     <span><fmt:formatNumber value="${cus.totalSpent}" pattern="#,###"/> đ</span>
-                    <span><fmt:formatNumber value="${cus.nextRankMinSpent}" pattern="#,###"/> đ</span>
+                    <span>
+                        <c:choose>
+                            <c:when test="${hasNextRank}">
+                                <fmt:formatNumber value="${cus.nextRankMinSpent}" pattern="#,###"/> đ
+                            </c:when>
+                            <c:otherwise>Đã đạt tối đa</c:otherwise>
+                        </c:choose>
+                    </span>
                 </div>
                 <div class="membership-progress-track" aria-label="Membership progress">
                     <div class="membership-progress-fill"></div>
                 </div>
                 <div class="membership-milestones">
-                    <span>Bronze</span>
-                    <span>Silver</span>
-                    <span>Gold</span>
-                    <span>Diamond</span>
+                    <c:forEach var="rank" items="${rankList}">
+                        <span><c:out value="${rank.rankName}"/></span>
+                    </c:forEach>
                 </div>
             </section>
         </div>
@@ -125,8 +136,16 @@
 
             <aside class="membership-action-panel">
                 <span class="material-symbols-outlined">coffee</span>
-                <h2>Tiến gần hạng <c:out value="${nextRankName}"/></h2>
-                <p>Mỗi đơn hàng tại BasaltHouse đều được cộng vào tổng chi tiêu để xét hạng thành viên.</p>
+                <c:choose>
+                    <c:when test="${hasNextRank}">
+                        <h2>Tiến gần hạng <c:out value="${nextRankName}"/></h2>
+                        <p>Mỗi đơn hàng tại BasaltHouse đều được cộng vào tổng chi tiêu để xét hạng thành viên.</p>
+                    </c:when>
+                    <c:otherwise>
+                        <h2>Bạn đang ở hạng cao nhất</h2>
+                        <p>Tiếp tục tận hưởng các ưu đãi tốt nhất dành cho thành viên BasaltHouse.</p>
+                    </c:otherwise>
+                </c:choose>
                 <div class="membership-action-row">
                     <a href="${pageContext.request.contextPath}/category">Xem menu</a>
                     <a href="${pageContext.request.contextPath}/voucher" class="membership-link-secondary">Voucher</a>

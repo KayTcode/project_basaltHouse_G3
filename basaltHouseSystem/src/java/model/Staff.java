@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
  * @author KayT
  */
 public class Staff {
+
     private int staffId;
     private Integer accountId;
     private String fullName;
@@ -23,7 +24,9 @@ public class Staff {
     public Staff() {
     }
 
-    public Staff(int staffId, Integer accountId, String fullName, String phone, String address, String avatarUrl, LocalDateTime createdAt, boolean isDeleted) {
+    public Staff(int staffId, Integer accountId, String fullName, String phone,
+            String address, String avatarUrl, LocalDateTime createdAt,
+            boolean isDeleted) {
         this.staffId = staffId;
         this.accountId = accountId;
         this.fullName = fullName;
@@ -97,6 +100,4 @@ public class Staff {
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
-    
-    
 }

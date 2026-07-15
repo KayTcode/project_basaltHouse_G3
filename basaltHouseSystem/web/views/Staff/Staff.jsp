@@ -3,7 +3,6 @@
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 <c:url var="staffImportUrl" value="/staff/import"/>
 <c:set var="activeStaffPage" value="${staffPage}" scope="request"/>
-<c:set var="pageEyebrow" value="${staffPageEyebrow}"/>
 <c:set var="pageTitle" value="${staffPageTitle}"/>
 <c:set var="pageSubtitle" value="${staffPageSubtitle}"/>
 <!DOCTYPE html>
@@ -59,7 +58,7 @@
                         </div>
                         <span class="material-symbols-outlined account-chevron">expand_more</span>
                     </button>
-                    <div class="account-dropdown" id="accountDropdown">
+                    <div class="account-dropdown">
                         <form method="POST" action="${pageContext.request.contextPath}/logout">
                             <button type="submit" class="logout-btn">
                                 <span class="material-symbols-outlined">logout</span>
@@ -117,7 +116,7 @@
             <c:if test="${activeStaffPage eq 'ingredient' or activeStaffPage eq 'import'}">
             <section class="stats-grid" aria-label="Tổng quan kho">
                 <button class="stat-card stat-filter-card is-selected" type="button"
-                        data-stock-filter="all" onclick="applyStockFilter('all', this)" aria-pressed="true">
+                        data-stock-filter="all" onclick="applyStockFilter('all')" aria-pressed="true">
                     <span class="material-symbols-outlined stat-icon">category</span>
                     <div>
                         <p>Tổng nguyên liệu</p>
@@ -126,7 +125,7 @@
                     </div>
                 </button>
                 <button class="stat-card stat-warning stat-filter-card" type="button"
-                        data-stock-filter="warning" onclick="applyStockFilter('warning', this)" aria-pressed="false">
+                        data-stock-filter="warning" onclick="applyStockFilter('warning')" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">warning</span>
                     <div>
                         <p>Sắp hết</p>
@@ -135,7 +134,7 @@
                     </div>
                 </button>
                 <button class="stat-card stat-danger stat-filter-card" type="button"
-                        data-stock-filter="danger" onclick="applyStockFilter('danger', this)" aria-pressed="false">
+                        data-stock-filter="danger" onclick="applyStockFilter('danger')" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">error</span>
                     <div>
                         <p>Hết hàng</p>
@@ -144,7 +143,7 @@
                     </div>
                 </button>
                 <button class="stat-card stat-ok stat-filter-card" type="button"
-                        data-stock-filter="ok" onclick="applyStockFilter('ok', this)" aria-pressed="false">
+                        data-stock-filter="ok" onclick="applyStockFilter('ok')" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">task_alt</span>
                     <div>
                         <p>Đủ hàng</p>
@@ -179,11 +178,11 @@
                     <c:if test="${activeStaffPage eq 'import'}">
                         <div class="warning-filter-row" role="group" aria-label="Lọc nguyên liệu cần nhập">
                             <button class="warning-filter-btn active" type="button" data-warning-filter="all"
-                                    onclick="setImportWarningFilter('all', this)">Tất cả cần nhập</button>
+                                    onclick="setImportWarningFilter('all')">Tất cả cần nhập</button>
                             <button class="warning-filter-btn" type="button" data-warning-filter="warning"
-                                    onclick="setImportWarningFilter('warning', this)">Sắp hết</button>
+                                    onclick="setImportWarningFilter('warning')">Sắp hết</button>
                             <button class="warning-filter-btn" type="button" data-warning-filter="danger"
-                                    onclick="setImportWarningFilter('danger', this)">Hết hàng</button>
+                                    onclick="setImportWarningFilter('danger')">Hết hàng</button>
                         </div>
                     </c:if>
                     <div class="warning-list">
@@ -331,7 +330,7 @@
                         );
             }
 
-            function setImportWarningFilter(filter, button) {
+            function setImportWarningFilter(filter) {
                 var warningList = document.querySelector('.warning-list');
                 if (!warningList) {
                     return;
@@ -550,95 +549,8 @@
                 if (!supplierSelect) {
                     return;
                 }
-
-                var supplierId = supplierSelect.value;
-                var ingredientSelects = document.querySelectorAll('.import-ingredient-select');
-                var hint = document.querySelector('.field-hint');
-                if (!supplierId) {
-                    replaceIngredientOptions(ingredientSelects, []);
-                    if (hint) {
-                        hint.textContent = 'Chọn nhà cung cấp để tải danh sách nguyên liệu.';
-                        hint.hidden = false;
-                    }
-                    updateInvoicePreview();
-                    return;
-                }
-
-                supplierSelect.disabled = true;
-                for (var i = 0; i < ingredientSelects.length; i++) {
-                    ingredientSelects[i].disabled = true;
-                    ingredientSelects[i].setAttribute('aria-busy', 'true');
-                }
-
-                fetch('${pageContext.request.contextPath}/staff/import?action=ingredients&supplierId='
-                        + encodeURIComponent(supplierId), {
-                    headers: {'Accept': 'application/json'}
-                })
-                        .then(function (response) {
-                            if (!response.ok) {
-                                throw new Error('Không tải được nguyên liệu của nhà cung cấp.');
-                            }
-                            return response.json();
-                        })
-                        .then(function (data) {
-                            var ingredients = data.ingredients || [];
-                            replaceIngredientOptions(ingredientSelects, ingredients);
-                            if (hint) {
-                                hint.textContent = ingredients.length
-                                        ? '' : 'Nhà cung cấp này chưa có nguyên liệu đang hoạt động.';
-                                hint.hidden = ingredients.length > 0;
-                            }
-                            updateInvoicePreview();
-                        })
-                        .catch(function (error) {
-                            window.alert(error.message || 'Không tải được danh sách nguyên liệu.');
-                        })
-                        .finally(function () {
-                            supplierSelect.disabled = false;
-                            for (var j = 0; j < ingredientSelects.length; j++) {
-                                ingredientSelects[j].disabled = false;
-                                ingredientSelects[j].removeAttribute('aria-busy');
-                            }
-                        });
-            }
-
-            function replaceIngredientOptions(selects, ingredients) {
-                for (var i = 0; i < selects.length; i++) {
-                    selects[i].replaceChildren();
-                    var placeholder = document.createElement('option');
-                    placeholder.value = '';
-                    placeholder.textContent = ingredients.length
-                            ? 'Chọn nguyên liệu' : 'Chưa có nguyên liệu';
-                    selects[i].appendChild(placeholder);
-
-                    for (var j = 0; j < ingredients.length; j++) {
-                        var item = ingredients[j];
-                        var option = document.createElement('option');
-                        option.value = item.id;
-                        option.textContent = item.name + ' - còn ' + item.stockText + ' ' + item.unit;
-                        option.setAttribute('data-name', item.name);
-                        option.setAttribute('data-unit', item.unit);
-                        option.setAttribute('data-stock', item.stockText);
-                        selects[i].appendChild(option);
-                    }
-                }
-            }
-
-            function toggleImportRejectReason(statusSelect) {
-                var field = document.getElementById('importRejectReasonField');
-                if (!field) {
-                    return;
-                }
-                var textarea = field.querySelector('textarea');
-                var rejected = statusSelect && statusSelect.value === 'Rejected';
-                field.hidden = !rejected;
-                if (textarea) {
-                    textarea.required = rejected;
-                    textarea.disabled = !rejected;
-                    if (!rejected) {
-                        textarea.value = '';
-                    }
-                }
+                window.location.href = '${pageContext.request.contextPath}/staff/import?supplierId='
+                        + encodeURIComponent(supplierSelect.value);
             }
 
             function updateInvoicePreview(event) {
@@ -675,16 +587,21 @@
                 setText('previewOrderedTotal', formatMoney(orderedTotal));
                 setText('previewReceivedTotal', formatMoney(receivedTotal));
             }
-            renderInventoryRows();
-            renderHistoryRows();
-            renderSalesProductRows();
-            renderSalesIngredientRows();
+            if (document.getElementById('ingredientRows')) {
+                renderInventoryRows();
+            }
+            if (document.getElementById('historyRows')) {
+                renderHistoryRows();
+            }
+            if (document.getElementById('salesProductRows')) {
+                renderSalesProductRows();
+                renderSalesIngredientRows();
+            }
             if (document.getElementById('importView')) {
                 setImportWarningFilter('all');
+                updateImportDetailControls();
+                updateInvoicePreview();
             }
-            toggleImportRejectReason(document.getElementById('importStatus'));
-            updateImportDetailControls();
-            updateInvoicePreview();
         </script>
     </body>
 </html>

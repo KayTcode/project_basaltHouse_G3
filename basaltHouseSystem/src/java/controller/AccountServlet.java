@@ -4,13 +4,8 @@
  */
 package controller;
 
-import dao.AccountDAO;
-import dao.AuthDAO;
-import dao.ActiveLogDAO;
-import dao.CustomersProfileDAO;
 import dto.UserLoginDTO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,36 +27,9 @@ import utils.PasswordUtils;
  */
 public class AccountServlet extends HttpServlet {
 
-    private final AuthService autheService = new AuthService();
     private static final CustomerService cusService = new CustomerService();
     private static final ActivityLogService activeService = new ActivityLogService();
     private static final AccountService accService = new AccountService();
-
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet AccountServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet AccountServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
@@ -91,17 +59,11 @@ public class AccountServlet extends HttpServlet {
         CustomerProfile p = null;
         HashMap<String, Object> s = cusService.getCustomerById(user1.getAccountId());
         if (s.containsKey("error")) {
-            request.setAttribute("error", s.get("error").toString());
+            request.setAttribute("profileError", s.get("error").toString());
         } else {
             p = (CustomerProfile) s.get("success");
         }
         request.setAttribute("cusr", p);
-        if (p != null) {
-            request.setAttribute("phone", p.getPhone());
-            request.setAttribute("email", p.getEmail());
-            request.setAttribute("fullName", p.getFullName());
-            request.setAttribute("avatarUrl", p.getAvatarUrl());
-        }
         request.getRequestDispatcher("views/AccountProfile/AccountProfile.jsp").forward(request, response);
     }
 
@@ -128,48 +90,61 @@ public class AccountServlet extends HttpServlet {
         }
 
 
-        String passOld = PasswordUtils.hashSHA256(request.getParameter("oldPassword"));
-        String PasNew = PasswordUtils.hashSHA256(request.getParameter("newPassword"));
-        String passHard = null;
-        HashMap<String, Object> s = accService.getPassordById(user1.getAccountId());
-        if (s.containsKey("error")) {
-            request.setAttribute("error", s.get("error").toString());
-        } else {
-            passHard = (String) s.get("success");
-        }
-
-        if (passOld.equals(passHard) && !passOld.equals(PasNew)) {
-            HashMap<String, Object> s2 = accService.updatePassword(user1.getAccountId(), PasNew);
-            if (s2.containsKey("error")) {
-                request.setAttribute("error", s2.get("error").toString());
-            }
-            HashMap<String, Object> s3 = activeService.ctreatActiveLog(new ActivityLog(user1.getAccountId(),
-                    "Change password",
-                    "Accounts",
-                    user1.getAccountId(),
-                    passOld,
-                    PasNew,
-                    "Success",
-                    0,
-                    LocalDateTime.now()));
-            if (s3.containsKey("error")) {
-                request.setAttribute("error", s3.get("error"));
-            } else {
-                request.setAttribute("passwordSuccess", "Đổi mật khẩu thành công");
-                doGet(request, response);
-                return;
-            }
-
-        } else if (passOld.equals(passHard) && passOld.equals(PasNew)) {
-            request.setAttribute("error", "Mật khẩu mới không được giống mật khẩu cũ ");
-            doGet(request, response);
-            return;
-
-        } else {
-            request.setAttribute("error", "Mật khẩu sai ");
+        String oldPassword = request.getParameter("oldPassword");
+        String newPassword = request.getParameter("newPassword");
+        if (oldPassword == null || oldPassword.isBlank()
+                || newPassword == null || newPassword.isBlank()) {
+            request.setAttribute("passwordError", "Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới.");
             doGet(request, response);
             return;
         }
+
+        String oldPasswordHash = PasswordUtils.hashSHA256(oldPassword);
+        String newPasswordHash = PasswordUtils.hashSHA256(newPassword);
+        HashMap<String, Object> passwordResult = accService.getPassordById(user1.getAccountId());
+        if (passwordResult.containsKey("error")) {
+            request.setAttribute("passwordError", passwordResult.get("error").toString());
+            doGet(request, response);
+            return;
+        }
+
+        String storedPasswordHash = (String) passwordResult.get("success");
+        if (storedPasswordHash == null || !oldPasswordHash.equalsIgnoreCase(storedPasswordHash)) {
+            request.setAttribute("passwordError", "Mật khẩu cũ không chính xác.");
+            doGet(request, response);
+            return;
+        }
+        if (oldPasswordHash.equalsIgnoreCase(newPasswordHash)) {
+            request.setAttribute("passwordError", "Mật khẩu mới không được giống mật khẩu cũ.");
+            doGet(request, response);
+            return;
+        }
+
+        HashMap<String, Object> updateResult = accService.updatePassword(
+                user1.getAccountId(), newPasswordHash);
+        if (updateResult.containsKey("error")) {
+            request.setAttribute("passwordError", updateResult.get("error").toString());
+            doGet(request, response);
+            return;
+        }
+
+        HashMap<String, Object> logResult = activeService.ctreatActiveLog(
+                new ActivityLog(user1.getAccountId(),
+                        "Change password",
+                        "Accounts",
+                        user1.getAccountId(),
+                        null,
+                        null,
+                        "Success",
+                        0,
+                        LocalDateTime.now()));
+        if (logResult.containsKey("error")) {
+            System.err.println("Could not write password-change activity log: "
+                    + logResult.get("error"));
+        }
+
+        request.setAttribute("passwordSuccess", "Đổi mật khẩu thành công");
+        doGet(request, response);
     }
 
     /**

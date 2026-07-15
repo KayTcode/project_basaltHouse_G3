@@ -33,6 +33,13 @@ public class MembershipRank {
         this.minTotalSpent = minTotalSpent;
         this.discountValue = discountValue;
     }
+
+    public MembershipRank(String rankName, BigDecimal minTotalSpent, int discountValue, boolean isDeleted) {
+        this.rankName = rankName;
+        this.minTotalSpent = minTotalSpent;
+        this.discountValue = discountValue;
+        this.isDeleted = isDeleted;
+    }
     
 
     public int getRankId() {

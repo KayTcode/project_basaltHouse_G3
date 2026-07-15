@@ -1,8 +1,6 @@
 :root {
-    --green-900: #0c2f1d;
     --green-800: #14532d;
     --green-700: #166534;
-    --green-600: #16a34a;
     --mint-100: #dcfce7;
     --blue-700: #1d4ed8;
     --blue-100: #dbeafe;
@@ -14,7 +12,6 @@
     --line: #e5e7eb;
     --text: #1f2937;
     --muted: #6b7280;
-    --muted-soft: #9ca3af;
     --shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
     --radius: 8px;
 }
@@ -153,12 +150,6 @@ textarea {
     font-size: 20px;
 }
 
-.notice-success {
-    background: var(--mint-100);
-    border-color: #bbf7d0;
-    color: var(--green-700);
-}
-
 .notice-error {
     background: var(--red-100);
     border-color: #fecaca;
@@ -238,11 +229,6 @@ textarea {
 .status-badge.confirmed {
     background: var(--mint-100);
     color: var(--green-700);
-}
-
-.status-badge.pending {
-    background: var(--amber-100);
-    color: var(--amber-700);
 }
 
 .ingredient-unit {
@@ -572,9 +558,7 @@ input[readonly] {
     --line-soft: #edf2f7;
     --text: #172033;
     --muted: #68758b;
-    --muted-soft: #97a4b7;
     --shadow: 0 5px 18px rgba(38, 59, 94, 0.07);
-    --shadow-raised: 0 14px 36px rgba(38, 59, 94, 0.1);
     --radius: 16px;
     --input-radius: 11px;
 }
@@ -990,10 +974,8 @@ input[readonly] {
     --brand-500: #2a9d5b;
     --brand-100: #dcebe1;
     --brand-50: #f3f8f4;
-    --green-900: #123326;
     --green-800: #0f4f2f;
     --green-700: #0f6937;
-    --green-600: #178447;
     --mint-100: #dcebe1;
     --mint-600: #178447;
     --blue-700: #178447;
@@ -1007,9 +989,7 @@ input[readonly] {
     --line-soft: #eef4f0;
     --text: #17231c;
     --muted: #5f6d64;
-    --muted-soft: #92a399;
     --shadow: 0 6px 18px rgba(18, 51, 38, 0.07);
-    --shadow-raised: 0 14px 36px rgba(18, 51, 38, 0.1);
 }
 
 body {
@@ -1040,7 +1020,6 @@ body {
 }
 
 .hero-copy p:last-child,
-.meta-label,
 .summary-list span,
 .empty-state p {
     color: var(--muted) !important;

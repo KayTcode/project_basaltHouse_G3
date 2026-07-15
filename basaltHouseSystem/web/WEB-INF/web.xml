@@ -173,6 +173,7 @@
         <url-pattern>/Cart</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+<<<<<<< HEAD
         <servlet-name>CashierServlet</servlet-name>
         <url-pattern>/cashier/pos</url-pattern>
         <url-pattern>/cashier/oderview</url-pattern>
@@ -186,6 +187,12 @@
     <url-pattern>/cashier/pos</url-pattern>
     <url-pattern>/cashier/oderview</url-pattern>
     <url-pattern>/cashier/dashboard</url-pattern>
+=======
+        <servlet-name>POSOrderServlet</servlet-name>
+        <url-pattern>/cashier/pos</url-pattern>
+        <url-pattern>/cashier/oderview</url-pattern>
+        <url-pattern>/cashier/dashboard</url-pattern>
+>>>>>>> 8df9014 (feat admin membership)
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>BartenderServlet</servlet-name>
@@ -299,6 +306,10 @@
     <servlet-mapping>
         <servlet-name>AdminProductServlet</servlet-name>
         <url-pattern>/admin/products</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminMembership</servlet-name>
+        <url-pattern>/admin/memberships</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

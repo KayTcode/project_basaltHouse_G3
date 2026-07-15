@@ -7,8 +7,10 @@ package dao;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import model.CustomerMembership;
 import model.CustomerRanking;
 import model.MembershipRank;
 
@@ -28,12 +30,19 @@ public class CustomerMembershipDAO extends DBContext {
                           nextRank.RankName AS NextRank,nextRank.MinTotalSpent AS NextRankMinSpent,
                           CASE
                                   WHEN nextRank.MinTotalSpent IS NULL THEN 0
+                                  WHEN c.TotalSpent >= nextRank.MinTotalSpent THEN 0
                                   ELSE nextRank.MinTotalSpent - c.TotalSpent
                               END AS NeedMoreSpent
                           
                           FROM CustomerMemberships c 
                           JOIN MembershipRanks m ON m.RankId = c.RankId
-                          LEFT JOIN MembershipRanks nextRank ON nextRank.RankId = m.RankId + 1
+                          OUTER APPLY (
+                              SELECT TOP 1 candidate.RankName, candidate.MinTotalSpent
+                              FROM MembershipRanks candidate
+                              WHERE candidate.IsDeleted = 0
+                                AND candidate.MinTotalSpent > m.MinTotalSpent
+                              ORDER BY candidate.MinTotalSpent, candidate.RankId
+                          ) nextRank
                           JOIN Customers cm ON cm.CustomerId = c.CustomerId
                           JOIN Accounts a ON a.AccountId = cm.AccountId
                           where a.AccountId = ?
@@ -62,16 +71,20 @@ public class CustomerMembershipDAO extends DBContext {
          List<MembershipRank>list = new ArrayList<>();
          try {
             String sql = """
-                         select RankName,MinTotalSpent,DiscountValue from MembershipRanks
+                         select RankId,RankName,MinTotalSpent,DiscountValue,IsDeleted
+                         from MembershipRanks
+                         order by MinTotalSpent, RankId
                          """;
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
-             while (rs.next()) {                 
-                 MembershipRank m = new MembershipRank(rs.getString("RankName"),
-                         rs.getBigDecimal("MinTotalSpent"),
-                        rs.getInt("DiscountValue"));
+              while (rs.next()) {                 
+                 MembershipRank m = new MembershipRank(rs.getInt("RankId"),
+                         rs.getString("RankName"),
+                          rs.getBigDecimal("MinTotalSpent"),
+                        rs.getInt("DiscountValue"),
+                         rs.getBoolean("IsDeleted"));
                  list.add(m);
-             }
+              }
         } catch (Exception e) {
              System.err.println(e.getMessage());
         }
@@ -98,6 +111,178 @@ public class CustomerMembershipDAO extends DBContext {
             System.err.println(e.getMessage());
         }
     
+    }
+    public List<CustomerMembership> getAllListMembershipRank(){
+        List<CustomerMembership> list = new ArrayList<>();
+        try {
+            String sql = """
+                         select c.CustomerId,
+                                c.FullName,
+                                c.Phone,
+                                m.RankName,
+                                ISNULL(cm.TotalSpent, 0) as TotalSpent,
+                                ISNULL(m.DiscountValue, 0) as DiscountValue,
+                                case
+                                    when ISNULL(cm.IsDelete, 0) = 1 then 'locked'
+                                    else 'active'
+                                end as Status
+                         from Customers c
+                         join Accounts a on c.AccountId = a.AccountId and a.IsDeleted = 0
+                         left join CustomerMemberships cm on cm.CustomerId = c.CustomerId
+                         left join MembershipRanks m on cm.RankId = m.RankId and m.IsDeleted = 0
+                         where c.IsDeleted = 0
+                         order by ISNULL(cm.TotalSpent, 0) desc, c.FullName
+                         """;
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {                
+                CustomerMembership s = new CustomerMembership();
+                s.setCustomerId(rs.getInt("CustomerId"));
+                s.setCustomerName(rs.getString("FullName"));
+                s.setPhone(rs.getString("Phone"));
+                s.setRankName(rs.getString("RankName"));
+                s.setTotalSpent(rs.getBigDecimal("TotalSpent"));
+                s.setDiscountValue(rs.getBigDecimal("DiscountValue"));
+                s.setStatus(rs.getString("Status"));
+                list.add(s);
+            }
+            
+            
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return list;
+    
+    }
+    
+       public List<CustomerMembership> searchByName(String key,int rankId ,String status ){
+        List<CustomerMembership> list = new ArrayList<>();
+        try {
+            String sql = """
+                         select c.CustomerId,
+                                                         c.FullName,
+                                                         c.Phone,
+                                                         m.RankName,
+                                                         ISNULL(cm.TotalSpent, 0) as TotalSpent,
+                                                         ISNULL(m.DiscountValue, 0) as DiscountValue,
+                                                         case
+                                                             when ISNULL(cm.IsDelete, 0) = 1 then 'locked'
+                                                             else 'active'
+                                                         end as Status
+                                                  from Customers c
+                                                  join Accounts a on c.AccountId = a.AccountId and a.IsDeleted = 0
+                                                  left join CustomerMemberships cm on cm.CustomerId = c.CustomerId
+                                                   left join MembershipRanks m on cm.RankId = m.RankId and m.IsDeleted = 0
+                                                   where c.IsDeleted = 0
+                                                     and (? = ''
+                                                          or c.FullName like ?
+                                                          or c.Phone like ?
+                                                          or cast(c.CustomerId as nvarchar(20)) like ?)
+                                                     and (? = 0 or cm.RankId = ?)
+                                                     and (? = '' or ? = case
+                                                         when ISNULL(cm.IsDelete, 0) = 1 then 'locked'
+                                                         else 'active'
+                                                     end)
+                                                   order by ISNULL(cm.TotalSpent, 0) desc, c.FullName
+                          """;
+            st = connection.prepareStatement(sql);
+            String searchPattern = "%" + key + "%";
+            st.setString(1, key);
+            st.setString(2, searchPattern);
+            st.setString(3, searchPattern);
+            st.setString(4, searchPattern);
+            st.setInt(5, rankId);
+            st.setInt(6, rankId);
+            st.setString(7, status);
+            st.setString(8, status);
+            rs = st.executeQuery();
+            while (rs.next()) {                
+                CustomerMembership s = new CustomerMembership();
+                s.setCustomerId(rs.getInt("CustomerId"));
+                s.setCustomerName(rs.getString("FullName"));
+                s.setPhone(rs.getString("Phone"));
+                s.setRankName(rs.getString("RankName"));
+                s.setTotalSpent(rs.getBigDecimal("TotalSpent"));
+                s.setDiscountValue(rs.getBigDecimal("DiscountValue"));
+                s.setStatus(rs.getString("Status"));
+                list.add(s);
+            }
+            
+            
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return list;
+    
+    }
+    public void updateRanking(MembershipRank m){
+        try {
+            String sql = """
+                         UPDATE [dbo].[MembershipRanks]
+                            SET [RankName] = ?
+                               ,[MinTotalSpent] = ?
+                               ,[DiscountValue] = ?
+                               ,[IsDeleted] = ?
+                          WHERE RankId = ?
+                         """;
+            st = connection.prepareStatement(sql);
+            st.setObject(1, m.getRankName());
+            st.setObject(2, m.getMinTotalSpent());
+            st.setObject(3, m.getDiscountValue());
+            st.setObject(4, m.isIsDeleted());
+            st.setObject(5, m.getRankId());
+            st.executeUpdate();
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+    
+    }
+
+    public int inseartRanking(MembershipRank membershipRank) throws SQLException {
+        if (connection == null) {
+            throw new SQLException("Database connection is not available");
+        }
+
+        String sql = """
+                     INSERT INTO [dbo].[MembershipRanks]
+                                ([RankName]
+                                ,[MinTotalSpent]
+                                ,[DiscountValue]
+                                ,[IsDeleted])
+                     OUTPUT INSERTED.RankId
+                          VALUES
+                                (?,?,?,?)
+                     """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, membershipRank.getRankName());
+            statement.setBigDecimal(2, membershipRank.getMinTotalSpent());
+            statement.setInt(3, membershipRank.getDiscountValue());
+            statement.setBoolean(4, membershipRank.isIsDeleted());
+
+            try (ResultSet generatedKey = statement.executeQuery()) {
+                if (generatedKey.next()) {
+                    return generatedKey.getInt("RankId");
+                }
+            }
+        }
+
+        throw new SQLException("Membership rank was inserted without a generated RankId");
+    }
+    public boolean updateLocked(int id){
+        try {
+            String sql = """
+                         UPDATE [dbo].[CustomerMemberships]
+                            SET [IsDelete] = CASE WHEN [IsDelete] = 1 THEN 0 ELSE 1 END
+                          WHERE CustomerId = ?
+                         """;
+            st = connection.prepareStatement(sql);
+            st.setObject(1, id);
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return false;
     }
     
 }

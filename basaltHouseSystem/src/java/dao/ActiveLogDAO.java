@@ -5,7 +5,8 @@
 package dao;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import model.ActivityLog;
 
 /**
@@ -14,41 +15,37 @@ import model.ActivityLog;
  */
 public class ActiveLogDAO extends DBContext {
 
-    PreparedStatement st;
-    ResultSet rs;
-
-    public boolean ctreatActiveLog(ActivityLog s) {
-        try {
-             String sql = """
-                          INSERT INTO [dbo].[ActivityLogs]
-                                     ([AccountId]
-                                     ,[Action]
-                                     ,[Module]
-                                     ,[TargetId]
-                                     ,[OldValue]
-                                     ,[NewValue]
-                                     ,[Status]
-                                     ,[IsDeleted]
-                                     ,[CreatedAt])
-                               VALUES
-                                     (?,?,?,?,?,?,?,?,?)
-                          """;
-             st = connection.prepareStatement(sql);
-             st.setObject(1, s.getAccountId());
-             st.setObject(2, s.getAction());
-             st.setObject(3, s.getModule());
-             st.setObject(4, s.getTargetId());
-             st.setObject(5, s.getOldValue());
-             st.setObject(6, s.getNewValue());
-             st.setObject(7, s.getStatus());
-             st.setObject(8, s.getIsDeleted());
-             st.setObject(9, s.getCreatedAt());
-             st.executeUpdate();
-             return true;
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+    public boolean ctreatActiveLog(ActivityLog activityLog) throws SQLException {
+        if (connection == null) {
+            throw new SQLException("Database connection is not available");
         }
-        return false;
-               
+
+        String sql = """
+                     INSERT INTO [dbo].[ActivityLogs]
+                                ([AccountId]
+                                ,[Action]
+                                ,[Module]
+                                ,[TargetId]
+                                ,[OldValue]
+                                ,[NewValue]
+                                ,[Status]
+                                ,[IsDeleted]
+                                ,[CreatedAt])
+                          VALUES
+                                (?,?,?,?,?,?,?,?,?)
+                     """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, activityLog.getAccountId());
+            statement.setString(2, activityLog.getAction());
+            statement.setString(3, activityLog.getModule());
+            statement.setInt(4, activityLog.getTargetId());
+            statement.setString(5, activityLog.getOldValue());
+            statement.setString(6, activityLog.getNewValue());
+            statement.setString(7, activityLog.getStatus());
+            statement.setInt(8, activityLog.getIsDeleted());
+            statement.setTimestamp(9, Timestamp.valueOf(activityLog.getCreatedAt()));
+            return statement.executeUpdate() == 1;
+        }
     }
 }

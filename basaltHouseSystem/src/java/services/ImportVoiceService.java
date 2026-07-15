@@ -115,25 +115,4 @@ public class ImportVoiceService {
       java.math.BigDecimal safeRight = right == null ? java.math.BigDecimal.ZERO : right;
       return safeLeft.add(safeRight);
   }
-  
-   public HashMap<String , Object> getSupplierOptions(){
-   HashMap<String,Object>s = new HashMap<>();
-      try {
-          List<HashMap<String, Object>> list = dao.getSupplierOptions();
-          if(list==null){
-              s.put("error", "Danh sách lỗi");
-          }else{
-          
-          s.put("success", list);
-          }
-      } catch (Exception e) {
-          s.put("error", e.getMessage());
-          System.err.println(e.getMessage());
-      }
-   
-  return s;
-  
-  }
-   
-   
 }

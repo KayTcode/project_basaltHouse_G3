@@ -370,17 +370,15 @@ public class ImportVoiceDAO extends DBContext {
         }
 
         String sql = """
-                     SELECT id.IngredientId,
-                            SUM(id.ReceivedQuantity) AS ImportedQuantity
-                     FROM ImportInvoices i
-                     JOIN ImportDetails id ON i.ImportId = id.ImportId
-                                           AND id.IsDeleted = 0
-                     WHERE i.IsDeleted = 0
-                       AND i.ReceivedDate >= ?
-                       AND i.ReceivedDate < ?
-                       AND (i.Status IS NULL OR i.Status <> 'Pending')
-                       AND id.ReceivedQuantity IS NOT NULL
-                     GROUP BY id.IngredientId
+                     SELECT IngredientId,
+                            SUM(QuantityChanged) AS ImportedQuantity
+                     FROM IngredientStockLogs
+                     WHERE IsDeleted = 0
+                       AND RefType = 'ImportInvoice'
+                       AND ChangeType IN ('Import', 'ImportEdit')
+                       AND CreatedAt >= ?
+                       AND CreatedAt < ?
+                     GROUP BY IngredientId
                      """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setTimestamp(1, Timestamp.valueOf(auditDate.atStartOfDay()));

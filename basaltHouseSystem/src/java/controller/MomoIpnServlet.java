@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import utils.Momoconfig;
 
@@ -122,17 +123,23 @@ public class MomoIpnServlet extends HttpServlet {
                 + " | resultCode=" + resultCode + " | sigOK=" + signatureValid);
 
         // ── 4. Cập nhật DB nếu hợp lệ và thành công ─────────────────────
-        if (signatureValid && "0".equals(resultCode)) {
+        boolean successfulCallback = signatureValid && "0".equals(resultCode);
+        boolean processingFailed = successfulCallback
+                && !Momoconfig.PARTNER_CODE.equals(partnerCode);
+        if (successfulCallback && Momoconfig.PARTNER_CODE.equals(partnerCode)) {
             String orderCode = extractOrderCode(orderId);
             int dbOrderId = parseOrderId(orderCode);
 
-            if (dbOrderId > 0) {
+            BigDecimal paidAmount = parseAmount(amount);
+            if (dbOrderId > 0 && paidAmount != null && transId != null && !transId.isBlank()) {
                 OrderDAO orderDAO = new OrderDAO();
-                boolean ok = orderDAO.updatePaymentStatus(
-                        dbOrderId, "MOMO", "Paid", "Processing");
-                System.out.println("[MomoIPN] updatePaymentStatus → " + ok
+                boolean ok = orderDAO.confirmMomoPayment(
+                        dbOrderId, "MOMO-" + transId, paidAmount);
+                processingFailed = !ok;
+                System.out.println("[MomoIPN] confirmMomoPayment → " + ok
                         + " | dbOrderId=" + dbOrderId + " | transId=" + transId);
             } else {
+                processingFailed = true;
                 System.err.println("[MomoIPN] Không parse được orderId từ: " + orderId);
             }
         } else if (!signatureValid) {
@@ -144,9 +151,13 @@ public class MomoIpnServlet extends HttpServlet {
         // ── 5. Trả về HTTP 200 để MoMo biết đã nhận (BẮT BUỘC) ──────────
         // Nếu không trả 200, MoMo sẽ retry nhiều lần
         response.setContentType("application/json; charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_OK);
+        response.setStatus(processingFailed
+                ? HttpServletResponse.SC_INTERNAL_SERVER_ERROR
+                : HttpServletResponse.SC_OK);
         try (PrintWriter out = response.getWriter()) {
-            out.write("{\"status\":0,\"message\":\"success\"}");
+            out.write(processingFailed
+                    ? "{\"status\":1,\"message\":\"retry\"}"
+                    : "{\"status\":0,\"message\":\"success\"}");
         }
     }
 
@@ -197,6 +208,14 @@ public class MomoIpnServlet extends HttpServlet {
         }
         int idx = momoOrderId.lastIndexOf('_');
         return idx > 0 ? momoOrderId.substring(0, idx) : momoOrderId;
+    }
+
+    private BigDecimal parseAmount(String value) {
+        try {
+            return value == null ? null : new BigDecimal(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private int parseOrderId(String orderCode) {

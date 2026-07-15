@@ -1,10 +1,8 @@
 package services;
 
 import dao.DiscountCodeDAO;
-import dao.IngredientDAO;
 import dao.OrderDAO;
 import dao.ProductDAO;
-import dao.RecipeDAO;
 import dao.SizeDAO;
 import dao.TableSessionDAO;
 import java.math.BigDecimal;
@@ -17,7 +15,6 @@ import model.DiscountCode;
 import model.Order;
 import model.OrderDetail;
 import model.Product;
-import model.Recipe;
 import model.TableSession;
 
 
@@ -126,12 +123,6 @@ public class OrderService {
 
         OrderDAO orderDAO = new OrderDAO();
         int newOrderId = orderDAO.insertOfflineOrder(order, details);
-        
-        // Cập nhật trừ kho ngay sau khi tạo đơn và thanh toán thành công 
-        if (newOrderId != -1 && !details.isEmpty()) {
-            StockService stockService = new StockService();
-            stockService.updateStockForOrder(details);
-        }
         
         return newOrderId;
     }

@@ -52,52 +52,6 @@ public class IngredientDAO extends DBContext {
     }
 
 
-    public boolean updateIngredientQuantity(int id, BigDecimal quantityNeed) {
-        if (quantityNeed == null || quantityNeed.compareTo(BigDecimal.ZERO) <= 0) {
-            return false;
-        }
-        try {
-            String sql = """
-                         UPDATE Ingredients
-                         SET StockQuantity = StockQuantity - ?
-                         OUTPUT deleted.StockQuantity AS QuantityBefore,
-                                inserted.StockQuantity AS QuantityAfter
-                         WHERE IngredientId = ?
-                         """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, quantityNeed);
-            st.setObject(2, id);
-            rs = st.executeQuery();
-            if (!rs.next()) {
-                return false;
-            }
-
-            BigDecimal quantityBefore = rs.getBigDecimal("QuantityBefore");
-            BigDecimal quantityAfter = rs.getBigDecimal("QuantityAfter");
-            String logSql = """
-                            INSERT INTO IngredientStockLogs
-                                        (IngredientId, ChangeType, QuantityBefore,
-                                         QuantityChanged, QuantityAfter, RefType,
-                                         RefId, StaffId, IsDeleted)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
-                            """;
-            st = connection.prepareStatement(logSql);
-            st.setObject(1, id);
-            st.setObject(2, "Sold");
-            st.setObject(3, quantityBefore);
-            st.setObject(4, quantityNeed.negate());
-            st.setObject(5, quantityAfter);
-            st.setObject(6, "Sale");
-            st.setNull(7, java.sql.Types.INTEGER);
-            st.setNull(8, java.sql.Types.INTEGER);
-            st.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return false;
-        }
-    }
-
     public List<HashMap<String, Object>> getStockSnapshotByDate(LocalDate auditDate) {
         List<HashMap<String, Object>> rows = new ArrayList<>();
         String sql = """
@@ -157,25 +111,6 @@ public class IngredientDAO extends DBContext {
         }
         return rows;
     }
-      public boolean updateIngredientQuantity2(int id, BigDecimal quantityNeed) {
-        try {
-            String sql = """
-                         UPDATE Ingredients
-                         SET StockQuantity = StockQuantity + ?
-                         WHERE IngredientId = ?
-                         """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, quantityNeed);
-            st.setObject(2, id);
-            st.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            return false;
-        }
-   
-    }
-
     public List<Ingredient> getIngredientsBelowWarning() {
         List<Ingredient> list = new ArrayList<>();
         try {

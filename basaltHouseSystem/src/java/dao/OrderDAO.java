@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import model.Order;
+import java.util.TreeMap;
 import model.OrderDetail;
 
 /**
@@ -310,28 +310,134 @@ public class OrderDAO extends DBContext {
     }
 
     /**
-     * Xác nhận thanh toán đơn hàng: cập nhật PaymentStatus, PaymentMethod,
-     * OrderStatus.
+     * Xác nhận thanh toán MoMo và trừ kho trong cùng một transaction.
      */
-    public boolean updatePaymentStatus(int orderId, String paymentMethod, String paymentStatus, String orderStatus) {
+    public boolean confirmMomoPayment(
+            int orderId,
+            String paymentCode,
+            BigDecimal paidAmount) {
+        boolean oldAutoCommit = true;
         try {
+            oldAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+
+            String currentPaymentStatus;
+            Integer cashierId;
+            BigDecimal expectedAmount;
+            String currentOrderType;
+            String currentPaymentMethod;
+            String lockSql = """
+                             SELECT PaymentStatus, CashierId, OrderType, PaymentMethod,
+                                    COALESCE(FinalAmount, TotalAmount) AS ExpectedAmount
+                             FROM Orders WITH (UPDLOCK, HOLDLOCK)
+                             WHERE OrderId = ? AND IsDeleted = 0
+                             """;
+            try (PreparedStatement statement = connection.prepareStatement(lockSql)) {
+                statement.setInt(1, orderId);
+                try (ResultSet result = statement.executeQuery()) {
+                    if (!result.next()) {
+                        connection.rollback();
+                        return false;
+                    }
+                    currentPaymentStatus = result.getString("PaymentStatus");
+                    cashierId = (Integer) result.getObject("CashierId");
+                    currentOrderType = result.getString("OrderType");
+                    currentPaymentMethod = result.getString("PaymentMethod");
+                    expectedAmount = result.getBigDecimal("ExpectedAmount");
+                }
+            }
+
+            if (!"Online".equalsIgnoreCase(currentOrderType)
+                    || !"MOMO".equalsIgnoreCase(currentPaymentMethod)
+                    || paymentCode == null || paymentCode.isBlank()
+                    || paidAmount == null || expectedAmount == null
+                    || paidAmount.compareTo(expectedAmount) != 0) {
+                connection.rollback();
+                return false;
+            }
+
+            if ("Paid".equalsIgnoreCase(currentPaymentStatus)) {
+                boolean samePayment = hasMatchingOnlinePayment(
+                        orderId, paymentCode, paidAmount, "MOMO");
+                if (samePayment) {
+                    connection.commit();
+                } else {
+                    connection.rollback();
+                }
+                return samePayment;
+            }
+
             String sql = """
                          UPDATE Orders
-                         SET PaymentMethod = ?,
-                             PaymentStatus = ?,
-                             OrderStatus   = ?
+                         SET PaymentMethod = 'MOMO',
+                             PaymentStatus = 'Paid',
+                             OrderStatus   = 'Preparing'
                          WHERE OrderId = ? AND IsDeleted = 0
                          """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, paymentMethod);
-            st.setObject(2, paymentStatus);
-            st.setObject(3, orderStatus);
-            st.setObject(4, orderId);
-            int rowsAffected = st.executeUpdate();
-            return rowsAffected > 0;
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, orderId);
+                if (statement.executeUpdate() != 1) {
+                    connection.rollback();
+                    return false;
+                }
+            }
+
+            deductStockForOrder(orderId, cashierId);
+
+            String paymentSql = """
+                                INSERT INTO OnlinePayments
+                                       (PaymentCode, OrderId, Amount, PaymentMethod,
+                                        PaidAt, Note, IsDeleted, CreatedAt)
+                                VALUES (?, ?, ?, 'MOMO', GETDATE(), ?, 0, GETDATE())
+                                """;
+            try (PreparedStatement statement = connection.prepareStatement(paymentSql)) {
+                statement.setString(1, paymentCode);
+                statement.setInt(2, orderId);
+                statement.setBigDecimal(3, paidAmount);
+                statement.setString(4, "MoMo IPN");
+                statement.executeUpdate();
+            }
+            connection.commit();
+            return true;
         } catch (Exception e) {
-            System.err.println("Lỗi updatePaymentStatus: " + e.getMessage());
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackError) {
+                System.err.println("Rollback payment error: " + rollbackError.getMessage());
+            }
+            System.err.println("Lỗi confirmMomoPayment: " + e.getMessage());
             return false;
+        } finally {
+            try {
+                connection.setAutoCommit(oldAutoCommit);
+            } catch (SQLException e) {
+                System.err.println("Restore auto-commit error: " + e.getMessage());
+            }
+        }
+    }
+
+    private boolean hasMatchingOnlinePayment(
+            int orderId,
+            String paymentCode,
+            BigDecimal amount,
+            String paymentMethod) throws SQLException {
+        String sql = """
+                     SELECT TOP 1 1
+                     FROM OnlinePayments
+                     WHERE OrderId = ?
+                       AND PaymentCode = ?
+                       AND Amount = ?
+                       AND PaymentMethod = ?
+                       AND IsDeleted = 0
+                     """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            statement.setString(2, paymentCode);
+            statement.setBigDecimal(3, amount);
+            statement.setString(4, paymentMethod);
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next();
+            }
         }
     }
 
@@ -463,6 +569,8 @@ public class OrderDAO extends DBContext {
 
     public int insertOfflineOrder(Order order, List<OrderDetail> details) {
         int orderId = -1;
+        String storedPaymentStatus = order.getPaymentStatus() != null
+                ? order.getPaymentStatus() : "Paid";
         try {
             connection.setAutoCommit(false);
 
@@ -487,7 +595,7 @@ public class OrderDAO extends DBContext {
             }
             st.setString(4, order.getOrderType() != null ? order.getOrderType() : "Offline");
             st.setString(5, order.getOrderStatus() != null ? order.getOrderStatus() : "Preparing");
-            st.setString(6, order.getPaymentStatus() != null ? order.getPaymentStatus() : "Paid");
+            st.setString(6, storedPaymentStatus);
             st.setBigDecimal(7, order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);
             st.setBigDecimal(8, order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
             st.setBigDecimal(9, order.getFinalAmount() != null ? order.getFinalAmount() : BigDecimal.ZERO);
@@ -518,10 +626,15 @@ public class OrderDAO extends DBContext {
                     st.addBatch();
                 }
                 st.executeBatch();
+
+                if ("Paid".equalsIgnoreCase(storedPaymentStatus)) {
+                    deductStockForOrder(orderId, order.getCashierId());
+                }
             }
 
             connection.commit();
         } catch (Exception e) {
+            orderId = -1;
             System.err.println("Error insertOfflineOrder: " + e.getMessage());
             try {
                 if (connection != null) {
@@ -539,6 +652,127 @@ public class OrderDAO extends DBContext {
             }
         }
         return orderId;
+    }
+
+    private void deductStockForOrder(int orderId, Integer staffId) throws SQLException {
+        String appliedSql = """
+                            SELECT TOP 1 1
+                            FROM IngredientStockLogs WITH (UPDLOCK, HOLDLOCK)
+                            WHERE RefType = 'Sale'
+                              AND RefId = ?
+                              AND IsDeleted = 0
+                            """;
+        try (PreparedStatement statement = connection.prepareStatement(appliedSql)) {
+            statement.setInt(1, orderId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return;
+                }
+            }
+        }
+
+        String invalidDetailSql = """
+                                  SELECT COUNT(*) AS InvalidCount
+                                  FROM OrderDetails od
+                                  WHERE od.OrderId = ?
+                                    AND od.IsDeleted = 0
+                                    AND (od.Quantity <= 0 OR NOT EXISTS (
+                                        SELECT 1
+                                        FROM Recipes r
+                                        WHERE r.ProductId = od.ProductId
+                                          AND r.SizeId = od.SizeId
+                                          AND r.IsDeleted = 0
+                                          AND r.QuantityNeeded > 0
+                                    ))
+                                  """;
+        try (PreparedStatement statement = connection.prepareStatement(invalidDetailSql)) {
+            statement.setInt(1, orderId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next() && result.getInt("InvalidCount") > 0) {
+                    throw new SQLException("Đơn hàng có sản phẩm/size chưa có công thức hợp lệ.");
+                }
+            }
+        }
+
+        Map<Integer, BigDecimal> requiredByIngredient = new TreeMap<>();
+        String requirementSql = """
+                                SELECT r.IngredientId,
+                                       SUM(CAST(od.Quantity AS DECIMAL(19,4)) * r.QuantityNeeded) AS QuantityNeeded
+                                FROM OrderDetails od
+                                JOIN Recipes r ON r.ProductId = od.ProductId
+                                              AND r.SizeId = od.SizeId
+                                              AND r.IsDeleted = 0
+                                WHERE od.OrderId = ?
+                                  AND od.IsDeleted = 0
+                                GROUP BY r.IngredientId
+                                ORDER BY r.IngredientId
+                                """;
+        try (PreparedStatement statement = connection.prepareStatement(requirementSql)) {
+            statement.setInt(1, orderId);
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    BigDecimal quantityNeeded = result.getBigDecimal("QuantityNeeded");
+                    if (quantityNeeded != null && quantityNeeded.compareTo(BigDecimal.ZERO) > 0) {
+                        requiredByIngredient.put(result.getInt("IngredientId"), quantityNeeded);
+                    }
+                }
+            }
+        }
+        if (requiredByIngredient.isEmpty()) {
+            throw new SQLException("Đơn hàng không có định lượng nguyên liệu để trừ kho.");
+        }
+
+        String updateSql = """
+                           UPDATE Ingredients
+                           SET StockQuantity = StockQuantity - ?
+                           OUTPUT deleted.StockQuantity AS QuantityBefore,
+                                  inserted.StockQuantity AS QuantityAfter
+                           WHERE IngredientId = ?
+                             AND IsDeleted = 0
+                             AND IsActive = 1
+                             AND StockQuantity >= ?
+                           """;
+        String logSql = """
+                        INSERT INTO IngredientStockLogs
+                                   (IngredientId, ChangeType, QuantityBefore,
+                                    QuantityChanged, QuantityAfter, RefType,
+                                    RefId, StaffId, IsDeleted)
+                        VALUES (?, 'Sold', ?, ?, ?, 'Sale', ?, ?, 0)
+                        """;
+
+        for (Map.Entry<Integer, BigDecimal> entry : requiredByIngredient.entrySet()) {
+            int ingredientId = entry.getKey();
+            BigDecimal quantityNeeded = entry.getValue();
+            BigDecimal quantityBefore;
+            BigDecimal quantityAfter;
+            try (PreparedStatement statement = connection.prepareStatement(updateSql)) {
+                statement.setBigDecimal(1, quantityNeeded);
+                statement.setInt(2, ingredientId);
+                statement.setBigDecimal(3, quantityNeeded);
+                try (ResultSet result = statement.executeQuery()) {
+                    if (!result.next()) {
+                        throw new SQLException(
+                                "Nguyên liệu " + ingredientId + " không đủ tồn kho cho đơn " + orderId + ".");
+                    }
+                    quantityBefore = result.getBigDecimal("QuantityBefore");
+                    quantityAfter = result.getBigDecimal("QuantityAfter");
+                }
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(logSql)) {
+                statement.setInt(1, ingredientId);
+                statement.setBigDecimal(2, quantityBefore);
+                statement.setBigDecimal(3, quantityNeeded.negate());
+                statement.setBigDecimal(4, quantityAfter);
+                statement.setInt(5, orderId);
+                if (staffId == null) {
+                    statement.setNull(6, java.sql.Types.INTEGER);
+                } else {
+                    statement.setInt(6, staffId);
+                }
+                statement.executeUpdate();
+            }
+        }
     }
 
     public Order getOfflineOrderById(int orderId) {
@@ -787,18 +1021,32 @@ public class OrderDAO extends DBContext {
 
                      IF NOT EXISTS (
                          SELECT 1
-                         FROM Orders
-                         WHERE IsDeleted = 0
-                           AND PaymentStatus = 'Paid'
-                           AND CreatedAt >= CAST(@AuditDate AS DATETIME2)
-                           AND CreatedAt < DATEADD(DAY, 1, CAST(@AuditDate AS DATETIME2))
+                         FROM Orders o
+                         LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
+                         OUTER APPLY (
+                             SELECT TOP 1 l.CreatedAt AS AppliedAt
+                             FROM IngredientStockLogs l
+                             WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
+                             ORDER BY l.CreatedAt ASC, l.LogId ASC
+                         ) stockLog
+                         WHERE o.IsDeleted = 0
+                           AND o.PaymentStatus = 'Paid'
+                           AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= CAST(@AuditDate AS DATETIME2)
+                           AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < DATEADD(DAY, 1, CAST(@AuditDate AS DATETIME2))
                      )
                      BEGIN
-                         SELECT TOP 1 @AuditDate = CAST(CreatedAt AS DATE)
-                         FROM Orders
-                         WHERE IsDeleted = 0
-                           AND PaymentStatus = 'Paid'
-                         ORDER BY CreatedAt DESC;
+                         SELECT TOP 1 @AuditDate = CAST(COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) AS DATE)
+                         FROM Orders o
+                         LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
+                         OUTER APPLY (
+                             SELECT TOP 1 l.CreatedAt AS AppliedAt
+                             FROM IngredientStockLogs l
+                             WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
+                             ORDER BY l.CreatedAt ASC, l.LogId ASC
+                         ) stockLog
+                         WHERE o.IsDeleted = 0
+                           AND o.PaymentStatus = 'Paid'
+                         ORDER BY COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) DESC;
                      END
 
                      SET @Start = CAST(@AuditDate AS DATETIME2);
@@ -814,13 +1062,20 @@ public class OrderDAO extends DBContext {
                             @AuditDate AS AuditDate
                      FROM OrderDetails od
                      JOIN Orders o ON o.OrderId = od.OrderId
+                     LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
+                     OUTER APPLY (
+                         SELECT TOP 1 l.CreatedAt AS AppliedAt
+                         FROM IngredientStockLogs l
+                         WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
+                         ORDER BY l.CreatedAt ASC, l.LogId ASC
+                     ) stockLog
                      JOIN Products p ON p.ProductId = od.ProductId
                      JOIN Sizes s ON s.SizeId = od.SizeId
                      WHERE od.IsDeleted = 0
                        AND o.IsDeleted = 0
                        AND o.PaymentStatus = 'Paid'
-                       AND o.CreatedAt >= @Start
-                       AND o.CreatedAt < @End
+                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= @Start
+                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < @End
                      GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
                      ORDER BY p.ProductName ASC, s.SizeName ASC
                      """;
@@ -860,13 +1115,20 @@ public class OrderDAO extends DBContext {
                             @AuditDate AS AuditDate
                      FROM OrderDetails od
                      JOIN Orders o ON o.OrderId = od.OrderId
+                     LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
+                     OUTER APPLY (
+                         SELECT TOP 1 l.CreatedAt AS AppliedAt
+                         FROM IngredientStockLogs l
+                         WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
+                         ORDER BY l.CreatedAt ASC, l.LogId ASC
+                     ) stockLog
                      JOIN Products p ON p.ProductId = od.ProductId
                      JOIN Sizes s ON s.SizeId = od.SizeId
                      WHERE od.IsDeleted = 0
                        AND o.IsDeleted = 0
                        AND o.PaymentStatus = 'Paid'
-                       AND o.CreatedAt >= @Start
-                       AND o.CreatedAt < @End
+                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= @Start
+                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < @End
                      GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
                      ORDER BY p.ProductName ASC, s.SizeName ASC
                      """;

@@ -4,7 +4,6 @@
  */
 package services;
 
-import dao.IngredientDAO;
 import dao.ProductDAO;
 import dao.SizeDAO;
 import dao.ImportVoiceDAO;
@@ -34,14 +33,10 @@ public class StockService {
             = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private  final DateTimeFormatter DATE_INPUT_FORMAT
             = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final IngredientCheckService ingredientService = new IngredientCheckService();
     private final ProductDAO p = new ProductDAO();
     private final SizeDAO s = new SizeDAO();
     private final    ImportVoiceDAO staffDAO = new ImportVoiceDAO();
     public HashMap<Product, HashMap<String, Integer>> calculateProduct() {
-        ProductDAO p = new ProductDAO();
-        
-
         HashMap<Product, HashMap<String, Integer>> result = new HashMap<>();
         HashMap<Integer, Product> productMap = p.getProduct();
         HashMap<Integer, String> sizeMap = s.getSize();
@@ -88,12 +83,6 @@ public class StockService {
         return result;
     }
 
-    public List<Ingredient> getWarnings() {
-        IngredientDAO i = new IngredientDAO();
-        return i.getIngredientsBelowWarning();
-    }
-
-    
  public HashMap<String, Object> getStaffDashboardData(String key ,boolean includeImportOptions) {
      List<HashMap<String, Object>> rows = new ArrayList<>();
        if(key==null|| key.trim().isEmpty()){
@@ -139,7 +128,6 @@ public class StockService {
             item.put("id", row.get("ingredientId"));
             item.put("name", row.get("ingredientName"));
             item.put("unit", row.get("unit"));
-            item.put("supplierId", row.get("supplierId"));
             item.put("supplierName", row.get("supplierName"));
             item.put("stockText", formatDecimal(stock));
             item.put("minStockText", formatDecimal(minStock));
@@ -167,32 +155,12 @@ public class StockService {
         return data;
     }
 
-    public List<HashMap<String, Object>> getImportIngredientOptionsBySupplier(int supplierId) {
-        List<HashMap<String, Object>> options = new ArrayList<>();
-        if (supplierId <= 0) {
-            return options;
-        }
-
-        for (HashMap<String, Object> row : staffDAO.getIngredientStockRowsBySupplier(supplierId)) {
-            HashMap<String, Object> item = new HashMap<>();
-            item.put("id", row.get("ingredientId"));
-            item.put("name", row.get("ingredientName"));
-            item.put("unit", row.get("unit"));
-            item.put("stockText", formatDecimal(toBigDecimal(row.get("stockQuantity"))));
-            item.put("supplierId", row.get("supplierId"));
-            item.put("supplierName", row.get("supplierName"));
-            options.add(item);
-        }
-        return options;
-    }
-
     // Dựng dữ liệu kiểm kê bán hàng theo ngày được chọn.
     public HashMap<String, Object> getSalesAuditData(LocalDate selectedDate) {
         SalesAuditContext context = new SalesAuditContext(
                 loadIngredientMap(),
                 loadRecipeMap()
         );
-        context.selectedDate = selectedDate;
         if (selectedDate == null) {
             context.auditDate = LocalDate.now();
         } else {
@@ -203,9 +171,6 @@ public class StockService {
         if (selectedDate == null) {
             context.auditDate = resolveAuditDate(soldRows);
         }
-        context.showingLatestSaleDate = selectedDate == null
-                && !soldRows.isEmpty()
-                && !LocalDate.now().equals(context.auditDate);
         context.importedByIngredient = getImportedQuantityByIngredient(context.auditDate);
         context.stockSnapshotByIngredient = loadStockSnapshotByIngredient(context.auditDate);
 
@@ -385,12 +350,14 @@ public class StockService {
         data.put("totalRevenueText", formatMoney(context.totalRevenue));
         data.put("usedIngredientCount", context.usedIngredientCount);
         data.put("auditWarningCount", context.missingRecipeCount + context.stockWarningCount);
-        data.put("missingRecipeCount", context.missingRecipeCount);
         data.put("productSales", productSales);
         data.put("ingredientAudit", ingredientAudit);
         data.put("auditDateOnlyText", formatDate(context.auditDate));
         data.put("auditDateInput", context.auditDate.format(DATE_INPUT_FORMAT));
         data.put("todayDateInput", LocalDate.now().format(DATE_INPUT_FORMAT));
+        if (context.dataError != null && !context.dataError.trim().isEmpty()) {
+            data.put("dataError", context.dataError);
+        }
 
         return data;
     }
@@ -459,11 +426,6 @@ public class StockService {
         }
         sale.put("statusClass", statusClass);
         sale.put("statusIcon", statusIcon);
-        String statusLabel = "Du cong thuc";
-        if (missingRecipe) {
-            statusLabel = "Thieu cong thuc";
-        }
-        sale.put("statusLabel", statusLabel);
         return sale;
     }
 
@@ -478,21 +440,15 @@ public class StockService {
             SalesAuditContext context) {
         HashMap<String, Object> audit = new HashMap<>();
         audit.put("ingredientName", ingredient.getIngredientName());
-        audit.put("unit", ingredient.getUnit());
         audit.put("expectedUsedText", formatDecimal(expectedUsed) + " " + ingredient.getUnit());
         audit.put("importedTodayText", formatDecimal(imported) + " " + ingredient.getUnit());
         audit.put("currentStockText", formatDecimal(stockNumbers.closingStock) + " " + ingredient.getUnit());
         audit.put("openingEstimateText", formatDecimal(stockNumbers.openingStock) + " " + ingredient.getUnit());
         audit.put("expectedClosingText", formatDecimal(stockNumbers.expectedClosingStock) + " " + ingredient.getUnit());
-        audit.put("differenceText", formatDecimal(stockNumbers.difference) + " " + ingredient.getUnit());
         audit.put("cupsText", context.cupsByIngredient
                 .getOrDefault(ingredientId, "Không có sản phẩm bán trong ngày này"));
         audit.put("usageDetails", context.usageDetailsByIngredient
                 .getOrDefault(ingredientId, new ArrayList<>()));
-        audit.put("stockBalanceText", formatDecimal(stockNumbers.openingStock) + " " + ingredient.getUnit()
-                + " + " + formatDecimal(imported) + " " + ingredient.getUnit()
-                + " - " + formatDecimal(expectedUsed) + " " + ingredient.getUnit()
-                + " = " + formatDecimal(stockNumbers.expectedClosingStock) + " " + ingredient.getUnit());
         audit.put("statusClass", status.statusClass);
         audit.put("statusIcon", status.statusIcon);
         audit.put("statusLabel", status.statusLabel);

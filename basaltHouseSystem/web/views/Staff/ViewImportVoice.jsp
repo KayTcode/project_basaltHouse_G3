@@ -1,10 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
-<%@page import="java.time.format.DateTimeFormatter"%>
-<%@page import="java.util.HashMap"%>
-<%@page import="java.util.List"%>
-<%@page import="model.ImportInvoicesDetail"%>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -33,24 +29,10 @@
                 </a>
             </header>
 
-            <c:if test="${not empty successMessage}">
-                <div class="notice notice-success">
-                    <span class="material-symbols-outlined">check_circle</span>
-                    <c:out value="${successMessage}"/>
-                </div>
-            </c:if>
-
             <c:if test="${not empty errorMessage}">
                 <div class="notice notice-error">
                     <span class="material-symbols-outlined">error</span>
                     <c:out value="${errorMessage}"/>
-                </div>
-            </c:if>
-
-            <c:if test="${not empty dataError}">
-                <div class="notice notice-error">
-                    <span class="material-symbols-outlined">database_off</span>
-                    Không đọc được dữ liệu lựa chọn: <c:out value="${dataError}"/>
                 </div>
             </c:if>
 
@@ -69,10 +51,6 @@
                 </c:when>
 
                 <c:otherwise>
-                    <c:catch var="supplierInvoiceCodeLookupError">
-                        <c:set var="supplierInvoiceCodeValue" value="${invoiceDetail.supplierInvoiceCode}"/>
-                    </c:catch>
-
                     <form id="invoiceForm"
                           class="invoice-layout"
                           method="post"
@@ -117,9 +95,8 @@
                                     <label>
                                         <span>Mã hóa đơn NCC</span>
                                         <input type="text"
-                                               id="supplierInvoiceCodeInput"
                                                name="supplierInvoiceCode"
-                                               value="${not empty supplierInvoiceCodeValue ? supplierInvoiceCodeValue : param.supplierInvoiceCode}"
+                                               value="${invoiceDetail.supplierInvoiceCode}"
                                                placeholder="SUP-INV-001"
                                                readonly>
                                     </label>
@@ -217,7 +194,7 @@
                             </section>
 
                             <c:forEach var="detail" items="${invoiceDetails}" varStatus="detailStatus">
-                                <section class="panel detail-panel editable-invoice-detail">
+                                <section class="panel detail-panel">
                                     <input type="hidden"
                                            name="importDetailId"
                                            value="${detail.importDetailId}">
@@ -232,7 +209,7 @@
                                             <h2><c:out value="${detail.ingredientName}"/></h2>
                                         </div>
 
-                                        <span class="ingredient-unit detail-unit">
+                                        <span class="ingredient-unit">
                                             <c:out value="${detail.unit}"/>
                                         </span>
                                     </div>
@@ -240,18 +217,8 @@
                                     <label>
                                         <span>Nguyên liệu</span>
 
-                                        <c:set var="ingredientDisplayText"
-                                               value="${detail.ingredientName} - còn ${detail.stockQuantity} ${detail.unit}"/>
-
-                                        <c:forEach var="item" items="${ingredients}">
-                                            <c:if test="${item.ingredientId == detail.ingredientId}">
-                                                <c:set var="ingredientDisplayText"
-                                                       value="${item.ingredientName} - còn ${item.stockQuantity} ${item.unit}"/>
-                                            </c:if>
-                                        </c:forEach>
-
                                         <input type="text"
-                                               value="${ingredientDisplayText}"
+                                               value="${detail.ingredientName} - còn ${detail.stockQuantity} ${detail.unit}"
                                                readonly>
                                     </label>
 
@@ -259,7 +226,6 @@
                                         <label>
                                             <span>Số lượng đặt</span>
                                             <input type="number"
-                                                   class="detail-ordered-quantity"
                                                    name="orderedQuantity"
                                                    min="0.01"
                                                    step="0.01"
@@ -271,7 +237,6 @@
                                         <label>
                                             <span>Số lượng nhận</span>
                                             <input type="number"
-                                                   class="detail-received-quantity"
                                                    name="receivedQuantity"
                                                    min="0"
                                                    step="0.01"
@@ -283,7 +248,6 @@
                                         <label>
                                             <span>Đơn giá</span>
                                             <input type="number"
-                                                   class="detail-unit-price"
                                                    name="unitPrice"
                                                    min="0"
                                                    step="100"
@@ -319,7 +283,7 @@
 
                                     <div>
                                         <p>Tổng tiền thực nhận</p>
-                                        <strong id="receivedTotalText">
+                                        <strong>
                                             <fmt:formatNumber value="${invoiceDetail.totalReceivedAmount}"
                                                               type="number"
                                                               maxFractionDigits="0"/> đ
@@ -337,8 +301,8 @@
 
                                     <div>
                                         <span>Mã hóa đơn NCC</span>
-                                        <strong id="supplierInvoiceCodeText">
-                                            <c:out value="${not empty supplierInvoiceCodeValue ? supplierInvoiceCodeValue : param.supplierInvoiceCode}"/>
+                                        <strong>
+                                            <c:out value="${invoiceDetail.supplierInvoiceCode}"/>
                                         </strong>
                                     </div>
 
@@ -351,14 +315,14 @@
 
                                     <div>
                                         <span>Số nguyên liệu</span>
-                                        <strong id="ingredientCountText">
+                                        <strong>
                                             <c:out value="${invoiceDetail.ingredientCount}"/> loại
                                         </strong>
                                     </div>
 
                                     <div>
                                         <span>Tổng tiền đặt</span>
-                                        <strong id="orderedTotalText">
+                                        <strong>
                                             <fmt:formatNumber value="${invoiceDetail.totalOrderedAmount}"
                                                               type="number"
                                                               maxFractionDigits="0"/> đ
@@ -367,7 +331,7 @@
 
                                     <div>
                                         <span>Tổng tiền thực nhận</span>
-                                        <strong id="receivedLineTotalText">
+                                        <strong>
                                             <fmt:formatNumber value="${invoiceDetail.totalReceivedAmount}"
                                                               type="number"
                                                               maxFractionDigits="0"/> đ
@@ -395,64 +359,6 @@
         </main>
 
         <script>
-            function getDetailNumber(row, selector) {
-                var element = row.querySelector(selector);
-                return element ? parseFloat(element.value || '0') || 0 : 0;
-            }
-
-            function formatMoney(value) {
-                return new Intl.NumberFormat('vi-VN').format(value || 0) + ' đ';
-            }
-
-            function updateInvoiceTotals() {
-                var form = document.getElementById('invoiceForm');
-
-                if (!form) {
-                    return;
-                }
-
-                var rows = form.querySelectorAll('.editable-invoice-detail');
-                var orderedTotal = 0;
-                var receivedTotal = 0;
-
-                for (var i = 0; i < rows.length; i++) {
-                    var orderedQuantity = getDetailNumber(rows[i], '.detail-ordered-quantity');
-                    var receivedQuantity = getDetailNumber(rows[i], '.detail-received-quantity');
-                    var unitPrice = getDetailNumber(rows[i], '.detail-unit-price');
-
-                    orderedTotal += orderedQuantity * unitPrice;
-                    receivedTotal += receivedQuantity * unitPrice;
-                }
-
-                var receivedTotalText = document.getElementById('receivedTotalText');
-                var receivedLineTotalText = document.getElementById('receivedLineTotalText');
-                var orderedTotalText = document.getElementById('orderedTotalText');
-                var ingredientCountText = document.getElementById('ingredientCountText');
-
-                if (receivedTotalText) {
-                    receivedTotalText.textContent = formatMoney(receivedTotal);
-                }
-
-                if (receivedLineTotalText) {
-                    receivedLineTotalText.textContent = formatMoney(receivedTotal);
-                }
-
-                if (orderedTotalText) {
-                    orderedTotalText.textContent = formatMoney(orderedTotal);
-                }
-
-                if (ingredientCountText) {
-                    ingredientCountText.textContent = rows.length + ' loại';
-                }
-
-                var supplierInvoiceCodeInput = document.getElementById('supplierInvoiceCodeInput');
-                var supplierInvoiceCodeText = document.getElementById('supplierInvoiceCodeText');
-
-                if (supplierInvoiceCodeInput && supplierInvoiceCodeText) {
-                    supplierInvoiceCodeText.textContent = supplierInvoiceCodeInput.value || '-';
-                }
-            }
-
             function updateRejectReasonRequirement() {
                 var statusSelect = document.getElementById('statusSelect');
                 var rejectReason = document.getElementById('rejectReasonInput');
@@ -465,13 +371,10 @@
             var form = document.getElementById('invoiceForm');
 
             if (form) {
-                form.addEventListener('input', updateInvoiceTotals);
-                form.addEventListener('change', updateInvoiceTotals);
                 form.addEventListener('change', updateRejectReasonRequirement);
             }
 
             updateRejectReasonRequirement();
-            updateInvoiceTotals();
         </script>
     </body>
 </html>

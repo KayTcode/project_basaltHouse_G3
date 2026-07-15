@@ -2,6 +2,7 @@ package controller;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.HashMap;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import services.StockService;
 
 public class StaffHistoryBuyProductServlet extends HttpServlet {
+
+    private final StockService stockService = new StockService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -21,8 +24,11 @@ public class StaffHistoryBuyProductServlet extends HttpServlet {
                         "Không thể tìm lịch sử bán hàng ở ngày tương lai.");
                 selectedDate = null;
             }
-            request.setAttribute("salesAudit",
-                    new StockService().getSalesAuditData(selectedDate));
+            HashMap<String, Object> salesAudit = stockService.getSalesAuditData(selectedDate);
+            request.setAttribute("salesAudit", salesAudit);
+            if (salesAudit.containsKey("dataError")) {
+                request.setAttribute("dataError", salesAudit.get("dataError"));
+            }
         } catch (Exception e) {
             request.setAttribute("dataError", e.getMessage());
         }

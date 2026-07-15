@@ -2,7 +2,7 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
-<section class="staff-view active" id="inventoryView">
+<section class="staff-view active">
     <div class="panel inventory-panel">
         <div class="panel-header">
             <div>
@@ -13,8 +13,7 @@
             <form action="${pageContext.request.contextPath}/staff/ingredient" method="get">
                 <div class="search-box">
                     <span class="material-symbols-outlined">search</span>
-                    <input id="ingredientSearch"
-                           name="search"
+                    <input name="search"
                            value="${key}"
                            placeholder="Tìm nguyên liệu">
                 </div>
@@ -74,8 +73,7 @@
 
                     <c:forEach var="item" items="${ingredients}">
                         <tr class="ingredient-row"
-                            data-status="${item.status}"
-                            data-name="${item.name}">
+                            data-status="${item.status}">
 
                             <td class="ingredient-primary">
                                 <div class="ingredient-name">
@@ -123,7 +121,7 @@
                     <tr id="inventoryFilterEmpty" hidden>
                         <td class="empty-cell" colspan="5">
                             <span class="material-symbols-outlined">inventory_2</span>
-                            <span id="inventoryFilterEmptyText">
+                            <span>
                                 Không có nguyên liệu ở trạng thái này.
                             </span>
                         </td>

@@ -165,7 +165,7 @@
                             <c:when test="${order.orderStatus == 'Pending'}">     <c:set var="sc" value="pending"/></c:when>
                             <c:when test="${order.orderStatus == 'Preparing'}">   <c:set var="sc" value="preparing"/></c:when>
                             <c:when test="${order.orderStatus == 'In_Progress'}"> <c:set var="sc" value="preparing"/></c:when>
-                            <c:when test="${order.orderStatus == 'Ready'}">       <c:set var="sc" value="shipping"/></c:when>
+                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}"> <c:set var="sc" value="preparing"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivering'}">  <c:set var="sc" value="shipping"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">   <c:set var="sc" value="completed"/></c:when>
                             <c:when test="${order.orderStatus == 'Cancelled'}">   <c:set var="sc" value="cancelled"/></c:when>
@@ -177,7 +177,7 @@
                             <c:when test="${order.orderStatus == 'Pending'}">     <c:set var="sl" value="Chờ xác nhận"/></c:when>
                             <c:when test="${order.orderStatus == 'Preparing'}">   <c:set var="sl" value="Đang pha chế"/></c:when>
                             <c:when test="${order.orderStatus == 'In_Progress'}"> <c:set var="sl" value="Đang pha chế"/></c:when>
-                            <c:when test="${order.orderStatus == 'Ready'}">       <c:set var="sl" value="Sẵn sàng giao"/></c:when>
+                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}">       <c:set var="sl" value="Sẵn sàng giao"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivering'}">  <c:set var="sl" value="Đang giao hàng"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">   <c:set var="sl" value="Hoàn thành"/></c:when>
                             <c:when test="${order.orderStatus == 'Cancelled'}">   <c:set var="sl" value="Đã hủy"/></c:when>
@@ -188,7 +188,7 @@
                         <c:choose>
                             <c:when test="${order.orderStatus == 'Pending'}">                                        <c:set var="si" value="hourglass_empty"/></c:when>
                             <c:when test="${order.orderStatus == 'Preparing' || order.orderStatus == 'In_Progress'}"><c:set var="si" value="coffee_maker"/></c:when>
-                            <c:when test="${order.orderStatus == 'Ready'}">                                          <c:set var="si" value="inventory_2"/></c:when>
+                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}">                                      <c:set var="si" value="inventory_2"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivering'}">                                     <c:set var="si" value="local_shipping"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">                                      <c:set var="si" value="task_alt"/></c:when>
                             <c:when test="${order.orderStatus == 'Cancelled'}">                                      <c:set var="si" value="cancel"/></c:when>
@@ -256,7 +256,7 @@
                                             <c:when test="${order.orderStatus == 'Preparing' || order.orderStatus == 'In_Progress'}">
                                                 <c:set var="s2" value="active"/>
                                             </c:when>
-                                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Delivering' || order.orderStatus == 'Completed'}">
+                                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper' || order.orderStatus == 'Delivering' || order.orderStatus == 'Completed'}">
                                                 <c:set var="s2" value="done"/>
                                             </c:when>
                                         </c:choose>
@@ -271,7 +271,7 @@
                                         <%-- Step 3: Giao hàng --%>
                                         <c:set var="s3" value=""/>
                                         <c:choose>
-                                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Delivering'}">
+                                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper' || order.orderStatus == 'Delivering'}">
                                                 <c:set var="s3" value="active"/>
                                             </c:when>
                                             <c:when test="${order.orderStatus == 'Completed'}">

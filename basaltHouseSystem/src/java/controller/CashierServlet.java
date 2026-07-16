@@ -96,11 +96,16 @@ public class CashierServlet extends HttpServlet {
             response.getWriter().write("Cart is empty");
             return;
         }
-
+       Integer cashierId = null;
+        var httpSession = request.getSession(false);
+        if (httpSession != null) {
+            Object attr = httpSession.getAttribute("cashierId");
+            if (attr instanceof Integer) cashierId = (Integer) attr;
+        }
         try {
             OrderService orderService = new OrderService();
-            int orderId = orderService.createOfflineOrder(cartData, totalAmountStr, discountAmountStr, finalAmountStr,
-              paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr);
+             int orderId = orderService.createOfflineOrder(cartData, totalAmountStr, discountAmountStr, finalAmountStr,
+              paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr, cashierId);
                                                           
             if (orderId != -1) {
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -138,7 +143,7 @@ public class CashierServlet extends HttpServlet {
                 if (!"all".equalsIgnoreCase(typeParam)) {
                     List<model.Order> filteredList = new ArrayList<>();
                     for (model.Order o : fullList) {
-                        String oType = o.getOrderType() != null ? o.getOrderType().toLowerCase() : "offline";
+                        String oType = o.getOrderType() != null ? o.getOrderType().toLowerCase() : "pos";
                         if (typeParam.equalsIgnoreCase(oType)) {
                             filteredList.add(o);
                         }

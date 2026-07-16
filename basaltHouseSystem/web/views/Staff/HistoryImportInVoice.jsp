@@ -2,8 +2,8 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
-            <section class="staff-view active" id="historyView">
-                <div class="panel history-panel" id="history">
+            <section class="staff-view active">
+                <div class="panel history-panel">
                     <div class="panel-header">
                         <div>
                             <h2>Lịch sử nhập nguyên liệu</h2>
@@ -66,7 +66,7 @@
                                 </c:if>
 
                                 <c:forEach var="row" items="${listP}">
-                                    <tr class="history-row" data-history-text="${row.importCode} ${row.ingredientName} ${row.sppliendName} ${row.status} ${row.staffName}">
+                                    <tr class="history-row">
                                         <td><strong><c:out value="${row.orderedDate}"/></strong></td>
                                         <td>
                                             <strong><c:out value="${row.importCode}"/></strong>
@@ -107,7 +107,6 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <input type="hidden" name="importId" value="${row.importId}">
                                             <a class="history-view-btn"
                                                href="${pageContext.request.contextPath}/viewimportvoice?id=${row.importId}">
                                                 <span class="material-symbols-outlined">visibility</span>

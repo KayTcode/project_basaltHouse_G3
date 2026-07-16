@@ -12,7 +12,7 @@ import services.ImportVoiceService;
 
 public class StaffHistoryInvoiceServlet extends HttpServlet {
 
-    private static final ImportVoiceService importService = new ImportVoiceService();
+    private final ImportVoiceService importService = new ImportVoiceService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

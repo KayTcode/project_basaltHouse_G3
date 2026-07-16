@@ -43,6 +43,9 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title><c:out value="${empty pageTitle ? 'BasaltHouse - Good Coffee, Good Mood' : pageTitle}"/></title>
+        <c:if test="${not empty pageDescription}">
+            <meta name="description" content="<c:out value='${pageDescription}'/>">
+        </c:if>
         <!-- Bootstrap 5 CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- Google Fonts -->
@@ -50,40 +53,14 @@
         <!-- Material Symbols Outlined -->
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
         <link href="${pageContext.request.contextPath}/css/HomePageCss/HomePage.css?v=20260709-1" rel="stylesheet">
+        <c:if test="${not empty pageStylesheet and not pageStylesheetAfterTheme}">
+            <link href="${pageContext.request.contextPath}${pageStylesheet}" rel="stylesheet">
+        </c:if>
         <link href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-2" rel="stylesheet">
-
-
+        <c:if test="${not empty pageStylesheet and pageStylesheetAfterTheme}">
+            <link href="${pageContext.request.contextPath}${pageStylesheet}" rel="stylesheet">
+        </c:if>
     </head>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-
-            const trigger = document.getElementById("userMenuTrigger");
-            const dropdown = document.getElementById("userDropdown");
-
-            if (!trigger || !dropdown)
-                return;
-
-            trigger.addEventListener("click", function (e) {
-                e.stopPropagation();
-
-                dropdown.classList.toggle("is-open");
-
-                const expanded =
-                        trigger.getAttribute("aria-expanded") === "true";
-
-                trigger.setAttribute("aria-expanded", !expanded);
-            });
-
-            document.addEventListener("click", function (e) {
-                if (!dropdown.contains(e.target)
-                        && !trigger.contains(e.target)) {
-
-                    dropdown.classList.remove("is-open");
-                    trigger.setAttribute("aria-expanded", "false");
-                }
-            });
-        });
-    </script>
     <body>
 
         <!-- TopNavBar -->
@@ -351,3 +328,37 @@
                 </div>
             </nav>
         </header>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const trigger = document.getElementById("userMenuTrigger");
+                const dropdown = document.getElementById("userDropdown");
+
+                if (!trigger || !dropdown) {
+                    return;
+                }
+
+                function setMenuOpen(open) {
+                    dropdown.classList.toggle("is-open", open);
+                    trigger.setAttribute("aria-expanded", String(open));
+                    dropdown.setAttribute("aria-hidden", String(!open));
+                }
+
+                trigger.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    setMenuOpen(trigger.getAttribute("aria-expanded") !== "true");
+                });
+
+                document.addEventListener("click", function (event) {
+                    if (!dropdown.contains(event.target) && !trigger.contains(event.target)) {
+                        setMenuOpen(false);
+                    }
+                });
+
+                document.addEventListener("keydown", function (event) {
+                    if (event.key === "Escape") {
+                        setMenuOpen(false);
+                        trigger.focus();
+                    }
+                });
+            });
+        </script>

@@ -3,19 +3,11 @@
 
 <%
     request.setAttribute("pageTitle", "Thông tin tài khoản - BasaltHouse");
+    request.setAttribute("pageStylesheet", "/css/AccountProfile/AccountProfile.css?v=20260709-2");
+    request.setAttribute("pageStylesheetAfterTheme", true);
 %>
 
-<c:set var="fullNameVal" value="${not empty cusr.fullName ? cusr.fullName : fullName}"/>
-<c:set var="phoneVal" value="${not empty cusr.phone ? cusr.phone : phone}"/>
-<c:set var="avatarUrlVal" value="${not empty cusr.avatarUrl ? cusr.avatarUrl : avatarUrl}"/>
-<c:set var="emailVal" value="${not empty cusr.email ? cusr.email : email}"/>
-
 <jsp:include page="/views/HomePage/Header.jsp"/>
-
-<link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/Customer/CustomerTheme.css?v=20260709-1">
-<link rel="stylesheet"
-      href="${pageContext.request.contextPath}/css/AccountProfile/AccountProfile.css?v=20260709-2">
 
 <main class="account-inform-page">
     <section class="account-hero">
@@ -39,42 +31,27 @@
 
     <section class="account-content-section">
         <div class="container">
+            <c:if test="${not empty profileError}">
+                <div class="account-form-alert account-form-alert--error account-profile-error" role="alert">
+                    <span class="material-symbols-outlined">error</span>
+                    <c:out value="${profileError}"/>
+                </div>
+            </c:if>
+
             <div class="account-layout">
                 <aside class="account-profile-card">
-                    <details class="account-avatar-editor">
-                        <summary class="account-avatar-wrap" title="Cập nhật URL ảnh đại diện">
-                            <c:choose>
-                                <c:when test="${not empty avatarUrlVal}">
-                                    <img src="${avatarUrlVal}" alt="Avatar"
-                                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                                    <span class="account-avatar-fallback material-symbols-outlined">account_circle</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="account-avatar-fallback material-symbols-outlined">account_circle</span>
-                                </c:otherwise>
-                            </c:choose>
-                            <span class="account-avatar-edit">
-                                <span class="material-symbols-outlined">edit</span>
-                                Cập nhật URL
-                            </span>
-                        </summary>
-
-                        <div class="account-avatar-url-panel">
-                            <label for="avatarUrlInput">URL ảnh đại diện</label>
-                            <div class="account-avatar-url-row">
-                                <input id="avatarUrlInput"
-                                       type="url"
-                                       name="avatarUrl"
-                                       value="${avatarUrlVal}"
-                                       placeholder="https://example.com/avatar.jpg">
-                                <button type="button">
-                                    <span class="material-symbols-outlined">image</span>
-                                    Cập nhật
-                                </button>
-                            </div>
-                            <small>Phần này mới là giao diện nhập URL, chưa gắn xử lý lưu dữ liệu.</small>
-                        </div>
-                    </details>
+                    <div class="account-avatar-wrap">
+                        <c:choose>
+                            <c:when test="${not empty cusr.avatarUrl}">
+                                <img src="<c:out value='${cusr.avatarUrl}'/>" alt="Avatar"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <span class="account-avatar-fallback material-symbols-outlined">account_circle</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="account-avatar-fallback material-symbols-outlined">account_circle</span>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
 
                     <div class="account-profile-info">
                         <span class="account-status-chip">
@@ -83,16 +60,16 @@
                         </span>
                         <h2>
                             <c:choose>
-                                <c:when test="${not empty fullNameVal}">
-                                    <c:out value="${fullNameVal}"/>
+                                <c:when test="${not empty cusr.fullName}">
+                                    <c:out value="${cusr.fullName}"/>
                                 </c:when>
                                 <c:otherwise>Chưa cập nhật họ tên</c:otherwise>
                             </c:choose>
                         </h2>
                         <p>
                             <c:choose>
-                                <c:when test="${not empty emailVal}">
-                                    <c:out value="${emailVal}"/>
+                                <c:when test="${not empty cusr.email}">
+                                    <c:out value="${cusr.email}"/>
                                 </c:when>
                                 <c:otherwise>Chưa cập nhật email</c:otherwise>
                             </c:choose>
@@ -105,7 +82,7 @@
                             <small>Liên hệ</small>
                             <strong>
                                 <c:choose>
-                                    <c:when test="${not empty phoneVal}"><c:out value="${phoneVal}"/></c:when>
+                                    <c:when test="${not empty cusr.phone}"><c:out value="${cusr.phone}"/></c:when>
                                     <c:otherwise>Chưa có</c:otherwise>
                                 </c:choose>
                             </strong>
@@ -129,8 +106,8 @@
                                 <small>FullName</small>
                                 <strong>
                                     <c:choose>
-                                        <c:when test="${not empty fullNameVal}">
-                                            <c:out value="${fullNameVal}"/>
+                                        <c:when test="${not empty cusr.fullName}">
+                                            <c:out value="${cusr.fullName}"/>
                                         </c:when>
                                         <c:otherwise>Chưa cập nhật</c:otherwise>
                                     </c:choose>
@@ -144,8 +121,8 @@
                                 <small>Phone</small>
                                 <strong>
                                     <c:choose>
-                                        <c:when test="${not empty phoneVal}">
-                                            <c:out value="${phoneVal}"/>
+                                        <c:when test="${not empty cusr.phone}">
+                                            <c:out value="${cusr.phone}"/>
                                         </c:when>
                                         <c:otherwise>Chưa cập nhật</c:otherwise>
                                     </c:choose>
@@ -159,8 +136,8 @@
                                 <small>Email</small>
                                 <strong>
                                     <c:choose>
-                                        <c:when test="${not empty emailVal}">
-                                            <c:out value="${emailVal}"/>
+                                        <c:when test="${not empty cusr.email}">
+                                            <c:out value="${cusr.email}"/>
                                         </c:when>
                                         <c:otherwise>Chưa cập nhật</c:otherwise>
                                     </c:choose>
@@ -200,12 +177,6 @@
                                         <span>Mật khẩu mới</span>
                                         <input type="password" name="newPassword" placeholder="Nhập mật khẩu mới" required>
                                     </label>
-                                    <c:if test="${not empty error}">
-                                        <div class="account-form-alert account-form-alert--error account-form-alert--form" role="alert">
-                                            <span class="material-symbols-outlined">error</span>
-                                            <c:out value="${error}"/>
-                                        </div>
-                                    </c:if>
                                     <button type="submit">
                                         <span class="material-symbols-outlined">lock_reset</span>
                                         Cập nhật mật khẩu
@@ -219,13 +190,5 @@
         </div>
     </section>
 </main>
-
-<c:if test="${not empty passwordSuccess}">
-    <script>
-        window.addEventListener("DOMContentLoaded", function () {
-            alert("Đổi mật khẩu thành công");
-        });
-    </script>
-</c:if>
 
 <jsp:include page="/views/HomePage/Footer.jsp"/>

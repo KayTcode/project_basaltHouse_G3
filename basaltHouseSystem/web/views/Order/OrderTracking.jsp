@@ -3,20 +3,11 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
 <%@taglib prefix="fn" uri="jakarta.tags.functions"%>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theo Dõi Đơn Hàng - BasaltHouse</title>
-    <meta name="description" content="Xem lịch sử và trạng thái các đơn hàng online của bạn tại BasaltHouse.">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="${pageContext.request.contextPath}/css/CartCss/OrderTracking.css?v=1.0.3" rel="stylesheet">
-</head>
-<body>
+<%
+    request.setAttribute("pageTitle", "Theo Dõi Đơn Hàng - BasaltHouse");
+    request.setAttribute("pageDescription", "Xem lịch sử và trạng thái các đơn hàng online của bạn tại BasaltHouse.");
+    request.setAttribute("pageStylesheet", "/css/CartCss/OrderTracking.css?v=20260709-1");
+%>
 
 <%-- Shared Header --%>
 <jsp:include page="/views/HomePage/Header.jsp"/>

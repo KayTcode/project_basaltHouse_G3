@@ -2,7 +2,7 @@
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <link href="${pageContext.request.contextPath}/css/Staff/SaleHistory.css?v=20260709-1" rel="stylesheet">
 
-<section class="staff-view active" id="salesHistoryView">
+<section class="staff-view active">
     <section class="sales-audit-grid" aria-label="Tổng quan bán hàng">
         <div class="sales-audit-card">
             <span class="material-symbols-outlined">shopping_cart</span>
@@ -133,7 +133,7 @@
                         <th>Đã dùng theo sản phẩm/size</th>
                         <th>Tổng đã dùng</th>
                         <th>Tồn đầu ngày</th>
-                        <th>Nhập trong ngày</th>
+                        <th>Nhập/điều chỉnh kho trong ngày</th>
                         <th>Tồn cuối ngày</th>
                         <th>Đối chiếu</th>
                         <th>Kết quả</th>

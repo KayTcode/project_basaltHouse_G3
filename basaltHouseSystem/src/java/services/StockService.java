@@ -4,7 +4,6 @@
  */
 package services;
 
-import dao.IngredientDAO;
 import dao.ProductDAO;
 import dao.SizeDAO;
 import dao.ImportVoiceDAO;
@@ -18,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import model.Ingredient;
-import model.OrderDetail;
 import model.Product;
 import model.Recipe;
 import model.SalesAuditContext;
@@ -27,24 +25,24 @@ import model.StockStatus;
 
 public class StockService {
 
-    private  final BigDecimal WARNING_RATE = new BigDecimal("1.2");
-    private  final DateTimeFormatter DATE_TIME_INPUT_FORMAT
+    private static final BigDecimal WARNING_RATE = new BigDecimal("1.2");
+    private static final BigDecimal AVAILABILITY_RATE = new BigDecimal("0.85");
+    private static final DateTimeFormatter DATE_TIME_INPUT_FORMAT
             = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-    private  final DateTimeFormatter DISPLAY_DATE_FORMAT
+    private static final DateTimeFormatter DISPLAY_DATE_FORMAT
             = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private  final DateTimeFormatter DATE_INPUT_FORMAT
+    private static final DateTimeFormatter DATE_INPUT_FORMAT
             = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final IngredientCheckService ingredientService = new IngredientCheckService();
-    private final ProductDAO p = new ProductDAO();
-    private final SizeDAO s = new SizeDAO();
-    private final    ImportVoiceDAO staffDAO = new ImportVoiceDAO();
-    public HashMap<Product, HashMap<String, Integer>> calculateProduct() {
-        ProductDAO p = new ProductDAO();
-        
+    private final ProductDAO productDAO = new ProductDAO();
+    private final SizeDAO sizeDAO = new SizeDAO();
+    private final ImportVoiceDAO importVoiceDAO = new ImportVoiceDAO();
+    private final IngredientCheckService ingredientCheckService = new IngredientCheckService();
+    private final RecipeService recipeService = new RecipeService();
 
+    public HashMap<Product, HashMap<String, Integer>> calculateProduct() {
         HashMap<Product, HashMap<String, Integer>> result = new HashMap<>();
-        HashMap<Integer, Product> productMap = p.getProduct();
-        HashMap<Integer, String> sizeMap = s.getSize();
+        HashMap<Integer, Product> productMap = productDAO.getProduct();
+        HashMap<Integer, String> sizeMap = sizeDAO.getSize();
         HashMap<Integer, Ingredient> ingredientMap = loadIngredientMap();
         HashMap<Integer, HashMap<Integer, List<Recipe>>> recipeMap = loadRecipeMap();
 
@@ -52,30 +50,45 @@ public class StockService {
                 : recipeMap.entrySet()) {
             int productId = productEntry.getKey();
             Product product = productMap.get(productId);
+            if (product == null) {
+                continue;
+            }
             HashMap<String, Integer> sizeResult = new HashMap<>();
 
             for (Map.Entry<Integer, List<Recipe>> sizeEntry
                     : productEntry.getValue().entrySet()) {
                 int sizeId = sizeEntry.getKey();
                 String sizeName = sizeMap.get(sizeId);
+                if (sizeName == null) {
+                    continue;
+                }
                 int minCoc = Integer.MAX_VALUE;
 
+                Map<Integer, BigDecimal> neededByIngredient = new HashMap<>();
                 for (Recipe recipe : sizeEntry.getValue()) {
-                    Ingredient ig = ingredientMap.get(recipe.getIngredientId());
-                    if (ig == null) {
-                        continue;
-                    }
-
                     BigDecimal needed = recipe.getQuantityNeeded();
                     if (needed == null || needed.compareTo(BigDecimal.ZERO) <= 0) {
                         minCoc = 0;
                         break;
                     }
-                    int coc = ig.getStockQuantity()
-                            .divide(needed, 0, RoundingMode.FLOOR)
-                            .intValue();
-                    coc = (int) (coc * (1 - 0.15));
-                    minCoc = Math.min(minCoc, coc);
+                    neededByIngredient.merge(recipe.getIngredientId(), needed, BigDecimal::add);
+                }
+
+                if (minCoc != 0) {
+                    for (Map.Entry<Integer, BigDecimal> requirement : neededByIngredient.entrySet()) {
+                        Ingredient ingredient = ingredientMap.get(requirement.getKey());
+                        if (ingredient == null) {
+                            minCoc = 0;
+                            break;
+                        }
+                        int cups = calculateAvailableCups(
+                                ingredient.getStockQuantity(), requirement.getValue());
+                        if (cups == 0) {
+                            minCoc = 0;
+                            break;
+                        }
+                        minCoc = Math.min(minCoc, cups);
+                    }
                 }
                 int availableCups = minCoc;
                 if (availableCups == Integer.MAX_VALUE) {
@@ -88,22 +101,21 @@ public class StockService {
         return result;
     }
 
-    public List<Ingredient> getWarnings() {
-        IngredientDAO i = new IngredientDAO();
-        return i.getIngredientsBelowWarning();
+    static int calculateAvailableCups(BigDecimal stockQuantity, BigDecimal quantityNeeded) {
+        if (stockQuantity == null || stockQuantity.compareTo(BigDecimal.ZERO) <= 0
+                || quantityNeeded == null || quantityNeeded.compareTo(BigDecimal.ZERO) <= 0) {
+            return 0;
+        }
+        return stockQuantity.multiply(AVAILABILITY_RATE)
+                .divide(quantityNeeded, 0, RoundingMode.FLOOR)
+                .intValue();
     }
 
-    
- public HashMap<String, Object> getStaffDashboardData(String key ,boolean includeImportOptions) {
-     List<HashMap<String, Object>> rows = new ArrayList<>();
-       if(key==null|| key.trim().isEmpty()){
-           rows = staffDAO.getIngredientStockRows();
-      
-       }else{
-           rows = staffDAO.getIngredientStockRows(key);
-       }
-        
-       
+    public HashMap<String, Object> getStaffDashboardData(String key, boolean includeImportOptions) {
+        List<HashMap<String, Object>> rows = key == null || key.trim().isEmpty()
+                ? importVoiceDAO.getIngredientStockRows()
+                : importVoiceDAO.getIngredientStockRows(key);
+
         List<HashMap<String, Object>> ingredients = new ArrayList<>();
         List<HashMap<String, Object>> warnings = new ArrayList<>();
 
@@ -139,7 +151,6 @@ public class StockService {
             item.put("id", row.get("ingredientId"));
             item.put("name", row.get("ingredientName"));
             item.put("unit", row.get("unit"));
-            item.put("supplierId", row.get("supplierId"));
             item.put("supplierName", row.get("supplierName"));
             item.put("stockText", formatDecimal(stock));
             item.put("minStockText", formatDecimal(minStock));
@@ -161,29 +172,10 @@ public class StockService {
         data.put("outCount", outCount);
         data.put("okCount", okCount);
         if (includeImportOptions) {
-            data.put("suppliers", staffDAO.getSupplierOptions());
+            data.put("suppliers", importVoiceDAO.getSupplierOptions());
             data.put("currentDateInput", LocalDateTime.now().format(DATE_TIME_INPUT_FORMAT));
         }
         return data;
-    }
-
-    public List<HashMap<String, Object>> getImportIngredientOptionsBySupplier(int supplierId) {
-        List<HashMap<String, Object>> options = new ArrayList<>();
-        if (supplierId <= 0) {
-            return options;
-        }
-
-        for (HashMap<String, Object> row : staffDAO.getIngredientStockRowsBySupplier(supplierId)) {
-            HashMap<String, Object> item = new HashMap<>();
-            item.put("id", row.get("ingredientId"));
-            item.put("name", row.get("ingredientName"));
-            item.put("unit", row.get("unit"));
-            item.put("stockText", formatDecimal(toBigDecimal(row.get("stockQuantity"))));
-            item.put("supplierId", row.get("supplierId"));
-            item.put("supplierName", row.get("supplierName"));
-            options.add(item);
-        }
-        return options;
     }
 
     // Dựng dữ liệu kiểm kê bán hàng theo ngày được chọn.
@@ -192,7 +184,6 @@ public class StockService {
                 loadIngredientMap(),
                 loadRecipeMap()
         );
-        context.selectedDate = selectedDate;
         if (selectedDate == null) {
             context.auditDate = LocalDate.now();
         } else {
@@ -203,9 +194,6 @@ public class StockService {
         if (selectedDate == null) {
             context.auditDate = resolveAuditDate(soldRows);
         }
-        context.showingLatestSaleDate = selectedDate == null
-                && !soldRows.isEmpty()
-                && !LocalDate.now().equals(context.auditDate);
         context.importedByIngredient = getImportedQuantityByIngredient(context.auditDate);
         context.stockSnapshotByIngredient = loadStockSnapshotByIngredient(context.auditDate);
 
@@ -215,33 +203,9 @@ public class StockService {
         return buildSalesAuditData(productSales, ingredientAudit, context);
     }
 
-    public void updateStockForOrder(List<OrderDetail> details) {
-        IngredientCheckService ingredientService = new IngredientCheckService();
-
-        HashMap<Integer, HashMap<Integer, List<Recipe>>> recipeMap = loadRecipeMap();
-
-        for (OrderDetail detail : details) {
-            HashMap<Integer, List<Recipe>> bySize = recipeMap.get(detail.getProductId());
-            if (bySize == null) {
-                continue;
-            }
-
-            List<Recipe> recipes = bySize.get(detail.getSizeId());
-            if (recipes == null) {
-                continue;
-            }
-
-            for (Recipe recipe : recipes) {
-                BigDecimal quantityNeed = recipe.getQuantityNeeded()
-                        .multiply(BigDecimal.valueOf(detail.getQuantity()));
-                ingredientService.updateIngredientQuantity(recipe.getIngredientId(), quantityNeed);
-            }
-        }
-    }
-
     // Lấy danh sách nguyên liệu qua service để hạn chế gọi IngredientDAO trực tiếp.
     private HashMap<Integer, Ingredient> loadIngredientMap() {
-        HashMap<String, Object> result = new IngredientCheckService().getAllIngredients();
+        HashMap<String, Object> result = ingredientCheckService.getAllIngredients();
         Object success = result.get("success");
         if (success instanceof HashMap<?, ?>) {
             return (HashMap<Integer, Ingredient>) success;
@@ -251,7 +215,7 @@ public class StockService {
 
     // Lấy map công thức qua RecipeService để StockService không gọi RecipeDAO trực tiếp.
     private HashMap<Integer, HashMap<Integer, List<Recipe>>> loadRecipeMap() {
-        HashMap<String, Object> result = new RecipeService().getRecipeMap();
+        HashMap<String, Object> result = recipeService.getRecipeMap();
         Object success = result.get("success");
         if (success instanceof HashMap<?, ?>) {
             return (HashMap<Integer, HashMap<Integer, List<Recipe>>>) success;
@@ -262,7 +226,7 @@ public class StockService {
     // Lấy tồn đầu/tồn cuối theo ngày từ log kho.
     private Map<Integer, HashMap<String, Object>> loadStockSnapshotByIngredient(LocalDate auditDate) {
         Map<Integer, HashMap<String, Object>> map = new HashMap<>();
-        HashMap<String, Object> result = new IngredientCheckService().getStockSnapshotByDate(auditDate);
+        HashMap<String, Object> result = ingredientCheckService.getStockSnapshotByDate(auditDate);
         Object success = result.get("success");
         if (!(success instanceof List<?>)) {
             return map;
@@ -306,8 +270,6 @@ public class StockService {
             List<HashMap<String, Object>> soldRows,
             SalesAuditContext context) {
         List<HashMap<String, Object>> productSales = new ArrayList<>();
-        RecipeService recipeService = new RecipeService();
-
         for (HashMap<String, Object> row : soldRows) {
             int productId = toInt(row.get("productId"));
             int sizeId = toInt(row.get("sizeId"));
@@ -355,7 +317,7 @@ public class StockService {
                     .getOrDefault(ingredientId, BigDecimal.ZERO);
 
             if (expectedUsed.compareTo(BigDecimal.ZERO) <= 0
-                    && imported.compareTo(BigDecimal.ZERO) <= 0) {
+                    && imported.compareTo(BigDecimal.ZERO) == 0) {
                 continue;
             }
 
@@ -364,7 +326,7 @@ public class StockService {
             }
 
             StockNumbers stockNumbers = getStockNumbers(ingredientId, ingredient, expectedUsed, imported, context);
-            StockStatus status = getStockStatus(ingredient, stockNumbers.closingStock, stockNumbers.difference);
+            StockStatus status = getStockStatus(ingredient, stockNumbers);
             if (!"ok".equals(status.statusClass)) {
                 context.stockWarningCount++;
             }
@@ -385,12 +347,14 @@ public class StockService {
         data.put("totalRevenueText", formatMoney(context.totalRevenue));
         data.put("usedIngredientCount", context.usedIngredientCount);
         data.put("auditWarningCount", context.missingRecipeCount + context.stockWarningCount);
-        data.put("missingRecipeCount", context.missingRecipeCount);
         data.put("productSales", productSales);
         data.put("ingredientAudit", ingredientAudit);
         data.put("auditDateOnlyText", formatDate(context.auditDate));
         data.put("auditDateInput", context.auditDate.format(DATE_INPUT_FORMAT));
         data.put("todayDateInput", LocalDate.now().format(DATE_INPUT_FORMAT));
+        if (context.dataError != null && !context.dataError.trim().isEmpty()) {
+            data.put("dataError", context.dataError);
+        }
 
         return data;
     }
@@ -418,7 +382,7 @@ public class StockService {
         if (quantityPerCup == null) {
             quantityPerCup = BigDecimal.ZERO;
         }
-        BigDecimal expectedUsed = quantityPerCup.multiply(BigDecimal.valueOf(soldQuantity));
+        BigDecimal expectedUsed = calculateExpectedUsage(quantityPerCup, soldQuantity);
 
         context.expectedByIngredient.merge(recipe.getIngredientId(), expectedUsed, BigDecimal::add);
         appendCupText(context.cupsByIngredient, recipe.getIngredientId(),
@@ -459,11 +423,6 @@ public class StockService {
         }
         sale.put("statusClass", statusClass);
         sale.put("statusIcon", statusIcon);
-        String statusLabel = "Du cong thuc";
-        if (missingRecipe) {
-            statusLabel = "Thieu cong thuc";
-        }
-        sale.put("statusLabel", statusLabel);
         return sale;
     }
 
@@ -478,28 +437,22 @@ public class StockService {
             SalesAuditContext context) {
         HashMap<String, Object> audit = new HashMap<>();
         audit.put("ingredientName", ingredient.getIngredientName());
-        audit.put("unit", ingredient.getUnit());
         audit.put("expectedUsedText", formatDecimal(expectedUsed) + " " + ingredient.getUnit());
         audit.put("importedTodayText", formatDecimal(imported) + " " + ingredient.getUnit());
-        audit.put("currentStockText", formatDecimal(stockNumbers.closingStock) + " " + ingredient.getUnit());
-        audit.put("openingEstimateText", formatDecimal(stockNumbers.openingStock) + " " + ingredient.getUnit());
-        audit.put("expectedClosingText", formatDecimal(stockNumbers.expectedClosingStock) + " " + ingredient.getUnit());
-        audit.put("differenceText", formatDecimal(stockNumbers.difference) + " " + ingredient.getUnit());
+        audit.put("currentStockText", formatStockValue(stockNumbers.closingStock, ingredient.getUnit()));
+        audit.put("openingEstimateText", formatStockValue(stockNumbers.openingStock, ingredient.getUnit()));
+        audit.put("expectedClosingText", formatStockValue(stockNumbers.expectedClosingStock, ingredient.getUnit()));
         audit.put("cupsText", context.cupsByIngredient
                 .getOrDefault(ingredientId, "Không có sản phẩm bán trong ngày này"));
         audit.put("usageDetails", context.usageDetailsByIngredient
                 .getOrDefault(ingredientId, new ArrayList<>()));
-        audit.put("stockBalanceText", formatDecimal(stockNumbers.openingStock) + " " + ingredient.getUnit()
-                + " + " + formatDecimal(imported) + " " + ingredient.getUnit()
-                + " - " + formatDecimal(expectedUsed) + " " + ingredient.getUnit()
-                + " = " + formatDecimal(stockNumbers.expectedClosingStock) + " " + ingredient.getUnit());
         audit.put("statusClass", status.statusClass);
         audit.put("statusIcon", status.statusIcon);
         audit.put("statusLabel", status.statusLabel);
         return audit;
     }
 
-    // Lấy tồn đầu/tồn cuối từ log; nếu thiếu log thì quay về cách ước tính cũ.
+    // Lấy tồn đầu/tồn cuối từ log; thiếu log thì đánh dấu không đủ dữ liệu đối chiếu.
     private StockNumbers getStockNumbers(
             int ingredientId,
             Ingredient ingredient,
@@ -507,36 +460,64 @@ public class StockService {
             BigDecimal imported,
             SalesAuditContext context) {
         HashMap<String, Object> snapshot = context.stockSnapshotByIngredient.get(ingredientId);
-        BigDecimal currentStock = ingredient.getStockQuantity();
-        if (currentStock == null) {
-            currentStock = BigDecimal.ZERO;
-        }
         boolean hasStockLog = snapshot != null && Boolean.TRUE.equals(snapshot.get("hasStockLog"));
 
-        BigDecimal openingStock;
-        BigDecimal closingStock;
-        if (hasStockLog) {
-            openingStock = toBigDecimal(snapshot.get("openingStock"));
-            closingStock = toBigDecimal(snapshot.get("closingStock"));
-        } else {
-            closingStock = currentStock;
-            openingStock = closingStock.add(expectedUsed).subtract(imported);
+        if (!hasStockLog) {
+            return reconcileStock(null, ingredient.getStockQuantity(), imported, expectedUsed);
         }
+        return reconcileStock(
+                toBigDecimal(snapshot.get("openingStock")),
+                toBigDecimal(snapshot.get("closingStock")),
+                imported,
+                expectedUsed);
+    }
 
-        BigDecimal expectedClosingStock = openingStock.add(imported).subtract(expectedUsed);
-        BigDecimal difference = expectedClosingStock.subtract(closingStock);
-        return new StockNumbers(openingStock, closingStock, expectedClosingStock, difference);
+    static BigDecimal calculateExpectedUsage(BigDecimal quantityPerCup, int soldQuantity) {
+        if (quantityPerCup == null || quantityPerCup.compareTo(BigDecimal.ZERO) <= 0
+                || soldQuantity <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return quantityPerCup.multiply(BigDecimal.valueOf(soldQuantity));
+    }
+
+    static StockNumbers reconcileStock(
+            BigDecimal openingStock,
+            BigDecimal closingStock,
+            BigDecimal imported,
+            BigDecimal expectedUsed) {
+        if (openingStock == null || closingStock == null) {
+            return new StockNumbers(null, closingStock, null, null, false);
+        }
+        BigDecimal safeImported = imported == null ? BigDecimal.ZERO : imported;
+        BigDecimal safeExpectedUsed = expectedUsed == null ? BigDecimal.ZERO : expectedUsed;
+        BigDecimal expectedClosingStock = openingStock.add(safeImported).subtract(safeExpectedUsed);
+        return new StockNumbers(
+                openingStock,
+                closingStock,
+                expectedClosingStock,
+                expectedClosingStock.subtract(closingStock),
+                true);
     }
 
     // Xác định trạng thái kiểm kê của nguyên liệu để hiển thị cảnh báo.
-    private StockStatus getStockStatus(Ingredient ingredient, BigDecimal closingStock, BigDecimal difference) {
+    private StockStatus getStockStatus(Ingredient ingredient, StockNumbers stockNumbers) {
+        if (!stockNumbers.hasStockLog) {
+            return new StockStatus("warning", "help", "Không đủ dữ liệu log");
+        }
+        BigDecimal closingStock = stockNumbers.closingStock;
+        BigDecimal difference = stockNumbers.difference;
         BigDecimal minStock = ingredient.getMinStockQuantity();
         if (minStock == null) {
             minStock = BigDecimal.ZERO;
         }
 
-        if (difference.compareTo(BigDecimal.ZERO) != 0) {
-            return new StockStatus("danger", "error", "Lệch kho");
+        if (difference.compareTo(BigDecimal.ZERO) > 0) {
+            return new StockStatus("danger", "error",
+                    "Thiếu " + formatDecimal(difference) + " " + ingredient.getUnit());
+        }
+        if (difference.compareTo(BigDecimal.ZERO) < 0) {
+            return new StockStatus("danger", "error",
+                    "Dư " + formatDecimal(difference.abs()) + " " + ingredient.getUnit());
         }
         if (closingStock.compareTo(BigDecimal.ZERO) <= 0) {
             return new StockStatus("danger", "error", "Hết kho");
@@ -649,11 +630,8 @@ public class StockService {
 
     // Tính tổng lượng nguyên liệu đã nhập theo ngày kiểm kê.
     private Map<Integer, BigDecimal> getImportedQuantityByIngredient(LocalDate auditDate) {
-        LocalDate targetDate = auditDate;
-        if (targetDate == null) {
-            targetDate = LocalDate.now();
-        }
-        return new ImportVoiceDAO().getReceivedQuantityByIngredient(targetDate);
+        LocalDate targetDate = auditDate == null ? LocalDate.now() : auditDate;
+        return importVoiceDAO.getReceivedQuantityByIngredient(targetDate);
     }
 
     // Format số lượng nguyên liệu, bỏ số 0 dư phía sau.
@@ -662,6 +640,10 @@ public class StockService {
             return "0";
         }
         return value.stripTrailingZeros().toPlainString();
+    }
+
+    private String formatStockValue(BigDecimal value, String unit) {
+        return value == null ? "—" : formatDecimal(value) + " " + unit;
     }
 
     // Format tiền Việt Nam để hiển thị trên JSP.

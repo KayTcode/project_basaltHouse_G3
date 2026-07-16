@@ -155,6 +155,10 @@
     <servlet>
         <servlet-name>AdminBillDetailServlet</servlet-name>
         <servlet-class>controller.AdminBillDetailServlet</servlet-class>
+      </servlet>
+      <servlet>
+        <servlet-name>AdminMembership</servlet-name>
+        <servlet-class>controller.AdminMembership</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -319,6 +323,10 @@
     <servlet-mapping>
         <servlet-name>AdminBillDetailServlet</servlet-name>
         <url-pattern>/admin/bill-detail</url-pattern>
+     </servlet-mapping>
+     <servlet-mapping>
+        <servlet-name>AdminMembership</servlet-name>
+        <url-pattern>/admin/memberships</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

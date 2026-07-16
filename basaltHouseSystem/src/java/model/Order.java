@@ -235,4 +235,13 @@ public class Order {
         this.note = note;
     }
     
+    public java.util.Date getCreatedAtDate() {
+        if (createdAt == null) {
+            return null;
+        }
+        return java.util.Date.from(createdAt
+                .atZone(java.time.ZoneId.systemDefault())
+                .toInstant());
+    }
 }
+

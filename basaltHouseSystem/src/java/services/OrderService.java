@@ -2,10 +2,8 @@ package services;
 
 import dao.BillDAO;
 import dao.DiscountCodeDAO;
-import dao.IngredientDAO;
 import dao.OrderDAO;
 import dao.ProductDAO;
-import dao.RecipeDAO;
 import dao.SizeDAO;
 import dao.TableSessionDAO;
 import java.math.BigDecimal;
@@ -20,7 +18,6 @@ import model.DiscountCode;
 import model.Order;
 import model.OrderDetail;
 import model.Product;
-import model.Recipe;
 import model.TableSession;
 
 public class OrderService {

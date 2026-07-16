@@ -7,7 +7,6 @@ package controller;
 
 import dto.UserLoginDTO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,43 +24,17 @@ import model.ActivityLog;
 import model.ImportDetail;
 import model.ImportInvoice;
 import model.ImportInvoicesDetail;
-import model.Ingredient;
 import services.ActivityLogService;
 import static services.AuthService.USER_SESSION_KEY;
 import services.ImportVoiceService;
-import services.IngredientCheckService;
 
 /**
  *
  * @author admin
  */
 public class ViewImportVoiceServlet extends HttpServlet {
-   private static final IngredientCheckService iService = new IngredientCheckService();
    private static final ImportVoiceService importService = new ImportVoiceService();
    private static final ActivityLogService activeService = new ActivityLogService();
-    /** 
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet ViewImportVoiceServlet</title>");  
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet ViewImportVoiceServlet at " + request.getContextPath () + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    } 
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /** 
@@ -93,7 +66,7 @@ public class ViewImportVoiceServlet extends HttpServlet {
         
         HashMap<String, Object> s3 = importService.getImportInvoiceDetailsById(id);
         if (s3.containsKey("error")) {
-            request.setAttribute("error", s3.get("error").toString());
+            request.setAttribute("errorMessage", s3.get("error").toString());
             request.getRequestDispatcher("views/Staff/ViewImportVoice.jsp").forward(request, response);
             return;
         }
@@ -102,23 +75,6 @@ public class ViewImportVoiceServlet extends HttpServlet {
         ImportInvoicesDetail im = invoiceDetails.get(0);
         im.setIngredientCount(invoiceDetails.size());
 
-        List<HashMap<String, Object>> listS = new ArrayList<>();
-        HashMap<Integer, Ingredient> ingre = new HashMap<>();
-        HashMap<String , Object>s1 = importService.getSupplierOptions();
-        if(s1.containsKey("error")){
-        request.setAttribute("error", s1.get("error").toString());
-        }else{
-          listS = ( List<HashMap<String, Object>> )s1.get("success");
-        }
-        HashMap<String,Object> s2 = iService.getAllIngredients();
-         if(s2.containsKey("error")){
-          request.setAttribute("error", s2.get("error").toString());
-        
-        }else{
-          ingre = (HashMap<Integer, Ingredient>)s2.get("success");
-        }
-        request.setAttribute("ingredients", new ArrayList<>(ingre.values()));
-        request.setAttribute("suppliers", listS);
         request.setAttribute("invoiceDetail", im);
         request.setAttribute("invoiceDetails", invoiceDetails);
         request.getRequestDispatcher("views/Staff/ViewImportVoice.jsp").forward(request, response);

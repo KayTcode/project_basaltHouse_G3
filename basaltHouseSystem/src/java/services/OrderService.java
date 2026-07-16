@@ -144,10 +144,6 @@ public class OrderService {
 
         if (newOrderId != -1) {
 
-            if (!details.isEmpty()) {
-                new StockService().updateStockForOrder(details);
-            }
-
             Bill bill = new Bill();
             bill.setOrderId(newOrderId);
             bill.setCashierId(order.getCashierId());
@@ -189,9 +185,10 @@ public class OrderService {
             if (current != null && "Pending".equalsIgnoreCase(current.getOrderStatus())) {
                 orderDAO.updateOrderStatus(orderId, "Preparing");
 
-                List<OrderDetail> details = orderDAO.getOfflineOrderDetailsByOrderId(orderId);
-                if (!details.isEmpty()) {
-                    new StockService().updateStockForOrder(details);
+                try {
+                    orderDAO.deductStockForOrder(orderId, cashierId);
+                } catch (Exception e) {
+                    System.err.println("Failed to deduct stock for online order: " + e.getMessage());
                 }
 
                 Bill bill = new Bill();

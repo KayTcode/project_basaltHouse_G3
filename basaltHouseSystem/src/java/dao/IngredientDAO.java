@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import model.Ingredient;
 
 /**
@@ -198,6 +199,58 @@ public class IngredientDAO extends DBContext {
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
+        }
+        return list;
+    }
+    public List<Map<String, Object>> getTodayIngredientUsage() {
+        List<Map<String, Object>> list = new ArrayList<>();
+        try {
+            String sql = """
+                         SELECT p.ProductName, s.SizeName, SUM(od.Quantity) AS TotalCups, i.IngredientName, i.Unit, SUM(od.Quantity * r.QuantityNeeded) AS UsedQuantity
+                         FROM Orders o
+                         JOIN OrderDetails od ON o.OrderId = od.OrderId
+                         JOIN Products p ON od.ProductId = p.ProductId
+                         JOIN Sizes s ON od.SizeId = s.SizeId
+                         JOIN Recipes r ON od.ProductId = r.ProductId AND od.SizeId = r.SizeId
+                         JOIN Ingredients i ON r.IngredientId = i.IngredientId
+                         WHERE CAST(o.CreatedAt AS DATE) = CAST(GETDATE() AS DATE)
+                           AND o.IsDeleted = 0
+                           AND o.OrderStatus NOT IN ('Cancelled', 'Pending')
+                         GROUP BY p.ProductId, p.ProductName, s.SizeId, s.SizeName, i.IngredientId, i.IngredientName, i.Unit
+                         ORDER BY p.ProductName, s.SizeName, UsedQuantity DESC
+                         """;
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            
+            Map<String, Map<String, Object>> productGroups = new java.util.LinkedHashMap<>();
+            
+            while (rs.next()) {
+                String pName = rs.getString("ProductName");
+                String sName = rs.getString("SizeName");
+                String key = pName + "-" + sName;
+                
+                Map<String, Object> prodGroup = productGroups.get(key);
+                if (prodGroup == null) {
+                    prodGroup = new HashMap<>();
+                    prodGroup.put("productName", pName);
+                    prodGroup.put("sizeName", sName);
+                    prodGroup.put("totalCups", rs.getInt("TotalCups"));
+                    prodGroup.put("ingredients", new ArrayList<Map<String, Object>>());
+                    productGroups.put(key, prodGroup);
+                }
+                
+                Map<String, Object> ing = new HashMap<>();
+                ing.put("ingredientName", rs.getString("IngredientName"));
+                ing.put("unit", rs.getString("Unit"));
+                ing.put("usedQuantity", rs.getBigDecimal("UsedQuantity"));
+                
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> ingList = (List<Map<String, Object>>) prodGroup.get("ingredients");
+                ingList.add(ing);
+            }
+            list.addAll(productGroups.values());
+        } catch (Exception e) {
+            System.err.println("Error in getTodayIngredientUsage: " + e.getMessage());
         }
         return list;
     }

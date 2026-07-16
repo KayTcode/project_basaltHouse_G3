@@ -144,6 +144,18 @@
         <servlet-name>ApplyVoucherServlet</servlet-name>
         <servlet-class>controller.ApplyVoucherServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>AdminBillServlet</servlet-name>
+        <servlet-class>controller.AdminBillServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminInventoryServlet</servlet-name>
+        <servlet-class>controller.AdminInventoryServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminBillDetailServlet</servlet-name>
+        <servlet-class>controller.AdminBillDetailServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
@@ -178,14 +190,10 @@
         <url-pattern>/cashier/oderview</url-pattern>
         <url-pattern>/cashier/dashboard</url-pattern>
         <url-pattern>/cashier/shippers</url-pattern>
-        <servlet-name>ApplyVoucherServlet</servlet-name>
-        <url-pattern>/apply-voucher</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-    <servlet-name>POSOrderServlet</servlet-name>
-    <url-pattern>/cashier/pos</url-pattern>
-    <url-pattern>/cashier/oderview</url-pattern>
-    <url-pattern>/cashier/dashboard</url-pattern>
+        <servlet-name>ApplyVoucherServlet</servlet-name>
+        <url-pattern>/apply-voucher</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>BartenderServlet</servlet-name>
@@ -299,6 +307,18 @@
     <servlet-mapping>
         <servlet-name>AdminProductServlet</servlet-name>
         <url-pattern>/admin/products</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminBillServlet</servlet-name>
+        <url-pattern>/admin/bills</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminInventoryServlet</servlet-name>
+        <url-pattern>/admin/ingredients</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminBillDetailServlet</servlet-name>
+        <url-pattern>/admin/bill-detail</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

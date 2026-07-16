@@ -65,9 +65,9 @@ public class OrderTrackingServlet extends HttpServlet {
             orders.add(new OrderTrackingDTO(o, details, addr, logs));
 
             String status = o.getOrderStatus();
-            if ("Pending".equals(status) || "Preparing".equals(status)
+             if ("Pending".equals(status) || "Preparing".equals(status)
                     || "In_Progress".equals(status) || "Ready".equals(status)
-                    || "Delivering".equals(status)) {
+                    || "Waiting_Shipper".equals(status) || "Delivering".equals(status)) {
                 pendingCount++;
             }
             if ("Completed".equals(status)) {

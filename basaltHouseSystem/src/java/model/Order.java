@@ -30,6 +30,7 @@ public class Order {
     private boolean isDeleted;
     private String customerName;
     private String tableName;
+    private String cashierName;
     private String shipperName;
     private String note;
 
@@ -175,6 +176,11 @@ public class Order {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+    
+    public String getFormattedCreatedAt() {
+        if (createdAt == null) return "";
+        return createdAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
@@ -203,6 +209,16 @@ public class Order {
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
+    
+    public String getCashierName() {
+        return cashierName;
+    }
+
+    public void setCashierName(String cashierName) {
+        this.cashierName = cashierName;
+    }
+
+  
     public String getShipperName() {
         return shipperName;
     }
@@ -210,6 +226,7 @@ public class Order {
     public void setShipperName(String shipperName) {
         this.shipperName = shipperName;
     }
+
     public String getNote() {
         return note;
     }

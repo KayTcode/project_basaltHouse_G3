@@ -44,8 +44,15 @@ public class BartenderServlet extends HttpServlet {
 
         try {
             int orderId = Integer.parseInt(orderIdStr.replace("ORD00", "").trim());
+            
+            Integer cashierId = null;
+            if (request.getSession(false) != null) {
+                Object attr = request.getSession(false).getAttribute("cashierId");
+                if (attr instanceof Integer) cashierId = (Integer) attr;
+            }
+
             OrderService orderService = new OrderService();
-            orderService.updateOrderStatus(orderId, action);
+            orderService.updateOrderStatus(orderId, action, cashierId);
 
             response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().write("Success");

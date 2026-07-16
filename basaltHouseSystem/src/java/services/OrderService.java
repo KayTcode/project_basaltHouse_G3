@@ -1,5 +1,6 @@
 package services;
 
+import dao.BillDAO;
 import dao.DiscountCodeDAO;
 import dao.IngredientDAO;
 import dao.OrderDAO;
@@ -9,10 +10,12 @@ import dao.SizeDAO;
 import dao.TableSessionDAO;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import model.Bill;
 import model.DiscountCode;
 import model.Order;
 import model.OrderDetail;
@@ -20,26 +23,33 @@ import model.Product;
 import model.Recipe;
 import model.TableSession;
 
-
 public class OrderService {
+
     private final OrderDAO dao = new OrderDAO();
     private final TableSessionDAO sesioneDAO = new TableSessionDAO();
- 
-    public int createOfflineOrder(String cartData, String totalAmountStr, String discountAmountStr, String finalAmountStr, 
-                                  String paymentMethod, String tableName, String note, 
-                                  String customerIdStr, String discountCode, String tableIdStr) throws Exception {
-                                      
+
+    public int createOfflineOrder(String cartData, String totalAmountStr, String discountAmountStr, String finalAmountStr,
+            String paymentMethod, String tableName, String note,
+            String customerIdStr, String discountCode, String tableIdStr, Integer cashierId) throws Exception {
+
         BigDecimal totalAmount = BigDecimal.ZERO;
         BigDecimal discountAmount = BigDecimal.ZERO;
         BigDecimal finalAmount = BigDecimal.ZERO;
         try {
-            if (totalAmountStr != null) totalAmount = new BigDecimal(totalAmountStr);
-            if (discountAmountStr != null) discountAmount = new BigDecimal(discountAmountStr);
-            if (finalAmountStr != null) finalAmount = new BigDecimal(finalAmountStr);
-        } catch (Exception e) {}
+            if (totalAmountStr != null) {
+                totalAmount = new BigDecimal(totalAmountStr);
+            }
+            if (discountAmountStr != null) {
+                discountAmount = new BigDecimal(discountAmountStr);
+            }
+            if (finalAmountStr != null) {
+                finalAmount = new BigDecimal(finalAmountStr);
+            }
+        } catch (Exception e) {
+        }
 
         Order order = new Order();
-        order.setOrderType("Offline");
+        order.setOrderType("POS");
         order.setOrderStatus("Preparing");
         order.setPaymentStatus("Paid");
         order.setPaymentMethod(paymentMethod != null && !paymentMethod.isEmpty() ? paymentMethod : "Cash");
@@ -48,6 +58,9 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
         order.setDiscountAmount(discountAmount);
         order.setFinalAmount(finalAmount);
+        if (cashierId != null) {
+            order.setCashierId(cashierId);
+        }
 
         if (tableIdStr != null && !tableIdStr.trim().isEmpty()) {
             try {
@@ -67,7 +80,10 @@ public class OrderService {
         }
 
         if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
-            try { order.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception e) {}
+            try {
+                order.setCustomerId(Integer.parseInt(customerIdStr));
+            } catch (Exception e) {
+            }
         }
 
         if (discountCode != null && !discountCode.trim().isEmpty()) {
@@ -85,10 +101,12 @@ public class OrderService {
         HashMap<Integer, String> sizes = sDao.getSize();
 
         if (cartData != null && !cartData.isEmpty()) {
-           
+
             String[] items = cartData.split("\\|");
             for (String item : items) {
-                if (item.trim().isEmpty()) continue;
+                if (item.trim().isEmpty()) {
+                    continue;
+                }
                 String[] parts = item.split(",");
                 if (parts.length >= 4) {
                     String name = parts[0];
@@ -126,33 +144,95 @@ public class OrderService {
 
         OrderDAO orderDAO = new OrderDAO();
         int newOrderId = orderDAO.insertOfflineOrder(order, details);
-        
-        // Cập nhật trừ kho ngay sau khi tạo đơn và thanh toán thành công 
-        if (newOrderId != -1 && !details.isEmpty()) {
-            StockService stockService = new StockService();
-            stockService.updateStockForOrder(details);
+
+        if (newOrderId != -1) {
+
+            if (!details.isEmpty()) {
+                new StockService().updateStockForOrder(details);
+            }
+
+            Bill bill = new Bill();
+            bill.setOrderId(newOrderId);
+            bill.setCashierId(order.getCashierId());
+            bill.setSubTotal(order.getTotalAmount());
+            bill.setDiscountAmount(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
+            bill.setFinalAmount(order.getFinalAmount());
+            bill.setPaymentMethod(order.getPaymentMethod());
+            bill.setNote(order.getNote());
+            bill.setPrintedAt(LocalDateTime.now());
+            if (tableIdStr != null && !tableIdStr.trim().isEmpty()) {
+                try {
+                    bill.setTableId(Integer.parseInt(tableIdStr));
+                } catch (NumberFormatException e) {
+
+                }
+            }
+            try {
+                boolean billOk = new BillDAO().insertBill(bill);
+                System.out.println("[OrderService] insertBill result=" + billOk + " orderId=" + newOrderId + " cashierId=" + order.getCashierId());
+            } catch (Exception billEx) {
+                System.err.println("[OrderService] insertBill FAILED orderId=" + newOrderId + " error=" + billEx.getMessage());
+                billEx.printStackTrace();
+            }
         }
-        
+
         return newOrderId;
     }
 
     public void updateOrderStatus(int orderId, String action) throws Exception {
+        updateOrderStatus(orderId, action, null);
+    }
+
+    public void updateOrderStatus(int orderId, String action, Integer cashierId) throws Exception {
         OrderDAO orderDAO = new OrderDAO();
-        
-        
+
         if (action.equals("confirm")) {
-            // Cashier xác nhận đơn online -> Chuyển sang Preparing (Chờ xử lý) để Bartender thấy
-            orderDAO.updateOrderStatus(orderId, "Preparing");
+
+            Order current = orderDAO.getOrderById(orderId);
+            if (current != null && "Pending".equalsIgnoreCase(current.getOrderStatus())) {
+                orderDAO.updateOrderStatus(orderId, "Preparing");
+
+                List<OrderDetail> details = orderDAO.getOfflineOrderDetailsByOrderId(orderId);
+                if (!details.isEmpty()) {
+                    new StockService().updateStockForOrder(details);
+                }
+
+                Bill bill = new Bill();
+                bill.setOrderId(orderId);
+                if (cashierId != null) {
+                    bill.setCashierId(cashierId);
+                } else if (current.getCashierId() != null && current.getCashierId() > 0) {
+                    bill.setCashierId(current.getCashierId());
+                } else {
+                    bill.setCashierId(0);
+                }
+                bill.setSubTotal(current.getTotalAmount());
+                bill.setDiscountAmount(current.getDiscountAmount() != null ? current.getDiscountAmount() : BigDecimal.ZERO);
+                bill.setFinalAmount(current.getFinalAmount());
+                bill.setPaymentMethod(current.getPaymentMethod());
+                bill.setNote(current.getNote());
+                bill.setPrintedAt(LocalDateTime.now());
+                try {
+                    new BillDAO().insertBill(bill);
+                } catch (Exception e) {
+                    System.err.println("Failed to insert bill for online order " + orderId + ": " + e.getMessage());
+                }
+            } else {
+                orderDAO.updateOrderStatus(orderId, "Preparing");
+            }
         } else if (action.equals("start")) {
-            // Bartender nhấn "Xác nhận" -> Chuyển sang In_Progress (Đang pha chế)
+
             orderDAO.updateOrderStatus(orderId, "In_Progress");
         } else if (action.equals("ready")) {
-            // Bartender nhấn "Xong" -> Chuyển sang Ready (Sẵn sàng phục vụ)
+
             orderDAO.updateOrderStatus(orderId, "Ready");
         } else if (action.equals("complete")) {
-            // Bartender nhấn "Hoàn thành" -> Chuyển sang Completed (Đã xong)
-            orderDAO.updateOrderStatus(orderId, "Completed");
-         
+            Order order = orderDAO.getOrderById(orderId);
+            if (order != null && "Online".equalsIgnoreCase(order.getOrderType())) {
+                orderDAO.updateOrderStatus(orderId, "Waiting_Shipper");
+            } else {
+                orderDAO.updateOrderStatus(orderId, "Completed");
+            }
         } else {
             throw new IllegalArgumentException("Invalid action: " + action);
         }

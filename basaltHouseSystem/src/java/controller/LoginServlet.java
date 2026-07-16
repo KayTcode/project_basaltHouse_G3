@@ -146,7 +146,15 @@ public class LoginServlet extends HttpServlet {
 
         // Dòng này để HomePage.jsp dùng được sessionScope.currentUser
         session.setAttribute("currentUser", result);
-
+        if (result.getRoleId() == 4) {
+            dao.AuthDAO authDAO = new dao.AuthDAO();
+            Integer cashierId = authDAO.getCashierIdByAccountId(result.getAccountId());
+            if (cashierId != null) {
+                session.setAttribute("cashierId", cashierId);
+            } else {
+                System.err.println("[LoginServlet] Could not load cashierId for account: " + result.getAccountId());
+            }
+        }
         Cookie jwtCookie = new Cookie(AuthService.JWT_COOKIE_NAME, result.getJwtToken());
         jwtCookie.setMaxAge(7 * 24 * 60 * 60);
         jwtCookie.setPath("/");

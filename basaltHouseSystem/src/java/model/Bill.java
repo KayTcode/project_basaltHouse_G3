@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
  * @author KayT
  */
 public class Bill {
+
     private int billId;
     private String billCode;
     private int orderId;
@@ -22,8 +23,12 @@ public class Bill {
     private BigDecimal finalAmount;
     private String paymentMethod;
     private String note;
-    private LocalDateTime printedAt;
+    private java.time.LocalDateTime printedAt;
     private boolean isDeleted;
+    private String orderType;
+    private String orderStatus;
+    private String customerName;
+    private String cashierName;
 
     public Bill() {
     }
@@ -138,6 +143,43 @@ public class Bill {
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
-    
-    
+
+    public String getOrderType() {
+        return orderType;
+    }
+
+    public void setOrderType(String orderType) {
+        this.orderType = orderType;
+    }
+
+    public String getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(String orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getCashierName() {
+        return cashierName;
+    }
+
+    public void setCashierName(String cashierName) {
+        this.cashierName = cashierName;
+    }
+
+    public String getFormattedPrintedAt() {
+        if (printedAt == null) {
+            return "";
+        }
+        return printedAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
 }

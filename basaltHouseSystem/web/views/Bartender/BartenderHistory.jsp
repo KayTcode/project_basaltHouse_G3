@@ -11,10 +11,10 @@
 <%@page import="java.util.HashMap"%>
 <%@page import="java.time.format.DateTimeFormatter"%>
 <%
-    // Lấy DAO để truy xuất order detail
+    
     OrderDAO oDao = new OrderDAO();
     
-    // Lấy danh sách sản phẩm và size được truyền từ Controller
+  
     HashMap<Integer, Product> products = (HashMap<Integer, Product>) request.getAttribute("products");
     HashMap<Integer, String> sizes     = (HashMap<Integer, String>) request.getAttribute("sizes");
 
@@ -61,7 +61,6 @@
         </div>
     </div>
 
-    <!-- History Grid — chỉ render items của trang hiện tại từ pageResult -->
     <div class="history-grid">
         <c:forEach items="${orderList}" var="o">
             <%
@@ -79,8 +78,8 @@
                             <span class="card-loc"><span class="material-symbols-outlined" style="font-size:12px">location_on</span>
                                 ${o.tableName != null && !o.tableName.isEmpty() ? o.tableName : (o.orderType != null && o.orderType.equalsIgnoreCase("online") ? "Online" : "Walk-in")}
                             </span>
-                            <span class="card-type-badge ${o.orderType != null ? o.orderType.toLowerCase() : 'offline'}">
-                                ${o.orderType != null ? o.orderType : 'Offline'}
+                            <span class="card-type-badge ${o.orderType != null ? o.orderType.toLowerCase() : 'pos'}">
+                                ${o.orderType != null ? o.orderType : 'POS'}
                             </span>
                         </div>
                     </div>
@@ -127,7 +126,6 @@
         </c:if>
     </div>
 
-    <!-- Phân trang History — render từ server, dùng cùng CSS .pagination / .btn-page -->
     <c:if test="${historyPages > 1}">
     <div class="pagination" style="padding:20px 0;">
         <a href="?page=<%=historyPage - 1%>"
@@ -143,7 +141,7 @@
     </div>
     </c:if>
 
-</div><!-- /content-area -->
+</div>
 
 </body>
 </html>

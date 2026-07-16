@@ -150,3 +150,12 @@ body {
     overflow-y: auto;
     background-color: var(--basalt-neutral-bg);
 }
+
+/* ── BUTTONS ── */
+.btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; text-decoration: none !important; }
+.btn-primary:hover { background: #4f46e5; }
+.btn-secondary, .btn-clear { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none !important; transition: background .2s; }
+.btn-secondary:hover, .btn-clear:hover { background: #e5e7eb; }
+.btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; background: transparent; color: #6b7280; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none !important; transition: background .2s; }
+.btn-ghost:hover { background: #f3f4f6; color: #374151; }
+.btn-disabled, .disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }

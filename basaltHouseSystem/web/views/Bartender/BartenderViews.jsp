@@ -11,17 +11,17 @@
 <%@page import="java.util.HashMap"%>
 <%@page import="java.time.format.DateTimeFormatter"%>
 <%
-    // Lấy DAO để truy vấn OrderDetail (vì chi tiết nằm bảng khác)
+    
     OrderDAO oDao = new OrderDAO();
 
-    // Lấy products và sizes từ Servlet truyền sang thay vì khởi tạo DAO
+    
     HashMap<Integer, Product> products = (HashMap<Integer, Product>) request.getAttribute("products");
     HashMap<Integer, String> sizes     = (HashMap<Integer, String>) request.getAttribute("sizes");
 
     String filterParam = request.getParameter("filter");
     String filterQs    = (filterParam != null && !filterParam.isEmpty()) ? "&filter=" + filterParam : "";
 
-    // Phân trang
+   
     int pagePending   = (Integer) request.getAttribute("pendingPage");
     int pagePreparing = (Integer) request.getAttribute("preparingPage");
     int pageReady     = (Integer) request.getAttribute("readyPage");
@@ -44,10 +44,10 @@
 </head>
 <body>
 
-<!-- ── CONTENT ── -->
+
 <div class="content-area">
 
-    <!-- ── TOP ACTIONS ── -->
+   
     <div class="bartender-top-actions">
         <a href="${pageContext.request.contextPath}/cashier/pos" class="btn-top-action pos">
             <span class="material-symbols-outlined">point_of_sale</span>
@@ -59,7 +59,7 @@
         </a>
     </div>
 
-    <!-- Stats bar — giá trị TỔNG từ Servlet, không phụ thuộc trang hiện tại -->
+  
     <div class="stats-bar">
         <div class="stat-chip pending">
             <span class="stat-icon">&#9203;</span>
@@ -103,10 +103,10 @@
         <button onclick="searchOrders('')" style="padding:8px 14px;border-radius:24px;border:1px solid rgba(0,0,0,0.1);background:#fff;font-size:13px;cursor:pointer;color:#8a8a9a;font-family:inherit;display:none;" title="Xóa tìm kiếm" id="clearSearchBtn">&#x2715; Xóa</button>
     </div>
 
-    <!-- Kanban columns -->
+   
     <div class="kanban">
 
-        <!-- ── PENDING ── -->
+       
         <div class="kanban-col col-bg-pending" style="display:flex;flex-direction:column;">
             <div class="col-header">
                 <div class="col-title">
@@ -132,7 +132,7 @@
             </c:if>
         </div>
 
-        <!-- ── PREPARING ── -->
+       
         <div class="kanban-col col-bg-preparing" style="display:flex;flex-direction:column;">
             <div class="col-header">
                 <div class="col-title">
@@ -143,7 +143,7 @@
                 <span style="font-size:11px;color:#8a8a9a">Đang pha chế</span>
             </div>
             <div class="col-body" id="col-preparing"></div>
-            <!-- Phân trang cột Preparing -->
+          
             <c:if test="${preparingPages > 1}">
             <div class="pagination">
                 <a href="?page_pending=<%=pagePending%>&page_preparing=${preparingPage - 1}&page_ready=<%=pageReady%><%=filterQs%>"
@@ -158,7 +158,7 @@
             </c:if>
         </div>
 
-        <!-- ── READY ── -->
+        
         <div class="kanban-col col-bg-ready" style="display:flex;flex-direction:column;">
             <div class="col-header">
                 <div class="col-title">
@@ -169,7 +169,7 @@
                 <span style="font-size:11px;color:#8a8a9a">Sẵn sàng phục vụ</span>
             </div>
             <div class="col-body" id="col-ready"></div>
-            <!-- Phân trang cột Ready -->
+            
             <c:if test="${readyPages > 1}">
             <div class="pagination">
                 <a href="?page_pending=<%=pagePending%>&page_preparing=<%=pagePreparing%>&page_ready=${readyPage - 1}<%=filterQs%>"
@@ -184,8 +184,8 @@
             </c:if>
         </div>
 
-    </div><!-- /kanban -->
-</div><!-- /content-area -->
+    </div>
+</div>
 
 <div class="modal-overlay" id="orderModal" onclick="closeIfOverlay(event, 'orderModal')">
     <div class="modal-box">
@@ -202,9 +202,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============================================================
-   DATA — inject 3 mảng phân trang riêng từ Servlet
-============================================================ */
 var ORDERS_PENDING = [
 <c:forEach items="${pendingList}" var="o" varStatus="loop">
     <%
@@ -214,7 +211,7 @@ var ORDERS_PENDING = [
             t1 = co1.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm"));
     %>
     {id:'ORD00${o.orderId}',status:'pending',
-     type:'${o.orderType != null ? o.orderType.toLowerCase() : "offline"}',
+     type:'${o.orderType != null ? o.orderType.toLowerCase() : "pos"}',
      location:'${o.tableName != null && !o.tableName.isEmpty() ? o.tableName : (o.orderType != null && o.orderType.equalsIgnoreCase("online") ? "Online" : "Walk-in")}',
      time:'<%=t1%>',startedAt:null,note:'${o.note != null ? o.note : ""}',
      items:[<% List<OrderDetail> dl1=oDao.getOrderDetailsByOrderId(co1.getOrderId());
@@ -237,7 +234,7 @@ var ORDERS_PREPARING = [
         }
     %>
     {id:'ORD00${o.orderId}',status:'preparing',
-     type:'${o.orderType != null ? o.orderType.toLowerCase() : "offline"}',
+     type:'${o.orderType != null ? o.orderType.toLowerCase() : "pos"}',
      location:'${o.tableName != null && !o.tableName.isEmpty() ? o.tableName : (o.orderType != null && o.orderType.equalsIgnoreCase("online") ? "Online" : "Walk-in")}',
      time:'<%=t2%>',startedAt:<%=sa2%>,note:'${o.note != null ? o.note : ""}',
      items:[<% List<OrderDetail> dl2=oDao.getOrderDetailsByOrderId(co2.getOrderId());
@@ -260,7 +257,7 @@ var ORDERS_READY = [
         }
     %>
     {id:'ORD00${o.orderId}',status:'ready',
-     type:'${o.orderType != null ? o.orderType.toLowerCase() : "offline"}',
+     type:'${o.orderType != null ? o.orderType.toLowerCase() : "pos"}',
      location:'${o.tableName != null && !o.tableName.isEmpty() ? o.tableName : (o.orderType != null && o.orderType.equalsIgnoreCase("online") ? "Online" : "Walk-in")}',
      time:'<%=t3%>',startedAt:<%=sa3%>,note:'${o.note != null ? o.note : ""}',
      items:[<% List<OrderDetail> dl3=oDao.getOrderDetailsByOrderId(co3.getOrderId());
@@ -272,19 +269,16 @@ var ORDERS_READY = [
 </c:forEach>
 ];
 
-// Gộp để các hàm action (startOrder, markReady, completeOrder) dùng getOrder(id)
+
 var ORDERS = ORDERS_PENDING.concat(ORDERS_PREPARING, ORDERS_READY);
 
-/* ============================================================
-   MODAL ACTIONS
-============================================================ */
 function openOrderModal(id) {
     var o = getOrder(id);
     if (!o) return;
     document.getElementById('modalOrderId').textContent = 'Đơn #' + o.id;
     var typeLabel = o.type === 'online'
         ? '<span class="card-type-badge online" style="margin-left:6px;">Online</span>'
-        : '<span class="card-type-badge offline" style="margin-left:6px;">Offline</span>';
+        : '<span class="card-type-badge pos" style="margin-left:6px;">POS</span>';
     document.getElementById('modalOrderLoc').innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">location_on</span> ' + o.location + typeLabel;
     
     var itemsHtml = '';
@@ -332,9 +326,6 @@ function closeIfOverlay(e, id) {
     }
 }
 
-/* ============================================================
-   RENDER
-============================================================ */
 function waitLabel(startedAt) {
     if (!startedAt) return null;
     var mins = Math.floor((Date.now() - startedAt) / 60000);
@@ -406,9 +397,6 @@ function renderAll() {
     });
 }
 
-/* ============================================================
-   ACTIONS — sau khi thành công reload trang để đồng bộ server data
-============================================================ */
 function getOrder(id) {
     for (var i = 0; i < ORDERS.length; i++) {
         if (ORDERS[i].id === id) return ORDERS[i];
@@ -484,9 +472,6 @@ function completeOrder(id) {
     });
 }
 
-/* ============================================================
-   FILTER — server-side: redirect với filter param, reset về trang 1
-============================================================ */
 function searchOrders(q) {
     var clearBtn = document.getElementById('clearSearchBtn');
     q = q.trim().toLowerCase();
@@ -500,18 +485,16 @@ function searchOrders(q) {
         var cards = col.querySelectorAll('.order-card');
         var anyVisible = false;
         cards.forEach(function(card) {
-            var id = (card.id || '').toLowerCase(); // e.g. "card-ord0018"
+            var id = (card.id || '').toLowerCase(); 
             var match = !q || id.indexOf(q) >= 0;
             card.style.display = match ? '' : 'none';
             if (match) anyVisible = true;
         });
-        // show/hide empty state
         var empty = col.querySelector('.empty-col');
         if (empty) empty.style.display = (!anyVisible && !q) ? '' : (anyVisible ? 'none' : '');
     });
 }
 
-/* Refresh wait badges every 30s (chỉ cập nhật badge, không reload toàn bộ) */
 setInterval(function() {
     ORDERS_PREPARING.forEach(function(o) {
         if (o.startedAt) {
@@ -537,7 +520,6 @@ function showToast(msg) {
     setTimeout(function(){ t.classList.remove('show'); }, 2800);
 }
 
-/* ── INIT ── */
 renderAll();
 </script>
 </body>

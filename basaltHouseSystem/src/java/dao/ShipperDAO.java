@@ -77,7 +77,7 @@ public class ShipperDAO extends DBContext {
                                      o.[OrderType], o.[OrderStatus], o.[PaymentMethod], o.[PaymentStatus],
                                      o.[TotalAmount], o.[DiscountAmount], o.[FinalAmount],
                                      o.[CreatedAt], o.[IsDeleted],
-                                     ISNULL(c.fullName, 'Khách vãng lai') AS customerName
+                                     ISNULL(c.fullName, 'Khách tại quán') AS customerName
               FROM [Orders] o
               LEFT JOIN [Customers] c ON o.[CustomerId] = c.[CustomerId]
               WHERE o.orderStatus = 'Preparing'
@@ -125,7 +125,7 @@ public class ShipperDAO extends DBContext {
                                      o.OrderType, o.OrderStatus, o.PaymentMethod, o.PaymentStatus,
                                      o.TotalAmount, o.DiscountAmount, o.FinalAmount,
                                      o.CreatedAt, o.IsDeleted,
-                                     ISNULL(c.fullName, 'Khách vãng lai') AS customerName
+                                     ISNULL(c.fullName, 'Khách tại quán') AS customerName
                               FROM Orders o
                               LEFT JOIN Customers c ON o.customerId = c.customerId
                               WHERE o.shipperId = ?

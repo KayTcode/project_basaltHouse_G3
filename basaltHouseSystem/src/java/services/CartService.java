@@ -137,7 +137,7 @@ public class CartService {
 
         Order order = new Order();
         order.setOrderType("Online");
-        order.setOrderStatus("Preparing");
+        order.setOrderStatus("Pending");
         order.setPaymentStatus("Unpaid");
         order.setPaymentMethod(paymentMethod);
         order.setTableName("Online");

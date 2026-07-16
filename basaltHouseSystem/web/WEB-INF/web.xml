@@ -145,6 +145,18 @@
         <servlet-class>controller.ApplyVoucherServlet</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>AdminBillServlet</servlet-name>
+        <servlet-class>controller.AdminBillServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminInventoryServlet</servlet-name>
+        <servlet-class>controller.AdminInventoryServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminBillDetailServlet</servlet-name>
+        <servlet-class>controller.AdminBillDetailServlet</servlet-class>
+      </servlet>
+      <servlet>
         <servlet-name>AdminMembership</servlet-name>
         <servlet-class>controller.AdminMembership</servlet-class>
     </servlet>
@@ -301,6 +313,18 @@
         <url-pattern>/admin/products</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>AdminBillServlet</servlet-name>
+        <url-pattern>/admin/bills</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminInventoryServlet</servlet-name>
+        <url-pattern>/admin/ingredients</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminBillDetailServlet</servlet-name>
+        <url-pattern>/admin/bill-detail</url-pattern>
+     </servlet-mapping>
+     <servlet-mapping>
         <servlet-name>AdminMembership</servlet-name>
         <url-pattern>/admin/memberships</url-pattern>
     </servlet-mapping>

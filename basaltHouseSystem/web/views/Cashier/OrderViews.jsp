@@ -28,9 +28,9 @@
 </head>
 <body>
 
-<!-- SIDEBAR -->
+
 <aside class="sidebar">
-    <!-- [MODIFIED] - Wrap logo in anchor to link back to home -->
+  
     <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
         <div class="logo-icon">&#9749;</div>
         <div class="logo-text">Basalt<span>House Coffee</span></div>
@@ -53,7 +53,7 @@
         <div class="staff-card">
             <div class="staff-avatar"><span class="material-symbols-outlined" style="font-size:18px">person</span></div>
             <div class="staff-info">
-                <!-- [MODIFIED] - Replace hardcoded 'Cashier' with session fullName -->
+             
                 <div class="staff-name">${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : 'Cashier'}</div>
                 <div class="staff-status"><div class="status-dot"></div>Online</div>
             </div>
@@ -61,7 +61,7 @@
     </div>
 </aside>
 
-<!-- CONTENT -->
+
 <main class="content-area">
     <div class="page-header">
         <div class="page-title">
@@ -78,7 +78,7 @@
             <div class="filter-tabs">
                 <button type="button" class="filter-tab ${empty currentType || currentType == 'all' ? 'active' : ''}" onclick="window.location.href='oderview?type=all'">All</button>
                 <button type="button" class="filter-tab ${currentType == 'online' ? 'active' : ''}"        onclick="window.location.href='oderview?type=online'">Online</button>
-                <button type="button" class="filter-tab ${currentType == 'offline' ? 'active' : ''}"        onclick="window.location.href='oderview?type=offline'">Offline</button>
+                <button type="button" class="filter-tab ${currentType == 'pos' ? 'active' : ''}"        onclick="window.location.href='oderview?type=pos'">POS</button>
             </div>
             <button type="button" class="btn-filter">
                 <span class="material-symbols-outlined" style="font-size:17px">tune</span>
@@ -100,7 +100,7 @@
                         if (ord.getCreatedAt() != null) {
                             formatTime = ord.getCreatedAt().format(DateTimeFormatter.ofPattern("HH:mm"));
                         }
-                        String oType = ord.getOrderType() != null ? ord.getOrderType().toLowerCase() : "offline";
+                        String oType = ord.getOrderType() != null ? ord.getOrderType().toLowerCase() : "pos";
                         String statusClass = ord.getOrderStatus() != null ? ord.getOrderStatus().toLowerCase().replace(" ", "-") : "preparing";
                     %>
                     <tr data-type="<%=oType%>" data-id="ORD00${o.orderId}" data-cust="${o.customerName}">
@@ -133,14 +133,14 @@
     </div>
 </main>
 
-<!-- ── OFFLINE MODAL ── -->
+
 <div class="modal-overlay" id="offModal" onclick="closeIfOverlay(event,'offModal')">
     <div class="off-modal" id="offModalBox">
         <!-- built by JS -->
     </div>
 </div>
 
-<!-- ── ONLINE MODAL ── -->
+
 <div class="modal-overlay" id="onModal" onclick="closeIfOverlay(event,'onModal')">
     <div class="modal-box">
         <div id="onlineContent"></div>
@@ -150,12 +150,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============================================================  DATA  */
+
 var ORDERS = {
 <c:forEach items="${orderList}" var="o" varStatus="loop">
     'ORD00${o.orderId}': {
         id: '${o.orderId}',
-        type: '${o.orderType != null ? o.orderType.toLowerCase() : "offline"}',
+        type: '${o.orderType != null ? o.orderType.toLowerCase() : "pos"}',
         customer: '${o.customerName}',
         table: '${o.tableName != null ? o.tableName : "Walk-in"}',
         cashier: '${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : "Cashier"}',
@@ -169,6 +169,20 @@ var ORDERS = {
         status: '${o.orderStatus != null ? o.orderStatus.toLowerCase() : "preparing"}',
         shipperId: ${o.shipperId != null ? o.shipperId : 0},
         shipperName: '${o.shipperName != null ? o.shipperName : ""}',
+        <% 
+            Order o2 = (Order) pageContext.getAttribute("o");
+            String ph = "";
+            String ad = "";
+            if (o2.getOrderAddressId() != null && o2.getOrderAddressId() > 0) {
+                model.OrderAddress addr = oDao.getOrderAddressByOrderAddressId(o2.getOrderAddressId());
+                if (addr != null) {
+                    ph = addr.getRecipientPhone();
+                    ad = addr.getAddressDetail();
+                }
+            }
+        %>
+        phone: '<%= ph != null ? ph.replace("'", "\\'") : "" %>',
+        address: '<%= ad != null ? ad.replace("'", "\\'") : "" %>',
         items: [
             <% 
                Order orderObj = (Order) pageContext.getAttribute("o");
@@ -192,7 +206,6 @@ var ORDERS = {
 
 var currentId     = null;
 
-/* ────────────── FILTER ────────────── */
 var activeFilter = '${currentType != null ? currentType : "all"}';
 function doFilter() {
     var q = document.getElementById('searchInput').value.toLowerCase();
@@ -205,7 +218,7 @@ function doFilter() {
     }
 }
 
-/* ────────────── HELPERS ────────────── */
+
 function fmt(n) { return n.toLocaleString('vi-VN') + ' đ'; }
 function badgeHtml(s) {
     var m = { preparing:'<span class="badge badge-preparing">Preparing</span>',
@@ -227,12 +240,12 @@ function showToast(msg) {
     setTimeout(function(){ t.classList.remove('show'); }, 3000);
 }
 
-/* ────────────── OPEN ────────────── */
+
 function openModal(id) {
     currentId = id;
     var o = ORDERS[id];
     if (!o) return;
-    if (o.type === 'offline') {
+    if (o.type === 'pos') {
         buildOfflineModal(o);
         document.getElementById('offModal').classList.add('open');
     } else {
@@ -241,13 +254,11 @@ function openModal(id) {
     }
 }
 
-/* ============================================================
-   OFFLINE MODAL
-============================================================ */
+
 function statusLabelAndClass(s) {
-    var map = { preparing:['Preparing','preparing'], pending_payment:['Pending Payment','pending'],
-                ready:['Ready','ready'], delivering:['Delivering','ready'], completed:['Completed','completed'], paid:['Paid','paid'] };
-    return map[s] || [s, 'pending'];
+    var map = { preparing:['Đang chuẩn bị','preparing'], pending_payment:['Chờ thanh toán','pending'],
+                ready:['Sẵn sàng','ready'], waiting_shipper:['Sẵn sàng','ready'], delivering:['Đang giao','ready'], completed:['Hoàn thành','completed'], paid:['Đã thanh toán','paid'] };
+    return map[s] || [s === 'pending' ? 'Chờ xác nhận' : s, 'pending'];
 }
 
 function buildOfflineModal(o) {
@@ -274,7 +285,7 @@ function buildOfflineModal(o) {
 
     var discSection = '';
 
-    /* Price summary */
+   
     var priceSection =
         '<hr class="off-divider">' +
         '<div class="off-price">' +
@@ -283,7 +294,7 @@ function buildOfflineModal(o) {
             '<div class="off-price-row grand"><span>Tổng cộng</span><span>' + fmt(o.total) + '</span></div>' +
         '</div>';
 
-    /* Payment (read-only from POS) */
+    
     var PM_ICON = { 'Cash':'&#128181;', 'QR Code':'&#128241;', 'The':'&#128179;' };
     var pm = o.payMethod || 'Cash';
     var paySection =
@@ -295,7 +306,7 @@ function buildOfflineModal(o) {
             '</span>' +
         '</div>';
 
-    /* Note - chi hien neu co */
+   
     var noteSection = '';
     if (o.note && o.note.trim() && o.note !== 'Không có') {
         noteSection =
@@ -304,10 +315,11 @@ function buildOfflineModal(o) {
             '</div>';
     }
 
-    /* Status timeline */
+    
     var STEPS       = ['preparing','in_progress','ready','completed'];
     var STEP_LABELS = { preparing:'Chờ xác nhận', in_progress:'Pha chế', ready:'Sẵn sàng', completed:'Hoàn thành' };
     var curIdx = STEPS.indexOf(o.status);
+    if (o.status === 'waiting_shipper') curIdx = 2;
     if (o.status === 'paid') curIdx = 3;
 
     var tlHtml = '<div class="off-timeline">';
@@ -330,7 +342,7 @@ function buildOfflineModal(o) {
         '</div>' +
         '<div id="statusTimelineBox" style="display:none;padding:0 20px 14px;">' + tlHtml + '</div>';
 
-    /* Assemble - no footer buttons */
+    
     document.getElementById('offModalBox').innerHTML =
         '<div class="off-hd">' +
             '<div class="off-hd-title">Chi tiết đơn hàng</div>' +
@@ -341,7 +353,7 @@ function buildOfflineModal(o) {
             '<span class="off-datetime">' + o.time + '</span>' +
         '</div>' +
         '<div style="padding:6px 20px 0;">' +
-            '<span class="off-type-tag">Offline Order</span>' +
+            '<span class="off-type-tag">POS Order</span>' +
             '<div class="off-id" style="margin-bottom:6px;">#' + o.id + '</div>' +
         '</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 20px;">' +
@@ -375,14 +387,12 @@ function toggleOrderStatus() {
 
 
 
-/* ============================================================
-   ONLINE MODAL
-============================================================ */
+
 function buildOnlineModal(o) {
     var sc = statusLabelAndClass(o.status);
     var confirmed = o.status !== 'pending';
 
-    /* ── Item rows ── */
+    
     var itemsHtml = '';
     var SIZE_CLR = { S:'#3b82f6', M:'#16a34a', L:'#f97316' };
     var SIZE_BG  = { S:'#dbeafe', M:'#dcfce7', L:'#ffedd5' };
@@ -399,12 +409,12 @@ function buildOnlineModal(o) {
             '</div>';
     }
 
-    /* ── Tinh tong co giam gia ── */
+   
     var couponAmt = o.coupon ? o.coupon.amount : 0;
     var memAmt    = o.member ? Math.round(o.total * o.member.pct / 100) : 0;
     var grand     = Math.max(0, o.total - couponAmt - memAmt);
 
-    /* ── Discount section (chi hien neu co tu he thong) ── */
+    
     var discSection = '';
     if (o.coupon || o.member) {
         discSection = '<hr class="off-divider">';
@@ -436,7 +446,7 @@ function buildOnlineModal(o) {
         }
     }
 
-    /* ── Price summary ── */
+    
     var priceSection =
         '<hr class="off-divider">' +
         '<div class="off-price">' +
@@ -446,7 +456,7 @@ function buildOnlineModal(o) {
             '<div class="off-price-row grand"><span>Tổng cộng</span><span>' + fmt(grand) + '</span></div>' +
         '</div>';
 
-    /* ── Payment mode ── */
+    
     var pm = o.payMode === 'cod' ? '&#128181; COD (Thanh toán khi nhận)' : '&#9989; Đã thanh toán online';
     var pmBg = o.payMode === 'cod' ? '#fff7ed' : '#f0fdf4';
     var pmClr = o.payMode === 'cod' ? '#c2410c' : '#15803d';
@@ -457,7 +467,7 @@ function buildOnlineModal(o) {
             '<span style="font-size:12.5px;font-weight:700;background:' + pmBg + ';color:' + pmClr + ';padding:4px 12px;border-radius:20px;">' + pm + '</span>' +
         '</div>';
 
-    /* ── Note ── */
+  
     var noteSection = '';
     if (o.note && o.note.trim()) {
         noteSection =
@@ -466,13 +476,14 @@ function buildOnlineModal(o) {
             '</div>';
     }
 
-    /* ── Status timeline (chi hien sau khi cashier xac nhan) ── */
+    
     var statusSection = '';
     if (confirmed) {
         var STEPS       = ['preparing','in_progress','ready','delivering','completed'];
         var STEP_LABELS = { preparing:'Chờ xác nhận', in_progress:'Pha chế', ready:'Sẵn sàng', delivering:'Đang giao', completed:'Hoàn thành' };
         var curIdx = STEPS.indexOf(o.status);
-        if (o.status === 'paid') curIdx = 4; // treated as completed
+        if (o.status === 'waiting_shipper') curIdx = 2;
+        if (o.status === 'paid') curIdx = 4; 
 
         var tlHtml = '<div class="off-timeline">';
         for (var s = 0; s < STEPS.length; s++) {
@@ -495,22 +506,31 @@ function buildOnlineModal(o) {
             '<div id="onStatusBox" style="display:none;padding:0 20px 14px;">' + tlHtml + '</div>';
     }
 
-    /* ── Footer ── */
+    
     var footerHtml = '';
     if (!confirmed) {
-        /* Chua xac nhan → chi hien nut Xac nhan don dat */
+       
         footerHtml =
             '<div style="padding:8px 20px 16px;">' +
-                '<div style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
-                    '<span style="font-size:16px;">&#9888;&#65039;</span>' +
-                    '<span style="font-size:12.5px;color:#92400e;">Bấm xác nhận để gửi Bartender pha chế.</span>' +
-                '</div>' +
                 '<button type="button" onclick="confirmOnlineOrder()" style="width:100%;padding:13px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
                     '<span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>Xác nhận đơn đặt' +
                 '</button>' +
             '</div>';
+    } else if (o.status === 'completed' || o.status === 'paid') {
+       
+        footerHtml =
+            '<div style="padding:8px 20px 16px;">' +
+                '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
+                    '<span style="font-size:16px;">&#10003;</span>' +
+                    '<span style="font-size:13px;font-weight:700;color:#15803d;">Đơn đã hoàn thành</span>' +
+                '</div>' +
+                (o.shipperId > 0 ?
+                '<div style="width:100%;padding:13px;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;">' +
+                    '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Đã giao bởi: ' + (o.shipperName || 'Shipper #' + o.shipperId) +
+                '</div>' : '') +
+            '</div>';
     } else if (o.shipperId > 0 || o.status === 'delivering') {
-        /* Da giao cho shipper */
+        
         footerHtml =
             '<div style="padding:8px 20px 16px;">' +
                 '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
@@ -521,46 +541,42 @@ function buildOnlineModal(o) {
                     '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Đã giao cho: ' + (o.shipperName || 'Shipper #' + o.shipperId) +
                 '</div>' +
             '</div>';
-    } else if (o.status === 'completed' || o.status === 'paid') {
-        /* Hoan thanh */
-        footerHtml =
-            '<div style="padding:8px 20px 16px;">' +
-                '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
-                    '<span style="font-size:16px;">&#10003;</span>' +
-                    '<span style="font-size:13px;font-weight:700;color:#15803d;">Đơn đã hoàn thành</span>' +
-                '</div>' +
-                '<button type="button" onclick="createDelivery()" style="width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
-                    '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Tạo đơn giao hàng' +
-                '</button>' +
-            '</div>';
+
     } else {
-        /* Da gui Bartender, dang xu ly */
-        footerHtml =
-            '<div style="padding:8px 20px 16px;">' +
-                '<button type="button" onclick="createDelivery()" style="width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
-                    '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Tạo đơn giao hàng' +
-                '</button>' +
-            '</div>';
+     
+        if (o.status === 'waiting_shipper') {
+            footerHtml =
+                '<div style="padding:8px 20px 16px;">' +
+                    '<button type="button" onclick="createDelivery()" style="width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
+                        '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Tạo đơn giao hàng' +
+                    '</button>' +
+                '</div>';
+        } else {
+            footerHtml =
+                '<div style="padding:8px 20px 16px;">' +
+                    '<button type="button" disabled style="width:100%;padding:13px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;">' +
+                        '<span class="material-symbols-outlined" style="font-size:18px;">hourglass_empty</span>Chờ pha chế hoàn thành' +
+                    '</button>' +
+                '</div>';
+        }
     }
 
-    /* ── Assemble (compact 2-col like offline) ── */
+    
     document.getElementById('onlineContent').innerHTML =
         '<div class="off-hd">' +
             '<div class="off-hd-title">Chi tiết đơn hàng</div>' +
             '<button type="button" class="off-close" onclick="closeModal(\'onModal\')">&#x2715;</button>' +
         '</div>' +
-        /* Status + datetime */
+        
         '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 20px 0;">' +
             '<span class="off-status-badge ' + sc[1] + '"><div class="off-status-dot"></div>' + sc[0] + '</span>' +
             '<span class="off-datetime">' + o.time + '</span>' +
         '</div>' +
-        /* Badge + ID */
-        '<div style="padding:4px 20px 0;">' +
+                '<div style="padding:4px 20px 0;">' +
             '<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;margin-bottom:3px;">&#127760; Online</span>' +
             '<div class="off-id" style="margin-bottom:2px;">#' + o.id + '</div>' +
         '</div>' +
-        /* 2-col customer info */
-        '<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 20px;">' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 20px;">' +
             '<div class="off-info-row" style="border-right:1px solid rgba(0,0,0,0.05);">' +
                 '<div class="off-info-left"><span class="material-symbols-outlined">person</span>Khách hàng</div>' +
                 '<div class="off-info-val">' + o.customer + '</div>' +
@@ -569,9 +585,9 @@ function buildOnlineModal(o) {
                 '<div class="off-info-left"><span class="material-symbols-outlined">phone</span>Điện thoại</div>' +
                 '<div class="off-info-val">' + (o.phone || '---') + '</div>' +
             '</div>' +
-            '<div class="off-info-row" style="grid-column:1/-1;">' +
-                '<div class="off-info-left"><span class="material-symbols-outlined">location_on</span>Địa chỉ</div>' +
-                '<div class="off-info-val" style="max-width:260px;text-align:right;">' + (o.address || '---') + '</div>' +
+            '<div class="off-info-row" style="grid-column:1/-1; justify-content: flex-start; gap: 24px; align-items: flex-start;">' +
+                '<div class="off-info-left" style="min-width: 90px;"><span class="material-symbols-outlined">location_on</span>Địa chỉ</div>' +
+                '<div class="off-info-val" style="text-align:left; line-height: 1.4; padding-top: 1px;">' + (o.address || '---') + '</div>' +
             '</div>' +
         '</div>' +
         '<hr class="off-divider">' +

@@ -246,14 +246,16 @@ public class OrderDAO extends DBContext {
         List<Order> list = new ArrayList<>();
         try {
             String sql = """
-                    SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, o.ShipperId, tb.TableCode AS TableName, o.Note, c.FullName, sh.FullName AS ShipperName
+                    SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, o.ShipperId, o.OrderAddressId, tb.TableCode AS TableName, o.Note, c.FullName, sh.FullName AS ShipperName, stf.FullName AS CashierName
                     FROM Orders o 
                     LEFT JOIN Customers c ON o.CustomerId = c.CustomerId 
-                    LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId
-                    LEFT JOIN Tables tb ON ts.TableId = tb.TableId
-                    LEFT JOIN Shippers sh ON o.ShipperId = sh.ShipperId
+                    LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId 
+                    LEFT JOIN Tables tb ON ts.TableId = tb.TableId 
+                    LEFT JOIN Shippers sh ON o.ShipperId = sh.ShipperId 
+                    LEFT JOIN Staffs stf ON o.CashierId = stf.StaffId
                     WHERE o.IsDeleted = 0 
-                    ORDER BY o.CreatedAt DESC""";
+                    ORDER BY o.CreatedAt DESC
+                    """;
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -273,8 +275,11 @@ public class OrderDAO extends DBContext {
                 o.setPaymentMethod(rs.getString("PaymentMethod"));
                 o.setTableName(rs.getString("TableName"));
                 o.setNote(rs.getString("Note"));
+                o.setOrderAddressId(rs.getObject("OrderAddressId") != null ? rs.getInt("OrderAddressId") : null);
+              
                 o.setShipperId(rs.getObject("ShipperId") != null ? rs.getInt("ShipperId") : null);
                 o.setShipperName(rs.getString("ShipperName"));
+                o.setCashierName(rs.getString("CashierName"));
                 list.add(o);
             }
         } catch (Exception e) {
@@ -282,6 +287,7 @@ public class OrderDAO extends DBContext {
         }
         return list;
     }
+
 
     /**
      * Áp dụng mã giảm giá cho đơn hàng: cập nhật DiscountId, DiscountAmount,
@@ -567,7 +573,7 @@ public class OrderDAO extends DBContext {
         return list;
     }
 
-    public int insertOfflineOrder(Order order, List<OrderDetail> details) {
+   public int insertOfflineOrder(Order order, List<OrderDetail> details) {
         int orderId = -1;
         String storedPaymentStatus = order.getPaymentStatus() != null
                 ? order.getPaymentStatus() : "Paid";
@@ -593,7 +599,7 @@ public class OrderDAO extends DBContext {
             } else {
                 st.setNull(3, java.sql.Types.INTEGER);
             }
-            st.setString(4, order.getOrderType() != null ? order.getOrderType() : "Offline");
+            st.setString(4, order.getOrderType() != null ? order.getOrderType() : "POS");
             st.setString(5, order.getOrderStatus() != null ? order.getOrderStatus() : "Preparing");
             st.setString(6, storedPaymentStatus);
             st.setBigDecimal(7, order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO);

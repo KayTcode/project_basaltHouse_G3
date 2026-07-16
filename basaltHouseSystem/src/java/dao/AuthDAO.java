@@ -109,7 +109,7 @@ public class AuthDAO extends DBContext {
 
             case 4:
                 sql = """
-                     SELECT FullName, AvatarUrl
+                     SELECT CashierId,FullName, AvatarUrl
                      FROM Cashiers
                      WHERE AccountId = ?
                       """;
@@ -146,7 +146,20 @@ public class AuthDAO extends DBContext {
 
         return result;
     }
-
+    public Integer getCashierIdByAccountId(int accountId) {
+        String sqlQuery = "SELECT CashierId FROM Cashiers WHERE AccountId = ? AND IsDeleted = 0";
+        try {
+            ps = connection.prepareStatement(sqlQuery);
+            ps.setInt(1, accountId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("CashierId");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     public void incrementFailedAttempts(int accountId) {
         sql = """
               UPDATE Accounts

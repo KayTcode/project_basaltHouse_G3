@@ -26,7 +26,7 @@ public class AdminDiscountService {
     public String addDiscount(String code, String discountType,
             String discountPercentStr, String discountAmountStr,
             String startDateStr, String endDateStr,
-            String description, boolean isActive, int createdBy) {
+            String description, boolean isActive, boolean isPublic, int createdBy) {
 
         // --- Validate ---
         if (code == null || code.isBlank()) {
@@ -68,7 +68,7 @@ public class AdminDiscountService {
 
         boolean ok = discountDAO.addDiscount(
                 code, discountType, discountPercent, discountAmount,
-                startDate, endDate, description, isActive, createdBy);
+                startDate, endDate, description, isActive, isPublic, createdBy);
 
         return ok ? "success" : "Thêm mã thất bại. Mã có thể đã tồn tại hoặc lỗi cơ sở dữ liệu.";
     }
@@ -76,7 +76,7 @@ public class AdminDiscountService {
     public String updateDiscount(String discountIdStr, String code, String discountType,
             String discountPercentStr, String discountAmountStr,
             String startDateStr, String endDateStr,
-            String description, boolean isActive) {
+            String description, boolean isActive, boolean isPublic) {
 
         int discountId = parseInt(discountIdStr, -1);
         if (discountId <= 0) {
@@ -121,7 +121,7 @@ public class AdminDiscountService {
 
         boolean ok = discountDAO.updateDiscount(
                 discountId, code, discountType, discountPercent, discountAmount,
-                startDate, endDate, description, isActive);
+                startDate, endDate, description, isActive, isPublic);
 
         return ok ? "success" : "Cập nhật thất bại. Lỗi cơ sở dữ liệu.";
     }

@@ -39,7 +39,7 @@ public class StaffImportServlet extends HttpServlet {
             throws ServletException, IOException {
         StaffServlet.prepareStaffPage(request, "import");
         try {
-            HashMap<String, Object> dashboardData = stockService.getStaffDashboardData(null, true);
+            HashMap<String, Object> dashboardData = stockService.getStaffDashboardData(null);
             for (Map.Entry<String, Object> entry : dashboardData.entrySet()) {
                 request.setAttribute(entry.getKey(), entry.getValue());
             }

@@ -32,14 +32,7 @@ public class ContactServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            Object successMessage = session.getAttribute(CONTACT_SUCCESS_FLASH);
-            if (successMessage != null) {
-                request.setAttribute(CONTACT_SUCCESS_FLASH, successMessage);
-                session.removeAttribute(CONTACT_SUCCESS_FLASH);
-            }
-        }
+   
         request.getRequestDispatcher("views/Contact/Contact.jsp").forward(request, response);
     }
 

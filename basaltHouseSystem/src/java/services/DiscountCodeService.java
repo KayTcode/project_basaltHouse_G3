@@ -94,7 +94,7 @@ public class DiscountCodeService {
         String voucherCode = code != null ? code.trim() : "";
 
         if (voucherCode.isEmpty()) {
-            result.put("error", "Vui l\u00f2ng nh\u1eadp m\u00e3 voucher");
+            result.put("error", "Vui long nhap dung voucher");
             return result;
         }
 
@@ -102,7 +102,7 @@ public class DiscountCodeService {
             DiscountCode publicVoucher = findPublicVoucher(voucherCode);
             if (publicVoucher != null) {
                 result.put("voucher", publicVoucher);
-                result.put("success", "Th\u00eam m\u00e3 gi\u1ea3m gi\u00e1 th\u00e0nh c\u00f4ng");
+                result.put("success", "them ma giam gia thanh cong");
                 return result;
             }
 
@@ -110,7 +110,7 @@ public class DiscountCodeService {
                 DiscountCode customerVoucher = findCustomerVoucher(voucherCode, accountId);
                 if (customerVoucher != null) {
                     result.put("voucher", customerVoucher);
-                    result.put("success", "Th\u00eam m\u00e3 gi\u1ea3m gi\u00e1 th\u00e0nh c\u00f4ng");
+                    result.put("success", "them ma giam gia thanh cong");
                     return result;
                 }
             }
@@ -118,7 +118,7 @@ public class DiscountCodeService {
             System.err.println(e.getMessage());
         }
 
-        result.put("error", "M\u00e3 code kh\u00f4ng t\u1ed3n t\u1ea1i ho\u1eb7c \u0111\u00e3 h\u1ebft h\u1ea1n");
+        result.put("error", "ma code khong ton tai hoac da het thoi gian su dung");
         return result;
     }
 

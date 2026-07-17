@@ -111,7 +111,7 @@ public class StockService {
                 .intValue();
     }
 
-    public HashMap<String, Object> getStaffDashboardData(String key, boolean includeImportOptions) {
+    public HashMap<String, Object> getStaffDashboardData(String key) {
         List<HashMap<String, Object>> rows = key == null || key.trim().isEmpty()
                 ? importVoiceDAO.getIngredientStockRows()
                 : importVoiceDAO.getIngredientStockRows(key);
@@ -171,10 +171,7 @@ public class StockService {
         data.put("warningCount", warningCount);
         data.put("outCount", outCount);
         data.put("okCount", okCount);
-        if (includeImportOptions) {
-            data.put("suppliers", importVoiceDAO.getSupplierOptions());
-            data.put("currentDateInput", LocalDateTime.now().format(DATE_TIME_INPUT_FORMAT));
-        }
+       
         return data;
     }
 

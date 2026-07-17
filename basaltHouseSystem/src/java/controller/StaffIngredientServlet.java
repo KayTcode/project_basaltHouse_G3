@@ -20,7 +20,7 @@ public class StaffIngredientServlet extends HttpServlet {
         try {
 
             String key = request.getParameter("search");
-            HashMap<String, Object> dashboardData = stockService.getStaffDashboardData(key, false);
+            HashMap<String, Object> dashboardData = stockService.getStaffDashboardData(key);
             request.setAttribute("key", key);
             for (Map.Entry<String, Object> entry : dashboardData.entrySet()) {
                 request.setAttribute(entry.getKey(), entry.getValue());

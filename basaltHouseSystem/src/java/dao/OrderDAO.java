@@ -660,7 +660,7 @@ public class OrderDAO extends DBContext {
         return orderId;
     }
 
-    private void deductStockForOrder(int orderId, Integer staffId) throws SQLException {
+    public void deductStockForOrder(int orderId, Integer staffId) throws SQLException {
         String appliedSql = """
                             SELECT TOP 1 1
                             FROM IngredientStockLogs WITH (UPDLOCK, HOLDLOCK)

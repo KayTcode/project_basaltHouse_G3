@@ -29,6 +29,7 @@ public class DiscountCode {
     private boolean isDeleted;
     private String description;
     private int totalDay;
+    private boolean isPublic;
     public DiscountCode() {
     }
 
@@ -191,6 +192,11 @@ public class DiscountCode {
 
         return "0";
     }
-    
-    
+    public boolean isIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
 }

@@ -17,7 +17,7 @@ public class AdminDiscountDAO extends DBContext {
         
         String sql = """
             SELECT DiscountId, Code, DiscountPercent, DiscountAmount,
-                   StartDate, EndDate, IsActive, IsDeleted, Description,
+                   StartDate, EndDate, IsActive, IsDeleted, IsPublic, Description,
                    CreatedBy, CreatedAt,
                    DATEDIFF(DAY, GETDATE(), EndDate) AS DayTime
             FROM DiscountCodes
@@ -84,6 +84,7 @@ public class AdminDiscountDAO extends DBContext {
                 d.setEndDate(rs.getObject("EndDate", LocalDateTime.class));
                 d.setIsActive(rs.getBoolean("IsActive"));
                 d.setIsDeleted(rs.getBoolean("IsDeleted"));
+                d.setIsPublic(rs.getBoolean("IsPublic"));
                 d.setDescription(rs.getString("Description"));
                 d.setCreatedBy(rs.getInt("CreatedBy"));
                 d.setCreatedAt(rs.getObject("CreatedAt", LocalDateTime.class));
@@ -132,12 +133,12 @@ public class AdminDiscountDAO extends DBContext {
     public boolean addDiscount(String code, String discountType,
                                BigDecimal discountPercent, BigDecimal discountAmount,
                                LocalDateTime startDate, LocalDateTime endDate,
-                               String description, boolean isActive, int createdBy) {
+                               String description, boolean isActive, boolean isPublic, int createdBy) {
         String sql = """
             INSERT INTO DiscountCodes
                 (Code, DiscountPercent, DiscountAmount, StartDate, EndDate,
-                 Description, IsActive, IsDeleted, CreatedBy, CreatedAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, GETDATE())
+                 Description, IsActive, IsDeleted, IsPublic, CreatedBy, CreatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, GETDATE())
             """;
         try {
             PreparedStatement st = connection.prepareStatement(sql);
@@ -153,11 +154,12 @@ public class AdminDiscountDAO extends DBContext {
             st.setObject(5, endDate);
             st.setString(6, description);
             st.setBoolean(7, isActive);
+            st.setBoolean(8, isPublic);
             // Nếu không có id admin hợp lệ thì để NULL (tránh FK violation)
             if (createdBy > 0) {
-                st.setInt(8, createdBy);
+                st.setInt(9, createdBy);
             } else {
-                st.setNull(8, java.sql.Types.INTEGER);
+                st.setNull(9, java.sql.Types.INTEGER);
             }
             return st.executeUpdate() > 0;
         } catch (Exception e) {
@@ -170,11 +172,11 @@ public class AdminDiscountDAO extends DBContext {
     public boolean updateDiscount(int discountId, String code, String discountType,
                                   BigDecimal discountPercent, BigDecimal discountAmount,
                                   LocalDateTime startDate, LocalDateTime endDate,
-                                  String description, boolean isActive) {
+                                  String description, boolean isActive, boolean isPublic) {
         String sql = """
             UPDATE DiscountCodes
             SET Code = ?, DiscountPercent = ?, DiscountAmount = ?,
-                StartDate = ?, EndDate = ?, Description = ?, IsActive = ?
+                StartDate = ?, EndDate = ?, Description = ?, IsActive = ?, IsPublic = ?
             WHERE DiscountId = ? AND IsDeleted = 0
             """;
         try {
@@ -191,7 +193,8 @@ public class AdminDiscountDAO extends DBContext {
             st.setObject(5, endDate);
             st.setString(6, description);
             st.setBoolean(7, isActive);
-            st.setInt(8, discountId);
+            st.setBoolean(8, isPublic);
+            st.setInt(9, discountId);
             return st.executeUpdate() > 0;
         } catch (Exception e) {
             System.err.println("[AdminDiscountDAO.updateDiscount] Lỗi: " + e.getMessage());

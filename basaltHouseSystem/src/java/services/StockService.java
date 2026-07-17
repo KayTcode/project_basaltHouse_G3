@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import model.Ingredient;
+import model.OrderDetail;
 import model.Product;
 import model.Recipe;
 import model.SalesAuditContext;

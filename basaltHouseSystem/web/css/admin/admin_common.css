@@ -1,14 +1,24 @@
+/* ══════════════════════════════════════════════════════════
+   admin_common.css  –  Basalt House Admin Shared Base
+   Chỉ chứa: CSS variables, reset, layout, main-content,
+   và utility buttons.
+   Header → admin_header.css
+   Sidebar → admin_sidebar.css
+   ══════════════════════════════════════════════════════════ */
+
+/* ── CSS VARIABLES ── */
 :root {
-    --basalt-green: #006233;
-    --basalt-green-hover: #004d27;
-    --basalt-gold: #c39b62;
-    --basalt-white: #ffffff;
-    --basalt-charcoal: #2d312e;
+    --basalt-green:      #006233;
+    --basalt-green-hover:#004d27;
+    --basalt-gold:       #c39b62;
+    --basalt-white:      #ffffff;
+    --basalt-charcoal:   #2d312e;
     --basalt-neutral-bg: #f5f7f6;
-    --basalt-border: #e3e7e5;
+    --basalt-border:     #e3e7e5;
 }
 
-* {
+/* ── RESET ── */
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -21,126 +31,10 @@ body {
     overflow-x: hidden;
 }
 
-/* ── TOP HEADER ── */
-.top-header {
-    background: #ffffff;
-    color: #333333;
-    padding: 16px 32px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    border-bottom: 2px solid #e8eef5;
-    height: 70px;
-}
-
-.top-header .logo {
-    color: #006644;
-    font-size: 22px;
-    font-weight: 800;
-}
-
-.top-header .logo span {
-    color: #ffb300;
-}
-
-.server-time {
-    font-size: 13px;
-    color: #666;
-    font-weight: 500;
-}
-
-/* ── LAYOUT CONTAINER ── */
+/* ── APP LAYOUT ── */
 .app-container {
     display: flex;
-    min-height: calc(100vh - 70px);
-}
-
-/* ── SIDEBAR ── */
-.sidebar {
-    width: 260px;
-    background: #ffffff !important;
-    border-right: 1px solid #e8eef5 !important;
-    flex-shrink: 0;
-    overflow-y: auto;
-}
-
-.sidebar .user-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e8eef5;
-    margin-bottom: 8px;
-}
-
-.sidebar .user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #006644 0%, #008a5a 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 700;
-    font-size: 16px;
-}
-
-.sidebar .user-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar .user-info strong {
-    font-size: 13px;
-    color: #333333 !important;
-    font-weight: 700;
-}
-
-.sidebar .user-info .status-online {
-    font-size: 11px;
-    color: #2eb872 !important;
-}
-
-.sidebar .menu-section {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 8px;
-}
-
-.sidebar .section-header {
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8 !important;
-    padding: 12px 24px 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.sidebar .menu-item {
-    display: flex !important;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 20px;
-    color: #475569 !important;
-    text-decoration: none !important;
-    font-size: 13px;
-    font-weight: 500;
-    margin: 2px 12px;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-.sidebar .menu-item:hover {
-    background: #f1f5f9 !important;
-    color: #006644 !important;
-}
-
-.sidebar .menu-item.active {
-    background: #e6f5ea !important;
-    color: #006644 !important;
-    font-weight: 600 !important;
+    min-height: calc(100vh - 68px);
 }
 
 /* ── MAIN CONTENT AREA ── */
@@ -149,13 +43,39 @@ body {
     padding: 24px 32px;
     overflow-y: auto;
     background-color: var(--basalt-neutral-bg);
+    min-width: 0;
 }
 
-/* ── BUTTONS ── */
-.btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; text-decoration: none !important; }
+/* ── UTILITY BUTTONS ── */
+.btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px;
+    background: #6366f1; color: #fff;
+    border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: background .2s;
+    text-decoration: none !important;
+}
 .btn-primary:hover { background: #4f46e5; }
-.btn-secondary, .btn-clear { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none !important; transition: background .2s; }
+
+.btn-secondary, .btn-clear {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 14px;
+    background: #f3f4f6; color: #374151;
+    border: 1px solid #d1d5db; border-radius: 8px;
+    font-size: 14px; cursor: pointer;
+    text-decoration: none !important; transition: background .2s;
+}
 .btn-secondary:hover, .btn-clear:hover { background: #e5e7eb; }
-.btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; background: transparent; color: #6b7280; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none !important; transition: background .2s; }
+
+.btn-ghost {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px 14px;
+    background: transparent; color: #6b7280;
+    border: none; border-radius: 8px;
+    font-size: 14px; cursor: pointer;
+    text-decoration: none !important; transition: background .2s;
+}
 .btn-ghost:hover { background: #f3f4f6; color: #374151; }
+
 .btn-disabled, .disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }

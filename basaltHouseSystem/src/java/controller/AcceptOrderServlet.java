@@ -21,7 +21,7 @@ import services.ShipperService;
  * @author KayT
  */
 public class AcceptOrderServlet extends HttpServlet {
-    
+
     private final ShipperService shipperService = new ShipperService();
 
     /**
@@ -62,7 +62,7 @@ public class AcceptOrderServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
+        response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
     }
 
     /**
@@ -77,44 +77,35 @@ public class AcceptOrderServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
- 
-        // Guard: chưa đăng nhập
         if (session == null || session.getAttribute("currentUser") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
- 
-        // Lấy shipperId từ currentUser → ShipperService (giống ShipperDashboardServlet)
+
         UserLoginDTO currentUser = (UserLoginDTO) session.getAttribute("currentUser");
-        Shipper currentShipper = shipperService.getShipperByAccountId(currentUser.getAccountId());
-        if (currentShipper == null) {
+        Shipper shipper = shipperService.getShipperByAccountId(currentUser.getAccountId());
+        if (shipper == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        int shipperId = currentShipper.getShipperId();
- 
-        // Đọc orderId từ form POST
-        String orderIdParam = request.getParameter("orderId");
-        int orderId;
-        try {
-            orderId = Integer.parseInt(orderIdParam);
-        } catch (NumberFormatException e) {
-            setFlashMessage(session, false, "Mã đơn hàng không hợp lệ!");
-            response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
+
+        int orderId = parseIntParam(request.getParameter("orderId"), 0);
+        if (orderId <= 0) {
+            flash(session, false, "Mã đơn hàng không hợp lệ.");
+            response.sendRedirect(request.getContextPath() + "/shipper-dashboard");
             return;
         }
- 
-        // Gọi Service xử lý nghiệp vụ
-        ProcessOrderResult result = shipperService.accecptOrder(orderId, shipperId);
- 
+
+        ProcessOrderResult result = shipperService.accecptOrder(orderId, shipper.getShipperId());
+
         if (result.isSuccess()) {
-            setFlashMessage(session, true,
-                    "Bạn đã nhận đơn #" + orderId + " thành công! Chúc bạn giao hàng thuận lợi.");
+            flash(session, true, "Đã nhận đơn #" + orderId + ". Hãy giao ngay!");
         } else {
-            setFlashMessage(session, false, String.join(" | ", result.getErrors()));
+            String err = (result.getErrors() != null && !result.getErrors().isEmpty())
+                    ? result.getErrors().get(0) : "Không thể nhận đơn. Thử lại.";
+            flash(session, false, err);
         }
- 
-        response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
+        response.sendRedirect(request.getContextPath() + "/shipper-dashboard");
     }
 
     /**
@@ -127,9 +118,17 @@ public class AcceptOrderServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private void setFlashMessage(HttpSession session, boolean isSuccess, String message) {
-        session.setAttribute("flashSuccess", isSuccess);
-        session.setAttribute("flashMessage", message);
+    private void flash(HttpSession s, boolean success, String msg) {
+        s.setAttribute("flashMessage", msg);
+        s.setAttribute("flashSuccess", success);
     }
-    
+
+    private int parseIntParam(String val, int def) {
+        try {
+            return Integer.parseInt(val);
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
 }

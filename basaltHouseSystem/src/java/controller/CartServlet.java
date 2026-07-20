@@ -206,17 +206,39 @@ public class CartServlet extends HttpServlet {
             totalQty += item.getQuantity();
         }
 
-        // Tính giảm giá nếu có mã
+        // Lấy thông tin thành viên và tính chiết khấu hạng thành viên
+        double memberDiscountPercent = 0.0;
+        long memberDiscountAmount = 0;
+        String memberTier = "";
+        if (session.getAttribute("currentUser") instanceof UserLoginDTO) {
+            int aid = ((UserLoginDTO) session.getAttribute("currentUser")).getAccountId();
+            model.Customer member = new dao.DiscountCodeDAO().getCustomerMembershipByAccountId(aid);
+            if (member != null) {
+                memberTier = member.getRankName();
+                if (member.getDiscountValue() != null) {
+                    memberDiscountPercent = member.getDiscountValue().doubleValue();
+                    memberDiscountAmount = Math.round(totalAmount * (memberDiscountPercent / 100.0));
+                }
+            }
+        }
+
+        // Tính giảm giá nếu có mã voucher
         String discountCode = request.getParameter("discountCode");
         Map<String, Object> discountResult = cartService.applyDiscountResult(discountCode, cart);
-        long discountAmount = 0;
+        long couponDiscountAmount = 0;
         if (Boolean.TRUE.equals(discountResult.get("success"))) {
-            discountAmount = ((BigDecimal) discountResult.get("discountAmount")).longValue();
+            couponDiscountAmount = ((BigDecimal) discountResult.get("discountAmount")).longValue();
         }
-        long finalAmount = Math.max(totalAmount - discountAmount, 0);
+
+        long totalDiscountAmount = memberDiscountAmount + couponDiscountAmount;
+        long finalAmount = Math.max(totalAmount - totalDiscountAmount, 0);
 
         request.setAttribute("totalAmount", totalAmount);
-        request.setAttribute("discountAmount", discountAmount);
+        request.setAttribute("memberDiscountPercent", memberDiscountPercent);
+        request.setAttribute("memberDiscountAmount", memberDiscountAmount);
+        request.setAttribute("memberTier", memberTier != null ? memberTier : "");
+        request.setAttribute("couponDiscountAmount", couponDiscountAmount);
+        request.setAttribute("totalDiscountAmount", totalDiscountAmount);
         request.setAttribute("finalAmount", finalAmount);
         request.setAttribute("totalQty", totalQty);
         request.setAttribute("discountCode", discountCode != null ? discountCode : "");

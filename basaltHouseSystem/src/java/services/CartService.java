@@ -124,12 +124,31 @@ public class CartService {
             total = total.add(new BigDecimal(item.getPrice()).multiply(new BigDecimal(item.getQuantity())));
         }
 
-        // Tính discountAmount qua PromotionService
-        BigDecimal discountAmount = BigDecimal.ZERO;
+        // Tính discountAmount từ voucher qua PromotionService
+        BigDecimal voucherDiscount = BigDecimal.ZERO;
         if (discountCode != null && !discountCode.trim().isEmpty()) {
             PromotionService promotionService = new PromotionService();
-            discountAmount = promotionService.calculateDiscount(discountCode.trim(), total);
+            voucherDiscount = promotionService.calculateDiscount(discountCode.trim(), total);
         }
+
+        // Tính giảm giá hội viên từ customerIdStr nếu có
+        BigDecimal memberDiscount = BigDecimal.ZERO;
+        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+            try {
+                int cid = Integer.parseInt(customerIdStr.trim());
+                if (cid > 0) {
+                    model.Customer member = new dao.DiscountCodeDAO().getCustomerMembershipByCustomerId(cid);
+                    if (member != null && member.getDiscountValue() != null) {
+                        BigDecimal discPercent = member.getDiscountValue();
+                        memberDiscount = total.multiply(discPercent)
+                                              .divide(new BigDecimal(100), 0, java.math.RoundingMode.HALF_UP);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // Tổng giảm giá
+        BigDecimal discountAmount = voucherDiscount.add(memberDiscount);
         BigDecimal finalAmount = total.subtract(discountAmount);
         if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
             finalAmount = BigDecimal.ZERO;

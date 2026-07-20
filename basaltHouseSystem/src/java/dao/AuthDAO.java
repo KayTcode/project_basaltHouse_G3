@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import static java.util.UUID.randomUUID;
+import jdk.jfr.Timespan;
 import utils.PasswordUtils;
 
 public class AuthDAO extends DBContext {
@@ -427,7 +428,7 @@ public class AuthDAO extends DBContext {
             try (PreparedStatement psInsertCustomer = connection.prepareStatement(insertCustomer)) {
                 psInsertCustomer.setObject(1, newAccountId);
                 psInsertCustomer.setObject(2, fullName);
-                
+
                 psInsertCustomer.setObject(3, avatarUrl);
                 psInsertCustomer.executeUpdate();
             }
@@ -457,5 +458,44 @@ public class AuthDAO extends DBContext {
             throw new RuntimeException(e);
         }
         return -1;
+    }
+
+    public Account findById(int accountId) {
+        String sql = """
+                     SELECT [AccountId]
+                           ,[RoleId]
+                           ,[Email]
+                           ,[PasswordHash]
+                           ,[IsEmailVerified]
+                           ,[IsActive]
+                           ,[CreatedAt]
+                           ,[IsDeleted]
+                           ,[FailedAttempts]
+                           ,[IsLocked]
+                       FROM [dbo].[Accounts]
+                       WHERE AccountId = ? AND IsDeleted = 0
+                     """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, accountId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                Account account = new Account();
+                account.setAccountId(rs.getInt("AccountId"));
+                account.setRoleId(rs.getInt("RoleId"));
+                account.setEmail(rs.getString("Email"));
+                account.setPasswordHash(rs.getString("PasswordHash"));
+                account.setIsEmailVerified(rs.getBoolean("IsEmailVerified"));
+                account.setIsActive(rs.getBoolean("IsActive"));
+                Timestamp createAt = Timestamp.valueOf(LocalDateTime.now());
+                account.setCreatedAt(createAt.toLocalDateTime());
+                account.setFailedAttempts(rs.getInt("FailedAttempts"));
+                account.setIsLocked(rs.getBoolean("IsLocked"));
+                return account;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 }

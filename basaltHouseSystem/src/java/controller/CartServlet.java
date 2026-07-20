@@ -1,5 +1,6 @@
 package controller;
 
+import dao.AdminDeliveryZoneDAO;
 import dto.UserLoginDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -9,8 +10,10 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import model.CartItem;
+import model.DeliveryZone;
 import services.CartService;
 
 public class CartServlet extends HttpServlet {
@@ -219,6 +222,11 @@ public class CartServlet extends HttpServlet {
         request.setAttribute("discountCode", discountCode != null ? discountCode : "");
         request.setAttribute("orderNote", request.getParameter("orderNote") != null ? request.getParameter("orderNote") : "");
         request.setAttribute("cartItems", cart.values());
+
+        // Lấy danh sách vùng giao hàng active từ DB
+        List<DeliveryZone> activeZones = new AdminDeliveryZoneDAO().getZones(null, null, "true");
+        request.setAttribute("activeZones", activeZones);
+
         request.getRequestDispatcher("views/Order/Checkout.jsp").forward(request, response);
     }
 

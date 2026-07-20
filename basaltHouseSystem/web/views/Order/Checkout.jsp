@@ -85,13 +85,11 @@
                                     <label>Khu vực (Hòa Lạc) <span class="req">*</span></label>
                                     <select name="district" id="district" class="co-select">
                                         <option value=""> Chọn khu vực </option>
-                                        <option value="Thạch Hòa, Huyện Thạch Thất, Hà Nội">Thạch Hòa, Thạch Thất, Hà Nội</option>
-                                        <option value="Tân Xã, Huyện Thạch Thất, Hà Nội">Tân Xã, Thạch Thất, Hà Nội</option>
-                                        <option value="Hạ Bằng, Huyện Thạch Thất, Hà Nội">Hạ Bằng, Thạch Thất, Hà Nội</option>
-                                        <option value="Bình Yên, Huyện Thạch Thất, Hà Nội">Bình Yên, Thạch Thất, Hà Nội</option>
-                                        <option value="Đồng Trúc, Huyện Thạch Thất, Hà Nội">Đồng Trúc, Thạch Thất, Hà Nội</option>
-                                        <option value="Cẩm Yên, Huyện Thạch Thất, Hà Nội">Cẩm Yên, Thạch Thất, Hà Nội</option>
-                                        <option value="Liên Quan, Huyện Thạch Thất, Hà Nội">Liên Quan, Thạch Thất, Hà Nội</option>
+                                        <c:forEach var="zone" items="${activeZones}">
+                                            <option value="${zone.wardName}, ${zone.district}, ${zone.province}">
+                                                ${zone.wardName}, ${zone.district}, ${zone.province}
+                                            </option>
+                                        </c:forEach>
                                     </select>
                                 </div>
                                 <div class="co-field full">

@@ -187,8 +187,8 @@ public class GoogleLoginServlet extends HttpServlet {
     }
 
     private void setErorrAndRedirect(HttpServletRequest request, HttpServletResponse response, String message) throws IOException {
-        HttpSession session = request.getSession(true);
-        session.setAttribute("loginErrir", message);
+       HttpSession session = request.getSession(true);
+        session.setAttribute("loginError", message);
         response.sendRedirect(request.getContextPath() + "/login");
     }
 
@@ -196,12 +196,12 @@ public class GoogleLoginServlet extends HttpServlet {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(USERINFO_URL))
-                .header("Authorization", "Bearer  " + accessToken)
+                // ✅ Fix: "Bearer  " (2 space) → "Bearer " (1 space)
+                .header("Authorization", "Bearer " + accessToken)
                 .GET()
                 .build();
         HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
         JsonObject json = JsonParser.parseString(res.body()).getAsJsonObject();
-
         if (!json.has("email")) {
             System.err.println("[GoogleLogin] UserInfo fetch failed: " + res.body());
             return null;
@@ -211,16 +211,16 @@ public class GoogleLoginServlet extends HttpServlet {
 
     private void saveTokenAndRedirect(HttpServletRequest request, HttpServletResponse response, String jwtToken, Map<String, Object> result) throws IOException {
         Cookie jwtCookie = new Cookie("jwt", jwtToken);
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(7 * 24 * 60 * 60);
-        response.addCookie(jwtCookie);
+    jwtCookie.setHttpOnly(true);
+    jwtCookie.setPath("/");
+    jwtCookie.setMaxAge(7 * 24 * 60 * 60);
+    response.addCookie(jwtCookie);
 
-        HttpSession session = request.getSession(true);
-        session.setAttribute("currentUser", result.get("currentUser"));
-        session.setAttribute("roleName", result.get("roleName"));
+    HttpSession session = request.getSession(true);
+    session.setAttribute("currentUser", result.get("currentUser"));
+    session.setAttribute("roleName",    result.get("roleName"));
 
-        response.sendRedirect(request.getContextPath() + "/home");
+    response.sendRedirect(request.getContextPath() + "/home");
     }
 
 }

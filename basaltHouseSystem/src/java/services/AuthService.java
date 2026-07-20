@@ -214,32 +214,45 @@ public class AuthService {
 
     public Map<String, Object> loginOrRegisterWithGoogle(String email, String fullName, String avatarUrl) {
         Map<String, Object> result = new HashMap<>();
-        int existingAccountId = authDAO.findAccountIdByEmail(email);
-        if (existingAccountId != -1) {
-            result.put("success", false);
-            result.put("error", "Tài khoản với Email này đã tồn tại trong hệ thống. Vui lòng dăng nhập bằng mật khẩu");
-            return result;
-        }
-        Map<String, Object> creatResult = authDAO.createGoogleAccount(email, fullName, avatarUrl);
-        if (!Boolean.TRUE.equals(creatResult.get("success"))) {
-            result.put("success", false);
-            result.put("error", creatResult.get("error"));
-        }
-        int newAccountId = (int) creatResult.get("accountId");
-        String roleName = "Customer";
-        String token = generateJwtToken(newAccountId, email, roleName, fullName);
+        result.put("success", false);
 
-        UserLoginDTO currentUser = new UserLoginDTO();
-        currentUser.setAccountId(newAccountId);
-        currentUser.setEmail(email);
-        currentUser.setFullName(fullName);
-        currentUser.setAvatarUrl(avatarUrl);
-        currentUser.setRoleName(roleName);
+        try {
+            Account account = authDAO.findByEmail(email);
+            if (account == null) {
+                Map<String, Object> createResult = authDAO.createGoogleAccount(email, fullName, avatarUrl);
+                Boolean created = (Boolean) createResult.get("success");
+                if (created == null || !created) {
+                    result.put("error", createResult.getOrDefault("error", "Không thể tạo tài khoản. Vui lòng thử lại!"));
+                    return result;
+                }
+                int newAccountId = (int) createResult.get("accountId");
+                account = authDAO.findById(newAccountId);
+                if (account == null) {
+                    result.put("error", "Lỗi hệ thống sau khi tạo tài khoản.");
+                    return result;
+                }
+            }
+            if (!account.isIsActive()) {
+                result.put("error", "Tài khoản đã bị khoá. Vui lòng liên hệ hỗ trợ.");
+                return result;
+            }
+            String roleName = authDAO.getRoleNameById(account.getRoleId());
+            Map<String, String> profileInfo = authDAO.getFullNameAndAvatarByAccount(account);
+            String dbFullName = profileInfo.get("FullName");
+            String dbAvatarUrl = profileInfo.get("avatarUrl");
+            String displayName = (dbFullName != null && !dbFullName.equals(account.getEmail())) ? dbFullName : fullName;
+            String displayAvatar = (dbAvatarUrl != null) ? dbAvatarUrl : avatarUrl;
 
-        result.put("success", true);
-        result.put("token", token);
-        result.put("currentUser", currentUser);
-        result.put("roleName", roleName);
+            String jwtToken = generateJwtToken(account.getAccountId(), account.getEmail(), roleName, displayName);
+
+            UserLoginDTO dto = UserLoginDTO.success(account.getAccountId(), account.getEmail(), account.getRoleId(), roleName, displayName, displayAvatar, jwtToken);
+            result.put("success", true);
+            result.put("token", jwtToken);
+            result.put("currentUser", dto);
+            result.put("roleName", roleName);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return result;
     }
 

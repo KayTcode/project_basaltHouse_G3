@@ -25,14 +25,12 @@ public class AdminDiscountDAO extends DBContext {
             WHERE IsDeleted = 0
             """;
 
-        // 1. Lọc theo ô tìm kiếm sử dụng LIKE
         if (search != null && !search.trim().isEmpty()) {
             sql += """
                    AND (Code LIKE ? OR Description LIKE ?)
                    """;
         }
 
-        // 2. Lọc theo loại giảm giá
         if ("PERCENT".equals(filterType)) {
             sql += """
                    AND DiscountPercent IS NOT NULL AND DiscountPercent > 0
@@ -43,7 +41,6 @@ public class AdminDiscountDAO extends DBContext {
                    """;
         }
 
-        // 3. Lọc theo trạng thái hoạt động
         if ("ACTIVE".equals(filterStatus)) {
             sql += """
                    AND IsActive = 1 AND (EndDate IS NULL OR EndDate >= GETDATE())
@@ -58,7 +55,6 @@ public class AdminDiscountDAO extends DBContext {
                    """;
         }
 
-        // Sắp xếp giảm dần theo ngày tạo
         sql += """
                ORDER BY CreatedAt DESC
                """;
@@ -156,11 +152,11 @@ public class AdminDiscountDAO extends DBContext {
             st.setString(6, description);
             st.setBoolean(7, isActive);
             st.setBoolean(8, isPublic);
-            // Nếu không có id admin hợp lệ thì để NULL (tránh FK violation)
+            // Nếu không có id admin hợp lệ thì fallback về 1 (id admin mặc định) để tránh lỗi ràng buộc khóa ngoại
             if (createdBy > 0) {
                 st.setInt(9, createdBy);
             } else {
-                st.setNull(9, java.sql.Types.INTEGER);
+                st.setInt(9, 1);
             }
             return st.executeUpdate() > 0;
         } catch (Exception e) {

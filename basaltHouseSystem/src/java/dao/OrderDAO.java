@@ -173,7 +173,7 @@ public class OrderDAO extends DBContext {
                 }
             }
 
-            if (!hasLog) {
+            if (!hasLog && !"Cancelled".equals(status)) {
                 String insertSql = """
                     INSERT INTO DeliveryLogs (OrderId, ShipperId, Status, CreatedAt, IsDeleted)
                     VALUES (?, 1, 'Pending', GETDATE(), 0)
@@ -234,6 +234,17 @@ public class OrderDAO extends DBContext {
                 try (PreparedStatement psBackfill = connection.prepareStatement(backfillSql)) {
                     psBackfill.setInt(1, orderId);
                     psBackfill.executeUpdate();
+                }
+            } else if ("Cancelled".equals(status)) {
+                // Cập nhật log đã có (nếu có) sang Cancelled
+                String cancelLogSql = """
+                    UPDATE DeliveryLogs
+                    SET Status = 'Cancelled'
+                    WHERE OrderId = ? AND IsDeleted = 0
+                    """;
+                try (PreparedStatement psCancel = connection.prepareStatement(cancelLogSql)) {
+                    psCancel.setInt(1, orderId);
+                    psCancel.executeUpdate();
                 }
             }
 

@@ -33,6 +33,22 @@ public class Order {
     private String cashierName;
     private String shipperName;
     private String note;
+    private java.util.List<OrderDetail> orderDetails = new java.util.ArrayList<>();
+
+    public java.util.List<OrderDetail> getOrderDetails() {
+        return orderDetails;
+    }
+
+    public void setOrderDetails(java.util.List<OrderDetail> orderDetails) {
+        this.orderDetails = orderDetails;
+    }
+
+    public void addOrderDetail(OrderDetail detail) {
+        if (this.orderDetails == null) {
+            this.orderDetails = new java.util.ArrayList<>();
+        }
+        this.orderDetails.add(detail);
+    }
 
     public Order() {
     }

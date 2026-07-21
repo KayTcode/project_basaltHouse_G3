@@ -214,6 +214,10 @@
                                                                                     <%= s.getGuestCount() %> khách
                                                                                 </span>
                                                                                 <div style="display: flex; gap: 5px; align-items: center; justify-content: flex-end; margin-left: auto;">
+                                                                                    <button type="button" class="btn-view-orders"
+                                                                                        onclick="openViewOrdersModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
+                                                                                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">receipt_long</span>Xem đơn
+                                                                                    </button>
                                                                                     <button type="button" class="btn-move-table-session"
                                                                                         onclick="openMoveTableModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
                                                                                         <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">swap_horiz</span>Đổi bàn
@@ -356,11 +360,12 @@
                             </div>
                         </main>
 
-                        <!-- ── Modals: Thêm, Xóa Bàn, Thanh toán, Đổi Bàn ── -->
+                        <!-- ── Modals: Thêm, Xóa Bàn, Thanh toán, Đổi Bàn, Xem Đơn ── -->
                         <jsp:include page="AddTableModal.jsp" />
                         <jsp:include page="DeleteTableModal.jsp" />
                         <jsp:include page="CheckoutSessionModal.jsp" />
                         <jsp:include page="MoveTableModal.jsp" />
+                        <jsp:include page="ViewOrdersModal.jsp" />
 
                         <!-- Bootstrap JS -->
                         <script
@@ -491,7 +496,7 @@
 
                                 const btnSubmit = document.getElementById('btnSubmit');
                                 btnSubmit.disabled = true;
-                                btnSubmit.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Đang tạo...';
+                                btnSubmit.innerHTML = '<span class="material-symbols-outlined btn-spin-icon">progress_activity</span> Đang tạo...';
 
                                 const formData = new URLSearchParams();
                                 formData.append('action', 'create');
@@ -561,11 +566,6 @@
                                 }, 3500);
                             }
 
-                            /* ── CSS spin animation ── */
-                            const style = document.createElement('style');
-                            style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-                            document.head.appendChild(style);
-
 /* ── Server-side flash messages ── */
                             <% if (errorMsg != null && !errorMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('error', 'Lỗi', '<%= errorMsg.replace("'","\\'") %>'));
@@ -588,4 +588,4 @@
                         </script>
                     </body>
 
-                    </html>
+                    </html>

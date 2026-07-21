@@ -6,6 +6,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
 
 
 public class TableSessionDAO extends DBContext {
@@ -209,4 +210,66 @@ public class TableSessionDAO extends DBContext {
             return "ERR:Lỗi cập nhật session: " + ex.getMessage();
         }
     }
+
+    public java.util.Map<Integer, List<model.Order>> getActiveSessionOrdersMap() {
+        java.util.Map<Integer, List<model.Order>> map = new java.util.HashMap<>();
+        if (connection == null) return map;
+
+        String sql = """
+            SELECT o.TableSessionId, o.OrderId, o.OrderStatus, o.PaymentStatus, o.FinalAmount, o.CreatedAt,
+                   od.OrderDetailId, od.Quantity, od.UnitPrice, p.ProductName, s.SizeName
+            FROM Orders o
+            JOIN TableSessions ts ON ts.SessionId = o.TableSessionId AND ts.Status IN ('ACTIVE', 'Open') AND ts.IsDeleted = 0
+            LEFT JOIN OrderDetails od ON od.OrderId = o.OrderId AND od.IsDeleted = 0
+            LEFT JOIN Products p ON p.ProductId = od.ProductId
+            LEFT JOIN Sizes s    ON s.SizeId    = od.SizeId
+            WHERE o.IsDeleted = 0
+            ORDER BY o.TableSessionId, o.CreatedAt ASC, od.OrderDetailId ASC
+            """;
+
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            java.util.Map<Integer, model.Order> orderMap = new java.util.HashMap<>();
+
+            while (rs.next()) {
+                int sessionId = rs.getInt("TableSessionId");
+                int orderId   = rs.getInt("OrderId");
+
+                model.Order order = orderMap.computeIfAbsent(orderId, k -> {
+                    model.Order o = new model.Order();
+                    o.setOrderId(orderId);
+                    o.setTableSessionId(sessionId);
+                    try {
+                        o.setOrderStatus(rs.getString("OrderStatus"));
+                        o.setPaymentStatus(rs.getString("PaymentStatus"));
+                        o.setFinalAmount(rs.getBigDecimal("FinalAmount"));
+                        Timestamp cat = rs.getTimestamp("CreatedAt");
+                        if (cat != null) o.setCreatedAt(cat.toLocalDateTime());
+                    } catch (SQLException ignored) {}
+                    map.computeIfAbsent(sessionId, s -> new ArrayList<>()).add(o);
+                    return o;
+                });
+
+                try {
+                    Object odIdObj = rs.getObject("OrderDetailId");
+                    if (odIdObj != null) {
+                        model.OrderDetail od = new model.OrderDetail();
+                        od.setOrderDetailId(rs.getInt("OrderDetailId"));
+                        od.setOrderId(orderId);
+                        od.setQuantity(rs.getInt("Quantity"));
+                        od.setUnitPrice(rs.getBigDecimal("UnitPrice"));
+                        od.setProductName(rs.getString("ProductName"));
+                        od.setSizeName(rs.getString("SizeName"));
+                        order.addOrderDetail(od);
+                    }
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ex) {
+            System.err.println("[TableSessionDAO] getActiveSessionOrdersMap Exception: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return map;
+    }
 }
+

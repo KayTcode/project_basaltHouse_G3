@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -53,8 +54,12 @@ public class TableSessionServlet extends HttpServlet {
         HashMap<Integer, Table>        tablesMap   = tableService.getTablesMap();
         HashMap<Integer, TableSession> sessionsMap = tableService.getActiveSessionsMap();
 
+        dao.TableSessionDAO sessionDAO = new dao.TableSessionDAO();
+        java.util.Map<Integer, java.util.List<model.Order>> sessionOrdersMap = sessionDAO.getActiveSessionOrdersMap();
+
         request.setAttribute("tablesMap",   tablesMap);
         request.setAttribute("sessionsMap", sessionsMap);
+        request.setAttribute("sessionOrdersMap", sessionOrdersMap);
 
         request.getRequestDispatcher("views/TableSession/CreateTableSession.jsp")
                .forward(request, response);
@@ -242,3 +247,4 @@ public class TableSessionServlet extends HttpServlet {
         return attr instanceof Integer ? (Integer) attr : null;
     }
 }
+

@@ -1252,7 +1252,9 @@ h4,
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .vertical-middle-icon {
@@ -1277,11 +1279,12 @@ h4,
     transition: all 0.2s ease;
     white-space: nowrap;
 }
+
 .btn-view-orders:hover {
     background: #0ea5e9;
     color: #fff;
     border-color: #0ea5e9;
-    box-shadow: 0 3px 10px rgba(14,165,233,0.3);
+    box-shadow: 0 3px 10px rgba(14, 165, 233, 0.3);
     transform: translateY(-1px);
 }
 
@@ -1289,15 +1292,17 @@ h4,
 .vo-order-card {
     background: #fff;
     border-radius: 14px;
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
     padding: 18px 20px;
     margin-bottom: 16px;
     transition: box-shadow 0.2s;
 }
+
 .vo-order-card:last-child {
     margin-bottom: 0;
 }
+
 .vo-order-header {
     display: flex;
     align-items: center;
@@ -1306,12 +1311,14 @@ h4,
     flex-wrap: wrap;
     gap: 8px;
 }
+
 .vo-order-id {
     font-family: var(--font-montserrat);
     font-weight: 700;
     font-size: 15px;
     color: var(--text-dark);
 }
+
 .vo-order-meta {
     font-size: 12px;
     color: var(--text-muted);
@@ -1332,13 +1339,41 @@ h4,
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
-.vo-badge-pending   { background: #fef3c7; color: #92400e; }
-.vo-badge-confirmed { background: #dbeafe; color: #1e40af; }
-.vo-badge-done      { background: #d1fae5; color: #065f46; }
-.vo-badge-cancel    { background: #fee2e2; color: #991b1b; }
-.vo-badge-processing { background: #ede9fe; color: #5b21b6; }
-.vo-pay-paid   { background: #d1fae5; color: #065f46; }
-.vo-pay-unpaid { background: #fee2e2; color: #991b1b; }
+
+.vo-badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.vo-badge-confirmed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.vo-badge-done {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.vo-badge-cancel {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.vo-badge-processing {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+.vo-pay-paid {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.vo-pay-unpaid {
+    background: #fee2e2;
+    color: #991b1b;
+}
 
 /* Items table */
 .vo-items-table {
@@ -1347,9 +1382,11 @@ h4,
     margin-bottom: 10px;
     font-size: 13px;
 }
+
 .vo-items-table thead tr {
     background: var(--secondary-bg);
 }
+
 .vo-items-table th {
     padding: 8px 10px;
     font-family: var(--font-montserrat);
@@ -1358,39 +1395,46 @@ h4,
     color: var(--primary-color);
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    border-bottom: 1px solid rgba(0,110,47,0.12);
+    border-bottom: 1px solid rgba(0, 110, 47, 0.12);
 }
+
 .vo-items-table td {
     padding: 9px 10px;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     color: var(--text-dark);
     vertical-align: middle;
 }
+
 .vo-items-table tbody tr:last-child td {
     border-bottom: none;
 }
+
 .vo-items-table tbody tr:hover {
-    background: rgba(0,110,47,0.03);
+    background: rgba(0, 110, 47, 0.03);
 }
+
 .vo-prod-name {
     font-weight: 600;
 }
+
 .vo-size-chip {
     display: inline-block;
     padding: 2px 8px;
-    background: rgba(0,110,47,0.08);
+    background: rgba(0, 110, 47, 0.08);
     color: var(--primary-color);
     border-radius: 50px;
     font-size: 11px;
     font-weight: 600;
 }
+
 .vo-order-subtotal {
     text-align: right;
     font-size: 13px;
     color: var(--text-muted);
     padding-top: 8px;
-    border-top: 1px dashed rgba(0,0,0,0.08);
+    border-top: 1px dashed rgba(0, 0, 0, 0.08);
 }
+
 .vo-order-subtotal strong {
     color: var(--primary-color);
     font-size: 14px;
@@ -1402,12 +1446,14 @@ h4,
     padding: 48px 0;
     color: var(--text-muted);
 }
+
 .vo-empty .material-symbols-outlined {
     font-size: 52px;
     display: block;
     margin-bottom: 12px;
     color: #d1d5db;
 }
+
 .vo-empty p {
     font-size: 14px;
     margin: 0;
@@ -1509,4 +1555,76 @@ h4,
     padding: 8px 0;
 }
 
+/* ── Session Action Buttons (Equal Size) ── */
+.session-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-wrap: nowrap;
+}
+
+.session-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-inter);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    line-height: 1;
+}
+
+.session-action-btn .material-symbols-outlined {
+    font-size: 15px;
+}
+
+/* Nút Xem Đơn - Blue */
+.btn-session-view {
+    background: rgba(14, 165, 233, 0.08);
+    color: #0284c7;
+    border-color: rgba(14, 165, 233, 0.3);
+}
+.btn-session-view:hover {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 3px 8px rgba(2, 132, 199, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Nút Đổi Bàn - Orange */
+.btn-session-move {
+    background: rgba(245, 158, 11, 0.08);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+.btn-session-move:hover {
+    background: #d97706;
+    color: #ffffff;
+    border-color: #d97706;
+    box-shadow: 0 3px 8px rgba(217, 119, 6, 0.25);
+    transform: translateY(-1px);
+}
+
+/* Nút Trả Bàn - Red */
+.btn-session-checkout {
+    background: rgba(225, 29, 72, 0.08);
+    color: #e11d48;
+    border-color: rgba(225, 29, 72, 0.3);
+}
+.btn-session-checkout:hover {
+    background: #e11d48;
+    color: #ffffff;
+    border-color: #e11d48;
+    box-shadow: 0 3px 8px rgba(225, 29, 72, 0.25);
+    transform: translateY(-1px);
+}
 

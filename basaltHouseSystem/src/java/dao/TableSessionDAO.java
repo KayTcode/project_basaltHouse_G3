@@ -156,4 +156,39 @@ public class TableSessionDAO extends DBContext {
         }
         return false;
     }
+
+    public String moveSession(int sessionId, int newTableId) {
+        if (connection == null) return "ERR:Không có kết nối DB.";
+
+        // 1. Lấy session hiện tại
+        TableSession session = getSessionById(sessionId);
+        if (session == null) return "ERR:Session không tồn tại.";
+        if (session.getTableId() == newTableId) return "ERR:Bàn mới phải khác bàn hiện tại.";
+
+        // 2. Kiểm tra bàn mới có session đang hoạt động không (không cho chuyển vào bàn đang bận)
+        String checkSql = "SELECT COUNT(*) FROM TableSessions WHERE TableId = ? AND Status IN ('ACTIVE','Open') AND IsDeleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(checkSql)) {
+            ps.setInt(1, newTableId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return "ERR:Bàn đích đang có khách, không thể chuyển.";
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return "ERR:Lỗi kiểm tra bàn đích.";
+        }
+
+        // 3. Cập nhật TableId trong session
+        String updateSql = "UPDATE TableSessions SET TableId = ? WHERE SessionId = ? AND Status IN ('ACTIVE','Open') AND IsDeleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(updateSql)) {
+            ps.setInt(1, newTableId);
+            ps.setInt(2, sessionId);
+            int rows = ps.executeUpdate();
+            return rows > 0 ? "OK" : "ERR:Không thể cập nhật session.";
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return "ERR:Lỗi cập nhật session: " + ex.getMessage();
+        }
+    }
 }

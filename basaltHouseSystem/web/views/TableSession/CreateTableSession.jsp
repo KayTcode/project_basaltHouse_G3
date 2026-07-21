@@ -83,6 +83,7 @@
                                         HashMap<Integer, TableSession>  sessionsMap = (HashMap<Integer, TableSession>) request.getAttribute("sessionsMap");
                                         Collection<Table>        tables         = tablesMap   != null ? tablesMap.values()   : new java.util.ArrayList<>();
                                         Collection<TableSession> activeSessions = sessionsMap != null ? sessionsMap.values() : new java.util.ArrayList<>();
+                                        String moveTableMsg       = (String) request.getAttribute("moveTableMsg");
                                     %>
 
                                                     <div class="row g-4">
@@ -213,6 +214,10 @@
                                                                                     <%= s.getGuestCount() %> khách
                                                                                 </span>
                                                                                 <div style="display: flex; gap: 5px; align-items: center; justify-content: flex-end; margin-left: auto;">
+                                                                                    <button type="button" class="btn-move-table-session"
+                                                                                        onclick="openMoveTableModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
+                                                                                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">swap_horiz</span>Đổi bàn
+                                                                                    </button>
                                                                                     <button type="button" class="btn-checkout-session"
                                                                                         onclick="openCheckoutModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
                                                                                         <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">payments</span>Thanh toán
@@ -351,10 +356,11 @@
                             </div>
                         </main>
 
-                        <!-- ── Modals: Thêm, Xóa Bàn & Thanh toán (Tách riêng) ── -->
+                        <!-- ── Modals: Thêm, Xóa Bàn, Thanh toán, Đổi Bàn ── -->
                         <jsp:include page="AddTableModal.jsp" />
                         <jsp:include page="DeleteTableModal.jsp" />
                         <jsp:include page="CheckoutSessionModal.jsp" />
+                        <jsp:include page="MoveTableModal.jsp" />
 
                         <!-- Bootstrap JS -->
                         <script
@@ -579,6 +585,9 @@
 <% } %>
 <% if (checkoutSuccessMsg != null && !checkoutSuccessMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('success', 'Thanh toán', '<%= checkoutSuccessMsg.replace("'","\\'") %>'));
+<% } %>
+<% if (moveTableMsg != null && !moveTableMsg.isEmpty()) { %>
+                                window.addEventListener('load', () => showToast('success', 'Đổi bàn thành công', '<%= moveTableMsg.replace("'","\\'") %>'));
 <% } %>
                         </script>
                     </body>

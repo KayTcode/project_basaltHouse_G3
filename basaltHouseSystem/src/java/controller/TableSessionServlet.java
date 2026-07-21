@@ -31,6 +31,7 @@ public class TableSessionServlet extends HttpServlet {
         String addOk      = request.getParameter("addOk");
         String delOk      = request.getParameter("delOk");
         String checkoutOk = request.getParameter("checkoutOk");
+        String moveOk     = request.getParameter("moveOk");
         String err        = request.getParameter("err");
         String code       = request.getParameter("code");
 
@@ -42,6 +43,8 @@ public class TableSessionServlet extends HttpServlet {
             request.setAttribute("delTableMsg", "Bàn \"" + code + "\" đã được xóa!");
         } else if ("1".equals(checkoutOk) && code != null) {
             request.setAttribute("checkoutSuccessMsg", "Session \"" + code + "\" đã thanh toán thành công!");
+        } else if ("1".equals(moveOk) && code != null) {
+            request.setAttribute("moveTableMsg", "Session \"" + code + "\" đã được chuyển bàn thành công!");
         } else if (err != null && !err.isBlank()) {
             request.setAttribute("errorMsg", err);
         }
@@ -69,6 +72,7 @@ public class TableSessionServlet extends HttpServlet {
             case "addTable"    -> handleAddTable(request, response);
             case "deleteTable" -> handleDeleteTable(request, response);
             case "checkout"    -> handleCheckout(request, response);
+            case "moveTable"   -> handleMoveTable(request, response);
             default            -> redirect(request, response, "err", null, "Hành động không hợp lệ.");
         }
     }
@@ -176,6 +180,37 @@ public class TableSessionServlet extends HttpServlet {
             redirect(request, response, "checkoutOk", sessionCode, null);
         } else {
             redirect(request, response, "err", null, "Không thể thanh toán session. Vui lòng thử lại.");
+        }
+    }
+
+
+    private void handleMoveTable(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        String sessionIdStr  = request.getParameter("sessionId");
+        String newTableIdStr = request.getParameter("newTableId");
+        String sessionCode   = request.getParameter("sessionCode");
+
+        if (isBlank(sessionIdStr) || isBlank(newTableIdStr)) {
+            redirect(request, response, "err", null, "Thiếu thông tin đổi bàn.");
+            return;
+        }
+
+        int sessionId, newTableId;
+        try {
+            sessionId   = Integer.parseInt(sessionIdStr.trim());
+            newTableId  = Integer.parseInt(newTableIdStr.trim());
+        } catch (NumberFormatException e) {
+            redirect(request, response, "err", null, "Dữ liệu không hợp lệ.");
+            return;
+        }
+
+        String result = tableService.moveSession(sessionId, newTableId);
+        if ("OK".equals(result)) {
+            redirect(request, response, "moveOk", sessionCode != null ? sessionCode : "", null);
+        } else {
+            String errMsg = result.startsWith("ERR:") ? result.substring(4) : result;
+            redirect(request, response, "err", null, errMsg);
         }
     }
 

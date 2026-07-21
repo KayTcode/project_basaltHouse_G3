@@ -1078,9 +1078,9 @@ h4,
    Move Table — Đổi Bàn Modal
 ══════════════════════════════════════════════ */
 
-/* Header màu tím của modal đổi bàn */
+/* Header màu xanh của modal đổi bàn */
 .move-table-modal-header {
-    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    background: linear-gradient(135deg, #059669, #064e3b);
     padding: 20px 24px;
     display: flex;
     align-items: center;
@@ -1102,8 +1102,8 @@ h4,
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: rgba(124, 58, 237, 0.10);
-    color: #7c3aed;
+    background: rgba(16, 185, 129, 0.10);
+    color: #059669;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1130,7 +1130,7 @@ h4,
 }
 
 .move-table-select:focus {
-    border-color: #7c3aed;
+    border-color: #059669;
     background: #fff;
 }
 
@@ -1147,11 +1147,11 @@ h4,
     display: block;
 }
 
-/* Nút xác nhận đổi bàn — tím */
+/* Nút xác nhận đổi bàn — xanh emerald */
 .btn-move-confirm {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    background: linear-gradient(135deg, #059669, #047857);
     color: #fff;
     border: none;
     border-radius: var(--radius-sm);
@@ -1168,23 +1168,23 @@ h4,
 }
 
 .btn-move-confirm:hover:not(:disabled) {
-    background: linear-gradient(135deg, #6d28d9, #4338ca);
+    background: linear-gradient(135deg, #047857, #065f46);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(124, 58, 237, 0.25);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
 }
 
 .btn-move-confirm:disabled {
-    background: #b0b0c0;
+    background: #b0c4b0;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
 
-/* Nút đổi bàn trong session list — tím nhạt */
+/* Nút đổi bàn trong session list — xanh mint nhạt */
 .btn-move-table-session {
-    background: rgba(124, 58, 237, 0.08);
-    color: #7c3aed;
-    border: 1.5px solid rgba(124, 58, 237, 0.20);
+    background: rgba(16, 185, 129, 0.08);
+    color: #059669;
+    border: 1.5px solid rgba(16, 185, 129, 0.20);
     border-radius: 8px;
     padding: 6px 12px;
     font-size: 12px;
@@ -1198,7 +1198,7 @@ h4,
 }
 
 .btn-move-table-session:hover {
-    background: #7c3aed;
+    background: #059669;
     color: #fff;
-    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 }

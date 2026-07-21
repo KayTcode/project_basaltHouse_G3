@@ -51,7 +51,7 @@
                         <select name="newTableId" id="newTableId"
                                 class="move-table-select"
                                 onchange="validateMoveSelect()">
-                            <option value="">-- Chọn bàn đích --</option>
+                            <option value=""> Chọn bàn muốn đổi </option>
                             <%
                                 if (tablesMap2 != null) {
                                     for (Table tb : tablesMap2.values()) {

@@ -42,7 +42,7 @@ public class TableSessionServlet extends HttpServlet {
         } else if ("1".equals(delOk) && code != null) {
             request.setAttribute("delTableMsg", "Bàn \"" + code + "\" đã được xóa!");
         } else if ("1".equals(checkoutOk) && code != null) {
-            request.setAttribute("checkoutSuccessMsg", "Session \"" + code + "\" đã thanh toán thành công!");
+            request.setAttribute("checkoutSuccessMsg", "Session \"" + code + "\" đã trả bàn thành công!");
         } else if ("1".equals(moveOk) && code != null) {
             request.setAttribute("moveTableMsg", "Session \"" + code + "\" đã được chuyển bàn thành công!");
         } else if (err != null && !err.isBlank()) {
@@ -179,7 +179,7 @@ public class TableSessionServlet extends HttpServlet {
         if (ok) {
             redirect(request, response, "checkoutOk", sessionCode, null);
         } else {
-            redirect(request, response, "err", null, "Không thể thanh toán session. Vui lòng thử lại.");
+            redirect(request, response, "err", null, "Không thể trả bàn cho session. Vui lòng thử lại.");
         }
     }
 

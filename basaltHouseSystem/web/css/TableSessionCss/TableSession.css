@@ -1201,4 +1201,61 @@ h4,
     background: #059669;
     color: #fff;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+/* ── Modal Utility Classes (Tránh viết style inline) ── */
+.modal-header-subtitle {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 4px;
+}
+
+.modal-header-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.modal-header-title-icon {
+    font-size: 20px;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.modal-confirm-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+}
+
+.modal-confirm-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+.modal-button-icon {
+    font-size: 18px;
+}
+
+.modal-guest-icon {
+    font-size: 20px;
+}
+
+.btn-spin-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.vertical-middle-icon {
+    font-size: 13px;
+    vertical-align: middle;
 }

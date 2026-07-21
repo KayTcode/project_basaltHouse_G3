@@ -155,24 +155,22 @@
                         </c:if>
 
                         <c:forEach var="log" items="${orderInfo.deliveryLogs}">
-                            <c:choose>
-                                <c:when test="${log.status == 'ShipperConfirmed' && not empty log.shipperConfirmedAt}">
-                                    <c:set var="cfStr" value="${log.shipperConfirmedAt.toString()}"/>
-                                    <c:set var="confirmedTime" value="${fn:substring(cfStr, 11, 16)} ${fn:substring(cfStr, 8, 10)}/${fn:substring(cfStr, 5, 7)}"/>
-                                </c:when>
-                                <c:when test="${log.status == 'Delivering' && not empty log.pickedUpAt}">
-                                    <c:set var="puStr" value="${log.pickedUpAt.toString()}"/>
-                                    <c:set var="deliveringTime" value="${fn:substring(puStr, 11, 16)} ${fn:substring(puStr, 8, 10)}/${fn:substring(puStr, 5, 7)}"/>
-                                </c:when>
-                                <c:when test="${(log.status == 'Delivered' || log.status == 'Completed') && not empty log.deliveredAt}">
-                                    <c:set var="dvStr" value="${log.deliveredAt.toString()}"/>
-                                    <c:set var="completedTime" value="${fn:substring(dvStr, 11, 16)} ${fn:substring(dvStr, 8, 10)}/${fn:substring(dvStr, 5, 7)}"/>
-                                </c:when>
-                                <c:when test="${(log.status == 'Delivered' || log.status == 'Completed') && not empty log.customerConfirmedAt}">
-                                    <c:set var="dvStr" value="${log.customerConfirmedAt.toString()}"/>
-                                    <c:set var="completedTime" value="${fn:substring(dvStr, 11, 16)} ${fn:substring(dvStr, 8, 10)}/${fn:substring(dvStr, 5, 7)}"/>
-                                </c:when>
-                            </c:choose>
+                            <c:if test="${not empty log.shipperConfirmedAt}">
+                                <c:set var="cfStr" value="${log.shipperConfirmedAt.toString()}"/>
+                                <c:set var="confirmedTime" value="${fn:substring(cfStr, 11, 16)} ${fn:substring(cfStr, 8, 10)}/${fn:substring(cfStr, 5, 7)}"/>
+                            </c:if>
+                            <c:if test="${not empty log.pickedUpAt}">
+                                <c:set var="puStr" value="${log.pickedUpAt.toString()}"/>
+                                <c:set var="deliveringTime" value="${fn:substring(puStr, 11, 16)} ${fn:substring(puStr, 8, 10)}/${fn:substring(puStr, 5, 7)}"/>
+                            </c:if>
+                            <c:if test="${not empty log.deliveredAt}">
+                                <c:set var="dvStr" value="${log.deliveredAt.toString()}"/>
+                                <c:set var="completedTime" value="${fn:substring(dvStr, 11, 16)} ${fn:substring(dvStr, 8, 10)}/${fn:substring(dvStr, 5, 7)}"/>
+                            </c:if>
+                            <c:if test="${not empty log.customerConfirmedAt}">
+                                <c:set var="dvStr" value="${log.customerConfirmedAt.toString()}"/>
+                                <c:set var="completedTime" value="${fn:substring(dvStr, 11, 16)} ${fn:substring(dvStr, 8, 10)}/${fn:substring(dvStr, 5, 7)}"/>
+                            </c:if>
                         </c:forEach>
 
                         <%-- Map status → CSS class --%>

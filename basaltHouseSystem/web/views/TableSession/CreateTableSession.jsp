@@ -220,7 +220,7 @@
                                                                                     </button>
                                                                                     <button type="button" class="btn-checkout-session"
                                                                                         onclick="openCheckoutModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
-                                                                                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">payments</span>Thanh toán
+                                                                                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">logout</span>Trả bàn
                                                                                     </button>
                                                                                 </div>
                                                                             </li>
@@ -505,16 +505,13 @@
                                 })
                                 .then(function(response) {
                                     if (response.ok) {
-                                        /* Thành công: đọc sessionId từ response nếu có,
-                                           rồi gửi postMessage về màn hình POS chính */
                                         return response.text().then(function(text) {
-                                            // Cố parse JSON nếu server trả về JSON có sessionId
                                             let tableSessionId = null;
                                             try {
                                                 const json = JSON.parse(text);
                                                 tableSessionId = json.sessionId || json.tableSessionId || null;
                                             } catch(ignored) {
-                                                // Server trả về HTML/text thường — không sao
+
                                             }
 
                                             showToast('success', 'Thành công', 'Đã tạo session cho bàn ' + tableCode + '!');
@@ -528,7 +525,6 @@
                                                 tableSessionId  : tableSessionId
                                             };
                                             window.parent.postMessage(message, '*');
-                                            /* POS chính sẽ tự đóng modal sau khi nhận message */
                                         });
                                     } else {
                                         return response.text().then(function(text) {
@@ -571,24 +567,24 @@
                             document.head.appendChild(style);
 
 /* ── Server-side flash messages ── */
-<% if (errorMsg != null && !errorMsg.isEmpty()) { %>
+                            <% if (errorMsg != null && !errorMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('error', 'Lỗi', '<%= errorMsg.replace("'","\\'") %>'));
-<% } %>
-<% if (successMsg != null && !successMsg.isEmpty()) { %>
+                            <% } %>
+                            <% if (successMsg != null && !successMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('success', 'Thành công', '<%= successMsg.replace("'","\\'") %>'));
-<% } %>
-<% if (addTableMsg != null && !addTableMsg.isEmpty()) { %>
+                            <% } %>
+                            <% if (addTableMsg != null && !addTableMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('success', 'Bàn đã thêm', '<%= addTableMsg.replace("'","\\'") %>'));
-<% } %>
-<% if (delTableMsg != null && !delTableMsg.isEmpty()) { %>
+                            <% } %>
+                            <% if (delTableMsg != null && !delTableMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('success', 'Bàn đã xóa', '<%= delTableMsg.replace("'","\\'") %>'));
-<% } %>
-<% if (checkoutSuccessMsg != null && !checkoutSuccessMsg.isEmpty()) { %>
-                                window.addEventListener('load', () => showToast('success', 'Thanh toán', '<%= checkoutSuccessMsg.replace("'","\\'") %>'));
-<% } %>
-<% if (moveTableMsg != null && !moveTableMsg.isEmpty()) { %>
+                            <% } %>
+                            <% if (checkoutSuccessMsg != null && !checkoutSuccessMsg.isEmpty()) { %>
+                                window.addEventListener('load', () => showToast('success', 'Trả bàn', '<%= checkoutSuccessMsg.replace("'","\\'") %>'));
+                            <% } %>
+                            <% if (moveTableMsg != null && !moveTableMsg.isEmpty()) { %>
                                 window.addEventListener('load', () => showToast('success', 'Đổi bàn thành công', '<%= moveTableMsg.replace("'","\\'") %>'));
-<% } %>
+                            <% } %>
                         </script>
                     </body>
 

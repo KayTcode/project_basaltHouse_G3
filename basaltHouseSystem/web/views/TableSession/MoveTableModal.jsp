@@ -14,9 +14,8 @@
             <div class="move-table-modal-header">
                 <div>
                     <div class="move-modal-subtitle">Quản lý Session</div>
-                    <h5 id="moveTableModalLabel" style="margin:0;font-size:18px;font-weight:700;color:#fff">
-                        <span class="material-symbols-outlined"
-                              style="font-size:20px;vertical-align:middle;margin-right:6px">swap_horiz</span>
+                    <h5 id="moveTableModalLabel" class="modal-header-title">
+                        <span class="material-symbols-outlined modal-header-title-icon">swap_horiz</span>
                         Đổi Bàn
                     </h5>
                 </div>
@@ -31,9 +30,9 @@
                     <span class="material-symbols-outlined">table_restaurant</span>
                 </div>
 
-                <p class="text-center fw-bold" style="font-size:15px;color:var(--text-dark);margin-bottom:4px">
+                <p class="text-center modal-confirm-title">
                     Chuyển session sang bàn khác</p>
-                <p class="text-center" style="font-size:13px;color:var(--text-muted);margin-bottom:18px">
+                <p class="text-center modal-confirm-text">
                     Session: <strong id="moveSessionCodeDisplay"></strong>
                 </p>
 
@@ -52,17 +51,27 @@
                                 class="move-table-select"
                                 onchange="validateMoveSelect()">
                             <option value=""> Chọn bàn muốn đổi </option>
+                            <!-- Dropdown: tất cả bàn còn chỗ trống (kể cả bàn đang có khách) -->
                             <%
                                 if (tablesMap2 != null) {
                                     for (Table tb : tablesMap2.values()) {
-                                        boolean hasActiveSession = sessionsMap2 != null &&
-                                            sessionsMap2.values().stream()
-                                                .anyMatch(s -> s.getTableId() == tb.getTableId());
-                                        if (!hasActiveSession) {
+                                        // Tính tổng khách đang ngồi tại bàn này
+                                        int currentGuests2 = 0;
+                                        if (sessionsMap2 != null) {
+                                            for (TableSession s2 : sessionsMap2.values()) {
+                                                if (s2.getTableId() == tb.getTableId()) {
+                                                    currentGuests2 += s2.getGuestCount();
+                                                }
+                                            }
+                                        }
+                                        int remaining2 = tb.getCapacity() - currentGuests2;
+                                        if (remaining2 > 0) { // chỉ hiện bàn còn chỗ
                             %>
                             <option value="<%= tb.getTableId() %>">
                                 <%= tb.getTableCode() %> — <%= tb.getArea() %>
-                                (sức chứa: <%= tb.getCapacity() %>)
+                                (<%= currentGuests2 > 0
+                                        ? currentGuests2 + "/" + tb.getCapacity() + " khách — còn " + remaining2 + " chỗ"
+                                        : "trống — " + tb.getCapacity() + " chỗ" %>)
                             </option>
                             <%      }
                                 }
@@ -70,14 +79,13 @@
                             %>
                         </select>
                         <div id="moveSelectError" class="move-select-error">
-                            <span class="material-symbols-outlined"
-                                  style="font-size:13px;vertical-align:middle">error</span>
+                            <span class="material-symbols-outlined vertical-middle-icon">error</span>
                             Vui lòng chọn bàn đích.
                         </div>
                     </div>
 
                     <button type="submit" class="btn-move-confirm" id="btnMoveConfirm" disabled>
-                        <span class="material-symbols-outlined" style="font-size:18px">swap_horiz</span>
+                        <span class="material-symbols-outlined modal-button-icon">swap_horiz</span>
                         Xác nhận đổi bàn
                     </button>
                 </form>
@@ -115,6 +123,6 @@
     document.getElementById('moveTableForm').addEventListener('submit', function () {
         const btn = document.getElementById('btnMoveConfirm');
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Đang xử lý...';
+        btn.innerHTML = '<span class="material-symbols-outlined btn-spin-icon">progress_activity</span> Đang xử lý...';
     });
 </script>

@@ -170,17 +170,32 @@ public class TableSessionDAO extends DBContext {
             return "ERR:Bàn mới phải khác bàn hiện tại.";
         }
 
-        String checkSql = "SELECT COUNT(*) FROM TableSessions WHERE TableId = ? AND Status IN ('ACTIVE','Open') AND IsDeleted = 0";
-        try (PreparedStatement ps = connection.prepareStatement(checkSql)) {
+        String capacitySql = """
+            SELECT t.Capacity, ISNULL(SUM(ts.GuestCount), 0) AS CurrentGuests
+            FROM Tables t
+            LEFT JOIN TableSessions ts
+                ON ts.TableId = t.TableId
+                AND ts.Status IN ('ACTIVE','Open')
+                AND ts.IsDeleted = 0
+            WHERE t.TableId = ?
+            GROUP BY t.Capacity
+            """;
+        try (PreparedStatement ps = connection.prepareStatement(capacitySql)) {
             ps.setInt(1, newTableId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next() && rs.getInt(1) > 0) {
-                    return "ERR:Bàn đích đang có khách, không thể chuyển.";
+                if (!rs.next()) {
+                    return "ERR:Bàn đích không tồn tại.";
+                }
+                int capacity      = rs.getInt("Capacity");
+                int currentGuests = rs.getInt("CurrentGuests");
+                int remaining     = capacity - currentGuests;
+                if (session.getGuestCount() > remaining) {
+                    return "ERR:Bàn đích chỉ còn " + remaining + " chỗ trống, không đủ cho " + session.getGuestCount() + " khách.";
                 }
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
-            return "ERR:Lỗi kiểm tra bàn đích.";
+            return "ERR:Lỗi kiểm tra sức chứa bàn đích.";
         }
 
         String updateSql = "UPDATE TableSessions SET TableId = ? WHERE SessionId = ? AND Status IN ('ACTIVE','Open') AND IsDeleted = 0";

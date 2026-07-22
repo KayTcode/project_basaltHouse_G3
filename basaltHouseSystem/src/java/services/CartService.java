@@ -124,11 +124,17 @@ public class CartService {
             total = total.add(new BigDecimal(item.getPrice()).multiply(new BigDecimal(item.getQuantity())));
         }
 
-        // Tính discountAmount từ voucher qua PromotionService
+        // Tính discountAmount từ voucher qua PromotionService 
         BigDecimal voucherDiscount = BigDecimal.ZERO;
+        Integer voucherDiscountId = null;
         if (discountCode != null && !discountCode.trim().isEmpty()) {
-            PromotionService promotionService = new PromotionService();
-            voucherDiscount = promotionService.calculateDiscount(discountCode.trim(), total);
+            DiscountCodeDAO dcDao = new DiscountCodeDAO();
+            model.DiscountCode dc = dcDao.checkDiscountCode(discountCode.trim());
+            if (dc != null) {
+                voucherDiscountId = dc.getDiscountId();
+                PromotionService promotionService = new PromotionService();
+                voucherDiscount = promotionService.calculateDiscount(discountCode.trim(), total);
+            }
         }
 
         // Tính giảm giá hội viên từ customerIdStr nếu có
@@ -193,6 +199,7 @@ public class CartService {
         order.setTotalAmount(total);
         order.setDiscountAmount(discountAmount);
         order.setFinalAmount(finalAmount);
+        order.setDiscountId(voucherDiscountId);
         if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
             try {
                 order.setCustomerId(Integer.parseInt(customerIdStr));
@@ -318,9 +325,6 @@ public class CartService {
         return result;
     }
 
-    /**
-     * Lấy customerId từ accountId. Trả về -1 nếu không tìm thấy.
-     */
     public int resolveCustomerId(int accountId) {
         try {
             return new OrderDAO().getCustomerIdByAccountId(accountId);

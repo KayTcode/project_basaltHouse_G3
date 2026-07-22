@@ -21,13 +21,13 @@
         <meta name="description" content="Màn hình Dashboard Thu Ngân - Basalt House POS">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-        <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=5" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=8" rel="stylesheet">
     </head>
     <body>
 
         <!-- ── SIDEBAR ── -->
         <aside class="sidebar">
-
+            <!-- [MODIFIED] - Wrap logo in anchor to link back to home -->
             <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
                 <div class="logo-icon">☕</div>
                 <div class="logo-text">
@@ -62,6 +62,7 @@
                         <span class="material-symbols-outlined" style="font-size:18px">person</span>
                     </div>
                     <div class="staff-info">
+                        <!-- [MODIFIED] - Replace hardcoded 'Cashier' with session fullName -->
                         <div class="staff-name">${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : 'Cashier'}</div>
                         <div class="staff-status">
                             <div class="status-dot"></div>
@@ -69,11 +70,16 @@
                         </div>
                     </div>
                 </div>
+                <a href="${pageContext.request.contextPath}/home" class="btn-logout">
+                    <span class="material-symbols-outlined" style="font-size:16px; margin-right:6px;">logout</span>Thoát
+                </a>
             </div>
         </aside>
 
+        <!-- ── CONTENT AREA ── -->
         <main class="content-area">
 
+            <!-- Page Header -->
             <div class="page-header">
                 <div class="page-title">
                     <h1>Dashboard</h1>
@@ -117,6 +123,7 @@
                 </div>
             </div>
 
+            <!-- Recent Orders Table -->
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Đơn hàng gần đây</span>
@@ -148,7 +155,11 @@
                                         }
                                     %>
                                     <tr>
-                                        <td><strong>ORD00${o.orderId}</strong></td>
+                                        <%
+                                            String dashType = currentO.getOrderType() != null ? currentO.getOrderType().toLowerCase() : "pos";
+                                            String dashCode = String.format("%s%03d", "pos".equals(dashType) ? "POS" : "ONL", currentO.getOrderId());
+                                        %>
+                                        <td><strong><%=dashCode%></strong></td>
                                         <td><span class="badge badge-${o.orderType != null ? o.orderType.toLowerCase() : 'offline'}">${o.orderType != null ? o.orderType : 'Offline'}</span></td>
                                         <td>${o.customerName != null ? o.customerName : 'Walk-in'}</td>
                                         <td>

@@ -16,14 +16,14 @@
         <title>Tao Don Hang | Coffee House</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-        <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=3" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=8" rel="stylesheet">
         <link href="${pageContext.request.contextPath}/css/CashierCss/POSOrders.css?v=8" rel="stylesheet">
     </head>
     <body>
 
-        <!-- SIDEBAR -->
+
         <aside class="sidebar">
-            <!-- [MODIFIED] - Wrap logo in anchor to link back to home -->
+
             <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
                 <div class="logo-icon">&#9749;</div>
                 <div class="logo-text">Basalt<span>House Coffee</span></div>
@@ -44,12 +44,17 @@
                 <div class="staff-card">
                     <div class="staff-avatar"><span class="material-symbols-outlined" style="font-size:18px">person</span></div>
                     <div class="staff-info">
+
                         <div class="staff-name">${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : 'Cashier'}</div>
                         <div class="staff-status"><div class="status-dot"></div>Online</div>
                     </div>
                 </div>
+                <a href="${pageContext.request.contextPath}/home" class="btn-logout">
+                    <span class="material-symbols-outlined" style="font-size:16px; margin-right:6px;">logout</span>Thoát
+                </a>
             </div>
         </aside>
+
 
         <main class="content-area">
             <div class="co-header" style="position: relative; display:flex;align-items:center;justify-content:space-between; padding-right: 140px; box-sizing: border-box;">
@@ -64,6 +69,7 @@
                 </button>
             </div>
 
+
             <div class="inv-warning-bar" id="invWarningBar" onclick="openInventoryModal()">
                 <span class="inv-warn-icon">&#9888;&#65039;</span>
                 <span class="inv-warn-text" id="invWarnText">Có nguyên liệu sắp hết!</span>
@@ -72,6 +78,7 @@
             </div>
 
             <div class="co-layout">
+
 
                 <div class="co-cats">
                     <div class="co-cats-title">Menu</div>
@@ -90,7 +97,7 @@
                 </div>
 
                 <div class="co-menu">
-                    <%-- Page info bar --%>
+
                     <c:if test="${totalProductPages > 1}">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:13px;color:#8a8a9a;font-weight:500;">
                             <span>Hiển thị trang <strong style="color:#1a1a2e">${productPage}</strong> / ${totalProductPages}</span>
@@ -141,10 +148,16 @@
                     </c:if>
                 </div>
 
+
                 <div class="co-order">
                     <div class="co-order-hd">
                         <span class="co-order-hd-title">Đơn hàng (<span id="itemCount">0</span>)</span>
-                        <button type="button" class="btn-choose-table" id="tableBtn" onclick="chooseTable()">Chọn bàn</button>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-choose-table" style="background:#f0fdf4; color:#16a34a; border-color:#bbf7d0;" onclick="openAddMemberModal()" title="Thêm Thành Viên Mới">
+                                <span class="material-symbols-outlined" style="font-size:16px;">person_add</span> Thêm TV
+                            </button>
+                            <button type="button" class="btn-choose-table" id="tableBtn" onclick="chooseTable()">Chọn bàn</button>
+                        </div>
                     </div>
 
                     <div class="co-items" id="orderPanel">
@@ -161,7 +174,7 @@
                         </div>
                         <div class="mem-lookup-row">
                             <input type="text" class="mem-phone-input" id="memberPhone"
-                                   placeholder="Nhập SDT thành viên..."
+                                   placeholder="Nhập tên thành viên..."
                                    onkeydown="if (event.key === 'Enter')
                                                lookupMember()">
                             <button type="button" class="btn-lookup" onclick="lookupMember()">
@@ -175,10 +188,18 @@
                     <div class="co-discount">
                         <div class="disc-label">Mã giảm giá</div>
                         <div class="disc-row">
-                            <input type="text" class="disc-input" id="discountCode" placeholder="Nhập mã giảm giá...">
+                            <select class="disc-input" id="discountCode" style="appearance:auto;">
+                                <option value="">-- Chọn mã giảm giá --</option>
+                            </select>
                             <button type="button" class="btn-apply-disc" onclick="applyDiscount()">Áp dụng</button>
                         </div>
                         <div class="disc-msg" id="discMsg"></div>
+
+                        <!-- Earn Points Checkbox -->
+                        <div class="earn-points-row" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="isEarnPoints" style="width: 16px; height: 16px; cursor: pointer;" checked>
+                            <label for="isEarnPoints" style="font-size: 13.5px; color: #4b5563; font-weight: 500; cursor: pointer;">Tích điểm cho hóa đơn này</label>
+                        </div>
                     </div>
 
 
@@ -208,8 +229,10 @@
                 <div class="modal-title">Chọn phương thức thanh toán</div>
                 <div class="modal-sub" id="payModalSub">Đơn hàng tại Basalt Coffee House</div>
 
+                <!-- Order summary -->
                 <div class="pay-summary" id="paySummary"></div>
 
+                <!-- Payment methods -->
                 <div class="pay-method-grid">
                     <div class="pay-method-card" id="pm-cash" onclick="selectPayMethod('cash')">
                         <span class="pay-method-icon">&#128181;</span>
@@ -221,16 +244,18 @@
                     </div>
                 </div>
 
+
                 <div class="cash-section" id="cashSection">
                     <div class="cash-due">Khách cần trả: <span id="cashDue"></span></div>
                     <div style="font-size:12px;font-weight:600;color:#8a8a9a;margin-bottom:6px;">Số tiền nhanh:</div>
                     <div class="cash-quick" id="cashQuick"></div>
                     <div class="cash-input-row">
                         <input type="number" class="cash-input" id="cashInput" placeholder="Nhập số tiền khách đưa..." oninput="calcChange()">
-                        <span class="cash-unit">d</span>
+                        <span class="cash-unit">đ</span>
                     </div>
                     <div class="cash-change" id="cashChange">Tiền thối: <strong id="changeAmt"></strong></div>
                 </div>
+
 
                 <div class="qr-section" id="qrSection">
                     <div class="qr-amount-label">Số tiền cần chuyển: <strong id="qrAmt"></strong></div>
@@ -259,6 +284,7 @@
                 </div>
             </div>
         </div>
+
 
         <div class="size-modal-overlay" id="sizeModal" onclick="closeSizeIfOverlay(event)">
             <div class="size-modal-box">
@@ -296,6 +322,39 @@
                     <button type="button" class="table-modal-close" onclick="closeTableModal()">&#x2715;</button>
                 </div>
                 <iframe id="tableIframe" class="table-modal-iframe" src="" title="Chọn bàn"></iframe>
+            </div>
+        </div>
+
+
+        <div class="table-modal-overlay" id="addMemberModal" onclick="closeAddMemberIfOverlay(event)">
+            <div class="table-modal-box" style="max-width:400px; height:auto; padding:0;">
+                <div class="table-modal-hd" style="border-bottom: 1px solid #eee; padding: 16px;">
+                    <div class="table-modal-title" style="display:flex; align-items:center; gap:8px;"><span class="material-symbols-outlined">person_add</span> Thêm Thành Viên Mới</div>
+                    <button type="button" class="table-modal-close" onclick="closeAddMemberModal()">&#x2715;</button>
+                </div>
+                <div style="padding: 16px; display:flex; flex-direction:column; gap:12px;">
+                    <div>
+                        <label style="font-size:13px; font-weight:600; color:#4b5563; margin-bottom:4px; display:block;">Họ & Tên *</label>
+                        <input type="text" id="addMemName" placeholder="Nhập tên đầy đủ" autocomplete="off" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-family:inherit; font-size:14px; outline:none;">
+                    </div>
+                    <div>
+                        <label style="font-size:13px; font-weight:600; color:#4b5563; margin-bottom:4px; display:block;">Tên Đăng Nhập / Email *</label>
+                        <input type="email" id="addMemEmail" placeholder="Nhập email" autocomplete="new-password" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-family:inherit; font-size:14px; outline:none; background:#f3f4f6;">
+                    </div>
+                    <div>
+                        <label style="font-size:13px; font-weight:600; color:#4b5563; margin-bottom:4px; display:block;">Số Điện Thoại *</label>
+                        <input type="text" id="addMemPhone" placeholder="Nhập số điện thoại" autocomplete="off" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-family:inherit; font-size:14px; outline:none;">
+                    </div>
+                    <div>
+                        <label style="font-size:13px; font-weight:600; color:#4b5563; margin-bottom:4px; display:block;">Mật Khẩu *</label>
+                        <input type="password" id="addMemPassword" placeholder="Nhập mật khẩu" autocomplete="new-password" style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; font-family:inherit; font-size:14px; outline:none; background:#f3f4f6;">
+                    </div>
+                    <div id="addMemError" style="color:#ef4444; font-size:13px; display:none; margin-top:4px;"></div>
+                </div>
+                <div style="padding:16px; border-top: 1px solid #eee; display:flex; justify-content:flex-end; gap:12px; background:#f9fafb; border-bottom-left-radius:8px; border-bottom-right-radius:8px;">
+                    <button type="button" onclick="closeAddMemberModal()" style="padding:8px 16px; border:1px solid #d1d5db; background:#fff; border-radius:6px; font-weight:600; color:#4b5563; cursor:pointer;">Hủy Bỏ</button>
+                    <button type="button" id="addMemSubmitBtn" onclick="submitAddMember()" style="padding:8px 16px; border:none; background:#006e2f; color:#fff; border-radius:6px; font-weight:600; cursor:pointer;">Lưu Tài Khoản</button>
+                </div>
             </div>
         </div>
 
@@ -363,12 +422,14 @@
             %>
             console.log("DB Loaded Stock:", PRODUCT_STOCK);
 
+
             var cart = [];
             var selectedTable = null;
             var selectedTableId = null;
             var selectedTableSessionId = null;
             var subtotalVal = 0;
             var couponDiscount = 0;
+            var couponDiscountFixed = 0;
             var activeCouponCode = '';
             var memberDiscount = 0;
             var discountVal = 0;
@@ -426,7 +487,7 @@
                     return '<span class="inv-status danger">&#10060; Hết hàng</span>';
                 if (s === 'warning')
                     return '<span class="inv-status warning">&#9888; Sắp hết</span>';
-                return '<span class="inv-status ok">&#9989; Du hang</span>';
+                return '<span class="inv-status ok">&#9989; Dư hàng</span>';
             }
 
             function renderInventoryWarning() {
@@ -455,7 +516,7 @@
                     if (warnings.length > 0)
                         parts.push(warnings.length + ' sắp hết');
                     document.getElementById('invWarnText').textContent =
-                            'Canh bao kho: ' + parts.join(', ') + ' — cần nhập thêm!';
+                            'Cảnh báo kho: ' + parts.join(', ') + ' — cần nhập thêm!';
                 } else {
                     bar.classList.remove('show');
                     badge.style.display = 'none';
@@ -567,7 +628,7 @@
             var SIZE_LABELS = {S: 'Nhỏ', M: 'Vừa', L: 'Lớn'};
 
             function addItem(name, price) {
-                /* Mo modal chon size */
+
                 pendingItem = {name: name, basePrice: price};
                 document.getElementById('sizeModalTitle').textContent = name + ' — Chọn size';
 
@@ -716,7 +777,7 @@
                 memberDiscount = activeMember ? Math.round(subtotalVal * activeMember.pct / 100) : 0;
 
 
-                var couponDiscountAmt = Math.round(subtotalVal * couponDiscount);
+                var couponDiscountAmt = Math.round(subtotalVal * couponDiscount) + couponDiscountFixed;
 
 
                 discountVal = couponDiscountAmt + memberDiscount;
@@ -804,56 +865,52 @@
 
 
             function lookupMember() {
-                var phone = document.getElementById('memberPhone').value.trim().replace(/\s/g, '');
+                var name = document.getElementById('memberPhone').value.trim();
                 var resDiv = document.getElementById('memResult');
 
-                if (!phone) {
+                if (!name) {
                     resDiv.className = 'mem-result show';
-                    resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">Vui lòng nhập số điện thoại.</div>';
+                    resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">Vui lòng nhập tên thành viên.</div>';
                     return;
                 }
 
-                fetch('${pageContext.request.contextPath}/CheckPromotion?action=member&phone=' + encodeURIComponent(phone))
+                fetch('${pageContext.request.contextPath}/CheckPromotion?action=member_name&name=' + encodeURIComponent(name))
                         .then(response => response.json())
                         .then(data => {
-                            if (!data.found) {
+                            if (!data || data.length === 0) {
                                 activeMember = null;
                                 memberDiscount = 0;
                                 resDiv.className = 'mem-result show';
-                                resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">&#10007; Không tìm thấy thành viên với SDT: <strong>' + phone + '</strong></div>';
+                                resDiv.innerHTML = '<div style="font-size:12px;color:#ef4444;">&#10007; Không tìm thấy thành viên với tên: <strong>' + name + '</strong></div>';
                                 renderCart();
                                 return;
                             }
 
-                            var icon = '&#11088;';
-                            var tierClass = 'gold';
-                            if (data.tier && data.tier.toLowerCase().includes('bạc')) {
-                                icon = '&#129320;';
-                                tierClass = 'silver';
-                            } else if (data.tier && data.tier.toLowerCase().includes('đồng')) {
-                                icon = '&#129353;';
-                                tierClass = 'bronze';
+                            var html = '<div style="font-size:12px;font-weight:600;margin-bottom:8px;">Chọn thành viên:</div>';
+                            for (var i = 0; i < data.length; i++) {
+                                var mem = data[i];
+                                var icon = '&#11088;';
+                                var tierClass = 'gold';
+                                if (mem.tier && mem.tier.toLowerCase().includes('bạc')) {
+                                    icon = '&#129320;';
+                                    tierClass = 'silver';
+                                } else if (mem.tier && mem.tier.toLowerCase().includes('đồng')) {
+                                    icon = '&#129353;';
+                                    tierClass = 'bronze';
+                                }
+
+                                var encodedMem = encodeURIComponent(JSON.stringify(mem));
+                                html += '<div class="mem-card ' + tierClass + '" style="cursor:pointer;margin-bottom:8px;" onclick="selectMember(\'' + encodedMem + '\')">' +
+                                        '<div class="mem-badge ' + tierClass + '">' + icon + '</div>' +
+                                        '<div class="mem-info">' +
+                                        '<div class="mem-name">' + mem.name + ' (' + mem.phone + ')</div>' +
+                                        '<div class="mem-tier ' + tierClass + '">' + mem.tier + '</div>' +
+                                        '</div>' +
+                                        '<div class="mem-disc-tag ' + tierClass + '">' + (mem.pct > 0 ? '-' + mem.pct + '%' : '0%') + '</div>' +
+                                        '</div>';
                             }
-
-                            activeMember = {id: data.id, name: data.name, tier: tierClass, points: 0, pct: data.pct};
-                            memberDiscount = data.pct;
-
-                            var discInfo = data.pct > 0 ? ('Giam ' + data.pct + '%') : 'Khong co giam gia';
-
                             resDiv.className = 'mem-result show';
-                            resDiv.innerHTML =
-                                    '<div class="mem-card ' + tierClass + '">' +
-                                    '<div class="mem-badge ' + tierClass + '">' + icon + '</div>' +
-                                    '<div class="mem-info">' +
-                                    '<div class="mem-name">' + data.name + '</div>' +
-                                    '<div class="mem-tier ' + tierClass + '">' + data.tier + '</div>' +
-                                    '</div>' +
-                                    '<div class="mem-disc-tag ' + tierClass + '">' + (data.pct > 0 ? '-' + data.pct + '%' : '0%') + '</div>' +
-                                    '</div>' +
-                                    '<div style="font-size:11.5px;color:#16a34a;font-weight:600;">' +
-                                    (data.pct > 0 ? '&#10003; ' + discInfo + ' áp dụng trên tổng đơn' : 'Thành viên có bàn') +
-                                    '</div>';
-
+                            resDiv.innerHTML = html;
                             renderCart();
                         })
                         .catch(err => {
@@ -863,13 +920,87 @@
                         });
             }
 
+            function selectMember(encodedMem) {
+                var mem = JSON.parse(decodeURIComponent(encodedMem));
+                var resDiv = document.getElementById('memResult');
+
+                var icon = '&#11088;';
+                var tierClass = 'gold';
+                if (mem.tier && mem.tier.toLowerCase().includes('bạc')) {
+                    icon = '&#129320;';
+                    tierClass = 'silver';
+                } else if (mem.tier && mem.tier.toLowerCase().includes('đồng')) {
+                    icon = '&#129353;';
+                    tierClass = 'bronze';
+                }
+
+                activeMember = {id: mem.id, name: mem.name, tier: tierClass, points: 0, pct: mem.pct};
+                memberDiscount = mem.pct;
+
+                var discInfo = mem.pct > 0 ? ('Giảm ' + mem.pct + '%') : 'Không có giảm giá';
+
+                var html = '<div class="mem-card ' + tierClass + '">' +
+                        '<div class="mem-badge ' + tierClass + '">' + icon + '</div>' +
+                        '<div class="mem-info">' +
+                        '<div class="mem-name">' + mem.name + ' (' + mem.phone + ')</div>' +
+                        '<div class="mem-tier ' + tierClass + '">' + mem.tier + '</div>' +
+                        '</div>' +
+                        '<div class="mem-disc-tag ' + tierClass + '">' + (mem.pct > 0 ? '-' + mem.pct + '%' : '0%') + '</div>' +
+                        '</div>' +
+                        '<div style="font-size:11.5px;color:#16a34a;font-weight:600;margin-bottom:8px;">' +
+                        (mem.pct > 0 ? '&#10003; ' + discInfo + ' áp dụng trên tổng đơn' : 'Thành viên cơ bản') +
+                        '</div>';
+
+                if (mem.vouchers && mem.vouchers.length > 0) {
+                    html += '<div style="font-size:12px;font-weight:600;margin-bottom:8px;">Mã giảm giá cá nhân:</div>';
+                    for (var i = 0; i < mem.vouchers.length; i++) {
+                        var v = mem.vouchers[i];
+                        var vText = v.code + ' - ' + (v.pct > 0 ? 'Giảm ' + v.pct + '%' : 'Giảm ' + v.amount + 'đ');
+                        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;padding:6px 10px;border-radius:6px;margin-bottom:6px;border:1px solid #e2e8f0;font-size:12.5px;">' +
+                                '<div>' +
+                                '<strong style="color:#1a1a2e;">' + v.code + '</strong>' +
+                                '<div style="font-size:11px;color:#64748b;">' + (v.pct > 0 ? 'Giảm ' + v.pct + '%' : 'Giảm ' + v.amount.toLocaleString('vi-VN') + 'đ') + '</div>' +
+                                '</div>' +
+                                '<button type="button" onclick="applyPersonalDiscount(\'' + v.code + '\', ' + v.pct + ', ' + v.amount + ')" style="background:#2563eb;color:#fff;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:600;font-size:11.5px;">Dùng</button>' +
+                                '</div>';
+                    }
+                }
+
+                resDiv.innerHTML = html;
+                renderCart();
+            }
+
+            function applyPersonalDiscount(code, pct, amount) {
+                var sel = document.getElementById('discountCode');
+                var exists = false;
+                for (var i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].value === code) {
+                        exists = true;
+                        sel.selectedIndex = i;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    var opt = document.createElement('option');
+                    opt.value = code;
+                    opt.text = code + ' (Mã cá nhân)';
+                    sel.appendChild(opt);
+                    sel.value = code;
+                }
+                applyDiscount();
+            }
+
 
             function applyDiscount() {
-                var code = document.getElementById('discountCode').value.trim().toUpperCase();
+                var code = document.getElementById('discountCode').value.trim();
                 var msg = document.getElementById('discMsg');
                 if (!code) {
-                    msg.className = 'disc-msg err';
-                    msg.textContent = 'Vui lòng nhập mã giảm giá.';
+                    couponDiscount = 0;
+                    couponDiscountFixed = 0;
+                    activeCouponCode = '';
+                    msg.className = 'disc-msg';
+                    msg.textContent = '';
+                    renderCart();
                     return;
                 }
 
@@ -878,11 +1009,13 @@
                         .then(data => {
                             if (data.valid) {
                                 couponDiscount = data.pct / 100.0;
+                                couponDiscountFixed = data.amount || 0;
                                 activeCouponCode = code;
                                 msg.className = 'disc-msg ok';
-                                msg.textContent = '\u2713 Mã hợp lệ! Giảm ' + data.pct + '%';
+                                msg.textContent = '\u2713 Mã hợp lệ! Giảm ' + (data.pct > 0 ? data.pct + '%' : data.amount.toLocaleString('vi-VN') + 'đ');
                             } else {
                                 couponDiscount = 0;
+                                couponDiscountFixed = 0;
                                 activeCouponCode = '';
                                 msg.className = 'disc-msg err';
                                 msg.textContent = '\u2717 ' + data.msg;
@@ -895,6 +1028,20 @@
                             msg.textContent = '\u2717 Lỗi kết nối!';
                         });
             }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                fetch('${pageContext.request.contextPath}/CheckPromotion?action=public_discounts')
+                        .then(r => r.json())
+                        .then(data => {
+                            var sel = document.getElementById('discountCode');
+                            data.forEach(d => {
+                                var opt = document.createElement('option');
+                                opt.value = d.code;
+                                opt.text = d.code + ' - ' + (d.pct > 0 ? 'Giảm ' + d.pct + '%' : 'Giảm ' + d.amount.toLocaleString('vi-VN') + 'đ');
+                                sel.appendChild(opt);
+                            });
+                        });
+            });
 
 
             function chooseTable() {
@@ -911,6 +1058,79 @@
             function closeTableIfOverlay(e) {
                 if (e.target === document.getElementById('tableModal'))
                     closeTableModal();
+            }
+
+
+            function openAddMemberModal() {
+                document.getElementById('addMemName').value = '';
+                document.getElementById('addMemEmail').value = '';
+                document.getElementById('addMemPhone').value = '';
+                document.getElementById('addMemPassword').value = '';
+                document.getElementById('addMemError').style.display = 'none';
+                document.getElementById('addMemberModal').classList.add('open');
+            }
+
+            function closeAddMemberModal() {
+                document.getElementById('addMemberModal').classList.remove('open');
+            }
+
+            function closeAddMemberIfOverlay(e) {
+                if (e.target === document.getElementById('addMemberModal'))
+                    closeAddMemberModal();
+            }
+
+            function submitAddMember() {
+                var name = document.getElementById('addMemName').value.trim();
+                var email = document.getElementById('addMemEmail').value.trim();
+                var phone = document.getElementById('addMemPhone').value.trim();
+                var pass = document.getElementById('addMemPassword').value.trim();
+                var errEl = document.getElementById('addMemError');
+
+                if (!name || !email || !phone || !pass) {
+                    errEl.textContent = 'Vui lòng điền đủ tất cả các trường.';
+                    errEl.style.display = 'block';
+                    return;
+                }
+
+                var btn = document.getElementById('addMemSubmitBtn');
+                btn.textContent = 'Đang lưu...';
+                btn.disabled = true;
+
+                var formData = new URLSearchParams();
+                formData.append('action', 'addMember');
+                formData.append('fullName', name);
+                formData.append('email', email);
+                formData.append('phone', phone);
+                formData.append('password', pass);
+
+                fetch('${pageContext.request.contextPath}/cashier/pos', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: formData.toString()
+                })
+                        .then(r => r.json())
+                        .then(data => {
+                            btn.textContent = 'Lưu Tài Khoản';
+                            btn.disabled = false;
+                            if (data.success) {
+                                closeAddMemberModal();
+                                showToast('\u2713 Đã thêm thành viên ' + name);
+                                var phoneInp = document.getElementById('memberPhone');
+                                if (phoneInp) {
+                                    phoneInp.value = name;
+                                    lookupMember();
+                                }
+                            } else {
+                                errEl.textContent = data.message || 'Có lỗi xảy ra.';
+                                errEl.style.display = 'block';
+                            }
+                        })
+                        .catch(err => {
+                            btn.textContent = 'Lưu Tài Khoản';
+                            btn.disabled = false;
+                            errEl.textContent = 'Lỗi kết nối.';
+                            errEl.style.display = 'block';
+                        });
             }
 
 
@@ -1002,7 +1222,7 @@
                 if (method === 'cash') {
                     document.getElementById('cashSection').classList.add('show');
                     document.getElementById('cashDue').textContent = fmt(grandTotalVal);
-                    // Quick amount buttons
+
                     var amounts = [grandTotalVal, roundUp(grandTotalVal, 10000), roundUp(grandTotalVal, 50000), roundUp(grandTotalVal, 100000), 500000, 1000000];
                     var unique = [];
                     var seen = {};
@@ -1103,7 +1323,7 @@
 
                 var html =
                         '<div class="receipt-logo">&#9749; Basalt House Coffee</div>' +
-                        '<div class="receipt-store">123 Nguyen Hue, Q.1, TP.HCM</div>' +
+                        '<div class="receipt-store">123 Thạch Thất,TP.HN</div>' +
                         '<div class="receipt-store">SĐT: 028 1234 5678</div>' +
                         '<hr class="receipt-divider">' +
                         '<div class="receipt-info"><strong>Mã đơn:</strong> ' + orderId + '</div>' +
@@ -1158,8 +1378,12 @@
 
                     if (activeMember && activeMember.id) {
                         formData.append("customerId", activeMember.id);
+                        var isEarn = document.getElementById("isEarnPoints").checked;
+                        if (isEarn) {
+                            formData.append("isEarnPoints", "true");
+                        }
                     }
-                    if (couponDiscount > 0 && activeCouponCode) {
+                    if (activeCouponCode) {
                         formData.append("discountCode", activeCouponCode);
                     }
 

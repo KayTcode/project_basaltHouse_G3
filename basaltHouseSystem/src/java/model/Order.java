@@ -33,7 +33,7 @@ public class Order {
     private String cashierName;
     private String shipperName;
     private String note;
-
+     private String discountCode;
     public Order() {
     }
 
@@ -234,7 +234,13 @@ public class Order {
     public void setNote(String note) {
         this.note = note;
     }
-    
+    public String getDiscountCode() {
+        return discountCode;
+    }
+
+    public void setDiscountCode(String discountCode) {
+        this.discountCode = discountCode;
+    }
     public java.util.Date getCreatedAtDate() {
         if (createdAt == null) {
             return null;

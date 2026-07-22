@@ -22,7 +22,7 @@ public class PromotionService {
             String tier = member.getRankName() != null ? member.getRankName() : "Đồng";
             double pct = member.getDiscountValue() != null ? member.getDiscountValue().doubleValue() : 0.0;
 
-            return String.format("{\"found\": true, \"id\": %d, \"name\": \"%s\", \"tier\": \"%s\", \"pct\": %.2f}",
+            return String.format(java.util.Locale.US, "{\"found\": true, \"id\": %d, \"name\": \"%s\", \"tier\": \"%s\", \"pct\": %.2f}",
                     member.getCustomerId(),
                     name.replace("\"", "\\\""),
                     tier.replace("\"", "\\\""),
@@ -49,7 +49,7 @@ public class PromotionService {
             double pct = c.getDiscountValue() != null ? c.getDiscountValue().doubleValue() : 0.0;
             String phone = c.getPhone() != null ? c.getPhone() : "";
             
-            sb.append(String.format("{\"id\": %d, \"name\": \"%s\", \"phone\": \"%s\", \"tier\": \"%s\", \"pct\": %.2f, \"vouchers\": [",
+            sb.append(String.format(java.util.Locale.US, "{\"id\": %d, \"name\": \"%s\", \"phone\": \"%s\", \"tier\": \"%s\", \"pct\": %.2f, \"vouchers\": [",
                     c.getCustomerId(), fullName, phone, tier, pct));
             
             if (c.getAccountId() > 0) {
@@ -58,7 +58,7 @@ public class PromotionService {
                     CustomerDiscountCode v = vouchers.get(j);
                     double vPct = v.getDiscountPercent() != null ? v.getDiscountPercent().doubleValue() : 0.0;
                     double vAmount = v.getDiscountAmount() != null ? v.getDiscountAmount().doubleValue() : 0.0;
-                    sb.append(String.format("{\"id\": %d, \"code\": \"%s\", \"pct\": %.2f, \"amount\": %.2f, \"desc\": \"%s\"}",
+                    sb.append(String.format(java.util.Locale.US, "{\"id\": %d, \"code\": \"%s\", \"pct\": %.2f, \"amount\": %.2f, \"desc\": \"%s\"}",
                             v.getCustomerDiscountId(), v.getCode(), vPct, vAmount, v.getDescription() != null ? v.getDescription().replace("\"", "\\\"") : ""));
                     if (j < vouchers.size() - 1) sb.append(",");
                 }
@@ -81,7 +81,7 @@ public class PromotionService {
             DiscountCode d = list.get(i);
             double pct = d.getDiscountPercent() != null ? d.getDiscountPercent().doubleValue() : 0.0;
             double amount = d.getDiscountAmount() != null ? d.getDiscountAmount().doubleValue() : 0.0;
-            sb.append(String.format("{\"id\": %d, \"code\": \"%s\", \"pct\": %.2f, \"amount\": %.2f, \"desc\": \"%s\"}",
+            sb.append(String.format(java.util.Locale.US, "{\"id\": %d, \"code\": \"%s\", \"pct\": %.2f, \"amount\": %.2f, \"desc\": \"%s\"}",
                     d.getDiscountId(), d.getCode(), pct, amount, d.getDescription() != null ? d.getDescription().replace("\"", "\\\"") : ""));
             if (i < list.size() - 1) sb.append(",");
         }
@@ -101,7 +101,7 @@ public class PromotionService {
             double pct    = discount.getDiscountPercent() != null ? discount.getDiscountPercent().doubleValue() : 0.0;
             double amount = discount.getDiscountAmount()  != null ? discount.getDiscountAmount().doubleValue()  : 0.0;
             int    id     = discount.getDiscountId();
-            return String.format("{\"valid\": true, \"id\": %d, \"pct\": %.2f, \"amount\": %.2f}",
+            return String.format(java.util.Locale.US, "{\"valid\": true, \"id\": %d, \"pct\": %.2f, \"amount\": %.2f}",
                     id, pct, amount);
         } else {
             return "{\"valid\": false, \"msg\": \"Mã giảm giá không tồn tại hoặc đã hết hạn.\"}";

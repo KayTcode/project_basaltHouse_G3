@@ -424,7 +424,6 @@
             if (res.ok) {
             var card = document.getElementById('card-' + id);
             animateOut(card, function() {
-            showToast('&#9749; Xác nhận đơn ' + id);
             setTimeout(function() { window.location.reload(); }, 500);
             });
             }
@@ -445,7 +444,6 @@
             if (res.ok) {
             var card = document.getElementById('card-' + id);
             animateOut(card, function() {
-            showToast('&#9989; ' + id + ' đã xong!');
             setTimeout(function() { window.location.reload(); }, 500);
             });
             }
@@ -466,7 +464,6 @@
             if (res.ok) {
             var card = document.getElementById('card-' + id);
             animateOut(card, function() {
-            showToast('&#127881; ' + id + ' hoàn thành!');
             setTimeout(function() { window.location.reload(); }, 500);
             });
             }

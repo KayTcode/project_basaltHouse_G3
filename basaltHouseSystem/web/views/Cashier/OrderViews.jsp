@@ -1,6 +1,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
+<%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
 <%@page import="java.util.List"%>
 <%@page import="model.Order"%>
 <%@page import="model.OrderDetail"%>
@@ -112,7 +113,7 @@
                                 <td><span class="badge badge-<%=oType%>">${o.orderType}</span></td>
                                 <td>${o.customerName}</td>
                                 <td id="status-<%=orderCode%>"><span class="badge badge-<%=statusClass%>">${o.orderStatus}</span></td>
-                                <td><%=formatTime%></td><td><strong>${o.finalAmount} đ</strong></td>
+                                <td><%=formatTime%></td><td><strong><fmt:formatNumber value="${o.finalAmount}" type="number" maxFractionDigits="0"/> đ</strong></td>
                                 <td><button type="button" class="view-btn" onclick="openModal('<%=orderCode%>')"><span class="material-symbols-outlined" style="font-size:15px">visibility</span></button></td>
                             </tr>
                         </c:forEach>
@@ -572,7 +573,6 @@
             o.sentToBartender = true;
             o.status = 'preparing';
             document.getElementById('status-' + currentId).innerHTML = badgeHtml('preparing');
-            showToast('&#127861; Đơn ' + currentId + ' đã gửi Bartender!');
             buildOnlineModal(o);
             } else {
             alert('Lỗi khi xác nhận đơn trên server!');

@@ -1330,7 +1330,7 @@
                         '<div class="receipt-info"><strong>Bàn:</strong> ' + (selectedTable || 'Walk-in') + '</div>' +
                         '<div class="receipt-info"><strong>Thời gian:</strong> ' + dateStr + '</div>' +
                         '<hr class="receipt-divider">' +
-                        '<div class="receipt-items-hd"><span>Món</span><span style="width:28px;text-align:center">SL</span><span style="min-width:72px;text-align:right">Gia</span></div>' +
+                        '<div class="receipt-items-hd"><span>Món</span><span style="width:28px;text-align:center">SL</span><span style="min-width:72px;text-align:right">Giá</span></div>' +
                         itemRows +
                         '<hr class="receipt-divider">' +
                         '<div class="receipt-total-row"><span>Tạm tính</span><span>' + fmt(subtotalVal) + '</span></div>' +

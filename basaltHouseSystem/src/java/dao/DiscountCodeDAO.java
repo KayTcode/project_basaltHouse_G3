@@ -90,10 +90,11 @@ public List<Customer> searchCustomerMembershipByName(String name) {
                       FROM Customers c 
                       LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
                       LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
-                      WHERE c.FullName LIKE ? AND c.IsDeleted = 0
+                      WHERE (c.FullName LIKE ? OR c.Phone LIKE ?) AND c.IsDeleted = 0
                          """;
             PreparedStatement st = connection.prepareStatement(sql);
             st.setString(1, "%" + name + "%");
+            st.setString(2, "%" + name + "%");
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 Customer dto = new Customer();
@@ -162,13 +163,13 @@ public List<Customer> searchCustomerMembershipByName(String name) {
                                 d.EndDate,
                                 cd.IsUsed,
                                 cd.UsedDate,
-                                cd.[Status],
                                 d.Description,
                                 DATEDIFF(DAY, GETDATE(), d.EndDate) AS DayTime
                          FROM CustomerDiscountCodes cd
                          JOIN DiscountCodes d ON cd.DiscountId = d.DiscountId
                          WHERE d.IsActive = 1
                            AND d.IsDeleted = 0
+                           AND d.IsPublic = 0
                            AND cd.AccountId = ?
                            AND ISNULL(cd.IsUsed, 0) = 0
                          ORDER BY d.EndDate ASC
@@ -190,7 +191,7 @@ public List<Customer> searchCustomerMembershipByName(String name) {
                         rs.getString("Description"),
                         rs.getInt("DayTime"),
                         rs.getString("Code"),
-                        rs.getInt("Status"));
+                        rs.getBoolean("IsUsed") ? 0 : 1);
                 list.add(c);
             }
         } catch (Exception e) {

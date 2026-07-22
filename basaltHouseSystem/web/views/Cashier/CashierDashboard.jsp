@@ -1,4 +1,3 @@
-<%-- CashierDashboard_New.jsp - Màn hình Dashboard Thu Ngân --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
 <%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
@@ -25,9 +24,9 @@
     </head>
     <body>
 
-        <!-- ── SIDEBAR ── -->
+
         <aside class="sidebar">
-            <!-- [MODIFIED] - Wrap logo in anchor to link back to home -->
+
             <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
                 <div class="logo-icon">☕</div>
                 <div class="logo-text">
@@ -62,7 +61,7 @@
                         <span class="material-symbols-outlined" style="font-size:18px">person</span>
                     </div>
                     <div class="staff-info">
-                        <!-- [MODIFIED] - Replace hardcoded 'Cashier' with session fullName -->
+
                         <div class="staff-name">${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : 'Cashier'}</div>
                         <div class="staff-status">
                             <div class="status-dot"></div>
@@ -123,7 +122,7 @@
                 </div>
             </div>
 
-            <!-- Recent Orders Table -->
+
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Đơn hàng gần đây</span>

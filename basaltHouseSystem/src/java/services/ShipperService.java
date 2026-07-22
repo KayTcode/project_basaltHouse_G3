@@ -28,9 +28,9 @@ public class ShipperService {
         }
     }
 
-    public List<Order> getPendingShipperOrders() {
+    public List<Order> getPendingShipperOrders(int shipperId) {
         try {
-            return shipperDAO.getPendingShipperOrders();
+            return shipperDAO.getPendingShipperOrders(shipperId);
         } catch (Exception e) {
             e.printStackTrace();
             return List.of();

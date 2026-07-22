@@ -76,7 +76,7 @@ public class ShipperDAO extends DBContext {
                                      o.[OrderType], o.[OrderStatus], o.[PaymentMethod], o.[PaymentStatus],
                                      o.[TotalAmount], o.[DiscountAmount], o.[FinalAmount],
                                      o.[CreatedAt], o.[IsDeleted],
-                                     ISNULL(c.fullName, 'Khách vãng lai') AS customerName
+                                     ISNULL(c.fullName, 'Khách tại quán') AS customerName
               FROM [Orders] o
               LEFT JOIN [Customers] c ON o.[CustomerId] = c.[CustomerId]
               WHERE o.orderStatus = 'Preparing'
@@ -116,55 +116,6 @@ public class ShipperDAO extends DBContext {
         }
         return list;
     }
-    public List<Order> getPendingShipperOrders(int shipperId) {
-        sql = """
-          SELECT o.[OrderId], o.[CustomerId], o.[CashierId], o.[ShipperId],
-                 o.[TableSessionId], o.[OrderAddressId], o.[DiscountId],
-                 o.[OrderType], o.[OrderStatus], o.[PaymentMethod], o.[PaymentStatus],
-                 o.[TotalAmount], o.[DiscountAmount], o.[FinalAmount],
-                 o.[CreatedAt], o.[IsDeleted],
-                 ISNULL(c.fullName, 'Khách tại quán') AS customerName
-          FROM [Orders] o
-          LEFT JOIN [Customers] c ON o.[CustomerId] = c.[CustomerId]
-          WHERE o.[OrderStatus] = 'Preparing' AND o.[ShipperId] = ?
-            AND o.[IsDeleted] = 0
-          ORDER BY o.[CreatedAt] ASC
-          """;
-        List<Order> list = new ArrayList<>();
-        try {
-            ps = connection.prepareStatement(sql);
-            ps.setInt(1, shipperId);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                Order o = new Order();
-                o.setOrderId(rs.getInt("OrderId"));
-                o.setCustomerId(rs.getInt("CustomerId"));
-                o.setCashierId(rs.getInt("CashierId"));
-                o.setShipperId(rs.getInt("ShipperId"));
-                o.setTableSessionId(rs.getInt("TableSessionId"));
-                o.setOrderAddressId(rs.getInt("OrderAddressId"));
-                o.setDiscountId(rs.getInt("DiscountId"));
-                o.setOrderType(rs.getString("OrderType"));
-                o.setOrderStatus(rs.getString("OrderStatus"));
-                o.setPaymentMethod(rs.getString("PaymentMethod"));
-                o.setPaymentStatus(rs.getString("PaymentStatus"));
-                o.setTotalAmount(rs.getBigDecimal("TotalAmount"));
-                o.setDiscountAmount(rs.getBigDecimal("DiscountAmount"));
-                o.setFinalAmount(rs.getBigDecimal("FinalAmount"));
-                Timestamp createAt = rs.getTimestamp("CreatedAt");
-                if (createAt != null) {
-                    o.setCreatedAt(createAt.toLocalDateTime());
-                }
-                o.setIsDeleted(rs.getBoolean("IsDeleted"));
-                o.setCustomerName(rs.getString("customerName"));
-                list.add(o);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        return list;
-    }
-
     public Order getCurrentShippingOrder(int shipperId) {
         sql = """
               SELECT o.orderId, o.CustomerId, o.CashierId, o.ShipperId,

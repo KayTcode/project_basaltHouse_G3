@@ -5,8 +5,6 @@
 package services;
 
 import dao.IngredientDAO;
-import dao.RecipeDAO;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +17,7 @@ import model.Ingredient;
 public class IngredientCheckService {
 
     private final IngredientDAO ingredientDAO = new IngredientDAO();
-    private static final RecipeDAO r = new RecipeDAO();
-    private static final IngredientDAO i = new IngredientDAO();
+
     public HashMap<String, Object> getStockSnapshotByDate(LocalDate auditDate) {
         HashMap<String, Object> result = new HashMap<>();
         try {

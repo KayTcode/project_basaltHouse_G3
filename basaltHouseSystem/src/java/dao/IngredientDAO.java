@@ -112,31 +112,6 @@ public class IngredientDAO extends DBContext {
         }
         return rows;
     }
-    public List<Ingredient> getIngredientsBelowWarning() {
-        List<Ingredient> list = new ArrayList<>();
-        try {
-            String sql = """
-                     SELECT IngredientId, IngredientName, 
-                            StockQuantity, MinStockQuantity
-                     FROM Ingredients
-                     WHERE StockQuantity <= MinStockQuantity * 1.2
-                     AND IsDeleted = 0 AND IsActive = 1
-                     """;
-            st = connection.prepareStatement(sql);
-            rs = st.executeQuery();
-            while (rs.next()) {
-                list.add(new Ingredient(
-                        rs.getInt("IngredientId"),
-                        rs.getString("IngredientName"),
-                        rs.getBigDecimal("StockQuantity"),
-                        rs.getBigDecimal("MinStockQuantity")
-                ));
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        return list;
-    }
     public List<Map<String, Object>> getTodayIngredientUsage() {
         List<Map<String, Object>> list = new ArrayList<>();
         try {

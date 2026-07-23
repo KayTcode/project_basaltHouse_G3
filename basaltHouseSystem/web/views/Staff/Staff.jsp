@@ -116,7 +116,7 @@
             <c:if test="${activeStaffPage eq 'ingredient' or activeStaffPage eq 'import'}">
             <section class="stats-grid" aria-label="Tổng quan kho">
                 <button class="stat-card stat-filter-card is-selected" type="button"
-                        data-stock-filter="all" onclick="applyStockFilter('all')" aria-pressed="true">
+                        data-stock-filter="all" onclick="setStockFilter('all')" aria-pressed="true">
                     <span class="material-symbols-outlined stat-icon">category</span>
                     <div>
                         <p>Tổng nguyên liệu</p>
@@ -125,7 +125,7 @@
                     </div>
                 </button>
                 <button class="stat-card stat-warning stat-filter-card" type="button"
-                        data-stock-filter="warning" onclick="applyStockFilter('warning')" aria-pressed="false">
+                        data-stock-filter="warning" onclick="setStockFilter('warning')" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">warning</span>
                     <div>
                         <p>Sắp hết</p>
@@ -134,7 +134,7 @@
                     </div>
                 </button>
                 <button class="stat-card stat-danger stat-filter-card" type="button"
-                        data-stock-filter="danger" onclick="applyStockFilter('danger')" aria-pressed="false">
+                        data-stock-filter="danger" onclick="setStockFilter('danger')" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">error</span>
                     <div>
                         <p>Hết hàng</p>
@@ -143,7 +143,7 @@
                     </div>
                 </button>
                 <button class="stat-card stat-ok stat-filter-card" type="button"
-                        data-stock-filter="ok" onclick="applyStockFilter('ok')" aria-pressed="false">
+                        data-stock-filter="ok" onclick="setStockFilter('ok')" aria-pressed="false">
                     <span class="material-symbols-outlined stat-icon">task_alt</span>
                     <div>
                         <p>Đủ hàng</p>
@@ -254,18 +254,11 @@
                 }
             });
 
-            function setFilter(button) {
-                if (!button) {
-                    return;
+            function setStockFilter(filter) {
+                if (!filter) {
+                    filter = 'all';
                 }
-                activeFilter = button.getAttribute('data-filter');
-                updateStockFilterControls(activeFilter);
-                inventoryPage = 1;
-                renderInventoryRows();
-            }
-
-            function applyStockFilter(filter) {
-                activeFilter = filter || 'all';
+                activeFilter = filter;
                 inventoryPage = 1;
                 updateStockFilterControls(activeFilter);
                 renderInventoryRows();

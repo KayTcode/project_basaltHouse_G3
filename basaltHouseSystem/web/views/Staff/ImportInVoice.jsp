@@ -56,11 +56,7 @@
 
                     <label>
                         <span>Trạng thái</span>
-                        <select name="status">
-                            <option value="Pending">
-                                Chờ nhận
-                            </option>
-                        </select>
+                        <input type="text" value="Chờ nhận" readonly>
                     </label>
                 </div>
 

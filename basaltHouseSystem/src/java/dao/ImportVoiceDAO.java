@@ -9,7 +9,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,123 +28,78 @@ public class ImportVoiceDAO extends DBContext {
     PreparedStatement st;
     ResultSet rs;
 
-    public List<HashMap<String, Object>> getIngredientStockRows() {
-        List<HashMap<String, Object>> list = new ArrayList<>();
-        try {
-            String sql = """
-                         SELECT i.IngredientId,
-                                i.IngredientName,
-                                i.Unit,
-                                i.StockQuantity,
-                                i.MinStockQuantity,
-                                i.SupplierId,
-                                COALESCE(s.SupplierName, N'Chưa có NCC') AS SupplierName
-                         FROM Ingredients i
-                         LEFT JOIN Suppliers s
-                                ON s.SupplierId = i.SupplierId
-                               AND s.IsDeleted = 0
-                         WHERE i.IsDeleted = 0
-                           AND i.IsActive = 1
-                         ORDER BY i.IngredientName ASC
-                         """;
-            st = connection.prepareStatement(sql);
-            rs = st.executeQuery();
-            while (rs.next()) {
-                HashMap<String, Object> row = new HashMap<>();
-                row.put("ingredientId", rs.getInt("IngredientId"));
-                row.put("ingredientName", rs.getString("IngredientName"));
-                row.put("unit", rs.getString("Unit"));
-                row.put("stockQuantity", rs.getBigDecimal("StockQuantity"));
-                row.put("minStockQuantity", rs.getBigDecimal("MinStockQuantity"));
-                Object supplierId = rs.getObject("SupplierId");
-                row.put("supplierId", supplierId == null ? "" : supplierId);
-                row.put("supplierName", rs.getString("SupplierName"));
-                list.add(row);
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        return list;
-    }
-
     public List<HashMap<String, Object>> getIngredientStockRowsBySupplier(int supplierId) {
-        List<HashMap<String, Object>> list = new ArrayList<>();
-        try {
-            String sql = """
-                         SELECT i.IngredientId,
-                                i.IngredientName,
-                                i.Unit,
-                                i.StockQuantity,
-                                i.MinStockQuantity,
-                                i.SupplierId,
-                                COALESCE(s.SupplierName, N'Chưa có NCC') AS SupplierName
-                         FROM Ingredients i
-                         INNER JOIN Suppliers s
-                                 ON s.SupplierId = i.SupplierId
-                                AND s.IsDeleted = 0
-                         WHERE i.IsDeleted = 0
-                           AND i.IsActive = 1
-                           AND i.SupplierId = ?
-                         ORDER BY i.IngredientName ASC
-                         """;
-            st = connection.prepareStatement(sql);
-            st.setInt(1, supplierId);
-            rs = st.executeQuery();
-            while (rs.next()) {
-                HashMap<String, Object> row = new HashMap<>();
-                row.put("ingredientId", rs.getInt("IngredientId"));
-                row.put("ingredientName", rs.getString("IngredientName"));
-                row.put("unit", rs.getString("Unit"));
-                row.put("stockQuantity", rs.getBigDecimal("StockQuantity"));
-                row.put("minStockQuantity", rs.getBigDecimal("MinStockQuantity"));
-                row.put("supplierId", rs.getInt("SupplierId"));
-                row.put("supplierName", rs.getString("SupplierName"));
-                list.add(row);
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        return list;
+        return queryIngredientStockRows(null, supplierId);
     }
 
-     public List<HashMap<String, Object>> getIngredientStockRows(String key) {
-        List<HashMap<String, Object>> list = new ArrayList<>();
-        try {
-            String sql = """
-                         SELECT i.IngredientId,
-                                                         i.IngredientName,
-                                                         i.Unit,
-                                                         i.StockQuantity,
-                                                         i.MinStockQuantity,
-                                                         i.SupplierId,
-                                                         COALESCE(s.SupplierName, N'Chưa có NCC') AS SupplierName
-                                                  FROM Ingredients i
-                                                  LEFT JOIN Suppliers s
-                                                         ON s.SupplierId = i.SupplierId
-                                                        AND s.IsDeleted = 0
-                                                  WHERE i.IsDeleted = 0
-                                                    AND i.IsActive = 1 and i.IngredientName like ?
-                                                  ORDER BY i.IngredientName ASC
-                         """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, "%"+key+"%");
-            rs = st.executeQuery();
-            while (rs.next()) {
-                HashMap<String, Object> row = new HashMap<>();
-                row.put("ingredientId", rs.getInt("IngredientId"));
-                row.put("ingredientName", rs.getString("IngredientName"));
-                row.put("unit", rs.getString("Unit"));
-                row.put("stockQuantity", rs.getBigDecimal("StockQuantity"));
-                row.put("minStockQuantity", rs.getBigDecimal("MinStockQuantity"));
-                Object supplierId = rs.getObject("SupplierId");
-                row.put("supplierId", supplierId == null ? "" : supplierId);
-                row.put("supplierName", rs.getString("SupplierName"));
-                list.add(row);
+    public List<HashMap<String, Object>> getIngredientStockRows(String key) {
+        return queryIngredientStockRows(key, null);
+    }
+
+    private List<HashMap<String, Object>> queryIngredientStockRows(
+            String key, Integer supplierId) {
+        List<HashMap<String, Object>> rows = new ArrayList<>();
+        String normalizedKey = normalizeSearchKey(key);
+        String searchPattern = "%";
+        if (normalizedKey != null) {
+            searchPattern = "%" + normalizedKey + "%";
+        }
+        int selectedSupplierId = 0;
+        if (supplierId != null) {
+            selectedSupplierId = supplierId;
+        }
+
+        String sql = """
+                     SELECT i.IngredientId,
+                            i.IngredientName,
+                            i.Unit,
+                            i.StockQuantity,
+                            i.MinStockQuantity,
+                            i.SupplierId,
+                            COALESCE(s.SupplierName, N'Chưa có NCC') AS SupplierName
+                     FROM Ingredients i
+                     LEFT JOIN Suppliers s
+                            ON s.SupplierId = i.SupplierId
+                           AND s.IsDeleted = 0
+                     WHERE i.IsDeleted = 0
+                       AND i.IsActive = 1
+                       AND i.IngredientName LIKE ?
+                       AND (? = 0 OR i.SupplierId = ?)
+                     ORDER BY i.IngredientName ASC
+                     """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, searchPattern);
+            statement.setInt(2, selectedSupplierId);
+            statement.setInt(3, selectedSupplierId);
+
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    rows.add(mapIngredientStockRow(result));
+                }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
-        return list;
+        return rows;
+    }
+
+    private HashMap<String, Object> mapIngredientStockRow(ResultSet result)
+            throws SQLException {
+        HashMap<String, Object> row = new HashMap<>();
+        row.put("ingredientId", result.getInt("IngredientId"));
+        row.put("ingredientName", result.getString("IngredientName"));
+        row.put("unit", result.getString("Unit"));
+        row.put("stockQuantity", result.getBigDecimal("StockQuantity"));
+        row.put("minStockQuantity", result.getBigDecimal("MinStockQuantity"));
+        Object supplierId = result.getObject("SupplierId");
+        if (supplierId == null) {
+            row.put("supplierId", "");
+        } else {
+            row.put("supplierId", supplierId);
+        }
+        row.put("supplierName", result.getString("SupplierName"));
+        return row;
     }
 
     public List<HashMap<String, Object>> getSupplierOptions() {
@@ -188,7 +145,7 @@ public class ImportVoiceDAO extends DBContext {
         return null;
     }
 
-    public boolean inseartImportInvoices(ImportInvoice v, List<ImportDetail> details) {
+    public boolean insertImportInvoice(ImportInvoice v, List<ImportDetail> details) {
         if (details == null || details.isEmpty()) {
             return false;
         }
@@ -269,11 +226,6 @@ public class ImportVoiceDAO extends DBContext {
                 st.setObject(8, detail.isIsDeleted());
                 st.executeUpdate();
 
-                if ("Confirmed".equalsIgnoreCase(v.getStatus())
-                        && detail.getReceivedQuantity() != null
-                        && detail.getReceivedQuantity().compareTo(BigDecimal.ZERO) > 0) {
-                    updateStockAfterImport(v, detail);
-                }
             }
 
             connection.commit();
@@ -313,56 +265,6 @@ public class ImportVoiceDAO extends DBContext {
         }
     }
 
-    private void updateStockAfterImport(ImportInvoice invoice, ImportDetail detail) throws SQLException {
-        BigDecimal quantityBefore;
-        BigDecimal quantityAfter;
-
-        String updateStockSql = """
-                                UPDATE Ingredients
-                                SET StockQuantity = StockQuantity + ?
-                                OUTPUT deleted.StockQuantity AS QuantityBefore,
-                                       inserted.StockQuantity AS QuantityAfter
-                                WHERE IngredientId = ?
-                                """;
-        st = connection.prepareStatement(updateStockSql);
-        st.setObject(1, detail.getReceivedQuantity());
-        st.setObject(2, detail.getIngredientId());
-        rs = st.executeQuery();
-        if (!rs.next()) {
-            throw new SQLException("Không cập nhật được tồn kho nguyên liệu.");
-        }
-
-        quantityBefore = rs.getBigDecimal("QuantityBefore");
-        quantityAfter = rs.getBigDecimal("QuantityAfter");
-
-        String logSql = """
-                        INSERT INTO [dbo].[IngredientStockLogs]
-                                    ([IngredientId]
-                                    ,[ChangeType]
-                                    ,[QuantityBefore]
-                                    ,[QuantityChanged]
-                                    ,[QuantityAfter]
-                                    ,[RefType]
-                                    ,[RefId]
-                                    ,[StaffId]
-                                    ,[IsDeleted])
-                              VALUES
-                                    (?,?,?,?,?,?,?,?,0)
-                        """;
-        st = connection.prepareStatement(logSql);
-        st.setObject(1, detail.getIngredientId());
-        st.setObject(2, "Import");
-        st.setObject(3, quantityBefore);
-        st.setObject(4, detail.getReceivedQuantity());
-        st.setObject(5, quantityAfter);
-        st.setObject(6, "ImportInvoice");
-        st.setObject(7, detail.getImportId());
-        st.setObject(8, invoice.getConfirmedByStaffId() != null
-                ? invoice.getConfirmedByStaffId()
-                : invoice.getCreatedByStaffId());
-        st.executeUpdate();
-    }
-
     public HashMap<Integer, BigDecimal> getReceivedQuantityByIngredient(LocalDate auditDate) {
         HashMap<Integer, BigDecimal> imported = new HashMap<>();
         if (auditDate == null) {
@@ -394,401 +296,318 @@ public class ImportVoiceDAO extends DBContext {
         return imported;
     }
 
-    public List<ImportInvoicesDetail> getImportInvoicesDetail() {
-        List<ImportInvoicesDetail> list = new ArrayList<>();
-        try {
-            String sql = """
-                         SELECT i.ImportId,
-                                id.ImportDetailId,
-                                i.OrderedDate,
-                                i.ExpectedDate,
-                                i.ReceivedDate,
-                                i.ImportCode,
-                                i.SupplierInvoiceCode,
-                                i.SupplierId,
-                                COALESCE(su.SupplierName, N'Chua co NCC') AS SupplierName,
-                                id.IngredientId,
-                                ingre.IngredientName,
-                                ingre.Unit,
-                                id.OrderedQuantity,
-                                id.ReceivedQuantity,
-                                ingre.StockQuantity,
-                                id.UnitPrice,
-                                i.TotalOrderedAmount,
-                                i.TotalReceivedAmount,
-                                i.Status,
-                                s.FullName,
-                                i.Note AS InvoiceNote,
-                                i.RejectReason,
-                                id.DiscrepancyNote,
-                                id.Note AS DetailNote
-                         FROM ImportInvoices i
-                         JOIN ImportDetails id ON i.ImportId = id.ImportId AND id.IsDeleted = 0
-                         JOIN Staffs s ON i.CreatedByStaffId = s.StaffId
-                         JOIN Ingredients ingre ON id.IngredientId = ingre.IngredientId
-                         LEFT JOIN Suppliers su ON i.SupplierId = su.SupplierId
-                         WHERE i.IsDeleted = 0
-                         ORDER BY i.OrderedDate DESC, i.ImportId DESC
-                         """;
-            st = connection.prepareStatement(sql);
-            rs = st.executeQuery();
-            while (rs.next()) {
-                 ImportInvoicesDetail detail = new ImportInvoicesDetail();
-                detail.setImportId(rs.getInt("ImportId"));
-                detail.setImportDetailId(rs.getInt("ImportDetailId"));
-                detail.setOrderedDate(rs.getTimestamp("OrderedDate") == null ? null : rs.getTimestamp("OrderedDate").toLocalDateTime());
-                detail.setExpectedDate(rs.getTimestamp("ExpectedDate") == null ? null : rs.getTimestamp("ExpectedDate").toLocalDateTime());
-                detail.setReceivedDate(rs.getTimestamp("ReceivedDate") == null ? null : rs.getTimestamp("ReceivedDate").toLocalDateTime());
-                detail.setImportCode(rs.getString("ImportCode"));
-                detail.setSupplierInvoiceCode(rs.getString("SupplierInvoiceCode"));
-                detail.setSupplierId(rs.getInt("SupplierId"));
-                detail.setSupplierName(rs.getString("SupplierName"));
-                detail.setIngredientId(rs.getInt("IngredientId"));
-                detail.setIngredientName(rs.getString("IngredientName"));
-                detail.setUnit(rs.getString("Unit"));
-                detail.setOrderedQuantity(rs.getBigDecimal("OrderedQuantity"));
-                detail.setReceivedQuantity(rs.getBigDecimal("ReceivedQuantity"));
-                detail.setStockQuantity(rs.getBigDecimal("StockQuantity"));
-                detail.setUnitPrice(rs.getBigDecimal("UnitPrice"));
-                detail.setTotalOrderedAmount(rs.getBigDecimal("TotalOrderedAmount"));
-                detail.setTotalReceivedAmount(rs.getBigDecimal("TotalReceivedAmount"));
-                detail.setStatus(rs.getString("Status"));
-                detail.setStaffName(rs.getString("FullName"));
-                detail.setInvoiceNote(rs.getString("InvoiceNote"));
-                detail.setRejectReason(rs.getString("RejectReason"));
-                detail.setDiscrepancyNote(rs.getString("DiscrepancyNote"));
-                detail.setDetailNote(rs.getString("DetailNote"));
-                
-                list.add(detail);
-
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        return list;
-
+    public List<ImportInvoicesDetail> getImportInvoicesDetail(String key) {
+        return queryImportInvoiceDetails(key, null);
     }
-  public List<ImportInvoicesDetail> getImportInvoicesDetail(String key) {
-        List<ImportInvoicesDetail> list = new ArrayList<>();
-        try {
-            String sql = """
-                         SELECT i.ImportId,
-                                                         id.ImportDetailId,
-                                                         i.OrderedDate,
-                                                         i.ExpectedDate,
-                                                         i.ReceivedDate,
-                                                         i.ImportCode,
-                                                         i.SupplierInvoiceCode,
-                                                         i.SupplierId,
-                                                         COALESCE(su.SupplierName, N'Chua co NCC') AS SupplierName,
-                                                         id.IngredientId,
-                                                         ingre.IngredientName,
-                                                         ingre.Unit,
-                                                         id.OrderedQuantity,
-                                                         id.ReceivedQuantity,
-                                                         ingre.StockQuantity,
-                                                         id.UnitPrice,
-                                                         i.TotalOrderedAmount,
-                                                         i.TotalReceivedAmount,
-                                                         i.Status,
-                                                         s.FullName,
-                                                         i.Note AS InvoiceNote,
-                                                         i.RejectReason,
-                                                         id.DiscrepancyNote,
-                                                         id.Note AS DetailNote
-                                                  FROM ImportInvoices i
-                                                  JOIN ImportDetails id ON i.ImportId = id.ImportId AND id.IsDeleted = 0
-                                                  JOIN Staffs s ON i.CreatedByStaffId = s.StaffId
-                                                  JOIN Ingredients ingre ON id.IngredientId = ingre.IngredientId
-                                                  LEFT JOIN Suppliers su ON i.SupplierId = su.SupplierId
-                                                  WHERE i.IsDeleted = 0 and  ingre.IngredientName like ?
-                                                  ORDER BY i.OrderedDate DESC, i.ImportId DESC
-                         """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, "%"+key+"%");
-            rs = st.executeQuery();
-            while (rs.next()) {
-                 ImportInvoicesDetail detail = new ImportInvoicesDetail();
-                detail.setImportId(rs.getInt("ImportId"));
-                detail.setImportDetailId(rs.getInt("ImportDetailId"));
-                detail.setOrderedDate(rs.getTimestamp("OrderedDate") == null ? null : rs.getTimestamp("OrderedDate").toLocalDateTime());
-                detail.setExpectedDate(rs.getTimestamp("ExpectedDate") == null ? null : rs.getTimestamp("ExpectedDate").toLocalDateTime());
-                detail.setReceivedDate(rs.getTimestamp("ReceivedDate") == null ? null : rs.getTimestamp("ReceivedDate").toLocalDateTime());
-                detail.setImportCode(rs.getString("ImportCode"));
-                detail.setSupplierInvoiceCode(rs.getString("SupplierInvoiceCode"));
-                detail.setSupplierId(rs.getInt("SupplierId"));
-                detail.setSupplierName(rs.getString("SupplierName"));
-                detail.setIngredientId(rs.getInt("IngredientId"));
-                detail.setIngredientName(rs.getString("IngredientName"));
-                detail.setUnit(rs.getString("Unit"));
-                detail.setOrderedQuantity(rs.getBigDecimal("OrderedQuantity"));
-                detail.setReceivedQuantity(rs.getBigDecimal("ReceivedQuantity"));
-                detail.setStockQuantity(rs.getBigDecimal("StockQuantity"));
-                detail.setUnitPrice(rs.getBigDecimal("UnitPrice"));
-                detail.setTotalOrderedAmount(rs.getBigDecimal("TotalOrderedAmount"));
-                detail.setTotalReceivedAmount(rs.getBigDecimal("TotalReceivedAmount"));
-                detail.setStatus(rs.getString("Status"));
-                detail.setStaffName(rs.getString("FullName"));
-                detail.setInvoiceNote(rs.getString("InvoiceNote"));
-                detail.setRejectReason(rs.getString("RejectReason"));
-                detail.setDiscrepancyNote(rs.getString("DiscrepancyNote"));
-                detail.setDetailNote(rs.getString("DetailNote"));
-                
-                list.add(detail);
 
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        return list;
-
-    }
     public List<ImportInvoicesDetail> getImportInvoiceDetailsById(int importId) {
+        return queryImportInvoiceDetails(null, importId);
+    }
+
+    private List<ImportInvoicesDetail> queryImportInvoiceDetails(
+            String key, Integer importId) {
         List<ImportInvoicesDetail> details = new ArrayList<>();
-        try {
-            String sql = """
-                         SELECT i.ImportId,
-                                id.ImportDetailId,
-                                i.OrderedDate,
-                                i.ExpectedDate,
-                                i.ReceivedDate,
-                                i.ImportCode,
-                                i.SupplierInvoiceCode,
-                                i.SupplierId,
-                                COALESCE(su.SupplierName, N'Chưa có NCC') AS SupplierName,
-                                id.IngredientId,
-                                ingre.IngredientName,
-                                ingre.Unit,
-                                id.OrderedQuantity,
-                                id.ReceivedQuantity,
-                                ingre.StockQuantity,
-                                id.UnitPrice,
-                                i.TotalOrderedAmount,
-                                i.TotalReceivedAmount,
-                                i.Status,
-                                s.FullName,
-                                i.Note AS InvoiceNote,
-                                i.RejectReason,
-                                id.DiscrepancyNote,
-                                id.Note AS DetailNote
-                         FROM ImportInvoices i
-                         JOIN ImportDetails id
-                           ON i.ImportId = id.ImportId
-                          AND id.IsDeleted = 0
-                         JOIN Staffs s ON i.CreatedByStaffId = s.StaffId
-                         JOIN Ingredients ingre ON id.IngredientId = ingre.IngredientId
-                         LEFT JOIN Suppliers su ON i.SupplierId = su.SupplierId
-                         WHERE i.IsDeleted = 0
-                           AND i.ImportId = ?
-                         ORDER BY id.ImportDetailId ASC
-                         """;
-            st = connection.prepareStatement(sql);
-            st.setInt(1, importId);
-            rs = st.executeQuery();
-            while (rs.next()) {
-                ImportInvoicesDetail detail = new ImportInvoicesDetail();
-                detail.setImportId(rs.getInt("ImportId"));
-                detail.setImportDetailId(rs.getInt("ImportDetailId"));
-                detail.setOrderedDate(rs.getTimestamp("OrderedDate") == null
-                        ? null : rs.getTimestamp("OrderedDate").toLocalDateTime());
-                detail.setExpectedDate(rs.getTimestamp("ExpectedDate") == null
-                        ? null : rs.getTimestamp("ExpectedDate").toLocalDateTime());
-                detail.setReceivedDate(rs.getTimestamp("ReceivedDate") == null
-                        ? null : rs.getTimestamp("ReceivedDate").toLocalDateTime());
-                detail.setImportCode(rs.getString("ImportCode"));
-                detail.setSupplierInvoiceCode(rs.getString("SupplierInvoiceCode"));
-                detail.setSupplierId(rs.getInt("SupplierId"));
-                detail.setSupplierName(rs.getString("SupplierName"));
-                detail.setIngredientId(rs.getInt("IngredientId"));
-                detail.setIngredientName(rs.getString("IngredientName"));
-                detail.setUnit(rs.getString("Unit"));
-                detail.setOrderedQuantity(rs.getBigDecimal("OrderedQuantity"));
-                detail.setReceivedQuantity(rs.getBigDecimal("ReceivedQuantity"));
-                detail.setStockQuantity(rs.getBigDecimal("StockQuantity"));
-                detail.setUnitPrice(rs.getBigDecimal("UnitPrice"));
-                detail.setTotalOrderedAmount(rs.getBigDecimal("TotalOrderedAmount"));
-                detail.setTotalReceivedAmount(rs.getBigDecimal("TotalReceivedAmount"));
-                detail.setStatus(rs.getString("Status"));
-                detail.setStaffName(rs.getString("FullName"));
-                detail.setInvoiceNote(rs.getString("InvoiceNote"));
-                detail.setRejectReason(rs.getString("RejectReason"));
-                detail.setDiscrepancyNote(rs.getString("DiscrepancyNote"));
-                detail.setDetailNote(rs.getString("DetailNote"));
-                details.add(detail);
+        String normalizedKey = normalizeSearchKey(key);
+        String searchPattern = "%";
+        if (normalizedKey != null) {
+            searchPattern = "%" + normalizedKey + "%";
+        }
+        int selectedImportId = 0;
+        if (importId != null) {
+            selectedImportId = importId;
+        }
+
+        String sql = """
+                     SELECT i.ImportId,
+                            id.ImportDetailId,
+                            i.OrderedDate,
+                            i.ExpectedDate,
+                            i.ReceivedDate,
+                            i.ImportCode,
+                            i.SupplierInvoiceCode,
+                            i.SupplierId,
+                            COALESCE(su.SupplierName, N'Chưa có NCC') AS SupplierName,
+                            id.IngredientId,
+                            ingre.IngredientName,
+                            ingre.Unit,
+                            id.OrderedQuantity,
+                            id.ReceivedQuantity,
+                            ingre.StockQuantity,
+                            id.UnitPrice,
+                            i.TotalOrderedAmount,
+                            i.TotalReceivedAmount,
+                            i.Status,
+                            s.FullName,
+                            i.Note AS InvoiceNote,
+                            i.RejectReason,
+                            id.DiscrepancyNote,
+                            id.Note AS DetailNote
+                     FROM ImportInvoices i
+                     JOIN ImportDetails id
+                       ON i.ImportId = id.ImportId
+                      AND id.IsDeleted = 0
+                     JOIN Staffs s ON i.CreatedByStaffId = s.StaffId
+                     JOIN Ingredients ingre ON id.IngredientId = ingre.IngredientId
+                     LEFT JOIN Suppliers su ON i.SupplierId = su.SupplierId
+                     WHERE i.IsDeleted = 0
+                       AND (? = 0 OR i.ImportId = ?)
+                       AND EXISTS (
+                           SELECT 1
+                           FROM ImportDetails searchedDetail
+                           JOIN Ingredients searchedIngredient
+                             ON searchedIngredient.IngredientId = searchedDetail.IngredientId
+                           WHERE searchedDetail.ImportId = i.ImportId
+                             AND searchedDetail.IsDeleted = 0
+                             AND searchedIngredient.IngredientName LIKE ?
+                       )
+                     ORDER BY i.OrderedDate DESC,
+                              i.ImportId DESC,
+                              id.ImportDetailId ASC
+                     """;
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, selectedImportId);
+            statement.setInt(2, selectedImportId);
+            statement.setString(3, searchPattern);
+
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    details.add(mapImportInvoiceDetail(result));
+                }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
         return details;
     }
 
-
-    public boolean updateImportVoice(ImportInvoice s) {
-        try {
-            String sql = """
-                          UPDATE [dbo].[ImportInvoices]
-                             SET [ImportCode] = ?
-                                ,[SupplierId] = ?
-                                ,[Status] = ?
-                                ,[OrderedDate] = ?
-                                ,[ExpectedDate] = ?
-                                ,[ReceivedDate] = ?
-                                ,[SupplierInvoiceCode] = ?
-                                ,[TotalOrderedAmount] = ?
-                                ,[TotalReceivedAmount] = ?
-                                ,[Note] = ?
-                                ,[RejectReason] = ?
-                           WHERE ImportId = ?
-                          """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, s.getImportCode());
-            st.setObject(2, s.getSupplierId());
-            st.setObject(3, s.getStatus());
-            st.setObject(4, s.getOrderedDate());
-            st.setObject(5, s.getExpectedDate());
-            st.setObject(6, s.getReceivedDate());
-            st.setObject(7, s.getSupplierInvoiceCode());
-            st.setObject(8, s.getTotalOrderedAmount());
-            st.setObject(9, s.getTotalReceivedAmount());
-            st.setObject(10, s.getNote());
-            st.setObject(11, s.getRejectReason());
-            st.setObject(12, s.getImportId());
-
-            return st.executeUpdate() == 1;
-
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
-        return false;
+    private ImportInvoicesDetail mapImportInvoiceDetail(ResultSet result)
+            throws SQLException {
+        ImportInvoicesDetail detail = new ImportInvoicesDetail();
+        detail.setImportId(result.getInt("ImportId"));
+        detail.setImportDetailId(result.getInt("ImportDetailId"));
+        detail.setOrderedDate(getLocalDateTime(result, "OrderedDate"));
+        detail.setExpectedDate(getLocalDateTime(result, "ExpectedDate"));
+        detail.setReceivedDate(getLocalDateTime(result, "ReceivedDate"));
+        detail.setImportCode(result.getString("ImportCode"));
+        detail.setSupplierInvoiceCode(result.getString("SupplierInvoiceCode"));
+        detail.setSupplierId(result.getInt("SupplierId"));
+        detail.setSupplierName(result.getString("SupplierName"));
+        detail.setIngredientId(result.getInt("IngredientId"));
+        detail.setIngredientName(result.getString("IngredientName"));
+        detail.setUnit(result.getString("Unit"));
+        detail.setOrderedQuantity(result.getBigDecimal("OrderedQuantity"));
+        detail.setReceivedQuantity(result.getBigDecimal("ReceivedQuantity"));
+        detail.setStockQuantity(result.getBigDecimal("StockQuantity"));
+        detail.setUnitPrice(result.getBigDecimal("UnitPrice"));
+        detail.setTotalOrderedAmount(result.getBigDecimal("TotalOrderedAmount"));
+        detail.setTotalReceivedAmount(result.getBigDecimal("TotalReceivedAmount"));
+        detail.setStatus(result.getString("Status"));
+        detail.setStaffName(result.getString("FullName"));
+        detail.setInvoiceNote(result.getString("InvoiceNote"));
+        detail.setRejectReason(result.getString("RejectReason"));
+        detail.setDiscrepancyNote(result.getString("DiscrepancyNote"));
+        detail.setDetailNote(result.getString("DetailNote"));
+        return detail;
     }
 
-    public boolean updateImportVoiceDetail(ImportDetail d) {
-        try {
-            String sql = """
-                         UPDATE [dbo].[ImportDetails]
-                            SET 
-                               [IngredientId] = ?
-                               ,[OrderedQuantity] = ?
-                               ,[ReceivedQuantity] = ?
-                               ,[UnitPrice] = ?
-                               ,[DiscrepancyNote] = ?
-                               ,[Note] = ?
-                          WHERE ImportDetailId = ?
-                            AND ImportId = ?
-                         """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, d.getIngredientId());
-            st.setObject(2, d.getOrderedQuantity());
-            st.setObject(3, d.getReceivedQuantity());
-            st.setObject(4, d.getUnitPrice());
-            st.setObject(5, d.getDiscrepancyNote());
-            st.setObject(6, d.getNote());
-            st.setObject(7, d.getImportDetailId());
-            st.setObject(8, d.getImportId());
-            return st.executeUpdate() == 1;
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+    private LocalDateTime getLocalDateTime(ResultSet result, String column)
+            throws SQLException {
+        Timestamp value = result.getTimestamp(column);
+        if (value == null) {
+            return null;
         }
-        return false;
-
+        return value.toLocalDateTime();
     }
 
-    public boolean updateImportVoice(ImportInvoice invoice, List<ImportDetail> details) {
+    public boolean updateImportInvoice(
+            int importId,
+            String status,
+            String note,
+            String rejectReason,
+            int actingStaffId,
+            List<ImportDetail> details) {
+        if (connection == null || details == null || details.isEmpty()) {
+            return false;
+        }
+
         boolean oldAutoCommit = true;
         try {
             oldAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
 
-            List<ImportInvoicesDetail> oldDetails =
-                    getImportInvoiceDetailsById(invoice.getImportId());
-            if (oldDetails.isEmpty() || oldDetails.size() != details.size()) {
-                connection.rollback();
-                return false;
-            }
+            List<ImportInvoicesDetail> oldDetails = getImportInvoiceDetailsById(importId);
+            validateSubmittedDetails(importId, oldDetails, details);
 
-            HashMap<Integer, BigDecimal> stockChanges = new HashMap<>();
-            if (isStockAppliedStatus(oldDetails.get(0).getStatus())) {
-                for (ImportInvoicesDetail oldDetail : oldDetails) {
-                    mergeStockChange(stockChanges, oldDetail.getIngredientId(),
-                            safe(oldDetail.getReceivedQuantity()).negate());
-                }
-            }
-            if (isStockAppliedStatus(invoice.getStatus())) {
-                for (ImportDetail detail : details) {
-                    mergeStockChange(stockChanges, detail.getIngredientId(),
-                            safe(detail.getReceivedQuantity()));
-                }
-            }
-
-            if (!updateImportVoice(invoice)) {
-                connection.rollback();
-                return false;
-            }
-
+            HashMap<Integer, BigDecimal> stockChanges =
+                    calculateStockChanges(oldDetails, status);
+            updateInvoiceHeader(
+                    importId, status, note, rejectReason, actingStaffId);
             for (ImportDetail detail : details) {
-                if (!ingredientBelongsToSupplier(detail.getIngredientId(), invoice.getSupplierId())
-                        || !updateImportVoiceDetail(detail)) {
-                    connection.rollback();
-                    return false;
-                }
+                updateInvoiceDetail(detail);
             }
 
-            int staffId = getImportStaffId(invoice.getImportId());
             for (java.util.Map.Entry<Integer, BigDecimal> entry : stockChanges.entrySet()) {
                 if (entry.getValue().compareTo(BigDecimal.ZERO) != 0) {
                     adjustStockAfterImportEdit(
-                            invoice.getImportId(), entry.getKey(), entry.getValue(), staffId);
+                            importId, entry.getKey(), entry.getValue(), actingStaffId);
                 }
             }
 
             connection.commit();
             return true;
         } catch (Exception e) {
-            try {
-                connection.rollback();
-            } catch (Exception rollbackError) {
-                System.err.println(rollbackError.getMessage());
-            }
+            rollbackQuietly();
             System.err.println(e.getMessage());
             return false;
         } finally {
-            try {
-                connection.setAutoCommit(oldAutoCommit);
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
+            restoreAutoCommit(oldAutoCommit);
+        }
+    }
+
+    private void validateSubmittedDetails(
+            int importId,
+            List<ImportInvoicesDetail> oldDetails,
+            List<ImportDetail> submittedDetails) throws SQLException {
+        if (oldDetails.isEmpty() || oldDetails.size() != submittedDetails.size()) {
+            throw new SQLException("Chi tiết phiếu nhập không hợp lệ.");
+        }
+
+        HashMap<Integer, ImportInvoicesDetail> oldById = new HashMap<>();
+        for (ImportInvoicesDetail oldDetail : oldDetails) {
+            oldById.put(oldDetail.getImportDetailId(), oldDetail);
+        }
+
+        for (ImportDetail submittedDetail : submittedDetails) {
+            if (submittedDetail.getImportId() != importId
+                    || oldById.remove(submittedDetail.getImportDetailId()) == null) {
+                throw new SQLException("Chi tiết phiếu nhập không hợp lệ.");
+            }
+        }
+        if (!oldById.isEmpty()) {
+            throw new SQLException("Chi tiết phiếu nhập không hợp lệ.");
+        }
+    }
+
+    private HashMap<Integer, BigDecimal> calculateStockChanges(
+            List<ImportInvoicesDetail> oldDetails, String newStatus) {
+        HashMap<Integer, BigDecimal> changes = new HashMap<>();
+        String oldStatus = oldDetails.get(0).getStatus();
+        for (ImportInvoicesDetail detail : oldDetails) {
+            BigDecimal stockDelta = calculateStockDelta(
+                    oldStatus, newStatus, detail.getReceivedQuantity());
+            if (stockDelta.compareTo(BigDecimal.ZERO) != 0) {
+                mergeStockChange(
+                        changes,
+                        detail.getIngredientId(),
+                        stockDelta);
+            }
+        }
+        return changes;
+    }
+
+    static BigDecimal calculateStockDelta(
+            String oldStatus, String newStatus, BigDecimal receivedQuantity) {
+        BigDecimal delta = BigDecimal.ZERO;
+        BigDecimal safeQuantity = safe(receivedQuantity);
+        if (isStockAppliedStatus(oldStatus)) {
+            delta = delta.subtract(safeQuantity);
+        }
+        if (isStockAppliedStatus(newStatus)) {
+            delta = delta.add(safeQuantity);
+        }
+        return delta;
+    }
+
+    private void updateInvoiceHeader(
+            int importId,
+            String status,
+            String note,
+            String rejectReason,
+            int actingStaffId) throws SQLException {
+        String sql = """
+                     UPDATE ImportInvoices
+                     SET Status = ?,
+                         ConfirmedByStaffId = ?,
+                         Note = ?,
+                         RejectReason = ?
+                     WHERE ImportId = ?
+                       AND IsDeleted = 0
+                     """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, status);
+            if (isStockAppliedStatus(status)) {
+                statement.setInt(2, actingStaffId);
+            } else {
+                statement.setNull(2, Types.INTEGER);
+            }
+            statement.setString(3, note);
+            statement.setString(4, rejectReason);
+            statement.setInt(5, importId);
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("Không cập nhật được phiếu nhập.");
             }
         }
     }
 
-    private boolean isStockAppliedStatus(String status) {
+    private void updateInvoiceDetail(ImportDetail detail) throws SQLException {
+        String sql = """
+                     UPDATE ImportDetails
+                     SET DiscrepancyNote = ?,
+                         Note = ?
+                     WHERE ImportDetailId = ?
+                       AND ImportId = ?
+                       AND IsDeleted = 0
+                     """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, detail.getDiscrepancyNote());
+            statement.setString(2, detail.getNote());
+            statement.setInt(3, detail.getImportDetailId());
+            statement.setInt(4, detail.getImportId());
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("Không cập nhật được chi tiết phiếu nhập.");
+            }
+        }
+    }
+
+    private void rollbackQuietly() {
+        try {
+            connection.rollback();
+        } catch (SQLException rollbackError) {
+            System.err.println(rollbackError.getMessage());
+        }
+    }
+
+    private void restoreAutoCommit(boolean oldAutoCommit) {
+        try {
+            connection.setAutoCommit(oldAutoCommit);
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    private static boolean isStockAppliedStatus(String status) {
         return "Confirmed".equalsIgnoreCase(status);
     }
 
-    private BigDecimal safe(BigDecimal value) {
-        return value == null ? BigDecimal.ZERO : value;
+    private String normalizeSearchKey(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            return null;
+        }
+        return key.trim();
+    }
+
+    private static BigDecimal safe(BigDecimal value) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        return value;
     }
 
     private void mergeStockChange(
             HashMap<Integer, BigDecimal> changes, int ingredientId, BigDecimal quantity) {
         changes.put(ingredientId,
                 changes.getOrDefault(ingredientId, BigDecimal.ZERO).add(quantity));
-    }
-
-    private int getImportStaffId(int importId) throws SQLException {
-        String sql = """
-                     SELECT COALESCE(ConfirmedByStaffId, CreatedByStaffId) AS StaffId
-                     FROM ImportInvoices
-                     WHERE ImportId = ?
-                     """;
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, importId);
-            try (ResultSet result = statement.executeQuery()) {
-                if (!result.next()) {
-                    throw new SQLException("Không tìm thấy nhân viên của phiếu nhập.");
-                }
-                return result.getInt("StaffId");
-            }
-        }
     }
 
     private void adjustStockAfterImportEdit(

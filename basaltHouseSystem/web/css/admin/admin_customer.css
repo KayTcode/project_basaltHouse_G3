@@ -591,3 +591,21 @@
     color: var(--basalt-blue, #1c7ed6) !important;
     background-color: #f8f9fa !important;
 }
+
+/* ── GIFT DISCOUNT BUTTON ── */
+.btn-icon-action.action-gift {
+    color: #7c3aed;
+    background: #f5f3ff;
+    border-color: #ede9fe;
+}
+
+.btn-icon-action.action-gift:hover {
+    background: #ede9fe;
+    border-color: #c4b5fd;
+    color: #6d28d9;
+}
+
+/* ── GIFT MODAL SIZE ── */
+.modal-card--gift {
+    max-width: 480px;
+}

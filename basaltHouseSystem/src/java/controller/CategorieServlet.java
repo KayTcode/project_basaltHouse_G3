@@ -109,9 +109,7 @@ public class CategorieServlet extends HttpServlet {
                 break;
             }
         }
-        if (isSearchResult) {
-            categoryTitle = "K\u1ebft qu\u1ea3 t\u00ecm ki\u1ebfm";
-        }
+        
 
         request.setAttribute("listP", product);
         request.setAttribute("ListC", list);

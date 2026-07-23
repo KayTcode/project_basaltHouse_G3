@@ -263,6 +263,7 @@ body { display: flex; min-height: 100vh; overflow-x: hidden; }
             background: #f8f9fa; outline: none; color: #1a1a2e; text-transform: uppercase;
             transition: all 0.2s;
         }
+        select.disc-input { text-transform: none; appearance: auto; cursor: pointer; }
         .disc-input:focus { border-color: #5c3317; background: #fff; box-shadow: 0 0 0 3px rgba(92,51,23,0.1); }
         .btn-apply-disc {
             padding: 10px 16px; background: #2c1a0e; border: none; border-radius: 12px;

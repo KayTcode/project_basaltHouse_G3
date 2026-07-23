@@ -38,4 +38,18 @@ public class CustomerDAO extends DBContext {
         return 0;
 
     }
+    public int getAccountIdByCustomerId(int customerId) {
+        try {
+            String sql = "SELECT AccountId FROM Customers WHERE CustomerId = ? AND IsDeleted = 0";
+            st = connection.prepareStatement(sql);
+            st.setObject(1, customerId);
+            rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("AccountId");
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        return 0;
+    }
 }

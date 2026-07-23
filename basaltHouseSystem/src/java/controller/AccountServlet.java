@@ -10,7 +10,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import model.ActivityLog;
@@ -44,17 +43,7 @@ public class AccountServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-
-        UserLoginDTO user1 = (UserLoginDTO) session.getAttribute(AuthService.USER_SESSION_KEY);
-        if (user1 == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        UserLoginDTO user1 = getCurrentUser(request);
 
         CustomerProfile p = null;
         HashMap<String, Object> s = cusService.getCustomerById(user1.getAccountId());
@@ -78,16 +67,7 @@ public class AccountServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-        UserLoginDTO user1 = (UserLoginDTO) session.getAttribute(AuthService.USER_SESSION_KEY);
-        if (user1 == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        UserLoginDTO user1 = getCurrentUser(request);
 
 
         String oldPassword = request.getParameter("oldPassword");
@@ -145,6 +125,11 @@ public class AccountServlet extends HttpServlet {
 
         request.setAttribute("passwordSuccess", "Đổi mật khẩu thành công");
         doGet(request, response);
+    }
+
+    private UserLoginDTO getCurrentUser(HttpServletRequest request) {
+        return (UserLoginDTO) request.getSession(false)
+                .getAttribute(AuthService.USER_SESSION_KEY);
     }
 
     /**

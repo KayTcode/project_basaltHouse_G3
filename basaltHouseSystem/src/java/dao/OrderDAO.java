@@ -173,7 +173,7 @@ public class OrderDAO extends DBContext {
                 }
             }
 
-            if (!hasLog) {
+            if (!hasLog && !"Cancelled".equals(status)) {
                 String insertSql = """
                     INSERT INTO DeliveryLogs (OrderId, ShipperId, Status, CreatedAt, IsDeleted)
                     VALUES (?, 1, 'Pending', GETDATE(), 0)
@@ -235,6 +235,17 @@ public class OrderDAO extends DBContext {
                     psBackfill.setInt(1, orderId);
                     psBackfill.executeUpdate();
                 }
+            } else if ("Cancelled".equals(status)) {
+                // Cập nhật log đã có (nếu có) sang Cancelled
+                String cancelLogSql = """
+                    UPDATE DeliveryLogs
+                    SET Status = 'Cancelled'
+                    WHERE OrderId = ? AND IsDeleted = 0
+                    """;
+                try (PreparedStatement psCancel = connection.prepareStatement(cancelLogSql)) {
+                    psCancel.setInt(1, orderId);
+                    psCancel.executeUpdate();
+                }
             }
 
         } catch (Exception e) {
@@ -245,42 +256,42 @@ public class OrderDAO extends DBContext {
     public List<Order> getAllOrdersWithCustomerName() {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = """
-                    SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, o.ShipperId, o.OrderAddressId, tb.TableCode AS TableName, o.Note, c.FullName, sh.FullName AS ShipperName, stf.FullName AS CashierName
-                    FROM Orders o 
-                    LEFT JOIN Customers c ON o.CustomerId = c.CustomerId 
-                    LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId 
-                    LEFT JOIN Tables tb ON ts.TableId = tb.TableId 
-                    LEFT JOIN Shippers sh ON o.ShipperId = sh.ShipperId 
-                    LEFT JOIN Staffs stf ON o.CashierId = stf.StaffId
-                    WHERE o.IsDeleted = 0 
-                    ORDER BY o.CreatedAt DESC
-                    """;
+            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.TotalAmount, o.DiscountAmount, o.FinalAmount, o.CreatedAt, o.PaymentMethod, o.ShipperId, o.OrderAddressId, tb.TableCode AS TableName, o.Note, c.FullName, sh.FullName AS ShipperName, COALESCE(ca.FullName, stf.FullName) AS CashierName, d.Code AS DiscountCode "
+                    + "FROM Orders o "
+                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
+                    + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
+                    + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
+                    + "LEFT JOIN Shippers sh ON o.ShipperId = sh.ShipperId "
+                    + "LEFT JOIN Staffs stf ON o.CashierId = stf.StaffId "
+                    + "LEFT JOIN Cashiers ca ON o.CashierId = ca.CashierId "
+                    + "LEFT JOIN DiscountCodes d ON o.DiscountId = d.DiscountId "
+                    + "WHERE o.IsDeleted = 0 "
+                    + "ORDER BY o.CreatedAt DESC";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
-                Order o = new Order();
-                o.setOrderId(rs.getInt("OrderId"));
-                o.setOrderType(rs.getString("OrderType"));
-                o.setOrderStatus(rs.getString("OrderStatus"));
-                o.setTotalAmount(rs.getBigDecimal("TotalAmount"));
-                o.setDiscountAmount(rs.getBigDecimal("DiscountAmount"));
-                o.setFinalAmount(rs.getBigDecimal("FinalAmount"));
+                Order order = new Order();
+                order.setOrderId(rs.getInt("OrderId"));
+                order.setOrderType(rs.getString("OrderType"));
+                order.setOrderStatus(rs.getString("OrderStatus"));
+                order.setTotalAmount(rs.getBigDecimal("TotalAmount"));
+                order.setDiscountAmount(rs.getBigDecimal("DiscountAmount"));
+                order.setFinalAmount(rs.getBigDecimal("FinalAmount"));
                 java.sql.Timestamp ts = rs.getTimestamp("CreatedAt");
                 if (ts != null) {
-                    o.setCreatedAt(ts.toLocalDateTime());
+                    order.setCreatedAt(ts.toLocalDateTime());
                 }
                 String cName = rs.getString("FullName");
-                o.setCustomerName(cName != null ? cName : "Walk-in");
-                o.setPaymentMethod(rs.getString("PaymentMethod"));
-                o.setTableName(rs.getString("TableName"));
-                o.setNote(rs.getString("Note"));
-                o.setOrderAddressId(rs.getObject("OrderAddressId") != null ? rs.getInt("OrderAddressId") : null);
-              
-                o.setShipperId(rs.getObject("ShipperId") != null ? rs.getInt("ShipperId") : null);
-                o.setShipperName(rs.getString("ShipperName"));
-                o.setCashierName(rs.getString("CashierName"));
-                list.add(o);
+                order.setCustomerName(cName != null ? cName : "Walk-in");
+                order.setPaymentMethod(rs.getString("PaymentMethod"));
+                order.setTableName(rs.getString("TableName"));
+                order.setNote(rs.getString("Note"));
+                order.setOrderAddressId(rs.getObject("OrderAddressId") != null ? rs.getInt("OrderAddressId") : null);
+                order.setShipperId(rs.getObject("ShipperId") != null ? rs.getInt("ShipperId") : null);
+                order.setShipperName(rs.getString("ShipperName"));
+                order.setCashierName(rs.getString("CashierName"));
+                order.setDiscountCode(rs.getString("DiscountCode"));
+                list.add(order);
             }
         } catch (Exception e) {
             System.err.println("getAllOrdersWithCustomerName Error: " + e.getMessage());
@@ -581,8 +592,8 @@ public class OrderDAO extends DBContext {
             connection.setAutoCommit(false);
 
             String sqlOrder = "INSERT INTO Orders (CustomerId, OrderAddressId, DiscountId, OrderType, OrderStatus, PaymentStatus, TotalAmount, DiscountAmount, FinalAmount, "
-                    + "PaymentMethod, Note, TableSessionId, CreatedAt, IsDeleted) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
+                    + "PaymentMethod, Note, TableSessionId, CashierId, CreatedAt, IsDeleted) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), 0)";
             st = connection.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
             if (order.getCustomerId() != null) {
                 st.setInt(1, order.getCustomerId());
@@ -611,6 +622,11 @@ public class OrderDAO extends DBContext {
                 st.setInt(12, order.getTableSessionId());
             } else {
                 st.setNull(12, java.sql.Types.INTEGER);
+            }
+            if (order.getCashierId() != null && order.getCashierId() > 0) {
+                st.setInt(13, order.getCashierId());
+            } else {
+                st.setNull(13, java.sql.Types.INTEGER);
             }
             st.executeUpdate();
 

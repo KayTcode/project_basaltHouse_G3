@@ -86,7 +86,6 @@
                                     <label>
                                         <span>Mã phiếu nhập</span>
                                         <input type="text"
-                                               name="importCode"
                                                value="${invoiceDetail.importCode}"
                                                readonly
                                                required>
@@ -95,7 +94,6 @@
                                     <label>
                                         <span>Mã hóa đơn NCC</span>
                                         <input type="text"
-                                               name="supplierInvoiceCode"
                                                value="${invoiceDetail.supplierInvoiceCode}"
                                                placeholder="SUP-INV-001"
                                                readonly>
@@ -123,10 +121,6 @@
                                     <label>
                                         <span>Nhà cung cấp</span>
 
-                                        <input type="hidden"
-                                               name="supplierId"
-                                               value="${invoiceDetail.supplierId}">
-
                                         <input type="text"
                                                value="${empty invoiceDetail.supplierName ? 'Chưa có nhà cung cấp' : invoiceDetail.supplierName}"
                                                readonly
@@ -152,7 +146,6 @@
                                     <label>
                                         <span>Ngày đặt</span>
                                         <input type="datetime-local"
-                                               name="orderedDate"
                                                value="${invoiceDetail.orderedDateInput}"
                                                required
                                                readonly>
@@ -161,7 +154,6 @@
                                     <label>
                                         <span>Ngày dự kiến</span>
                                         <input type="datetime-local"
-                                               name="expectedDate"
                                                value="${invoiceDetail.expectedDateInput}"
                                                readonly>
                                     </label>
@@ -169,7 +161,6 @@
                                     <label>
                                         <span>Ngày nhận</span>
                                         <input type="datetime-local"
-                                               name="receivedDate"
                                                value="${invoiceDetail.receivedDateInput}"
                                                readonly>
                                     </label>
@@ -199,10 +190,6 @@
                                            name="importDetailId"
                                            value="${detail.importDetailId}">
 
-                                    <input type="hidden"
-                                           name="ingredientId"
-                                           value="${detail.ingredientId}">
-
                                     <div class="panel-head">
                                         <div>
                                             <p>Nguyên liệu ${detailStatus.index + 1}</p>
@@ -226,7 +213,6 @@
                                         <label>
                                             <span>Số lượng đặt</span>
                                             <input type="number"
-                                                   name="orderedQuantity"
                                                    min="0.01"
                                                    step="0.01"
                                                    value="${detail.orderedQuantity}"
@@ -237,7 +223,6 @@
                                         <label>
                                             <span>Số lượng nhận</span>
                                             <input type="number"
-                                                   name="receivedQuantity"
                                                    min="0"
                                                    step="0.01"
                                                    value="${detail.receivedQuantity}"
@@ -248,7 +233,6 @@
                                         <label>
                                             <span>Đơn giá</span>
                                             <input type="number"
-                                                   name="unitPrice"
                                                    min="0"
                                                    step="100"
                                                    value="${detail.unitPrice}"

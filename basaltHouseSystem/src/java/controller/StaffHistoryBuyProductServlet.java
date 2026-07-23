@@ -36,21 +36,13 @@ public class StaffHistoryBuyProductServlet extends HttpServlet {
     }
 
     private LocalDate parseLocalDate(String value) {
-        String normalized = trimToNull(value);
-        if (normalized == null) {
-            return null;
-        }
-        try {
-            return LocalDate.parse(normalized);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String trimToNull(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
         }
-        return value.trim();
+        try {
+            return LocalDate.parse(value.trim());
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

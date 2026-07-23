@@ -72,7 +72,7 @@ public class MonoPaymentServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
 
         String orderCode = request.getParameter("orderCode");
-        if ((orderCode == null || orderCode.isBlank()) && session != null) {
+        if (orderCode == null || orderCode.isBlank()) {
             orderCode = (String) session.getAttribute("pendingOrderCode");
         }
         if (orderCode == null || orderCode.isBlank()) {
@@ -148,10 +148,8 @@ public class MonoPaymentServlet extends HttpServlet {
             String message = extractJsonValue(momoResponse, "message");
             if ("0".equals(resultCode) && payUrl != null && !payUrl.isBlank()) {
                 // ✅ Lưu requestId vào session để MomoReturnServlet đối chiếu
-                if (session != null) {
-                    session.setAttribute("momoRequestId", requestId);
-                    session.setAttribute("momoOrderId", momoOrderId);
-                }
+                session.setAttribute("momoRequestId", requestId);
+                session.setAttribute("momoOrderId", momoOrderId);
                 // Redirect khách sang trang thanh toán MoMo
                 response.sendRedirect(payUrl);
             } else {

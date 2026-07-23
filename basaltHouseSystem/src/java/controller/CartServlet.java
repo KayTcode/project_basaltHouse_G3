@@ -23,12 +23,6 @@ public class CartServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("checkout-form".equals(action)) {
-            HttpSession session = request.getSession();
-            if (session.getAttribute("currentUser") == null) {
-                session.setAttribute("loginError", "Vui lòng đăng nhập để tiến hành thanh toán.");
-                response.sendRedirect(request.getContextPath() + "/login");
-                return;
-            }
             handleCheckoutForm(request, response);
             return;
         }
@@ -86,12 +80,6 @@ public class CartServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("checkout".equals(action)) {
-            HttpSession session = request.getSession();
-            if (session.getAttribute("currentUser") == null) {
-                session.setAttribute("loginError", "Vui lòng đăng nhập để tiến hành thanh toán.");
-                response.sendRedirect(request.getContextPath() + "/login");
-                return;
-            }
             handleCheckout(request, response);
             return;
         }
@@ -234,11 +222,10 @@ public class CartServlet extends HttpServlet {
         }
 
         String customerIdStr = null;
-        Object currentUser = session.getAttribute("currentUser");
-        if (currentUser instanceof UserLoginDTO) {
-            int aid = ((UserLoginDTO) currentUser).getAccountId();
-            int cid = cartService.resolveCustomerId(aid);
-            if (cid > 0) customerIdStr = String.valueOf(cid);
+        UserLoginDTO currentUser = (UserLoginDTO) session.getAttribute("currentUser");
+        int customerId = cartService.resolveCustomerId(currentUser.getAccountId());
+        if (customerId > 0) {
+            customerIdStr = String.valueOf(customerId);
         }
 
         String orderNote = request.getParameter("orderNote");    // ghi chú từ Cart.jsp → Orders.Note

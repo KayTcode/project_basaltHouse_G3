@@ -411,4 +411,23 @@ public class OrderService {
         }
         return dao.updateOrderTotal(orderId, total);
     }
+
+    public String confirmDelivery(int orderId, int customerId) {
+        Order order = dao.getOrderById(orderId);
+        if (order == null) {
+            return "Đơn hàng không tồn tại.";
+        }
+
+        if (order.getCustomerId() == null || order.getCustomerId() != customerId) {
+            return "Bạn không có quyền xác nhận đơn hàng này.";
+        }
+
+        if (!"Delivered".equalsIgnoreCase(order.getOrderStatus())) {
+            return "Đơn hàng chưa được giao hoặc đã hoàn thành.";
+        }
+
+        boolean ok = dao.confirmDelivery(orderId);
+        return ok ? "OK" : "Lỗi hệ thống khi xác nhận đơn hàng.";
+    }
 }
+

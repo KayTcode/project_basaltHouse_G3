@@ -180,10 +180,16 @@
                             <c:when test="${order.orderStatus == 'Preparing'}">   <c:set var="sc" value="preparing"/></c:when>
                             <c:when test="${order.orderStatus == 'In_Progress'}"> <c:set var="sc" value="preparing"/></c:when>
                             <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}"> <c:set var="sc" value="preparing"/></c:when>
-                            <c:when test="${order.orderStatus == 'Delivering'}">  <c:set var="sc" value="shipping"/></c:when>
+                            <c:when test="${order.orderStatus == 'Delivering' || order.orderStatus == 'Delivered'}">  <c:set var="sc" value="shipping"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">   <c:set var="sc" value="completed"/></c:when>
                             <c:when test="${order.orderStatus == 'Cancelled'}">   <c:set var="sc" value="cancelled"/></c:when>
                         </c:choose>
+
+                        <%-- Status badge class --%>
+                        <c:set var="sb" value="${sc}"/>
+                        <c:if test="${order.orderStatus == 'Delivered'}">
+                            <c:set var="sb" value="delivered"/>
+                        </c:if>
 
                         <%-- Status label --%>
                         <c:set var="sl" value="Đang xử lý"/>
@@ -193,6 +199,7 @@
                             <c:when test="${order.orderStatus == 'In_Progress'}"> <c:set var="sl" value="Đang pha chế"/></c:when>
                             <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}">       <c:set var="sl" value="Sẵn sàng giao"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivering'}">  <c:set var="sl" value="Đang giao hàng"/></c:when>
+                            <c:when test="${order.orderStatus == 'Delivered'}">   <c:set var="sl" value="Đã giao - Chờ xác nhận"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">   <c:set var="sl" value="Hoàn thành"/></c:when>
                             <c:when test="${order.orderStatus == 'Cancelled'}">   <c:set var="sl" value="Đã hủy"/></c:when>
                         </c:choose>
@@ -204,6 +211,7 @@
                             <c:when test="${order.orderStatus == 'Preparing' || order.orderStatus == 'In_Progress'}"><c:set var="si" value="coffee_maker"/></c:when>
                             <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}">                                      <c:set var="si" value="inventory_2"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivering'}">                                     <c:set var="si" value="local_shipping"/></c:when>
+                            <c:when test="${order.orderStatus == 'Delivered'}">                                      <c:set var="si" value="done_all"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">                                      <c:set var="si" value="task_alt"/></c:when>
                             <c:when test="${order.orderStatus == 'Cancelled'}">                                      <c:set var="si" value="cancel"/></c:when>
                         </c:choose>
@@ -227,7 +235,7 @@
                                     </div>
                                 </div>
                                 <div class="ot-card-header-right">
-                                    <span class="ot-badge ot-badge-${sc}">
+                                    <span class="ot-badge ot-badge-${sb}">
                                         <span class="material-symbols-outlined">${si}</span>
                                         ${sl}
                                     </span>
@@ -270,7 +278,7 @@
                                             <c:when test="${order.orderStatus == 'Preparing' || order.orderStatus == 'In_Progress'}">
                                                 <c:set var="s2" value="active"/>
                                             </c:when>
-                                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper' || order.orderStatus == 'Delivering' || order.orderStatus == 'Completed'}">
+                                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper' || order.orderStatus == 'Delivering' || order.orderStatus == 'Delivered' || order.orderStatus == 'Completed'}">
                                                 <c:set var="s2" value="done"/>
                                             </c:when>
                                         </c:choose>
@@ -288,7 +296,7 @@
                                             <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper' || order.orderStatus == 'Delivering'}">
                                                 <c:set var="s3" value="active"/>
                                             </c:when>
-                                            <c:when test="${order.orderStatus == 'Completed'}">
+                                            <c:when test="${order.orderStatus == 'Delivered' || order.orderStatus == 'Completed'}">
                                                 <c:set var="s3" value="done"/>
                                             </c:when>
                                         </c:choose>
@@ -394,6 +402,18 @@
                                              <button type="submit" class="ot-cancel-btn">
                                                  <span class="material-symbols-outlined">cancel</span>
                                                  Hủy đơn
+                                             </button>
+                                         </form>
+                                     </c:if>
+                                     <%-- Nút Xác nhận đã nhận hàng - chỉ hiện khi đã giao (Delivered) --%>
+                                     <c:if test="${order.orderStatus == 'Delivered'}">
+                                         <form method="post" action="${pageContext.request.contextPath}/confirm-delivery"
+                                               style="display:inline;"
+                                               onsubmit="return confirm('Xác nhận bạn đã nhận được đơn hàng #BH-${order.orderId}?')">
+                                             <input type="hidden" name="orderId" value="${order.orderId}"/>
+                                             <button type="submit" class="ot-confirm-btn">
+                                                 <span class="material-symbols-outlined">done_all</span>
+                                                 Đã nhận hàng
                                              </button>
                                          </form>
                                      </c:if>

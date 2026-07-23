@@ -881,6 +881,45 @@ public class OrderDAO extends DBContext {
         }
     }
 
+    public boolean confirmDelivery(int orderId) {
+        try {
+            connection.setAutoCommit(false);
+
+            String updateOrderSql = "UPDATE Orders SET OrderStatus = 'Completed' WHERE OrderId = ? AND IsDeleted = 0";
+            try (PreparedStatement ps = connection.prepareStatement(updateOrderSql)) {
+                ps.setInt(1, orderId);
+                ps.executeUpdate();
+            }
+
+            // Update DeliveryLogs
+            String updateLogSql = """
+                                  UPDATE DeliveryLogs
+                                  SET CustomerConfirmedAt = GETDATE(), Status = 'Delivered'
+                                  WHERE OrderId = ? AND IsDeleted = 0
+                                  """;
+            try (PreparedStatement ps = connection.prepareStatement(updateLogSql)) {
+                ps.setInt(1, orderId);
+                ps.executeUpdate();
+            }
+
+            connection.commit();
+            return true;
+        } catch (Exception e) {
+            System.err.println("[OrderDAO] confirmDelivery FAILED orderId=" + orderId + ": " + e.getMessage());
+            try {
+                connection.rollback();
+            } catch (Exception ignored) {
+            }
+            return false;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+
     public Order getOfflineOrderById(int orderId) {
         try {
             String sql = """

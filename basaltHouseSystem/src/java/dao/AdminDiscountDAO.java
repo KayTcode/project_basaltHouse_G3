@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import model.DiscountCode;
 import java.math.BigDecimal;
+import java.sql.Connection;
 
 public class AdminDiscountDAO extends DBContext {
 
@@ -24,14 +25,12 @@ public class AdminDiscountDAO extends DBContext {
             WHERE IsDeleted = 0
             """;
 
-        // 1. Lọc theo ô tìm kiếm sử dụng LIKE
         if (search != null && !search.trim().isEmpty()) {
             sql += """
                    AND (Code LIKE ? OR Description LIKE ?)
                    """;
         }
 
-        // 2. Lọc theo loại giảm giá
         if ("PERCENT".equals(filterType)) {
             sql += """
                    AND DiscountPercent IS NOT NULL AND DiscountPercent > 0
@@ -42,7 +41,6 @@ public class AdminDiscountDAO extends DBContext {
                    """;
         }
 
-        // 3. Lọc theo trạng thái hoạt động
         if ("ACTIVE".equals(filterStatus)) {
             sql += """
                    AND IsActive = 1 AND (EndDate IS NULL OR EndDate >= GETDATE())
@@ -57,7 +55,6 @@ public class AdminDiscountDAO extends DBContext {
                    """;
         }
 
-        // Sắp xếp giảm dần theo ngày tạo
         sql += """
                ORDER BY CreatedAt DESC
                """;
@@ -155,11 +152,11 @@ public class AdminDiscountDAO extends DBContext {
             st.setString(6, description);
             st.setBoolean(7, isActive);
             st.setBoolean(8, isPublic);
-            // Nếu không có id admin hợp lệ thì để NULL (tránh FK violation)
+            // Nếu không có id admin hợp lệ thì fallback về 1 (id admin mặc định) để tránh lỗi ràng buộc khóa ngoại
             if (createdBy > 0) {
                 st.setInt(9, createdBy);
             } else {
-                st.setNull(9, java.sql.Types.INTEGER);
+                st.setInt(9, 1);
             }
             return st.executeUpdate() > 0;
         } catch (Exception e) {
@@ -214,6 +211,74 @@ public class AdminDiscountDAO extends DBContext {
             System.err.println("[AdminDiscountDAO.deleteDiscount] Lỗi: " + e.getMessage());
             e.printStackTrace();
             return false;
+        }
+    }
+
+
+    public List<DiscountCode> getActiveDiscountsForGift() {
+        List<DiscountCode> list = new ArrayList<>();
+        String sql = """
+            SELECT DiscountId, Code, DiscountPercent, DiscountAmount, StartDate, EndDate, Description
+            FROM DiscountCodes
+            WHERE IsDeleted = 0
+              AND IsActive = 1
+              AND (StartDate IS NULL OR StartDate <= GETDATE())
+              AND (EndDate IS NULL OR EndDate >= GETDATE())
+            ORDER BY CreatedAt DESC
+            """;
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                DiscountCode d = new DiscountCode();
+                d.setDiscountId(rs.getInt("DiscountId"));
+                d.setCode(rs.getString("Code"));
+                d.setDiscountPercent(rs.getBigDecimal("DiscountPercent"));
+                d.setDiscountAmount(rs.getBigDecimal("DiscountAmount"));
+                d.setStartDate(rs.getObject("StartDate", LocalDateTime.class));
+                d.setEndDate(rs.getObject("EndDate", LocalDateTime.class));
+                d.setDescription(rs.getString("Description"));
+                list.add(d);
+            }
+        } catch (Exception e) {
+            System.err.println("[AdminDiscountDAO.getActiveDiscountsForGift] Lỗi: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public String giftDiscountToCustomer(int accountId, int discountId) {
+        // 1. Kiểm tra trùng
+        String checkSql = """
+            SELECT COUNT(*) FROM CustomerDiscountCodes
+            WHERE AccountId = ? AND DiscountId = ?
+            """;
+        try {
+            PreparedStatement checkSt = connection.prepareStatement(checkSql);
+            checkSt.setInt(1, accountId);
+            checkSt.setInt(2, discountId);
+            ResultSet rs = checkSt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                return "already_gifted";
+            }
+        } catch (Exception e) {
+            System.err.println("[AdminDiscountDAO.giftDiscountToCustomer] Kiểm tra trùng lỗi: " + e.getMessage());
+            return "error";
+        }
+
+        String insertSql = """
+            INSERT INTO CustomerDiscountCodes (AccountId, DiscountId, IsUsed, [Status])
+            VALUES (?, ?, 0, 1)
+            """;
+        try {
+            PreparedStatement st = connection.prepareStatement(insertSql);
+            st.setInt(1, accountId);
+            st.setInt(2, discountId);
+            int rows = st.executeUpdate();
+            return rows > 0 ? "success" : "error";
+        } catch (Exception e) {
+            System.err.println("[AdminDiscountDAO.giftDiscountToCustomer] Tặng mã lỗi: " + e.getMessage());
+            e.printStackTrace();
+            return "error";
         }
     }
 }

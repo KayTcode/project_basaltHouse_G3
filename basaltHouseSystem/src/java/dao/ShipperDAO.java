@@ -69,25 +69,23 @@ public class ShipperDAO extends DBContext {
         }
         return null;
     }
-
-    public List<Order> getPendingShipperOrders(int shipperId) {
+      public List<Order> getPendingShipperOrders() {
         sql = """
-          SELECT o.[OrderId], o.[CustomerId], o.[CashierId], o.[ShipperId],
-                 o.[TableSessionId], o.[OrderAddressId], o.[DiscountId],
-                 o.[OrderType], o.[OrderStatus], o.[PaymentMethod], o.[PaymentStatus],
-                 o.[TotalAmount], o.[DiscountAmount], o.[FinalAmount],
-                 o.[CreatedAt], o.[IsDeleted],
-                 ISNULL(c.fullName, 'Khách tại quán') AS customerName
-          FROM [Orders] o
-          LEFT JOIN [Customers] c ON o.[CustomerId] = c.[CustomerId]
-          WHERE o.[OrderStatus] = 'Preparing' AND o.[ShipperId] = ?
-            AND o.[IsDeleted] = 0
-          ORDER BY o.[CreatedAt] ASC
-          """;
+              SELECT o.[OrderId], o.[CustomerId], o.[CashierId], o.[ShipperId],
+                                     o.[TableSessionId], o.[OrderAddressId], o.[DiscountId],
+                                     o.[OrderType], o.[OrderStatus], o.[PaymentMethod], o.[PaymentStatus],
+                                     o.[TotalAmount], o.[DiscountAmount], o.[FinalAmount],
+                                     o.[CreatedAt], o.[IsDeleted],
+                                     ISNULL(c.fullName, 'Khách tại quán') AS customerName
+              FROM [Orders] o
+              LEFT JOIN [Customers] c ON o.[CustomerId] = c.[CustomerId]
+              WHERE o.orderStatus = 'Preparing'
+                                AND o.isDeleted = 0
+                              ORDER BY o.createdAt ASC
+              """;
         List<Order> list = new ArrayList<>();
         try {
             ps = connection.prepareStatement(sql);
-            ps.setInt(1, shipperId);
             rs = ps.executeQuery();
             while (rs.next()) {
                 Order o = new Order();
@@ -118,7 +116,6 @@ public class ShipperDAO extends DBContext {
         }
         return list;
     }
-
     public Order getCurrentShippingOrder(int shipperId) {
         sql = """
               SELECT o.orderId, o.CustomerId, o.CashierId, o.ShipperId,
@@ -257,22 +254,27 @@ public class ShipperDAO extends DBContext {
         return result;
     }
 
-    public boolean assignShipper(int orderId, int shipperId) {
+   public boolean assignShipper(int orderId, int shipperId, Integer cashierId) {
         sql = """
-          UPDATE [dbo].[Orders]
-          SET [ShipperId] = ?
-          WHERE [OrderId] = ? AND [OrderStatus] = 'Preparing'
-            AND [ShipperId] IS NULL AND [IsDeleted] = 0
-          """;
+              UPDATE [dbo].[Orders]
+              SET [ShipperId] = ?, [OrderStatus] = 'Delivering', [CashierId] = COALESCE([CashierId], ?)
+              WHERE [OrderId] = ? AND [IsDeleted] = 0
+              """;
         try {
             ps = connection.prepareStatement(sql);
             ps.setInt(1, shipperId);
-            ps.setInt(2, orderId);
+            if (cashierId != null) {
+                ps.setInt(2, cashierId);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, orderId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
+
 
     public ProcessOrderResult updateDeliveryStatus(int orderId, int shipperId, boolean isSuccess, String note, String proofImageUrl, String failReasion) {
         ProcessOrderResult result = new ProcessOrderResult();

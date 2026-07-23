@@ -1,5 +1,6 @@
 package controller;
 
+import dao.AdminDeliveryZoneDAO;
 import dto.UserLoginDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -9,8 +10,10 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import model.CartItem;
+import model.DeliveryZone;
 import services.CartService;
 
 public class CartServlet extends HttpServlet {
@@ -23,12 +26,6 @@ public class CartServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("checkout-form".equals(action)) {
-            HttpSession session = request.getSession();
-            if (session.getAttribute("currentUser") == null) {
-                session.setAttribute("loginError", "Vui lòng đăng nhập để tiến hành thanh toán.");
-                response.sendRedirect(request.getContextPath() + "/login");
-                return;
-            }
             handleCheckoutForm(request, response);
             return;
         }
@@ -86,12 +83,6 @@ public class CartServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("checkout".equals(action)) {
-            HttpSession session = request.getSession();
-            if (session.getAttribute("currentUser") == null) {
-                session.setAttribute("loginError", "Vui lòng đăng nhập để tiến hành thanh toán.");
-                response.sendRedirect(request.getContextPath() + "/login");
-                return;
-            }
             handleCheckout(request, response);
             return;
         }
@@ -203,22 +194,49 @@ public class CartServlet extends HttpServlet {
             totalQty += item.getQuantity();
         }
 
-        // Tính giảm giá nếu có mã
+        // Lấy thông tin thành viên và tính chiết khấu hạng thành viên
+        double memberDiscountPercent = 0.0;
+        long memberDiscountAmount = 0;
+        String memberTier = "";
+        if (session.getAttribute("currentUser") instanceof UserLoginDTO) {
+            int aid = ((UserLoginDTO) session.getAttribute("currentUser")).getAccountId();
+            model.Customer member = new dao.DiscountCodeDAO().getCustomerMembershipByAccountId(aid);
+            if (member != null) {
+                memberTier = member.getRankName();
+                if (member.getDiscountValue() != null) {
+                    memberDiscountPercent = member.getDiscountValue().doubleValue();
+                    memberDiscountAmount = Math.round(totalAmount * (memberDiscountPercent / 100.0));
+                }
+            }
+        }
+
+        // Tính giảm giá nếu có mã voucher
         String discountCode = request.getParameter("discountCode");
         Map<String, Object> discountResult = cartService.applyDiscountResult(discountCode, cart);
-        long discountAmount = 0;
+        long couponDiscountAmount = 0;
         if (Boolean.TRUE.equals(discountResult.get("success"))) {
-            discountAmount = ((BigDecimal) discountResult.get("discountAmount")).longValue();
+            couponDiscountAmount = ((BigDecimal) discountResult.get("discountAmount")).longValue();
         }
-        long finalAmount = Math.max(totalAmount - discountAmount, 0);
+
+        long totalDiscountAmount = memberDiscountAmount + couponDiscountAmount;
+        long finalAmount = Math.max(totalAmount - totalDiscountAmount, 0);
 
         request.setAttribute("totalAmount", totalAmount);
-        request.setAttribute("discountAmount", discountAmount);
+        request.setAttribute("memberDiscountPercent", memberDiscountPercent);
+        request.setAttribute("memberDiscountAmount", memberDiscountAmount);
+        request.setAttribute("memberTier", memberTier != null ? memberTier : "");
+        request.setAttribute("couponDiscountAmount", couponDiscountAmount);
+        request.setAttribute("totalDiscountAmount", totalDiscountAmount);
         request.setAttribute("finalAmount", finalAmount);
         request.setAttribute("totalQty", totalQty);
         request.setAttribute("discountCode", discountCode != null ? discountCode : "");
         request.setAttribute("orderNote", request.getParameter("orderNote") != null ? request.getParameter("orderNote") : "");
         request.setAttribute("cartItems", cart.values());
+
+        // Lấy danh sách vùng giao hàng active từ DB
+        List<DeliveryZone> activeZones = new AdminDeliveryZoneDAO().getZones(null, null, "true");
+        request.setAttribute("activeZones", activeZones);
+
         request.getRequestDispatcher("views/Order/Checkout.jsp").forward(request, response);
     }
 
@@ -234,11 +252,10 @@ public class CartServlet extends HttpServlet {
         }
 
         String customerIdStr = null;
-        Object currentUser = session.getAttribute("currentUser");
-        if (currentUser instanceof UserLoginDTO) {
-            int aid = ((UserLoginDTO) currentUser).getAccountId();
-            int cid = cartService.resolveCustomerId(aid);
-            if (cid > 0) customerIdStr = String.valueOf(cid);
+        UserLoginDTO currentUser = (UserLoginDTO) session.getAttribute("currentUser");
+        int customerId = cartService.resolveCustomerId(currentUser.getAccountId());
+        if (customerId > 0) {
+            customerIdStr = String.valueOf(customerId);
         }
 
         String orderNote = request.getParameter("orderNote");    // ghi chú từ Cart.jsp → Orders.Note

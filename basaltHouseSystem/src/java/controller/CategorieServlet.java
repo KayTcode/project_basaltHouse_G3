@@ -109,9 +109,7 @@ public class CategorieServlet extends HttpServlet {
                 break;
             }
         }
-        if (isSearchResult) {
-            categoryTitle = "Kết quả tìm kiếm";
-        }
+        
 
         request.setAttribute("listP", product);
         request.setAttribute("ListC", list);

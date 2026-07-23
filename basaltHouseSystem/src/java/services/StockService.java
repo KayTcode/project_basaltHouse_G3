@@ -113,9 +113,7 @@ public class StockService {
     }
 
     public HashMap<String, Object> getStaffDashboardData(String key, boolean includeImportOptions) {
-        List<HashMap<String, Object>> rows = key == null || key.trim().isEmpty()
-                ? importVoiceDAO.getIngredientStockRows()
-                : importVoiceDAO.getIngredientStockRows(key);
+        List<HashMap<String, Object>> rows = importVoiceDAO.getIngredientStockRows(key);
 
         List<HashMap<String, Object>> ingredients = new ArrayList<>();
         List<HashMap<String, Object>> warnings = new ArrayList<>();

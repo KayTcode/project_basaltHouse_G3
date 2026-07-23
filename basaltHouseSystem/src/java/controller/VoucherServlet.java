@@ -24,7 +24,7 @@ public class VoucherServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         UserLoginDTO user = getCurrentUser(request);
-        Integer accountId = user != null ? user.getAccountId() : null;
+        Integer accountId = user.getAccountId();
         HashMap<String, Object> voucherData = discountCodeService.statusVoucherById(accountId);
         
         for (Map.Entry<String, Object> entry : voucherData.entrySet()) {
@@ -38,6 +38,7 @@ public class VoucherServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+        HttpSession session = request.getSession(false);
         UserLoginDTO user1 = getCurrentUser(request);
         HashMap<String, Object> result = discountCodeService.applyVoucherCode(
                 request.getParameter("voucherCode"), user1.getAccountId());
@@ -61,10 +62,8 @@ public class VoucherServlet extends HttpServlet {
     }
 
     private UserLoginDTO getCurrentUser(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        return session != null
-                ? (UserLoginDTO) session.getAttribute(AuthService.USER_SESSION_KEY)
-                : null;
+        return (UserLoginDTO) request.getSession(false)
+                .getAttribute(AuthService.USER_SESSION_KEY);
     }
 
     @Override

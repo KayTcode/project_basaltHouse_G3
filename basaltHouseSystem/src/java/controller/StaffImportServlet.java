@@ -15,7 +15,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.ActivityLog;
 import model.ImportDetail;
 import model.ImportInvoice;
@@ -70,14 +69,8 @@ public class StaffImportServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        HttpSession session = request.getSession(false);
-        UserLoginDTO user = session != null
-                ? (UserLoginDTO) session.getAttribute(USER_SESSION_KEY)
-                : null;
-        if (user == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        UserLoginDTO user = (UserLoginDTO) request.getSession(false)
+                .getAttribute(USER_SESSION_KEY);
 
         if (!"importIngredient".equals(request.getParameter("action"))) {
             response.sendRedirect(request.getContextPath() + "/staff/ingredient");
@@ -96,18 +89,6 @@ public class StaffImportServlet extends HttpServlet {
             String importCode = trimToNull(request.getParameter("importCode"));
             if (importCode == null) {
                 importCode = "IMP-" + LocalDateTime.now().format(IMPORT_CODE_FORMAT);
-            }
-
-            String status = trimToNull(request.getParameter("status"));
-            if (status == null) {
-                status = "Confirmed";
-            }
-            String rejectReason = trimToNull(request.getParameter("rejectReason"));
-            if ("Rejected".equalsIgnoreCase(status) && rejectReason == null) {
-                throw new IllegalArgumentException("Vui lòng nhập lý do từ chối phiếu hàng.");
-            }
-            if (!"Rejected".equalsIgnoreCase(status)) {
-                rejectReason = null;
             }
 
             int supplierId = Integer.parseInt(request.getParameter("supplierId"));
@@ -160,8 +141,8 @@ public class StaffImportServlet extends HttpServlet {
                     importCode,
                     supplierId,
                     staffId,
-                    "Pending".equalsIgnoreCase(status) ? null : staffId,
-                    status,
+                    null,
+                    "Pending",
                     parseDateTime(request.getParameter("orderedDate")),
                     parseDateTime(request.getParameter("expectedDate")),
                     parseDateTime(request.getParameter("receivedDate")),
@@ -169,11 +150,11 @@ public class StaffImportServlet extends HttpServlet {
                     totalOrderedAmount,
                     totalReceivedAmount,
                     trimToNull(request.getParameter("note")),
-                    rejectReason,
+                    null,
                     false
             );
 
-            HashMap<String, Object> createResult = importService.creatImportvoice(invoice, details);
+            HashMap<String, Object> createResult = importService.createImportInvoice(invoice, details);
             if (createResult.containsKey("error")) {
                 request.setAttribute("errorMessage", createResult.get("error").toString());
                 doGet(request, response);
@@ -210,12 +191,18 @@ public class StaffImportServlet extends HttpServlet {
 
     private LocalDateTime parseDateTime(String value) {
         String normalized = trimToNull(value);
-        return normalized == null ? null : LocalDateTime.parse(normalized);
+        if (normalized == null) {
+            return null;
+        }
+        return LocalDateTime.parse(normalized);
     }
 
     private BigDecimal parseBigDecimal(String value) {
         String normalized = trimToNull(value);
-        return normalized == null ? BigDecimal.ZERO : new BigDecimal(normalized);
+        if (normalized == null) {
+            return BigDecimal.ZERO;
+        }
+        return new BigDecimal(normalized);
     }
 
     private String trimToNull(String value) {

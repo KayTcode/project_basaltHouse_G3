@@ -14,7 +14,7 @@ public class CheckPromotionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("application/json;charset=UTF-8");
+       response.setContentType("application/json;charset=UTF-8");
         String action = request.getParameter("action");
         PromotionService promotionService = new PromotionService();
         String json = "";
@@ -25,6 +25,11 @@ public class CheckPromotionServlet extends HttpServlet {
         } else if ("member".equals(action)) {
             String phone = request.getParameter("phone");
             json = promotionService.checkMember(phone);
+        } else if ("member_name".equals(action)) {
+            String name = request.getParameter("name");
+            json = promotionService.searchMembersByName(name);
+        } else if ("public_discounts".equals(action)) {
+            json = promotionService.getPublicDiscounts();
         }
 
         response.getWriter().write(json);

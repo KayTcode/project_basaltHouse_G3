@@ -24,7 +24,7 @@
             <button class="tab-btn active"
                     type="button"
                     data-filter="all"
-                    onclick="setFilter(this)">
+                    onclick="setStockFilter(this.getAttribute('data-filter'))">
                 Tất cả
                 <span class="tab-count">${fn:length(ingredients)}</span>
             </button>
@@ -32,7 +32,7 @@
             <button class="tab-btn"
                     type="button"
                     data-filter="warning"
-                    onclick="setFilter(this)">
+                    onclick="setStockFilter(this.getAttribute('data-filter'))">
                 Sắp hết
                 <span class="tab-count">
                     <c:out value="${warningCount}"/>
@@ -42,7 +42,7 @@
             <button class="tab-btn"
                     type="button"
                     data-filter="danger"
-                    onclick="setFilter(this)">
+                    onclick="setStockFilter(this.getAttribute('data-filter'))">
                 Hết hàng
                 <span class="tab-count">
                     <c:out value="${outCount}"/>

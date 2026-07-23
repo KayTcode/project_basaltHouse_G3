@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 import services.AdminAccountService;
+import utils.PasswordUtils;
 
 /**
  *
@@ -151,13 +152,14 @@ public class AdminAccountServlet extends HttpServlet {
     private void handleAddAccount(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String email = request.getParameter("email");
         String password = request.getParameter("password"); 
+        String hashedPass = PasswordUtils.hashSHA256(password);
         String roleIdStr = request.getParameter("roleId");
         String fullName = request.getParameter("fullName");
         String phone = request.getParameter("phone");
         String isActiveStr = request.getParameter("isActive");
 
         // Đẩy toàn bộ tham số thô dạng String sang Service tự ép kiểu và xử lý DB
-        boolean isSuccess = accountService.processAddAccount(email, password, roleIdStr, fullName, phone, isActiveStr);
+        boolean isSuccess = accountService.processAddAccount(email, hashedPass, roleIdStr, fullName, phone, isActiveStr);
 
         if (!isSuccess) {
             // Bạn có thể lưu thông báo lỗi vào Session nếu muốn hiển thị Alert sau khi redirect

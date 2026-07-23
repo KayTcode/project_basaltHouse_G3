@@ -375,7 +375,7 @@
                                     </label>
                                     <label for="formIsPublic" style="font-weight: 600; cursor: pointer;">
                                         <i class="fa-solid fa-globe" style="color:#2563eb;margin-right:5px;"></i>
-                                        Hiển thị công khai trên trang khửp mã
+                                        Hiển thị công khai trên trang chọn mã
                                     </label>
                                 </div>
                             </div>

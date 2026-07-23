@@ -6,7 +6,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import static services.AuthService.USER_SESSION_KEY;
 
 public class StaffServlet extends HttpServlet {
@@ -18,14 +17,13 @@ public class StaffServlet extends HttpServlet {
     }
 
     static void prepareStaffPage(HttpServletRequest request, String page) {
-        HttpSession session = request.getSession(false);
-        UserLoginDTO user = session != null
-                ? (UserLoginDTO) session.getAttribute(USER_SESSION_KEY)
-                : null;
-
-        request.setAttribute("staffName", user != null && user.getFullName() != null
-                ? user.getFullName()
-                : "Staff");
+        UserLoginDTO user = (UserLoginDTO) request.getSession(false)
+                .getAttribute(USER_SESSION_KEY);
+        String staffName = user.getFullName();
+        if (staffName == null || staffName.trim().isEmpty()) {
+            staffName = "Staff";
+        }
+        request.setAttribute("staffName", staffName);
         setStaffPageAttributes(request, page);
     }
 

@@ -103,7 +103,7 @@ public class CartService {
         }
     }
 
-    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr, String discountCode, String deliveryAddress, String paymentMethod, String deliveryNote) {
+    public String checkout(Map<String, CartItem> cart, String note, String customerIdStr, String discountCode, String deliveryAddress, String paymentMethod, String deliveryNote, int accountId) {
         if (cart == null || cart.isEmpty()) {
             return null;
         }
@@ -239,6 +239,16 @@ public class CartService {
                 + ", discount=" + discountAmount);
 
         if (orderId > 0) {
+            // ── Đánh dấu mã giảm giá cá nhân đã dùng (IsPublic = 0) ──────────
+            if (discountCode != null && !discountCode.trim().isEmpty() && accountId > 0) {
+                try {
+                    boolean marked = new DiscountCodeDAO().markVoucherAsUsed(accountId, discountCode.trim());
+                    System.out.println("[CartService] markVoucherAsUsed code='" + discountCode.trim()
+                            + "' accountId=" + accountId + " → " + (marked ? "OK" : "không phải mã cá nhân hoặc đã dùng"));
+                } catch (Exception e) {
+                    System.err.println("[CartService] markVoucherAsUsed FAILED: " + e.getMessage());
+                }
+            }
             cart.clear();
             return "BH-" + orderId;
         }

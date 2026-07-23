@@ -100,7 +100,6 @@ public class CartServlet extends HttpServlet {
             session.setAttribute("cart", cart);
         }
 
-        // cartKey = "productId_sizeName", là key dùng trong Map cart
         String cartKey = request.getParameter("productId");
 
         switch (action) {
@@ -258,8 +257,8 @@ public class CartServlet extends HttpServlet {
             customerIdStr = String.valueOf(customerId);
         }
 
-        String orderNote = request.getParameter("orderNote");    // ghi chú từ Cart.jsp → Orders.Note
-        String deliveryNote = request.getParameter("deliveryNote"); // ghi chú từ Checkout.jsp → OrderAddresses.Note
+        String orderNote = request.getParameter("orderNote");    
+        String deliveryNote = request.getParameter("deliveryNote"); 
         String discountCode = request.getParameter("discountCode");
         String deliveryAddress = request.getParameter("deliveryAddress");
         String paymentMethod = request.getParameter("paymentMethod");
@@ -269,8 +268,7 @@ public class CartServlet extends HttpServlet {
             paymentMethod = "COD";
         }
 
-        // ── Tạo đơn hàng trong DB ─────────────────────────────────────────
-        String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote);
+        String orderCode = cartService.checkout(cart, orderNote, customerIdStr, discountCode, deliveryAddress, paymentMethod, deliveryNote, currentUser.getAccountId());
 
         if (orderCode == null) {
             response.sendRedirect(request.getContextPath() + "/Cart?error=checkout_failed");

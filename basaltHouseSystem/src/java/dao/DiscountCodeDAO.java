@@ -321,6 +321,29 @@ public List<Customer> searchCustomerMembershipByName(String name) {
         return false;
     }
 
+    public boolean markVoucherAsUsed(int accountId, String code) {
+        try {
+            String sql = """
+                         UPDATE CustomerDiscountCodes
+                         SET IsUsed   = 1,
+                             UsedDate = GETDATE()
+                         WHERE AccountId  = ?
+                           AND DiscountId = (
+                                   SELECT DiscountId FROM DiscountCodes
+                                   WHERE UPPER(Code) = UPPER(?)
+                                     AND IsPublic = 0
+                               )
+                           AND ISNULL(IsUsed, 0) = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            st.setString(2, code);
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.err.println("markVoucherAsUsed Error: " + e.getMessage());
+        }
+        return false;
+    }
 
     public void updateActiveAt1(int id) {
         try {

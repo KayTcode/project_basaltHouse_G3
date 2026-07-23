@@ -79,9 +79,18 @@ public class CancelOrderServlet extends HttpServlet {
             return;
         }
 
-        // 5. Thực hiện hủy
+        //  Thực hiện hủy
         try {
             orderDAO.updateOrderStatus(orderId, "Cancelled");
+            if ("Pending".equalsIgnoreCase(status)) {
+                try {
+                    orderDAO.restoreStockForOrder(orderId);
+                } catch (Exception ex) {
+                    System.err.println("[CancelOrderServlet] restoreStock failed for order "
+                            + orderId + ": " + ex.getMessage());
+                }
+            }
+
             session.setAttribute("cancelSuccess", "Đơn hàng #BH-" + orderId + " đã được hủy thành công.");
             response.sendRedirect(ctx + "/my-orders?tab=cancelled");
             return;

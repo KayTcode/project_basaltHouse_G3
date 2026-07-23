@@ -18,7 +18,8 @@ final class AccessRules {
             "/membership",
             "/my-orders",
             "/review",
-            "/momo/payment"
+            "/momo/payment",
+            "/confirm-delivery"
     );
 
     private static final Set<String> CASHIER_ROUTES = Set.of(

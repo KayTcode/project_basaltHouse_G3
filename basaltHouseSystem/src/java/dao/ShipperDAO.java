@@ -69,7 +69,7 @@ public class ShipperDAO extends DBContext {
         }
         return null;
     }
-      public List<Order> getPendingShipperOrders() {
+    public List<Order> getPendingShipperOrders(int shipperId) {
         sql = """
               SELECT o.[OrderId], o.[CustomerId], o.[CashierId], o.[ShipperId],
                                      o.[TableSessionId], o.[OrderAddressId], o.[DiscountId],
@@ -81,11 +81,13 @@ public class ShipperDAO extends DBContext {
               LEFT JOIN [Customers] c ON o.[CustomerId] = c.[CustomerId]
               WHERE o.orderStatus = 'Preparing'
                                 AND o.isDeleted = 0
+                                AND (o.ShipperId = ? OR o.ShipperId IS NULL)
                               ORDER BY o.createdAt ASC
               """;
         List<Order> list = new ArrayList<>();
         try {
             ps = connection.prepareStatement(sql);
+            ps.setInt(1, shipperId);
             rs = ps.executeQuery();
             while (rs.next()) {
                 Order o = new Order();

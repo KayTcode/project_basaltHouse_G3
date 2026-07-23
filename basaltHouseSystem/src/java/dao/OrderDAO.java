@@ -676,6 +676,28 @@ public class OrderDAO extends DBContext {
         return orderId;
     }
 
+    public boolean deductStockForOrderWithTransaction(int orderId) {
+        try {
+            connection.setAutoCommit(false);
+            deductStockForOrder(orderId, null);
+            connection.commit();
+            return true;
+        } catch (Exception e) {
+            System.err.println("[OrderDAO] deductStockForOrderWithTransaction FAILED orderId="
+                    + orderId + ": " + e.getMessage());
+            try {
+                connection.rollback();
+            } catch (Exception ignored) {
+            }
+            return false;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
     public void deductStockForOrder(int orderId, Integer staffId) throws SQLException {
         String appliedSql = """
                             SELECT TOP 1 1
@@ -796,6 +818,107 @@ public class OrderDAO extends DBContext {
             }
         }
     }
+
+    public void restoreStockForOrder(int orderId) {
+        try {
+            String checkSql = """
+                              SELECT IngredientId, ABS(QuantityChanged) AS Qty
+                              FROM IngredientStockLogs
+                              WHERE RefType  = 'Sale'
+                                AND RefId    = ?
+                                AND IsDeleted = 0
+                              """;
+            Map<Integer, BigDecimal> toRestore = new java.util.TreeMap<>();
+            try (PreparedStatement ps = connection.prepareStatement(checkSql)) {
+                ps.setInt(1, orderId);
+                try (ResultSet rs2 = ps.executeQuery()) {
+                    while (rs2.next()) {
+                        toRestore.put(rs2.getInt("IngredientId"),
+                                      rs2.getBigDecimal("Qty"));
+                    }
+                }
+            }
+
+            if (toRestore.isEmpty()) {
+                return;
+            }
+
+            String restoreSql = """
+                                UPDATE Ingredients
+                                SET StockQuantity = StockQuantity + ?
+                                WHERE IngredientId = ? AND IsDeleted = 0
+                                """;
+            // Đánh dấu log cũ là đã hoàn (soft-delete) để deductStock
+            String softDeleteLogSql = """
+                                      UPDATE IngredientStockLogs
+                                      SET IsDeleted = 1
+                                      WHERE RefType  = 'Sale'
+                                        AND RefId    = ?
+                                        AND IsDeleted = 0
+                                      """;
+
+            connection.setAutoCommit(false);
+            for (Map.Entry<Integer, BigDecimal> entry : toRestore.entrySet()) {
+                try (PreparedStatement ps = connection.prepareStatement(restoreSql)) {
+                    ps.setBigDecimal(1, entry.getValue());
+                    ps.setInt(2, entry.getKey());
+                    ps.executeUpdate();
+                }
+            }
+            try (PreparedStatement ps = connection.prepareStatement(softDeleteLogSql)) {
+                ps.setInt(1, orderId);
+                ps.executeUpdate();
+            }
+            connection.commit();
+            System.out.println("[OrderDAO] restoreStockForOrder → orderId=" + orderId
+                    + ", restored " + toRestore.size() + " ingredients");
+        } catch (Exception e) {
+            System.err.println("[OrderDAO] restoreStockForOrder FAILED orderId=" + orderId
+                    + ": " + e.getMessage());
+            try { connection.rollback(); } catch (Exception ignored) {}
+        } finally {
+            try { connection.setAutoCommit(true); } catch (Exception ignored) {}
+        }
+    }
+
+    public boolean confirmDelivery(int orderId) {
+        try {
+            connection.setAutoCommit(false);
+
+            String updateOrderSql = "UPDATE Orders SET OrderStatus = 'Completed' WHERE OrderId = ? AND IsDeleted = 0";
+            try (PreparedStatement ps = connection.prepareStatement(updateOrderSql)) {
+                ps.setInt(1, orderId);
+                ps.executeUpdate();
+            }
+
+            // Update DeliveryLogs
+            String updateLogSql = """
+                                  UPDATE DeliveryLogs
+                                  SET CustomerConfirmedAt = GETDATE(), Status = 'Delivered'
+                                  WHERE OrderId = ? AND IsDeleted = 0
+                                  """;
+            try (PreparedStatement ps = connection.prepareStatement(updateLogSql)) {
+                ps.setInt(1, orderId);
+                ps.executeUpdate();
+            }
+
+            connection.commit();
+            return true;
+        } catch (Exception e) {
+            System.err.println("[OrderDAO] confirmDelivery FAILED orderId=" + orderId + ": " + e.getMessage());
+            try {
+                connection.rollback();
+            } catch (Exception ignored) {
+            }
+            return false;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
 
     public Order getOfflineOrderById(int orderId) {
         try {
@@ -999,9 +1122,6 @@ public class OrderDAO extends DBContext {
         return list;
     }
 
-    /**
-     * Lấy địa chỉ giao hàng theo OrderAddressId.
-     */
     public model.OrderAddress getOrderAddressByOrderAddressId(int orderAddressId) {
         try {
             String sql = """

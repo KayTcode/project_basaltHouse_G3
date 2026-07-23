@@ -38,22 +38,9 @@ public class VoucherServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-        UserLoginDTO user1 = (UserLoginDTO) session.getAttribute(AuthService.USER_SESSION_KEY);
-        if (user1 == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        UserLoginDTO user1 = getCurrentUser(request);
         HashMap<String, Object> result = discountCodeService.applyVoucherCode(
                 request.getParameter("voucherCode"), user1.getAccountId());
-
-        if (result.containsKey("voucher")) {
-            session.setAttribute("voucher", result.get("voucher"));
-        }
 
         if (result.containsKey("success")) {
             activeService.ctreatActiveLog(new ActivityLog(user1.getAccountId(),

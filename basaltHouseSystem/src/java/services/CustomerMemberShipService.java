@@ -58,12 +58,23 @@ public class CustomerMemberShipService {
         HashMap<String, Object> s = new HashMap<>();
         try {
             if (m.getRankId() <= 0) {
-                s.put("error", "ID khong hop le");
-            }else{
-                dao.updateRanking(m);
-              s.put("success", "Cap nhat thanh cong");
+                s.put("error", "ID không hợp lệ");
+            } else if (m.getRankName() == null || m.getRankName().trim().isEmpty()) {
+                s.put("error", "Tên hạng không hợp lệ");
+            } else if (m.getMinTotalSpent() == null || m.getMinTotalSpent().signum() < 0) {
+                s.put("error", "Mốc chi tiêu không hợp lệ");
+            } else if (m.getDiscountValue() < 0 || m.getDiscountValue() > 100) {
+                s.put("error", "Giá trị giảm giá không hợp lệ");
+            } else if (m.isIsDeleted() && !dao.hasOtherActiveRank(m.getRankId())) {
+                s.put("error", "Phải có ít nhất một hạng thành viên đang hoạt động");
+            } else if (dao.updateRanking(m)) {
+                s.put("success", "Cập nhật thành công");
+            } else {
+                s.put("error", "Không thể cập nhật hạng thành viên");
             }
         } catch (Exception e) {
+            System.err.println(e.getMessage());
+            s.put("error", "Không thể cập nhật hạng thành viên");
         }
         return s;
 
@@ -91,36 +102,17 @@ public class CustomerMemberShipService {
         return s;
 
     }
-        public HashMap<String, Object> searchCustomer(String key,int rankId ,String status){
+    public HashMap<String, Object> searchCustomer(String key, int rankId) {
         HashMap<String, Object> s = new HashMap<>();
-        List<CustomerMembership>list  = new ArrayList<>();
-            try {
-                String searchKey = key == null ? "" : key.trim();
-                String memberStatus = status == null ? "" : status.trim();
-                list = dao.searchByName(searchKey, rankId, memberStatus);
-                s.put("success", list);
-            } catch (Exception e) {
-                s.put("error", "Khong the tai danh sach hoi vien");
-                System.err.println(e.getMessage());
-            }
-        return s;
+        List<CustomerMembership> list = new ArrayList<>();
+        try {
+            String searchKey = key == null ? "" : key.trim();
+            list = dao.searchByName(searchKey, rankId);
+            s.put("success", list);
+        } catch (Exception e) {
+            s.put("error", "Khong the tai danh sach hoi vien");
+            System.err.println(e.getMessage());
         }
-        
-       public HashMap<String, Object> updateLockId(int id){
-        HashMap<String, Object> s = new HashMap<>();
-           try {
-               if(id<=0){
-                   s.put("error", "Id khong hop le");
-               }else if (dao.updateLocked(id)) {
-                   s.put("success", "Cap nhat trang thai membership thanh cong");
-               } else {
-                   s.put("error", "Khach hang chua co membership");
-               }
-           } catch (Exception e) {
-               s.put("error", "Khong the cap nhat trang thai membership");
-               System.err.println(e.getMessage());
-           }
         return s;
-       
-       }
+    }
 }

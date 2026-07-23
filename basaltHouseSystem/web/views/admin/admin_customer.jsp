@@ -222,7 +222,8 @@
                                                 </a>
                                                 <!-- Chi tiết & Cập nhật -->
                                                 <button class="btn-icon-action action-edit" title="Xem &amp; Sửa thông tin" 
-                                                        onclick="openEditModal('${item.account.accountId}', '${item.fullName}', '${item.phone}', '${item.account.email}', '${item.rankId}', '${item.totalSpent}', '${item.account.isLocked}')">
+                                                        data-rank-name="${fn:escapeXml(item.rankName)}"
+                                                        onclick="openEditModal('${item.account.accountId}', '${item.fullName}', '${item.phone}', '${item.account.email}', '${item.rankId}', '${item.totalSpent}', '${item.account.isLocked}', this.dataset.rankName)">
                                                     <i class="fa-regular fa-pen-to-square"></i>
                                                 </button>
                                             </div>
@@ -372,13 +373,26 @@
             function openAddModal()  { document.getElementById('addCustomerModal').classList.add('active'); }
             function closeAddModal() { document.getElementById('addCustomerModal').classList.remove('active'); }
 
-            function openEditModal(id, fullName, phone, email, rankId, totalSpent, isLocked) {
+            function openEditModal(id, fullName, phone, email, rankId, totalSpent, isLocked, rankName) {
                 document.getElementById('edit_id').value              = id;
                 document.getElementById('edit_notice_title').innerText = 'Khách hàng #' + id;
                 document.getElementById('edit_fullName').value        = fullName;
                 document.getElementById('edit_phone').value           = phone;
                 document.getElementById('edit_email').value           = email;
-                document.getElementById('edit_rank').value            = rankId;
+                const rankSelect = document.getElementById('edit_rank');
+                const oldHiddenRank = rankSelect.querySelector('option[data-current-hidden-rank]');
+                if (oldHiddenRank) {
+                    oldHiddenRank.remove();
+                }
+                rankSelect.value = rankId;
+                if (rankSelect.value !== String(rankId)) {
+                    const hiddenRankOption = document.createElement('option');
+                    hiddenRankOption.value = rankId;
+                    hiddenRankOption.textContent = rankName + ' (đang tạm ẩn)';
+                    hiddenRankOption.setAttribute('data-current-hidden-rank', 'true');
+                    hiddenRankOption.selected = true;
+                    rankSelect.appendChild(hiddenRankOption);
+                }
                 document.getElementById('edit_totalSpent').value      = Math.round(parseFloat(totalSpent) || 0);
                 document.getElementById('edit_status').value          = (isLocked === 'true' || isLocked === '1') ? 'true' : 'false';
                 document.getElementById('editCustomerModal').classList.add('active');

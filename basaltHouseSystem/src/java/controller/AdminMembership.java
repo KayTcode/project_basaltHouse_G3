@@ -8,8 +8,6 @@ import dto.UserLoginDTO;
 import java.math.BigDecimal;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -86,11 +84,6 @@ public class AdminMembership extends HttpServlet {
                 request.setAttribute("error", "Hang thanh vien khong hop le");
             }
         }
-        String statusParam = request.getParameter("status");
-        String status = statusParam == null ? "" : statusParam.trim();
-        if (!"active".equals(status) && !"locked".equals(status)) {
-            status = "";
-        }
         int requestedPage = 1;
         String pageParam = request.getParameter("page");
         if (pageParam != null && !pageParam.trim().isEmpty()) {
@@ -110,7 +103,7 @@ public class AdminMembership extends HttpServlet {
             }
         }
         HashMap<String, Object> rankResult = membershipService.getRankName();
-        HashMap<String, Object> memberResult = membershipService.searchCustomer(key, rankId, status);
+        HashMap<String, Object> memberResult = membershipService.searchCustomer(key, rankId);
         List<CustomerMembership> memberList = new ArrayList<>();
         List<MembershipRank> rankList = new ArrayList<>();
         try {
@@ -141,13 +134,9 @@ public class AdminMembership extends HttpServlet {
         }
 
         BigDecimal totalSpent = BigDecimal.ZERO;
-        int activeMembers = 0;
         for (CustomerMembership member : memberList) {
             if (member.getTotalSpent() != null) {
                 totalSpent = totalSpent.add(member.getTotalSpent());
-            }
-            if (!"locked".equals(member.getStatus())) {
-                activeMembers++;
             }
         }
 
@@ -155,12 +144,12 @@ public class AdminMembership extends HttpServlet {
         int topDiscount = 0;
         BigDecimal topMinSpent = null;
         for (MembershipRank rank : activeRankList) {
-            if (rank.getDiscountValue() > topDiscount) {
-                topDiscount = rank.getDiscountValue();
-            }
-            if (rank.getMinTotalSpent() != null && (topMinSpent == null || rank.getMinTotalSpent().compareTo(topMinSpent) > 0)) {
+            if (rank.getMinTotalSpent() != null
+                    && (topMinSpent == null
+                    || rank.getMinTotalSpent().compareTo(topMinSpent) > 0)) {
                 topMinSpent = rank.getMinTotalSpent();
                 topRank = rank.getRankName();
+                topDiscount = rank.getDiscountValue();
             }
         }
 
@@ -171,13 +160,13 @@ public class AdminMembership extends HttpServlet {
         int toIndex = Math.min(fromIndex + MEMBER_PAGE_SIZE, totalMemberCount);
         List<CustomerMembership> pagedMemberList = new ArrayList<>(memberList.subList(fromIndex, toIndex));
 
-        int totalRankCount = activeRankList.size();
+        int totalRankCount = rankList.size();
         int totalRankPages = (totalRankCount + RANK_PAGE_SIZE - 1) / RANK_PAGE_SIZE;
         int currentRankPage = totalRankPages == 0 ? 1 : Math.min(requestedRankPage, totalRankPages);
         int rankFromIndex = totalRankCount == 0 ? 0 : (currentRankPage - 1) * RANK_PAGE_SIZE;
         int rankToIndex = Math.min(rankFromIndex + RANK_PAGE_SIZE, totalRankCount);
         List<MembershipRank> pagedRankList
-                = new ArrayList<>(activeRankList.subList(rankFromIndex, rankToIndex));
+                = new ArrayList<>(rankList.subList(rankFromIndex, rankToIndex));
 
         request.setAttribute("rankList", activeRankList);
         request.setAttribute("pagedRankList", pagedRankList);
@@ -185,7 +174,6 @@ public class AdminMembership extends HttpServlet {
         request.setAttribute("membershipRanks", activeRankList);
         request.setAttribute("membershipMembers", pagedMemberList);
         request.setAttribute("totalMembers", totalMemberCount);
-        request.setAttribute("activeMembers", activeMembers);
         request.setAttribute("totalSpent", totalSpent);
         request.setAttribute("topRank", topRank);
         request.setAttribute("topDiscount", topDiscount);
@@ -200,7 +188,6 @@ public class AdminMembership extends HttpServlet {
         request.setAttribute("rankPageEnd", rankToIndex);
         request.setAttribute("searchValue", key);
         request.setAttribute("selectedRankId", rankId);
-        request.setAttribute("selectedStatus", status);
         request.getRequestDispatcher("/views/admin/admin_membership.jsp").forward(request, response);
     }
 
@@ -271,9 +258,6 @@ public class AdminMembership extends HttpServlet {
 
                 MembershipRank rank = new MembershipRank(rankId, rankName, minTotalSpent, discountValue, isDeleted);
                 result = membershipService.chekUpdateRanking(rank);
-            } else if ("toggleMemberStatus".equals(action)) {
-                int id = Integer.parseInt(request.getParameter("customerId"));
-                result = membershipService.updateLockId(id);
             }
             if (result.containsKey("error")) {
                 session.setAttribute("toastError", result.get("error").toString());
@@ -289,22 +273,7 @@ public class AdminMembership extends HttpServlet {
 
         }
 
-        String redirectUrl = request.getContextPath() + "/admin/memberships";
-        if ("toggleMemberStatus".equals(action)) {
-            String returnPage = request.getParameter("returnPage");
-            String returnSearch = request.getParameter("returnSearch");
-            String returnRankId = request.getParameter("returnRankId");
-            String returnStatus = request.getParameter("returnStatus");
-            redirectUrl += "?page=" + encode(returnPage)
-                    + "&search=" + encode(returnSearch)
-                    + "&rankId=" + encode(returnRankId)
-                    + "&status=" + encode(returnStatus);
-        }
-        response.sendRedirect(redirectUrl);
-    }
-
-    private String encode(String value) {
-        return URLEncoder.encode(value == null ? "" : value, StandardCharsets.UTF_8);
+        response.sendRedirect(request.getContextPath() + "/admin/memberships");
     }
 
     /**

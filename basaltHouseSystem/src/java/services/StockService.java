@@ -191,10 +191,7 @@ public class StockService {
             context.auditDate = selectedDate;
         }
 
-        List<HashMap<String, Object>> soldRows = loadSoldRows(context, selectedDate);
-        if (selectedDate == null) {
-            context.auditDate = resolveAuditDate(soldRows);
-        }
+        List<HashMap<String, Object>> soldRows = loadSoldRows(context);
         context.importedByIngredient = getImportedQuantityByIngredient(context.auditDate);
         context.stockSnapshotByIngredient = loadStockSnapshotByIngredient(context.auditDate);
 
@@ -244,14 +241,10 @@ public class StockService {
     }
 
     // Lấy dữ liệu sản phẩm đã bán trong ngày kiểm kê từ OrderService.
-    private List<HashMap<String, Object>> loadSoldRows(SalesAuditContext context, LocalDate selectedDate) {
+    private List<HashMap<String, Object>> loadSoldRows(SalesAuditContext context) {
         OrderService orderService = new OrderService();
-        HashMap<String, Object> soldResult;
-        if (selectedDate == null) {
-            soldResult = orderService.getTodaySoldProductSizeRows();
-        } else {
-            soldResult = orderService.getSoldProductSizeRowsByDate(selectedDate);
-        }
+        HashMap<String, Object> soldResult
+                = orderService.getSoldProductSizeRowsByDate(context.auditDate);
         if (soldResult.containsKey("error")) {
             context.dataError = stringValue(soldResult.get("error"));
             return new ArrayList<>();
@@ -262,7 +255,7 @@ public class StockService {
             return (List<HashMap<String, Object>>) success;
         }
 
-        context.dataError = "Không đọc được dữ liệu bán hàng hôm nay.";
+        context.dataError = "Không đọc được dữ liệu bán hàng theo ngày đã chọn.";
         return new ArrayList<>();
     }
 
@@ -464,7 +457,11 @@ public class StockService {
         boolean hasStockLog = snapshot != null && Boolean.TRUE.equals(snapshot.get("hasStockLog"));
 
         if (!hasStockLog) {
-            return reconcileStock(null, ingredient.getStockQuantity(), imported, expectedUsed);
+            BigDecimal closingStock = null;
+            if (LocalDate.now().equals(context.auditDate)) {
+                closingStock = ingredient.getStockQuantity();
+            }
+            return reconcileStock(null, closingStock, imported, expectedUsed);
         }
         return reconcileStock(
                 toBigDecimal(snapshot.get("openingStock")),
@@ -530,44 +527,6 @@ public class StockService {
         return new StockStatus("ok", "check_circle", "Khớp");
     }
 
-    // Lấy ngày kiểm kê từ dữ liệu bán hàng; nếu rỗng thì dùng ngày hiện tại.
-    private LocalDate resolveAuditDate(List<HashMap<String, Object>> soldRows) {
-        if (soldRows == null || soldRows.isEmpty()) {
-            return LocalDate.now();
-        }
-        return toLocalDate(soldRows.get(0).get("auditDate"), LocalDate.now());
-    }
-
-    // Ép các kiểu ngày khác nhau về LocalDate để xử lý thống nhất.
-    private LocalDate toLocalDate(Object value, LocalDate defaultDate) {
-        if (value instanceof LocalDate) {
-            return (LocalDate) value;
-        }
-        if (value instanceof java.sql.Date) {
-            return ((java.sql.Date) value).toLocalDate();
-        }
-        if (value instanceof java.sql.Timestamp) {
-            return ((java.sql.Timestamp) value).toLocalDateTime().toLocalDate();
-        }
-        if (value instanceof LocalDateTime) {
-            return ((LocalDateTime) value).toLocalDate();
-        }
-        if (value == null) {
-            return defaultDate;
-        }
-
-        String text = value.toString();
-        try {
-            String dateText = text;
-            if (dateText.length() > 10) {
-                dateText = dateText.substring(0, 10);
-            }
-            return LocalDate.parse(dateText);
-        } catch (Exception e) {
-            return defaultDate;
-        }
-    }
-
     // Format ngày theo kiểu dd/MM/yyyy cho giao diện.
     private String formatDate(LocalDate date) {
         if (date == null) {
@@ -631,8 +590,7 @@ public class StockService {
 
     // Tính tổng lượng nguyên liệu đã nhập theo ngày kiểm kê.
     private Map<Integer, BigDecimal> getImportedQuantityByIngredient(LocalDate auditDate) {
-        LocalDate targetDate = auditDate == null ? LocalDate.now() : auditDate;
-        return importVoiceDAO.getReceivedQuantityByIngredient(targetDate);
+        return importVoiceDAO.getReceivedQuantityByIngredient(auditDate);
     }
 
     // Format số lượng nguyên liệu, bỏ số 0 dư phía sau.

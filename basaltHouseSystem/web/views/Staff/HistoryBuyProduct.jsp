@@ -122,7 +122,7 @@
         <div class="panel-header compact">
             <div>
                 <h2>Đối chiếu nguyên liệu</h2>
-                <p>Tính theo công thức Product + Size và lượng nhập đã nhận trong ngày kiểm kê.</p>
+                <p>Tồn cuối dự kiến = Tồn đầu ngày + Nhập/điều chỉnh - Tổng nguyên liệu đã dùng.</p>
             </div>
         </div>
         <div class="table-wrap">
@@ -135,7 +135,7 @@
                         <th>Tồn đầu ngày</th>
                         <th>Nhập/điều chỉnh kho trong ngày</th>
                         <th>Tồn cuối ngày</th>
-                        <th>Đối chiếu</th>
+                        <th>Tồn cuối dự kiến</th>
                         <th>Kết quả</th>
                     </tr>
                 </thead>

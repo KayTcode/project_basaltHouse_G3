@@ -110,7 +110,7 @@ public class CategorieServlet extends HttpServlet {
             }
         }
         if (isSearchResult) {
-            categoryTitle = "K\u1ebft qu\u1ea3 t\u00ecm ki\u1ebfm";
+            categoryTitle = "Kết quả tìm kiếm";
         }
 
         request.setAttribute("listP", product);

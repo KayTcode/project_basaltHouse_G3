@@ -99,7 +99,10 @@ public class AdminCustomerService {
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
             return false;
         }
-        int rankId = parseIntSafe(rankIdStr, 1);
+        int rankId = parseIntSafe(rankIdStr, 0);
+        if (rankId <= 0) {
+            return false;
+        }
         double totalSpent = parseDoubleSafe(spentStr, 0);
         return dao.addCustomer(email.trim(), password.trim(), fullName, phone, rankId, totalSpent);
     }
@@ -110,7 +113,10 @@ public class AdminCustomerService {
         if (accountId == -1 || email == null || email.isBlank()) {
             return false;
         }
-        int rankId = parseIntSafe(rankIdStr, 1);
+        int rankId = parseIntSafe(rankIdStr, 0);
+        if (rankId <= 0) {
+            return false;
+        }
         double totalSpent = parseDoubleSafe(spentStr, 0);
         boolean isLocked = "true".equalsIgnoreCase(isLockedStr);
         return dao.updateCustomer(accountId, email.trim(), fullName, phone, rankId, totalSpent, isLocked);

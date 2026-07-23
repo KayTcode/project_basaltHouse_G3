@@ -377,6 +377,7 @@ h1, h2, h3, h4 { font-family: var(--font-montserrat); }
 .ot-badge-shipping  { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
 .ot-badge-completed { background: var(--secondary-bg); color: var(--primary-color); border: 1px solid #86efac; }
 .ot-badge-cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.ot-badge-delivered { background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7; }
 .ot-badge-paid      { background: var(--secondary-bg); color: var(--primary-color); border: 1px solid #86efac; }
 .ot-badge-unpaid    { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 
@@ -1051,3 +1052,29 @@ h1, h2, h3, h4 { font-family: var(--font-montserrat); }
     border: 1px solid #fca5a5;
     color: #b91c1c;
 }
+
+/* ── Confirm Order Button ─────────────────────────────────────── */
+.ot-confirm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 16px;
+    border-radius: 50px;
+    border: 1.5px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: var(--font-inter);
+    white-space: nowrap;
+}
+.ot-confirm-btn:hover {
+    background: var(--primary-color);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-green);
+}
+.ot-confirm-btn .material-symbols-outlined { font-size: 14px; }
+

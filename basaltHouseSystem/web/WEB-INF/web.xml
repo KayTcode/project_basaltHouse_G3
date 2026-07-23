@@ -176,6 +176,10 @@
         <servlet-name>AdminMembership</servlet-name>
         <servlet-class>controller.AdminMembership</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>CancelOrderServlet</servlet-name>
+        <servlet-class>controller.CancelOrderServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
@@ -343,6 +347,10 @@
     <servlet-mapping>
         <servlet-name>AdminMembership</servlet-name>
         <url-pattern>/admin/memberships</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>CancelOrderServlet</servlet-name>
+        <url-pattern>/cancel-order</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

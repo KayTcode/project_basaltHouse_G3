@@ -5,10 +5,10 @@
         <div class="modal-content add-table-modal-content">
             <div class="add-table-modal-header">
                 <div>
-                    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px">
+                    <div class="modal-header-subtitle">
                         Quản lý bàn</div>
-                    <h5 id="addTableModalLabel" style="margin:0;font-size:18px;font-weight:700;color:#fff">
-                        <span class="material-symbols-outlined" style="font-size:20px;vertical-align:middle;margin-right:6px">add_circle</span>Thêm Bàn Mới
+                    <h5 id="addTableModalLabel" class="modal-header-title">
+                        <span class="material-symbols-outlined modal-header-title-icon">add_circle</span>Thêm Bàn Mới
                     </h5>
                 </div>
                 <button type="button" class="add-table-close-btn" data-bs-dismiss="modal">
@@ -44,11 +44,11 @@
                         <label class="at-label" for="atCap">Sức chứa (ghế) <span class="at-required">*</span></label>
                         <div class="guest-input-wrap" id="wrapAtCap">
                             <button type="button" class="guest-btn" id="atBtnMinus" onclick="adjustAtCap(-1)" disabled>
-                                <span class="material-symbols-outlined" style="font-size:20px">remove</span>
+                                <span class="material-symbols-outlined modal-guest-icon">remove</span>
                             </button>
                             <input type="number" id="atCap" name="capacity" value="2" min="1" max="20" onchange="validateAtCap()" oninput="validateAtCap()">
                             <button type="button" class="guest-btn" id="atBtnPlus" onclick="adjustAtCap(1)">
-                                <span class="material-symbols-outlined" style="font-size:20px">add</span>
+                                <span class="material-symbols-outlined modal-guest-icon">add</span>
                             </button>
                         </div>
                         <div class="capacity-hint">Từ 1 đến 20 ghế</div>
@@ -105,7 +105,7 @@
         if (!ok) { ev.preventDefault(); return; }
         const btn = document.getElementById('atBtnSubmit');
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Đang thêm...';
+        btn.innerHTML = '<span class="material-symbols-outlined btn-spin-icon">progress_activity</span> Đang thêm...';
     });
     document.getElementById('addTableModal').addEventListener('hidden.bs.modal', function () {
         document.getElementById('addTableForm').reset();

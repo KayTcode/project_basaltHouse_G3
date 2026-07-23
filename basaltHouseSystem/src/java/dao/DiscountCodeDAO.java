@@ -112,6 +112,58 @@ public List<Customer> searchCustomerMembershipByName(String name) {
         return list;
     }
 
+    public Customer getCustomerMembershipByAccountId(int accountId) {
+        Customer dto = null;
+        try {
+            String sql = """
+                      SELECT c.CustomerId, c.FullName, r.RankName, r.DiscountValue 
+                      FROM Customers c 
+                      LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
+                      LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
+                      WHERE c.AccountId = ? AND c.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                dto = new Customer();
+                dto.setCustomerId(rs.getInt("CustomerId"));
+                dto.setFullName(rs.getString("FullName"));
+                dto.setRankName(rs.getString("RankName"));
+                dto.setDiscountValue(rs.getBigDecimal("DiscountValue"));
+            }
+        } catch (Exception e) {
+            System.err.println("getCustomerMembershipByAccountId Error: " + e.getMessage());
+        }
+        return dto;
+    }
+
+    public Customer getCustomerMembershipByCustomerId(int customerId) {
+        Customer dto = null;
+        try {
+            String sql = """
+                      SELECT c.CustomerId, c.FullName, r.RankName, r.DiscountValue 
+                      FROM Customers c 
+                      LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
+                      LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
+                      WHERE c.CustomerId = ? AND c.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, customerId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                dto = new Customer();
+                dto.setCustomerId(rs.getInt("CustomerId"));
+                dto.setFullName(rs.getString("FullName"));
+                dto.setRankName(rs.getString("RankName"));
+                dto.setDiscountValue(rs.getBigDecimal("DiscountValue"));
+            }
+        } catch (Exception e) {
+            System.err.println("getCustomerMembershipByCustomerId Error: " + e.getMessage());
+        }
+        return dto;
+    }
+
     public List<DiscountCode> getDiscountCode() {
         List<DiscountCode> list = new ArrayList<>();
         try {

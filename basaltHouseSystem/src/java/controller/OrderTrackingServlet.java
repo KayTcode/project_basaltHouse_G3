@@ -8,7 +8,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,14 +23,8 @@ public class OrderTrackingServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-
-        if (session == null || session.getAttribute("currentUser") == null) {
-            request.getRequestDispatcher("views/Order/OrderTracking.jsp").forward(request, response);
-            return;
-        }
-
-        UserLoginDTO user = (UserLoginDTO) session.getAttribute("currentUser");
+        UserLoginDTO user = (UserLoginDTO) request.getSession(false)
+                .getAttribute("currentUser");
 
         OrderDAO orderDAO = new OrderDAO();
         int customerId = orderDAO.getCustomerIdByAccountId(user.getAccountId());

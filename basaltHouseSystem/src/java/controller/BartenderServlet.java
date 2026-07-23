@@ -43,7 +43,7 @@ public class BartenderServlet extends HttpServlet {
         }
 
         try {
-            int orderId = Integer.parseInt(orderIdStr.replace("ORD00", "").trim());
+            int orderId = Integer.parseInt(orderIdStr.replaceAll("\\D+", ""));
             
             Integer cashierId = null;
             if (request.getSession(false) != null) {

@@ -82,6 +82,35 @@ public class DiscountCodeDAO extends DBContext {
         }
         return dto;
     }
+public List<Customer> searchCustomerMembershipByName(String name) {
+        List<Customer> list = new ArrayList<>();
+        try {
+            String sql = """
+                      SELECT c.CustomerId, c.FullName, c.Phone, c.AccountId, r.RankName, r.DiscountValue 
+                      FROM Customers c 
+                      LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
+                      LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
+                      WHERE (c.FullName LIKE ? OR c.Phone LIKE ?) AND c.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, "%" + name + "%");
+            st.setString(2, "%" + name + "%");
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                Customer dto = new Customer();
+                dto.setCustomerId(rs.getInt("CustomerId"));
+                dto.setFullName(rs.getString("FullName"));
+                dto.setPhone(rs.getString("Phone"));
+                dto.setAccountId(rs.getInt("AccountId"));
+                dto.setRankName(rs.getString("RankName"));
+                dto.setDiscountValue(rs.getBigDecimal("DiscountValue"));
+                list.add(dto);
+            }
+        } catch (Exception e) {
+            System.err.println("searchCustomerMembershipByName Error: " + e.getMessage());
+        }
+        return list;
+    }
 
     public Customer getCustomerMembershipByAccountId(int accountId) {
         Customer dto = null;
@@ -186,13 +215,13 @@ public class DiscountCodeDAO extends DBContext {
                                 d.EndDate,
                                 cd.IsUsed,
                                 cd.UsedDate,
-                                cd.[Status],
                                 d.Description,
                                 DATEDIFF(DAY, GETDATE(), d.EndDate) AS DayTime
                          FROM CustomerDiscountCodes cd
                          JOIN DiscountCodes d ON cd.DiscountId = d.DiscountId
                          WHERE d.IsActive = 1
                            AND d.IsDeleted = 0
+                           AND d.IsPublic = 0
                            AND cd.AccountId = ?
                            AND ISNULL(cd.IsUsed, 0) = 0
                          ORDER BY d.EndDate ASC
@@ -214,7 +243,7 @@ public class DiscountCodeDAO extends DBContext {
                         rs.getString("Description"),
                         rs.getInt("DayTime"),
                         rs.getString("Code"),
-                        rs.getInt("Status"));
+                        rs.getBoolean("IsUsed") ? 0 : 1);
                 list.add(c);
             }
         } catch (Exception e) {
@@ -225,7 +254,6 @@ public class DiscountCodeDAO extends DBContext {
 
     public CustomerDiscountCode getCustomerVoucherByCode(int accountId, String code) {
         try {
-            markExpiredVouchersAsDeleted();
             String sql = """
                          SELECT cd.CustomerDiscountId,
                                 cd.AccountId,
@@ -237,15 +265,16 @@ public class DiscountCodeDAO extends DBContext {
                                 d.EndDate,
                                 cd.IsUsed,
                                 cd.UsedDate,
-                                cd.[Status],
                                 d.Description,
                                 DATEDIFF(DAY, GETDATE(), d.EndDate) AS DayTime
                          FROM CustomerDiscountCodes cd
                          JOIN DiscountCodes d ON cd.DiscountId = d.DiscountId
                          WHERE d.IsActive = 1
                            AND d.IsDeleted = 0
+                           AND d.IsPublic = 0
                            AND cd.AccountId = ?
                            AND UPPER(d.Code) = UPPER(?)
+                           AND (d.EndDate IS NULL OR d.EndDate >= GETDATE())
                          """;
             PreparedStatement st = connection.prepareStatement(sql);
             st.setObject(1, accountId);
@@ -258,14 +287,14 @@ public class DiscountCodeDAO extends DBContext {
                         rs.getInt("DiscountId"),
                         rs.getBigDecimal("DiscountPercent"),
                         rs.getBigDecimal("DiscountAmount"),
-                        rs.getObject("StartDate", LocalDateTime.class),
-                        rs.getObject("EndDate", LocalDateTime.class),
+                        rs.getTimestamp("StartDate") != null ? rs.getTimestamp("StartDate").toLocalDateTime() : null,
+                        rs.getTimestamp("EndDate") != null ? rs.getTimestamp("EndDate").toLocalDateTime() : null,
                         rs.getBoolean("IsUsed"),
-                        rs.getObject("UsedDate", LocalDateTime.class),
+                        rs.getTimestamp("UsedDate") != null ? rs.getTimestamp("UsedDate").toLocalDateTime() : null,
                         rs.getString("Description"),
                         rs.getInt("DayTime"),
                         rs.getString("Code"),
-                        rs.getInt("Status"));
+                        rs.getBoolean("IsUsed") ? 0 : 1);
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());

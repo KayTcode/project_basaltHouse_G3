@@ -27,8 +27,8 @@ public class AdminCustomerDAO extends DBContext {
                     a.IsEmailVerified, a.IsActive, a.CreatedAt,
                     a.IsDeleted, a.FailedAttempts, a.IsLocked,
                     c.FullName, c.Phone, c.AvatarUrl,
-                    COALESCE(mr.RankId, 1)                  AS RankId,
-                    COALESCE(mr.RankName, N'Đồng (Bronze)')  AS RankName,
+                    COALESCE(mr.RankId, 0)                  AS RankId,
+                    COALESCE(mr.RankName, N'Chưa xếp hạng') AS RankName,
                     COALESCE(cm.TotalSpent, 0)              AS TotalSpent
                 FROM Accounts a
                 JOIN Customers c
@@ -92,7 +92,12 @@ public class AdminCustomerDAO extends DBContext {
     public List<MembershipRank> getAllRanks() {
         List<MembershipRank> list = new ArrayList<>();
         try {
-            String sql = "SELECT RankId, RankName FROM MembershipRanks WHERE IsDeleted = 0 ORDER BY RankId";
+            String sql = """
+                         SELECT RankId, RankName
+                         FROM MembershipRanks
+                         WHERE IsDeleted = 0
+                         ORDER BY MinTotalSpent, RankId
+                         """;
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -110,8 +115,12 @@ public class AdminCustomerDAO extends DBContext {
     public boolean addCustomer(String email, String rawPassword, String fullName, String phone, int rankId, double totalSpent) {
         AdminAccountDAO accountDAO = new AdminAccountDAO();
         try {
+            if (!isActiveRank(rankId)) {
+                return false;
+            }
+
             Account acc = new Account();
-            acc.setRoleId(2); // Customer
+            acc.setRoleId(2); 
             acc.setEmail(email);
             acc.setPasswordHash(PasswordUtils.hashSHA256(rawPassword));
             acc.setIsEmailVerified(true);
@@ -120,11 +129,11 @@ public class AdminCustomerDAO extends DBContext {
             boolean created = accountDAO.addAccount(acc, fullName, phone);
             if (!created) return false;
 
-            // Lấy accountId vừa tạo
+            
             int accountId = getAccountIdByEmail(email);
             if (accountId == -1) return false;
 
-            // Tạo membership với rank và totalSpent
+        
             String sqlMs = """
                 INSERT INTO CustomerMemberships (CustomerId, RankId, TotalSpent)
                 SELECT c.CustomerId, ?, ?
@@ -135,8 +144,7 @@ public class AdminCustomerDAO extends DBContext {
             st.setInt(1, rankId);
             st.setDouble(2, totalSpent);
             st.setInt(3, accountId);
-            st.executeUpdate();
-            return true;
+            return st.executeUpdate() == 1;
         } catch (Exception e) {
             System.err.println("[AdminCustomerDAO.addCustomer] " + e.getMessage());
             return false;
@@ -147,6 +155,10 @@ public class AdminCustomerDAO extends DBContext {
                                    int rankId, double totalSpent, boolean isLocked) {
         AdminAccountDAO accountDAO = new AdminAccountDAO();
         try {
+            if (!isActiveRank(rankId) && !isCurrentCustomerRank(accountId, rankId)) {
+                return false;
+            }
+
             Account acc = new Account();
             acc.setAccountId(accountId);
             acc.setRoleId(2);
@@ -182,13 +194,52 @@ public class AdminCustomerDAO extends DBContext {
                 st.setInt(1, rankId);
                 st.setDouble(2, totalSpent);
                 st.setInt(3, accountId);
-                st.executeUpdate();
+                return st.executeUpdate() == 1;
             }
             return true;
         } catch (Exception e) {
             System.err.println("[AdminCustomerDAO.updateCustomer] " + e.getMessage());
             return false;
         }
+    }
+
+    private boolean isActiveRank(int rankId) {
+        try {
+            String sql = """
+                         SELECT 1
+                         FROM MembershipRanks
+                         WHERE RankId = ?
+                           AND IsDeleted = 0
+                         """;
+            st = connection.prepareStatement(sql);
+            st.setInt(1, rankId);
+            rs = st.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.isActiveRank] " + e.getMessage());
+        }
+        return false;
+    }
+
+    private boolean isCurrentCustomerRank(int accountId, int rankId) {
+        try {
+            String sql = """
+                         SELECT 1
+                         FROM CustomerMemberships cm
+                         JOIN Customers c ON c.CustomerId = cm.CustomerId
+                         WHERE c.AccountId = ?
+                           AND cm.RankId = ?
+                           AND c.IsDeleted = 0
+                         """;
+            st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            st.setInt(2, rankId);
+            rs = st.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerDAO.isCurrentCustomerRank] " + e.getMessage());
+        }
+        return false;
     }
 
     private int getAccountIdByEmail(String email) {
@@ -249,8 +300,8 @@ public class AdminCustomerDAO extends DBContext {
                 a.IsEmailVerified, a.IsActive, a.CreatedAt,
                 a.IsDeleted, a.FailedAttempts, a.IsLocked,
                 c.FullName, c.Phone, c.AvatarUrl,
-                COALESCE(mr.RankId, 1)                  AS RankId,
-                COALESCE(mr.RankName, N'Đồng (Bronze)')  AS RankName,
+                COALESCE(mr.RankId, 0)                  AS RankId,
+                COALESCE(mr.RankName, N'Chưa xếp hạng') AS RankName,
                 COALESCE(cm.TotalSpent, 0)              AS TotalSpent
             FROM Accounts a
             JOIN Customers c
@@ -274,7 +325,7 @@ public class AdminCustomerDAO extends DBContext {
         // 2. Lọc theo hạng thành viên
         if (rankId != null) {
             sql += """
-                   AND COALESCE(mr.RankId, 1) = ?
+                   AND COALESCE(mr.RankId, 0) = ?
                    """;
         }
 

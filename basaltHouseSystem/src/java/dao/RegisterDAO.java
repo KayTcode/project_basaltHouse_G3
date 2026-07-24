@@ -189,23 +189,29 @@ public class RegisterDAO extends DBContext {
                                        (?,?,?,1,1,?,0)
                             """;
         String sqlCustomer = """
-                             INSERT INTO [dbo].[Customers]
+                              INSERT INTO [dbo].[Customers]
                                         ([AccountId]
                                         ,[FullName]
                                         ,[Phone]
                                         ,[CreatedAt]
                                         ,[IsDeleted])
-                                  VALUES
-                                        (?,?,?,?,0)
-                             """;
+                                   VALUES
+                                         (?,?,?,?,0)
+                              """;
+        String sqlDefaultRank = """
+                                SELECT TOP 1 RankId
+                                FROM MembershipRanks
+                                WHERE IsDeleted = 0
+                                ORDER BY MinTotalSpent, RankId
+                                """;
         String sqlMembership = """
-                               INSERT INTO [dbo].[CustomerMemberships]
-                                          ([CustomerId]
-                                          ,[RankId]
-                                          ,[TotalSpent])
-                                    VALUES
-                                          (?,1,0)
-                               """;
+                                INSERT INTO [dbo].[CustomerMemberships]
+                                           ([CustomerId]
+                                           ,[RankId]
+                                           ,[TotalSpent])
+                                     VALUES
+                                           (?,?,0)
+                                """;
         try {
             connection.setAutoCommit(false);
             int roleId = -1;
@@ -217,6 +223,15 @@ public class RegisterDAO extends DBContext {
             if (roleId == -1) {
                 throw new SQLException("Không tìm thấy role Customer trong hệ thống");
             }
+            int defaultRankId;
+            ps = connection.prepareStatement(sqlDefaultRank);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                defaultRankId = rs.getInt("RankId");
+            } else {
+                throw new SQLException("Không có hạng thành viên đang hoạt động");
+            }
+
             int newAccountId;
             PreparedStatement psAccount = connection.prepareStatement(sqlAccount, Statement.RETURN_GENERATED_KEYS);
             psAccount.setObject(1, roleId);
@@ -247,7 +262,10 @@ public class RegisterDAO extends DBContext {
 
             PreparedStatement psMembership = connection.prepareStatement(sqlMembership);
             psMembership.setObject(1, newCustomerId);
-            psMembership.executeUpdate();
+            psMembership.setObject(2, defaultRankId);
+            if (psMembership.executeUpdate() != 1) {
+                throw new SQLException("Không thể tạo membership cho khách hàng");
+            }
 
             markPendingAsUsed(pendingId, connection);
             connection.commit();

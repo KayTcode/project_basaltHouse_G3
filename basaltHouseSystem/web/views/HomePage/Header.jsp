@@ -229,11 +229,6 @@
                                                         <span class="material-symbols-outlined">dashboard</span>
                                                         Dashboard Admin
                                                     </a>
-                                                    <a href="${pageContext.request.contextPath}/admin/users"
-                                                       class="dropdown-item-link" role="menuitem">
-                                                        <span class="material-symbols-outlined">manage_accounts</span>
-                                                        Quản lý người dùng
-                                                    </a>
                                                     <a href="${pageContext.request.contextPath}/admin/products"
                                                        class="dropdown-item-link" role="menuitem">
                                                         <span class="material-symbols-outlined">inventory_2</span>

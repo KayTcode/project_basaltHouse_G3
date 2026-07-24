@@ -1151,131 +1151,46 @@ public class OrderDAO extends DBContext {
         }
         return null;
     }
-    public List<HashMap<String, Object>> getTodaySoldProductSizeRows() {
-        List<HashMap<String, Object>> rows = new ArrayList<>();
-        String sql = """
-                     SET NOCOUNT ON;
-
-                     DECLARE @Today DATE = CAST(GETDATE() AS DATE);
-                     DECLARE @AuditDate DATE = @Today;
-                     DECLARE @Start DATETIME2;
-                     DECLARE @End DATETIME2;
-
-                     IF NOT EXISTS (
-                         SELECT 1
-                         FROM Orders o
-                         LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
-                         OUTER APPLY (
-                             SELECT TOP 1 l.CreatedAt AS AppliedAt
-                             FROM IngredientStockLogs l
-                             WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
-                             ORDER BY l.CreatedAt ASC, l.LogId ASC
-                         ) stockLog
-                         WHERE o.IsDeleted = 0
-                           AND o.PaymentStatus = 'Paid'
-                           AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= CAST(@AuditDate AS DATETIME2)
-                           AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < DATEADD(DAY, 1, CAST(@AuditDate AS DATETIME2))
-                     )
-                     BEGIN
-                         SELECT TOP 1 @AuditDate = CAST(COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) AS DATE)
-                         FROM Orders o
-                         LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
-                         OUTER APPLY (
-                             SELECT TOP 1 l.CreatedAt AS AppliedAt
-                             FROM IngredientStockLogs l
-                             WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
-                             ORDER BY l.CreatedAt ASC, l.LogId ASC
-                         ) stockLog
-                         WHERE o.IsDeleted = 0
-                           AND o.PaymentStatus = 'Paid'
-                         ORDER BY COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) DESC;
-                     END
-
-                     SET @Start = CAST(@AuditDate AS DATETIME2);
-                     SET @End = DATEADD(DAY, 1, @Start);
-
-                     SELECT od.ProductId,
-                            od.SizeId,
-                            p.ProductName,
-                            s.SizeName,
-                            SUM(od.Quantity) AS SoldQuantity,
-                            MAX(od.UnitPrice) AS UnitPrice,
-                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
-                            @AuditDate AS AuditDate
-                     FROM OrderDetails od
-                     JOIN Orders o ON o.OrderId = od.OrderId
-                     LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
-                     OUTER APPLY (
-                         SELECT TOP 1 l.CreatedAt AS AppliedAt
-                         FROM IngredientStockLogs l
-                         WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
-                         ORDER BY l.CreatedAt ASC, l.LogId ASC
-                     ) stockLog
-                     JOIN Products p ON p.ProductId = od.ProductId
-                     JOIN Sizes s ON s.SizeId = od.SizeId
-                     WHERE od.IsDeleted = 0
-                       AND o.IsDeleted = 0
-                       AND o.PaymentStatus = 'Paid'
-                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= @Start
-                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < @End
-                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
-                     ORDER BY p.ProductName ASC, s.SizeName ASC
-                     """;
-        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs2 = ps.executeQuery()) {
-            while (rs2.next()) {
-                HashMap<String, Object> row = new HashMap<>();
-                row.put("productId", rs2.getInt("ProductId"));
-                row.put("sizeId", rs2.getInt("SizeId"));
-                row.put("productName", rs2.getString("ProductName"));
-                row.put("sizeName", rs2.getString("SizeName"));
-                row.put("soldQuantity", rs2.getInt("SoldQuantity"));
-                row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
-                row.put("revenue", rs2.getBigDecimal("Revenue"));
-                row.put("auditDate", rs2.getDate("AuditDate"));
-                rows.add(row);
-            }
-        } catch (Exception e) {
-            System.err.println("getTodaySoldProductSizeRows Error: " + e.getMessage());
-        }
-        return rows;
-    }
-
+    /**
+     * Gom số lượng sản phẩm theo size của các đơn đã thanh toán trong ngày.
+     * Đơn online dùng PaidAt; đơn không có bản ghi thanh toán dùng CreatedAt.
+     */
     public List<HashMap<String, Object>> getSoldProductSizeRowsByDate(LocalDate auditDate) {
         List<HashMap<String, Object>> rows = new ArrayList<>();
-        String sql = """
-                     DECLARE @AuditDate DATE = ?;
-                     DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
-                     DECLARE @End DATETIME2 = DATEADD(DAY, 1, @Start);
+        if (auditDate == null) {
+            return rows;
+        }
 
+        String sql = """
                      SELECT od.ProductId,
                             od.SizeId,
                             p.ProductName,
                             s.SizeName,
                             SUM(od.Quantity) AS SoldQuantity,
                             MAX(od.UnitPrice) AS UnitPrice,
-                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
-                            @AuditDate AS AuditDate
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue
                      FROM OrderDetails od
                      JOIN Orders o ON o.OrderId = od.OrderId
-                     LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
                      OUTER APPLY (
-                         SELECT TOP 1 l.CreatedAt AS AppliedAt
-                         FROM IngredientStockLogs l
-                         WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
-                         ORDER BY l.CreatedAt ASC, l.LogId ASC
-                     ) stockLog
+                         SELECT TOP 1 op.PaidAt
+                         FROM OnlinePayments op
+                         WHERE op.OrderId = o.OrderId
+                           AND op.IsDeleted = 0
+                         ORDER BY op.PaidAt DESC, op.CreatedAt DESC
+                     ) payment
                      JOIN Products p ON p.ProductId = od.ProductId
                      JOIN Sizes s ON s.SizeId = od.SizeId
                      WHERE od.IsDeleted = 0
                        AND o.IsDeleted = 0
                        AND o.PaymentStatus = 'Paid'
-                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= @Start
-                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < @End
+                       AND COALESCE(payment.PaidAt, o.CreatedAt) >= ?
+                       AND COALESCE(payment.PaidAt, o.CreatedAt) < ?
                      GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
                      ORDER BY p.ProductName ASC, s.SizeName ASC
                      """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(auditDate));
+            ps.setTimestamp(1, Timestamp.valueOf(auditDate.atStartOfDay()));
+            ps.setTimestamp(2, Timestamp.valueOf(auditDate.plusDays(1).atStartOfDay()));
             try (ResultSet rs2 = ps.executeQuery()) {
                 while (rs2.next()) {
                     HashMap<String, Object> row = new HashMap<>();
@@ -1286,7 +1201,6 @@ public class OrderDAO extends DBContext {
                     row.put("soldQuantity", rs2.getInt("SoldQuantity"));
                     row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
                     row.put("revenue", rs2.getBigDecimal("Revenue"));
-                    row.put("auditDate", rs2.getDate("AuditDate"));
                     rows.add(row);
                 }
             }

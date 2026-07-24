@@ -43,10 +43,6 @@ public class VoucherServlet extends HttpServlet {
         HashMap<String, Object> result = discountCodeService.applyVoucherCode(
                 request.getParameter("voucherCode"), user1.getAccountId());
 
-        if (result.containsKey("voucher")) {
-            session.setAttribute("voucher", result.get("voucher"));
-        }
-
         if (result.containsKey("success")) {
             activeService.ctreatActiveLog(new ActivityLog(user1.getAccountId(),
                     "Apply Voucher Code",

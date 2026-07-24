@@ -377,6 +377,7 @@ h1, h2, h3, h4 { font-family: var(--font-montserrat); }
 .ot-badge-shipping  { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
 .ot-badge-completed { background: var(--secondary-bg); color: var(--primary-color); border: 1px solid #86efac; }
 .ot-badge-cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.ot-badge-delivered { background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7; }
 .ot-badge-paid      { background: var(--secondary-bg); color: var(--primary-color); border: 1px solid #86efac; }
 .ot-badge-unpaid    { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 
@@ -895,4 +896,185 @@ h1, h2, h3, h4 { font-family: var(--font-montserrat); }
 }
 .ot-review-submit:disabled { opacity: 0.65; cursor: not-allowed; }
 .ot-review-submit .material-symbols-outlined { font-size: 15px; }
+
+/* ── Cancel Order Button ──────────────────────────────────────── */
+.ot-cancel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 16px;
+    border-radius: 50px;
+    border: 1.5px solid #fca5a5;
+    background: transparent;
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: var(--font-inter);
+    white-space: nowrap;
+}
+.ot-cancel-btn:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220,38,38,0.25);
+}
+.ot-cancel-btn .material-symbols-outlined { font-size: 14px; }
+
+/* ── Cancel Confirm Modal Overlay ─────────────────────────────── */
+.ot-cancel-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99999 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* ── Cancel Confirm Modal Box ─────────────────────────────────── */
+.ot-cancel-modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+    width: 100%;
+    max-width: 420px;
+    padding: 36px 28px 28px;
+    text-align: center;
+    animation: ot-modal-in 0.22s cubic-bezier(.16,1,.3,1);
+}
+.ot-cancel-modal-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #fee2e2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+.ot-cancel-modal-icon .material-symbols-outlined {
+    font-size: 30px;
+    color: #dc2626;
+}
+.ot-cancel-modal h3 {
+    font-family: var(--font-montserrat);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 10px;
+}
+.ot-cancel-modal p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 24px;
+    line-height: 1.6;
+}
+.ot-cancel-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.ot-cancel-keep-btn {
+    padding: 10px 22px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid rgba(0,0,0,0.1);
+    background: var(--bg-light);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-inter);
+    transition: background 0.15s;
+}
+.ot-cancel-keep-btn:hover { background: #e5e7eb; }
+.ot-cancel-confirm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: #dc2626;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-inter);
+    transition: background 0.15s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(220,38,38,0.25);
+}
+.ot-cancel-confirm-btn:hover:not(:disabled) {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+.ot-cancel-confirm-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+.ot-cancel-confirm-btn .material-symbols-outlined { font-size: 15px; }
+.ot-cancel-modal-msg {
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 18px;
+    margin-top: 12px;
+    text-align: center;
+}
+
+/* ── Toast thông báo kết quả hủy đơn ─────────────────────────── */
+.ot-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+.ot-toast .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+.ot-toast-success {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #15803d;
+}
+.ot-toast-error {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+}
+
+/* ── Confirm Order Button ─────────────────────────────────────── */
+.ot-confirm-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 16px;
+    border-radius: 50px;
+    border: 1.5px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: var(--font-inter);
+    white-space: nowrap;
+}
+.ot-confirm-btn:hover {
+    background: var(--primary-color);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-green);
+}
+.ot-confirm-btn .material-symbols-outlined { font-size: 14px; }
 

@@ -94,5 +94,13 @@ public class TableService {
         return sessionDAO.closeSession(sessionId);
     }
 
+    public String moveSession(int sessionId, int newTableId) {
+        Table newTable = tableDAO.getTableById(newTableId);
+        if (newTable == null) {
+            return "ERR:Bàn đích không tồn tại.";
+        }
+        return sessionDAO.moveSession(sessionId, newTableId);
+    }
 
 }
+

@@ -14,7 +14,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import model.Order;
 import model.OrderAddress;
 import model.Shipper;
@@ -82,15 +85,24 @@ public class ShipperDashboardServlet extends HttpServlet {
             return;
         }
         int shipperId = currentShipper.getShipperId();
-        List<Order> pendingOrders = shipperService.getPendingShipperOrders();
+        List<Order> pendingOrders = shipperService.getPendingShipperOrders(shipperId);
 
         Order currentOrder = shipperService.getCurrentShippingOrder(shipperId);
 
         OrderAddress deliveryAddress = null;
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
-        if (currentOrder != null && currentOrder.getOrderAddressId() != null) {
-            deliveryAddress = shipperService.getOrderAddress(currentOrder.getOrderAddressId());
+// Tạo Map lưu thời gian đã format theo orderId
+        Map<Integer, String> orderTimeMap = new HashMap<>();
+        for (Order o : pendingOrders) {
+            if (o.getCreatedAt() != null) {
+                orderTimeMap.put(o.getOrderId(), o.getCreatedAt().format(fmt));
+            }
         }
+        if (currentOrder != null && currentOrder.getCreatedAt() != null) {
+            request.setAttribute("currentOrderTime", currentOrder.getCreatedAt().format(fmt));
+        }
+        request.setAttribute("orderTimeMap", orderTimeMap);
         request.setAttribute("currentShipper", currentShipper);
         request.setAttribute("pendingOrders", pendingOrders);
         request.setAttribute("currentOrder", currentOrder);

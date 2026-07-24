@@ -6,7 +6,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import model.DiscountCode;
 import services.AdminCustomerService;
 
 
@@ -41,6 +43,10 @@ public class AdminCustomerServlet extends HttpServlet {
 
             request.setAttribute("customerData", customerData);
 
+            // Load danh sách mã đang kích hoạt cho dropdown tặng mã
+            List<DiscountCode> activeDiscounts = customerService.getActiveDiscountsForGift();
+            request.setAttribute("activeDiscounts", activeDiscounts);
+
         } catch (Exception e) {
             System.err.println("[AdminCustomerServlet.doGet] " + e.getMessage());
         }
@@ -59,9 +65,10 @@ public class AdminCustomerServlet extends HttpServlet {
         if (action == null) action = "";
 
         switch (action) {
-            case "add"    -> handleAddCustomer(request, response);
-            case "update" -> handleUpdateCustomer(request, response);
-            default       -> response.sendRedirect(request.getContextPath() + "/admin/customers");
+            case "add"          -> handleAddCustomer(request, response);
+            case "update"       -> handleUpdateCustomer(request, response);
+            case "giftDiscount" -> handleGiftDiscount(request, response);
+            default             -> response.sendRedirect(request.getContextPath() + "/admin/customers");
         }
     }
 
@@ -108,6 +115,22 @@ public class AdminCustomerServlet extends HttpServlet {
             request.getSession().setAttribute("errorMessage", "Cập nhật thất bại. Vui lòng thử lại!");
         }
 
+        response.sendRedirect(request.getContextPath() + "/admin/customers");
+    }
+
+    private void handleGiftDiscount(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String accountIdStr  = request.getParameter("accountId");
+        String discountIdStr = request.getParameter("discountId");
+
+        String result = customerService.processGiftDiscount(accountIdStr, discountIdStr);
+        switch (result) {
+            case "success" ->
+                request.getSession().setAttribute("toastMessage", "✅ Tặng mã giảm giá thành công!");
+            case "already_gifted" ->
+                request.getSession().setAttribute("errorMessage", "⚠️ Khách hàng này đã có mã giảm giá này rồi!");
+            default ->
+                request.getSession().setAttribute("errorMessage", "❌ Tặng mã thất bại. Vui lòng thử lại!");
+        }
         response.sendRedirect(request.getContextPath() + "/admin/customers");
     }
 }

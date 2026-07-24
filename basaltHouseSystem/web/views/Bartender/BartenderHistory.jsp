@@ -11,10 +11,10 @@
 <%@page import="java.util.HashMap"%>
 <%@page import="java.time.format.DateTimeFormatter"%>
 <%
-    
+
     OrderDAO oDao = new OrderDAO();
     
-  
+    
     HashMap<Integer, Product> products = (HashMap<Integer, Product>) request.getAttribute("products");
     HashMap<Integer, String> sizes     = (HashMap<Integer, String>) request.getAttribute("sizes");
 
@@ -35,10 +35,10 @@
 </head>
 <body>
 
-<!-- ── CONTENT ── -->
+
 <div class="content-area">
 
-    <!-- ── TOP ACTIONS ── -->
+   
     <div class="bartender-top-actions">
         <a href="${pageContext.request.contextPath}/cashier/pos" class="btn-top-action pos">
             <span class="material-symbols-outlined">point_of_sale</span>
@@ -50,7 +50,7 @@
         </a>
     </div>
 
-    <!-- Stats bar -->
+   
     <div class="stats-bar">
         <div class="stat-chip done" style="max-width: 320px;">
             <span class="stat-icon">&#127881;</span>
@@ -61,6 +61,7 @@
         </div>
     </div>
 
+    
     <div class="history-grid">
         <c:forEach items="${orderList}" var="o">
             <%
@@ -73,7 +74,11 @@
             <div class="order-card completed">
                 <div class="card-top completed">
                     <div>
-                        <div class="card-id">#ORD00${o.orderId}</div>
+                        <%
+                            String bHistoryType = currentOrder.getOrderType() != null ? currentOrder.getOrderType().toLowerCase() : "pos";
+                            String bHistoryCode = String.format("%s%03d", "pos".equals(bHistoryType) ? "POS" : "ONL", currentOrder.getOrderId());
+                        %>
+                        <div class="card-id">#<%=bHistoryCode%></div>
                         <div class="card-meta">
                             <span class="card-loc"><span class="material-symbols-outlined" style="font-size:12px">location_on</span>
                                 ${o.tableName != null && !o.tableName.isEmpty() ? o.tableName : (o.orderType != null && o.orderType.equalsIgnoreCase("online") ? "Online" : "Walk-in")}
@@ -126,6 +131,7 @@
         </c:if>
     </div>
 
+   
     <c:if test="${historyPages > 1}">
     <div class="pagination" style="padding:20px 0;">
         <a href="?page=<%=historyPage - 1%>"

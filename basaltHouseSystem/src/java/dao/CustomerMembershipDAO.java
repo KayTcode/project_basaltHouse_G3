@@ -284,5 +284,73 @@ public class CustomerMembershipDAO extends DBContext {
         }
         return false;
     }
-    
+     public void addTotalSpent(int customerId, BigDecimal amount) {
+        try {
+           
+            String sql = """
+                         UPDATE CustomerMemberships 
+                         SET TotalSpent = TotalSpent + ? 
+                         WHERE CustomerId = ?
+                         """;
+            st = connection.prepareStatement(sql);
+            st.setBigDecimal(1, amount);
+            st.setInt(2, customerId);
+            int rows = st.executeUpdate();
+            
+           
+            if (rows > 0) {
+                String updateRankSql = """
+                    UPDATE CustomerMemberships
+                    SET RankId = (
+                        SELECT TOP 1 RankId
+                        FROM MembershipRanks
+                        WHERE MinTotalSpent <= CustomerMemberships.TotalSpent
+                        AND IsDeleted = 0
+                        ORDER BY MinTotalSpent DESC
+                    )
+                    WHERE CustomerId = ?
+                """;
+                st = connection.prepareStatement(updateRankSql);
+                st.setInt(1, customerId);
+                st.executeUpdate();
+            }
+            
+            
+            if (rows == 0) {
+                
+                String findAccountSql = "SELECT AccountId FROM Customers WHERE CustomerId = ? AND IsDeleted = 0";
+                st = connection.prepareStatement(findAccountSql);
+                st.setInt(1, customerId);
+                rs = st.executeQuery();
+                if (rs.next()) {
+                    int accountId = rs.getInt("AccountId");
+                    creatMemberShip(accountId);
+                    
+                    
+                    st = connection.prepareStatement(sql);
+                    st.setBigDecimal(1, amount);
+                    st.setInt(2, customerId);
+                    st.executeUpdate();
+                    
+                   
+                    String updateRankSql = """
+                        UPDATE CustomerMemberships
+                        SET RankId = (
+                            SELECT TOP 1 RankId
+                            FROM MembershipRanks
+                            WHERE MinTotalSpent <= CustomerMemberships.TotalSpent
+                            AND IsDeleted = 0
+                            ORDER BY MinTotalSpent DESC
+                        )
+                        WHERE CustomerId = ?
+                    """;
+                    st = connection.prepareStatement(updateRankSql);
+                    st.setInt(1, customerId);
+                    st.executeUpdate();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("addTotalSpent Error: " + e.getMessage());
+        }
+    }
 }

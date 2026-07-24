@@ -15,7 +15,7 @@
 
         <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_common.css?v=2">
         <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_account.css?v=2">
-        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_customer.css?v=6">
+        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_customer.css?v=7">
     </head>
     <body class="admin-dashboard-body">
 
@@ -220,6 +220,11 @@
                                                    class="btn-icon-action action-history" title="Lịch sử mua hàng">
                                                     <i class="fa-solid fa-clock-rotate-left"></i>
                                                 </a>
+                                                <!-- Tặng mã giảm giá -->
+                                                <button class="btn-icon-action action-gift" title="Tặng mã giảm giá"
+                                                        onclick="openGiftModal('${item.account.accountId}', '${item.fullName}')">
+                                                    <i class="fa-solid fa-gift"></i>
+                                                </button>
                                                 <!-- Chi tiết & Cập nhật -->
                                                 <button class="btn-icon-action action-edit" title="Xem &amp; Sửa thông tin" 
                                                         onclick="openEditModal('${item.account.accountId}', '${item.fullName}', '${item.phone}', '${item.account.email}', '${item.rankId}', '${item.totalSpent}', '${item.account.isLocked}')">
@@ -368,6 +373,57 @@
             </div>
         </div>
 
+        <!-- MODAL TẶNG MÃ GIẢM GIÁ -->
+        <div class="modal-backdrop" id="giftDiscountModal">
+            <div class="modal-card modal-card--gift">
+                <div class="modal-card-header">
+                    <h3><i class="fa-solid fa-gift"></i> Tặng Mã Giảm Giá</h3>
+                    <span class="close-modal-x" onclick="closeGiftModal()">&times;</span>
+                </div>
+                <form action="${pageContext.request.contextPath}/admin/customers" method="POST">
+                    <input type="hidden" name="action" value="giftDiscount">
+                    <input type="hidden" name="accountId" id="gift_accountId">
+                    <div class="modal-card-body">
+                        <div class="modal-form-flex-stack">
+                            <p class="edit-account-notice">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Đang tặng mã cho khách hàng: <strong id="gift_customerName"></strong>
+                            </p>
+                            <div class="form-field-group">
+                                <label>Chọn mã giảm giá <span style="color:var(--basalt-red);">*</span></label>
+                                <select name="discountId" id="gift_discountSelect" class="form-select" required>
+                                    <option value="">-- Chọn mã muốn tặng --</option>
+                                    <c:choose>
+                                        <c:when test="${not empty activeDiscounts}">
+                                            <c:forEach var="d" items="${activeDiscounts}">
+                                                <option value="${d.discountId}">
+                                                    ${d.code}
+                                                    <c:choose>
+                                                        <c:when test="${d.discountPercent != null}"> — Giảm ${d.discountPercent}%</c:when>
+                                                        <c:otherwise> — Giảm <fmt:formatNumber value="${d.discountAmount}" type="number" maxFractionDigits="0"/>đ</c:otherwise>
+                                                    </c:choose>
+                                                    <c:if test="${not empty d.description}"> (${d.description})</c:if>
+                                                </option>
+                                            </c:forEach>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <option disabled>Không có mã nào đang hoạt động</option>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-card-footer">
+                        <button type="button" class="btn-cancel" onclick="closeGiftModal()">Hủy Bỏ</button>
+                        <button type="submit" class="btn-primary-action">
+                            <i class="fa-solid fa-paper-plane"></i> Xác Nhận Tặng Mã
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <script>
             function openAddModal()  { document.getElementById('addCustomerModal').classList.add('active'); }
             function closeAddModal() { document.getElementById('addCustomerModal').classList.remove('active'); }
@@ -384,6 +440,14 @@
                 document.getElementById('editCustomerModal').classList.add('active');
             }
             function closeEditModal() { document.getElementById('editCustomerModal').classList.remove('active'); }
+
+            function openGiftModal(accountId, fullName) {
+                document.getElementById('gift_accountId').value      = accountId;
+                document.getElementById('gift_customerName').innerText = fullName + ' (#' + accountId + ')';
+                document.getElementById('gift_discountSelect').value  = '';
+                document.getElementById('giftDiscountModal').classList.add('active');
+            }
+            function closeGiftModal() { document.getElementById('giftDiscountModal').classList.remove('active'); }
         </script>
     </body>
 </html>

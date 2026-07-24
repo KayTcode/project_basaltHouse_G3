@@ -68,46 +68,7 @@ public class OrderDAO extends DBContext {
         return null;
     }
 
-    /**
-     * Lấy danh sách tất cả đơn hàng chưa thanh toán (Unpaid). Dùng cho màn hình
-     * POS của Thu ngân.
-     */
-    public List<Order> getUnpaidOrders() {
-        List<Order> orders = new ArrayList<>();
-        try {
-            String sql = """
-                         SELECT OrderId, CustomerId, CashierId, TableSessionId,
-                                OrderType, OrderStatus, PaymentMethod,
-                                PaymentStatus, TotalAmount, DiscountAmount, FinalAmount, CreatedAt
-                         FROM Orders
-                         WHERE PaymentStatus = 'Unpaid' AND IsDeleted = 0
-                         ORDER BY CreatedAt DESC
-                         """;
-            st = connection.prepareStatement(sql);
-            rs = st.executeQuery();
-            while (rs.next()) {
-                Order order = new Order();
-                order.setOrderId(rs.getInt("OrderId"));
-                order.setCustomerId(rs.getObject("CustomerId") != null ? rs.getInt("CustomerId") : null);
-                order.setCashierId(rs.getObject("CashierId") != null ? rs.getInt("CashierId") : null);
-                order.setTableSessionId(rs.getObject("TableSessionId") != null ? rs.getInt("TableSessionId") : null);
-                order.setOrderType(rs.getString("OrderType"));
-                order.setOrderStatus(rs.getString("OrderStatus"));
-                order.setPaymentMethod(rs.getString("PaymentMethod"));
-                order.setPaymentStatus(rs.getString("PaymentStatus"));
-                order.setTotalAmount(rs.getBigDecimal("TotalAmount"));
-                order.setDiscountAmount(rs.getBigDecimal("DiscountAmount"));
-                order.setFinalAmount(rs.getBigDecimal("FinalAmount"));
-                if (rs.getTimestamp("CreatedAt") != null) {
-                    order.setCreatedAt(rs.getTimestamp("CreatedAt").toLocalDateTime());
-                }
-                orders.add(order);
-            }
-        } catch (Exception e) {
-            System.err.println("Lỗi getUnpaidOrders: " + e.getMessage());
-        }
-        return orders;
-    }
+
 
     /**
      * Lấy chi tiết các sản phẩm trong một đơn hàng.
@@ -300,31 +261,7 @@ public class OrderDAO extends DBContext {
     }
 
 
-    /**
-     * Áp dụng mã giảm giá cho đơn hàng: cập nhật DiscountId, DiscountAmount,
-     * FinalAmount.
-     */
-    public boolean updateOrderDiscount(int orderId, int discountId, BigDecimal discountAmount, BigDecimal finalAmount) {
-        try {
-            String sql = """
-                         UPDATE Orders
-                         SET DiscountId = ?,
-                             DiscountAmount = ?,
-                             FinalAmount = ?
-                         WHERE OrderId = ? AND IsDeleted = 0
-                         """;
-            st = connection.prepareStatement(sql);
-            st.setObject(1, discountId);
-            st.setObject(2, discountAmount);
-            st.setObject(3, finalAmount);
-            st.setObject(4, orderId);
-            int rowsAffected = st.executeUpdate();
-            return rowsAffected > 0;
-        } catch (Exception e) {
-            System.err.println("Lỗi updateOrderDiscount: " + e.getMessage());
-            return false;
-        }
-    }
+
 
     /**
      * Xác nhận thanh toán MoMo và trừ kho trong cùng một transaction.
@@ -550,18 +487,33 @@ public class OrderDAO extends DBContext {
         return list;
     }
 
-    public List<Order> getCompletedOrders() {
+    public List<Order> getCompletedOrdersByDate(String historyDate, String orderType) {
         List<Order> list = new ArrayList<>();
         try {
-            String sql = "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, "
-                    + "o.Note, tb.TableCode AS TableName, c.FullName "
-                    + "FROM Orders o "
-                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
-                    + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
-                    + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
-                    + "WHERE o.IsDeleted = 0 AND o.OrderStatus = 'Completed' "
-                    + "ORDER BY o.CreatedAt DESC";
-            st = connection.prepareStatement(sql);
+            if (historyDate == null || historyDate.trim().isEmpty()) {
+                historyDate = java.time.LocalDate.now().toString();
+            }
+            StringBuilder sql = new StringBuilder(
+                "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, "
+                + "o.Note, tb.TableCode AS TableName, c.FullName "
+                + "FROM Orders o "
+                + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
+                + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
+                + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
+                + "WHERE o.IsDeleted = 0 AND o.OrderStatus = 'Completed' AND CAST(o.CreatedAt AS DATE) = ? "
+            );
+            
+            boolean filterType = orderType != null && !orderType.trim().isEmpty() && !"all".equalsIgnoreCase(orderType);
+            if (filterType) {
+                sql.append("AND LOWER(o.OrderType) = LOWER(?) ");
+            }
+            sql.append("ORDER BY o.CreatedAt DESC");
+            
+            st = connection.prepareStatement(sql.toString());
+            st.setString(1, historyDate);
+            if (filterType) {
+                st.setString(2, orderType.trim());
+            }
             rs = st.executeQuery();
             while (rs.next()) {
                 Order o = new Order();
@@ -579,9 +531,17 @@ public class OrderDAO extends DBContext {
                 list.add(o);
             }
         } catch (Exception e) {
-            System.err.println("getCompletedOrders Error: " + e.getMessage());
+            System.err.println("getCompletedOrdersByDate Error: " + e.getMessage());
         }
         return list;
+    }
+
+    public List<Order> getCompletedOrdersByDate(String historyDate) {
+        return getCompletedOrdersByDate(historyDate, null);
+    }
+
+    public List<Order> getCompletedOrders() {
+        return getCompletedOrdersByDate(java.time.LocalDate.now().toString(), null);
     }
 
    public int insertOfflineOrder(Order order, List<OrderDetail> details) {

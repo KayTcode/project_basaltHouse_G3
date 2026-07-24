@@ -28,7 +28,8 @@ public class OrderService {
 
    public int createOfflineOrder(String cartData, String totalAmountStr, String discountAmountStr, String finalAmountStr,
                                   String paymentMethod, String tableName, String note,
-                                  String customerIdStr, String discountCode, String tableIdStr, Integer cashierId, String isEarnPointsStr) throws Exception {
+                                  String customerIdStr, String discountCode, String tableIdStr, Integer cashierId, String isEarnPointsStr,
+                                  String tableSessionIdStr) throws Exception {
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         BigDecimal discountAmount = BigDecimal.ZERO;
@@ -60,7 +61,16 @@ public class OrderService {
             order.setCashierId(cashierId);
         }
 
-        if (tableIdStr != null && !tableIdStr.trim().isEmpty()) {
+        if (tableSessionIdStr != null && !tableSessionIdStr.trim().isEmpty()) {
+            try {
+                int explicitSessionId = Integer.parseInt(tableSessionIdStr);
+                if (explicitSessionId > 0) {
+                    order.setTableSessionId(explicitSessionId);
+                }
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        } else if (tableIdStr != null && !tableIdStr.trim().isEmpty()) {
             try {
                 int tableId = Integer.parseInt(tableIdStr);
                 dao.TableSessionDAO tsDao = new dao.TableSessionDAO();
@@ -96,20 +106,14 @@ public class OrderService {
         int customerDiscountIdToUse = -1;
         if (discountCode != null && !discountCode.trim().isEmpty()) {
             DiscountCodeDAO dcDao = new DiscountCodeDAO();
+            if (order.getTableSessionId() != null && order.getTableSessionId() > 0) {
+                if (dcDao.hasTableSessionUsedDiscount(order.getTableSessionId())) {
+                    throw new Exception("Mã đã được sử dụng không thể sử dụng được nữa");
+                }
+            }
             DiscountCode dto = dcDao.checkDiscountCode(discountCode);
             if (dto != null) {
                 order.setDiscountId(dto.getDiscountId());
-                
-                if (order.getCustomerId() != null) {
-                    CustomerDAO custDao = new dao.CustomerDAO();
-                    int accId = custDao.getAccountIdByCustomerId(order.getCustomerId());
-                    if (accId > 0) {
-                        model.CustomerDiscountCode cdc = dcDao.getCustomerVoucherByCode(accId, discountCode);
-                        if (cdc != null && cdc.getStatus() == 1) {
-                            customerDiscountIdToUse = cdc.getCustomerDiscountId();
-                        }
-                    }
-                }
             }
         }
 
@@ -170,8 +174,12 @@ public class OrderService {
                 memDao.addTotalSpent(order.getCustomerId(), order.getFinalAmount());
             }
 
-            if (customerDiscountIdToUse != -1) {
-                new DiscountCodeDAO().updateCustomerVoucherStatus(customerDiscountIdToUse, 0);
+            if (discountCode != null && !discountCode.trim().isEmpty() && order.getCustomerId() != null) {
+                dao.CustomerDAO custDao = new dao.CustomerDAO();
+                int accId = custDao.getAccountIdByCustomerId(order.getCustomerId());
+                if (accId > 0) {
+                    new DiscountCodeDAO().markVoucherAsUsed(accId, discountCode.trim());
+                }
             }
 
             Bill bill = new Bill();

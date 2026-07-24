@@ -105,6 +105,7 @@ public class CashierServlet extends HttpServlet {
         String finalAmountStr = request.getParameter("finalAmount");
         String isEarnPointsStr = request.getParameter("isEarnPoints");
         String tableIdStr = request.getParameter("tableId");
+        String tableSessionIdStr = request.getParameter("tableSessionId");
 
         if (cartData == null || cartData.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -123,7 +124,7 @@ public class CashierServlet extends HttpServlet {
         try {
             OrderService orderService = new OrderService();
             int orderId = orderService.createOfflineOrder(cartData, totalAmountStr, discountAmountStr, finalAmountStr,
-                                                          paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr, cashierId, isEarnPointsStr);
+                                                          paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr, cashierId, isEarnPointsStr, tableSessionIdStr);
                                                           
             if (orderId != -1) {
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -281,6 +282,13 @@ public class CashierServlet extends HttpServlet {
         List<Product> pagedProducts = filtered.subList(start, end);
 
        
+        try {
+            dao.IngredientDAO iDao = new dao.IngredientDAO();
+            request.setAttribute("ingredientsList", iDao.getAllIngredients().values());
+        } catch (Exception e) {
+            System.err.println("Error setting ingredientsList: " + e.getMessage());
+        }
+
         request.setAttribute("pagedProducts",   pagedProducts);
         request.setAttribute("categoryList",    categoryList);
         request.setAttribute("maxStockMap",     maxStockMap);

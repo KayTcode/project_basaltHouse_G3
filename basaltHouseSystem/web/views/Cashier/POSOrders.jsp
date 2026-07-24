@@ -25,8 +25,7 @@
         <aside class="sidebar">
 
             <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
-                <div class="logo-icon">&#9749;</div>
-                <div class="logo-text">Basalt<span>House Coffee</span></div>
+                <div class="logo-text">BasaltHouse</div>
             </a>
             <nav class="sidebar-nav">
                 <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item">
@@ -62,7 +61,7 @@
                     <h1>POS Order</h1>
 
                 </div>
-                <button type="button" onclick="openInventoryModal()" style="position: absolute; right: 28px; top: 18px; display:flex;align-items:center;gap:6px;background:#2c1a0e;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background = '#5c3317'" onmouseout="this.style.background = '#2c1a0e'">
+                <button type="button" onclick="openInventoryModal()" style="position: absolute; right: 28px; top: 18px; display:flex;align-items:center;gap:6px;background:#006e2f;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background = '#004d22'" onmouseout="this.style.background = '#006e2f'">
                     <span class="material-symbols-outlined" style="font-size:17px">inventory_2</span>
                     Xem kho
                     <span id="invBadgeCount" style="background:#dc2626;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;display:none;"></span>
@@ -70,10 +69,24 @@
             </div>
 
 
-            <div class="inv-warning-bar" id="invWarningBar" onclick="openInventoryModal()">
+            <c:set var="warnCount" value="0"/>
+            <c:set var="okCount" value="0"/>
+            <c:set var="dangerCount" value="0"/>
+            <c:forEach items="${ingredientsList}" var="ig">
+                <c:set var="stk" value="${ig.stockQuantity != null ? ig.stockQuantity.doubleValue() : 0.0}"/>
+                <c:set var="mn" value="${ig.minStockQuantity != null ? ig.minStockQuantity.doubleValue() : 0.0}"/>
+                <c:choose>
+                    <c:when test="${stk <= 0}"><c:set var="dangerCount" value="${dangerCount + 1}"/></c:when>
+                    <c:when test="${stk <= mn * 1.2}"><c:set var="warnCount" value="${warnCount + 1}"/></c:when>
+                    <c:otherwise><c:set var="okCount" value="${okCount + 1}"/></c:otherwise>
+                </c:choose>
+            </c:forEach>
+            <c:set var="totalInvWarn" value="${warnCount + dangerCount}"/>
+
+            <div class="inv-warning-bar ${totalInvWarn > 0 ? 'show' : ''}" id="invWarningBar" onclick="openInventoryModal()">
                 <span class="inv-warn-icon">&#9888;&#65039;</span>
-                <span class="inv-warn-text" id="invWarnText">Có nguyên liệu sắp hết!</span>
-                <span class="inv-warn-count" id="invWarnCount">0</span>
+                <span class="inv-warn-text">Cảnh báo kho: ${dangerCount} hết hàng, ${warnCount} sắp hết — cần nhập thêm!</span>
+                <span class="inv-warn-count">${totalInvWarn}</span>
                 <button type="button" class="inv-warn-btn">Xem chi tiết &rarr;</button>
             </div>
 
@@ -107,12 +120,38 @@
                     <div class="menu-grid" id="menuGrid">
                         <c:forEach items="${pagedProducts}" var="p">
                             <div class="menu-card" data-cat="cat-${p.categoryId}" data-name="${p.productName}" data-stock="${maxStockMap[p.productId] != null ? maxStockMap[p.productId] : 0}">
-                                <div class="menu-card-img" style="background:linear-gradient(135deg,#d4a96a,#8b5e3c); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                <div class="menu-card-img" style="background:#eaf6ec; border:1.5px solid #d0e7d2; border-radius:18px; width:90px; height:90px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                                     <c:if test="${not empty p.imageUrl}">
-                                        <img src="${p.imageUrl.startsWith('http') ? p.imageUrl : pageContext.request.contextPath.concat(p.imageUrl)}" alt="${p.productName}" style="width:100%;height:100%;object-fit:cover;">
+                                        <img src="${p.imageUrl.startsWith('http') ? p.imageUrl : pageContext.request.contextPath.concat(p.imageUrl)}" 
+                                             alt="${p.productName}" 
+                                             style="width:100%;height:100%;object-fit:cover;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="svg-placeholder" style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">
+                                            <div style="background:#ffffff; border:1.5px solid #c8e6c9; border-radius:12px; width:64px; height:46px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                                                <svg width="34" height="28" viewBox="0 0 40 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M14 6C14 4.5 15.5 4.5 15.5 3" stroke="#8d6e63" stroke-width="2.2" stroke-linecap="round"/>
+                                                    <path d="M20 6C20 4.5 21.5 4.5 21.5 3" stroke="#8d6e63" stroke-width="2.2" stroke-linecap="round"/>
+                                                    <path d="M26 6C26 4.5 27.5 4.5 27.5 3" stroke="#8d6e63" stroke-width="2.2" stroke-linecap="round"/>
+                                                    <path d="M10 10H30V18C30 22.4183 26.4183 26 22 26H18C13.5817 26 10 22.4183 10 18V10Z" stroke="#006e2f" stroke-width="2.4" stroke-linejoin="round"/>
+                                                    <path d="M30 13H33C34.6569 13 36 14.3431 36 16C36 17.6569 34.6569 19 33 19H30" stroke="#006e2f" stroke-width="2.4" stroke-linecap="round"/>
+                                                    <path d="M7 29H33" stroke="#006e2f" stroke-width="2.5" stroke-linecap="round"/>
+                                                </svg>
+                                            </div>
+                                        </div>
                                     </c:if>
                                     <c:if test="${empty p.imageUrl}">
-                                        <span style="font-size: 24px;">&#9749;</span>
+                                        <div class="svg-placeholder" style="display:flex; width:100%; height:100%; align-items:center; justify-content:center;">
+                                            <div style="background:#ffffff; border:1.5px solid #c8e6c9; border-radius:12px; width:64px; height:46px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                                                <svg width="34" height="28" viewBox="0 0 40 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M14 6C14 4.5 15.5 4.5 15.5 3" stroke="#8d6e63" stroke-width="2.2" stroke-linecap="round"/>
+                                                    <path d="M20 6C20 4.5 21.5 4.5 21.5 3" stroke="#8d6e63" stroke-width="2.2" stroke-linecap="round"/>
+                                                    <path d="M26 6C26 4.5 27.5 4.5 27.5 3" stroke="#8d6e63" stroke-width="2.2" stroke-linecap="round"/>
+                                                    <path d="M10 10H30V18C30 22.4183 26.4183 26 22 26H18C13.5817 26 10 22.4183 10 18V10Z" stroke="#006e2f" stroke-width="2.4" stroke-linejoin="round"/>
+                                                    <path d="M30 13H33C34.6569 13 36 14.3431 36 16C36 17.6569 34.6569 19 33 19H30" stroke="#006e2f" stroke-width="2.4" stroke-linecap="round"/>
+                                                    <path d="M7 29H33" stroke="#006e2f" stroke-width="2.5" stroke-linecap="round"/>
+                                                </svg>
+                                            </div>
+                                        </div>
                                     </c:if>
                                 </div>
                                 <div class="menu-card-name">${p.productName}</div>
@@ -374,7 +413,11 @@
                     <button type="button" class="inv-tab" onclick="switchInvTab('danger', this)">&#10060; Hết hàng</button>
                 </div>
                 <div class="inv-modal-body">
-                    <div class="inv-summary" id="invSummary"></div>
+                    <div class="inv-summary" id="invSummary">
+                        <div class="inv-sum-card ok"><div class="inv-sum-val">${okCount}</div><div class="inv-sum-label">Dư hàng</div></div>
+                        <div class="inv-sum-card warning"><div class="inv-sum-val">${warnCount}</div><div class="inv-sum-label">Sắp hết</div></div>
+                        <div class="inv-sum-card danger"><div class="inv-sum-val">${dangerCount}</div><div class="inv-sum-label">Hết hàng</div></div>
+                    </div>
                     <table class="inv-table">
                         <thead>
                             <tr>
@@ -386,7 +429,32 @@
                                 <th>Mức tồn</th>
                             </tr>
                         </thead>
-                        <tbody id="invTableBody"></tbody>
+                        <tbody id="invTableBody">
+                            <c:forEach items="${ingredientsList}" var="ig">
+                                <c:set var="stk" value="${ig.stockQuantity != null ? ig.stockQuantity.doubleValue() : 0.0}"/>
+                                <c:set var="mn" value="${ig.minStockQuantity != null ? ig.minStockQuantity.doubleValue() : 0.0}"/>
+                                <c:set var="st" value="${stk <= 0 ? 'danger' : (stk <= mn * 1.2 ? 'warning' : 'ok')}"/>
+                                <tr data-status="${st}">
+                                    <td style="font-weight:600">${ig.ingredientName}</td>
+                                    <td style="color:#8a8a9a">${ig.unit}</td>
+                                    <td><strong><fmt:formatNumber value="${stk}" pattern="#,##0.##"/></strong></td>
+                                    <td style="color:#8a8a9a"><fmt:formatNumber value="${mn}" pattern="#,##0.##"/></td>
+                                    <td>
+                                        <c:choose>
+                                            <c:when test="${st eq 'danger'}"><span class="inv-status danger">&#10060; Hết hàng</span></c:when>
+                                            <c:when test="${st eq 'warning'}"><span class="inv-status warning">&#9888; Sắp hết</span></c:when>
+                                            <c:otherwise><span class="inv-status ok">&#9989; Dư hàng</span></c:otherwise>
+                                        </c:choose>
+                                    </td>
+                                    <td>
+                                        <c:set var="pct" value="${mn > 0 ? (stk / (mn * 3) * 100 > 100 ? 100 : Math.round(stk / (mn * 3) * 100)) : 0}"/>
+                                        <div class="inv-bar-wrap">
+                                            <div class="inv-bar-fill ${st}" style="width:${pct}%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -449,125 +517,7 @@
             })();
 
 
-            var INGREDIENTS = [
-            <%
-            try {
-                IngredientDAO iDao = new IngredientDAO();
-                HashMap<Integer, Ingredient> igMap = iDao.getAllIngredients();
-                int count = 0;
-                int total = igMap.size();
-                for (Ingredient ig : igMap.values()) {
-                    count++;
-                    String iName = ig.getIngredientName() != null ? ig.getIngredientName().replace("'", "\\'") : "Unknown";
-                    String iUnit = ig.getUnit() != null ? ig.getUnit().replace("'", "\\'") : "";
-                    double iStock = ig.getStockQuantity() != null ? ig.getStockQuantity().doubleValue() : 0.0;
-                    double iMin = ig.getMinStockQuantity() != null ? ig.getMinStockQuantity().doubleValue() : 0.0;
-            %>
-            { id: <%= ig.getIngredientId() %>, name: '<%= iName %>', unit: '<%= iUnit %>', stock: <%= iStock %>, min: <%= iMin %> }<%= count < total ? "," : "" %>
-            <%
-                }
-            } catch (Exception e) {
-                System.err.println("Error loading ingredients: " + e.getMessage());
-            }
-            %>
-            ];
-
-            var activeInvTab = 'all';
-
-            function getInvStatus(ig) {
-                if (ig.stock <= 0)
-                    return 'danger';
-                if (ig.stock <= ig.min * 1.2)
-                    return 'warning';
-                return 'ok';
-            }
-
-            function getStatusLabel(s) {
-                if (s === 'danger')
-                    return '<span class="inv-status danger">&#10060; Hết hàng</span>';
-                if (s === 'warning')
-                    return '<span class="inv-status warning">&#9888; Sắp hết</span>';
-                return '<span class="inv-status ok">&#9989; Dư hàng</span>';
-            }
-
-            function renderInventoryWarning() {
-                var warnings = [];
-                var dangers = [];
-                for (var i = 0; i < INGREDIENTS.length; i++) {
-                    var s = getInvStatus(INGREDIENTS[i]);
-                    if (s === 'warning')
-                        warnings.push(INGREDIENTS[i]);
-                    if (s === 'danger')
-                        dangers.push(INGREDIENTS[i]);
-                }
-                var total = warnings.length + dangers.length;
-                var bar = document.getElementById('invWarningBar');
-                var badge = document.getElementById('invBadgeCount');
-
-                if (total > 0) {
-                    bar.classList.add('show');
-                    document.getElementById('invWarnCount').textContent = total;
-                    badge.textContent = total;
-                    badge.style.display = 'inline';
-
-                    var parts = [];
-                    if (dangers.length > 0)
-                        parts.push(dangers.length + ' hết hàng');
-                    if (warnings.length > 0)
-                        parts.push(warnings.length + ' sắp hết');
-                    document.getElementById('invWarnText').textContent =
-                            'Cảnh báo kho: ' + parts.join(', ') + ' — cần nhập thêm!';
-                } else {
-                    bar.classList.remove('show');
-                    badge.style.display = 'none';
-                }
-            }
-
-            function renderInventoryModal() {
-
-                var ok = 0, warn = 0, danger = 0;
-                for (var i = 0; i < INGREDIENTS.length; i++) {
-                    var s = getInvStatus(INGREDIENTS[i]);
-                    if (s === 'ok')
-                        ok++;
-                    else if (s === 'warning')
-                        warn++;
-                    else
-                        danger++;
-                }
-                document.getElementById('invSummary').innerHTML =
-                        '<div class="inv-sum-card ok"><div class="inv-sum-val">' + ok + '</div><div class="inv-sum-label">Dư hàng</div></div>' +
-                        '<div class="inv-sum-card warning"><div class="inv-sum-val">' + warn + '</div><div class="inv-sum-label">Sắp hết</div></div>' +
-                        '<div class="inv-sum-card danger"><div class="inv-sum-val">' + danger + '</div><div class="inv-sum-label">Hết hàng</div></div>';
-
-
-                var tbody = document.getElementById('invTableBody');
-                tbody.innerHTML = '';
-                for (var j = 0; j < INGREDIENTS.length; j++) {
-                    var ig = INGREDIENTS[j];
-                    var status = getInvStatus(ig);
-
-                    if (activeInvTab !== 'all' && status !== activeInvTab)
-                        continue;
-
-
-                    var maxRef = ig.min * 3;
-                    var pct = maxRef > 0 ? Math.min(100, Math.round((ig.stock / maxRef) * 100)) : 0;
-
-                    var tr = document.createElement('tr');
-                    tr.innerHTML =
-                            '<td style="font-weight:600">' + ig.name + '</td>' +
-                            '<td style="color:#8a8a9a">' + ig.unit + '</td>' +
-                            '<td><strong>' + ig.stock + '</strong></td>' +
-                            '<td style="color:#8a8a9a">' + ig.min + '</td>' +
-                            '<td>' + getStatusLabel(status) + '</td>' +
-                            '<td><div class="inv-bar-wrap"><div class="inv-bar-fill ' + status + '" style="width:' + pct + '%"></div></div></td>';
-                    tbody.appendChild(tr);
-                }
-            }
-
             function openInventoryModal() {
-                renderInventoryModal();
                 document.getElementById('invModal').classList.add('open');
             }
 
@@ -581,15 +531,12 @@
             }
 
             function switchInvTab(tab, btn) {
-                activeInvTab = tab;
-                var tabs = document.querySelectorAll('.inv-tab');
-                for (var i = 0; i < tabs.length; i++)
-                    tabs[i].classList.remove('active');
+                document.querySelectorAll('.inv-tab').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                renderInventoryModal();
+                document.querySelectorAll('#invTableBody tr').forEach(tr => {
+                    tr.style.display = (tab === 'all' || tr.getAttribute('data-status') === tab) ? '' : 'none';
+                });
             }
-
-            renderInventoryWarning();
 
             var activeCat = 'all';
 
@@ -767,19 +714,9 @@
 
             function renderCart() {
                 var panel = document.getElementById('orderPanel');
-
-
-                subtotalVal = 0;
-                for (var i = 0; i < cart.length; i++)
-                    subtotalVal += cart[i].price * cart[i].qty;
-
-
+                subtotalVal = cart.reduce(function(sum, item) { return sum + item.price * item.qty; }, 0);
                 memberDiscount = activeMember ? Math.round(subtotalVal * activeMember.pct / 100) : 0;
-
-
                 var couponDiscountAmt = Math.round(subtotalVal * couponDiscount) + couponDiscountFixed;
-
-
                 discountVal = couponDiscountAmt + memberDiscount;
                 grandTotalVal = Math.max(0, subtotalVal - discountVal);
 
@@ -789,78 +726,25 @@
                 document.getElementById('grandTotal').textContent = fmt(grandTotalVal);
 
                 if (cart.length === 0) {
-                    panel.innerHTML = '<div class="empty-cart" id="emptyMsg" style="display:block;">' +
-                            '<div class="ec-icon">&#128722;</div>' +
-                            '<div class="ec-text">Chưa có món nào</div>' +
-                            '</div>';
+                    panel.innerHTML = '<div class="empty-cart" id="emptyMsg" style="display:block;"><div class="ec-icon">&#128722;</div><div class="ec-text">Chưa có món nào</div></div>';
                     return;
                 }
-
-                panel.innerHTML = '';
-                for (var j = 0; j < cart.length; j++) {
-                    var item = cart[j];
-                    var line = item.price * item.qty;
-                    var itemKey = item.key || item.name;
-
-                    var div = document.createElement('div');
-                    div.className = 'order-line';
-                    var nameEl = document.createElement('div');
-                    nameEl.className = 'ol-name';
-                    nameEl.textContent = item.key;
-                    var bot = document.createElement('div');
-                    bot.className = 'ol-bottom';
-                    var qEl = document.createElement('div');
-                    qEl.className = 'ol-qty';
-
-                    var bm = document.createElement('button');
-                    bm.type = 'button';
-                    bm.className = 'qty-btn';
-                    bm.textContent = '-';
-                    (function (k) {
-                        bm.onclick = function () {
-                            changeQty(k, -1);
-                        };
-                    })(itemKey);
-
-                    var qn = document.createElement('span');
-                    qn.className = 'qty-num';
-                    qn.textContent = item.qty;
-
-                    var bp = document.createElement('button');
-                    bp.type = 'button';
-                    bp.className = 'qty-btn';
-                    bp.textContent = '+';
-                    (function (k) {
-                        bp.onclick = function () {
-                            changeQty(k, 1);
-                        };
-                    })(itemKey);
-
-                    qEl.appendChild(bm);
-                    qEl.appendChild(qn);
-                    qEl.appendChild(bp);
-
-                    var pEl = document.createElement('span');
-                    pEl.className = 'ol-price';
-                    pEl.textContent = fmt(line);
-
-                    var dEl = document.createElement('button');
-                    dEl.type = 'button';
-                    dEl.className = 'ol-del';
-                    dEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">delete</span>';
-                    (function (k) {
-                        dEl.onclick = function () {
-                            removeItem(k);
-                        };
-                    })(itemKey);
-
-                    bot.appendChild(qEl);
-                    bot.appendChild(pEl);
-                    bot.appendChild(dEl);
-                    div.appendChild(nameEl);
-                    div.appendChild(bot);
-                    panel.appendChild(div);
-                }
+                panel.innerHTML = cart.map(function(item) {
+                    var itemKey = (item.key || item.name).replace(/'/g, "\\'");
+                    return '<div class="order-line">' +
+                           '<div class="ol-name">' + item.key + '</div>' +
+                           '<div class="ol-bottom">' +
+                           '<div class="ol-qty">' +
+                           '<button type="button" class="qty-btn" onclick="changeQty(\'' + itemKey + '\', -1)">-</button>' +
+                           '<span class="qty-num">' + item.qty + '</span>' +
+                           '<button type="button" class="qty-btn" onclick="changeQty(\'' + itemKey + '\', 1)">+</button>' +
+                           '</div>' +
+                           '<span class="ol-price">' + fmt(item.price * item.qty) + '</span>' +
+                           '<button type="button" class="ol-del" onclick="removeItem(\'' + itemKey + '\')">' +
+                           '<span class="material-symbols-outlined" style="font-size:16px">delete</span>' +
+                           '</button>' +
+                           '</div></div>';
+                }).join('');
             }
 
 
@@ -1004,7 +888,10 @@
                     return;
                 }
 
-                fetch('${pageContext.request.contextPath}/CheckPromotion?action=discount&code=' + encodeURIComponent(code))
+                var custParam = (typeof activeMember !== 'undefined' && activeMember && activeMember.id) ? '&customerId=' + activeMember.id : '';
+                var tableSessParam = (typeof selectedTableSessionId !== 'undefined' && selectedTableSessionId) ? '&tableSessionId=' + selectedTableSessionId : '';
+                var tableParam = (typeof selectedTableId !== 'undefined' && selectedTableId) ? '&tableId=' + selectedTableId : '';
+                fetch('${pageContext.request.contextPath}/CheckPromotion?action=discount&code=' + encodeURIComponent(code) + custParam + tableSessParam + tableParam)
                         .then(response => response.json())
                         .then(data => {
                             if (data.valid) {
@@ -1145,9 +1032,9 @@
                     if (e.data.area)
                         label += ' \u2014 ' + e.data.area;
                     btn.textContent = label;
-                    btn.style.background = '#2c1a0e';
+                    btn.style.background = '#006e2f';
                     btn.style.color = '#fff';
-                    btn.style.borderColor = '#2c1a0e';
+                    btn.style.borderColor = '#006e2f';
 
                     closeTableModal();
                     showToast('\u2713 Đã chọn ' + e.data.tableCode + (e.data.area ? ' (' + e.data.area + ')' : ''));
@@ -1373,6 +1260,9 @@
                     formData.append("tableName", selectedTable || 'Walk-in');
                     if (typeof selectedTableId !== 'undefined' && selectedTableId !== null) {
                         formData.append("tableId", selectedTableId);
+                    }
+                    if (typeof selectedTableSessionId !== 'undefined' && selectedTableSessionId !== null) {
+                        formData.append("tableSessionId", selectedTableSessionId);
                     }
                     formData.append("note", noteVal);
 

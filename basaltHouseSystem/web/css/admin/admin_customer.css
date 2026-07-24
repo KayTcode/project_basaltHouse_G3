@@ -1,7 +1,6 @@
-
 :root {
-    --primary-color: #006e2f;
-    --primary-hover: #005c25;
+    --primary-color: #006233;
+    --primary-hover: #004d27;
     --border-subtle: #cbd5e1;
     --text-dark: #1e293b;
     --text-muted: #64748b;
@@ -591,6 +590,7 @@
     color: var(--basalt-blue, #1c7ed6) !important;
     background-color: #f8f9fa !important;
 }
+
 
 /* ── GIFT DISCOUNT BUTTON ── */
 .btn-icon-action.action-gift {

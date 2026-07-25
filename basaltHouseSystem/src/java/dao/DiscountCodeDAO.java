@@ -328,10 +328,9 @@ public List<Customer> searchCustomerMembershipByName(String name) {
                          SET IsUsed   = 1,
                              UsedDate = GETDATE()
                          WHERE AccountId  = ?
-                           AND DiscountId = (
+                           AND DiscountId IN (
                                    SELECT DiscountId FROM DiscountCodes
                                    WHERE UPPER(Code) = UPPER(?)
-                                     AND IsPublic = 0
                                )
                            AND ISNULL(IsUsed, 0) = 0
                          """;
@@ -341,6 +340,112 @@ public List<Customer> searchCustomerMembershipByName(String name) {
             return st.executeUpdate() > 0;
         } catch (Exception e) {
             System.err.println("markVoucherAsUsed Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasCustomerUsedDiscount(int customerId, String code) {
+        if (customerId <= 0 || code == null || code.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            String sql = """
+                         SELECT COUNT(*)
+                         FROM Orders o
+                         JOIN DiscountCodes d ON o.DiscountId = d.DiscountId
+                         WHERE o.CustomerId = ?
+                           AND UPPER(d.Code) = UPPER(?)
+                           AND o.OrderStatus <> 'Cancelled'
+                           AND o.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, customerId);
+            st.setString(2, code.trim());
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("hasCustomerUsedDiscount Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasAccountUsedDiscount(int accountId, String code) {
+        if (accountId <= 0 || code == null || code.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            String sql = """
+                         SELECT COUNT(*)
+                         FROM Orders o
+                         JOIN Customers c ON o.CustomerId = c.CustomerId
+                         JOIN DiscountCodes d ON o.DiscountId = d.DiscountId
+                         WHERE c.AccountId = ?
+                           AND UPPER(d.Code) = UPPER(?)
+                           AND o.OrderStatus <> 'Cancelled'
+                           AND o.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            st.setString(2, code.trim());
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("hasAccountUsedDiscount Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasTableSessionUsedDiscount(int tableSessionId) {
+        if (tableSessionId <= 0) return false;
+        try {
+            String sql = """
+                         SELECT COUNT(*)
+                         FROM Orders
+                         WHERE TableSessionId = ?
+                           AND DiscountId IS NOT NULL
+                           AND DiscountAmount > 0
+                           AND OrderStatus <> 'Cancelled'
+                           AND IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, tableSessionId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("hasTableSessionUsedDiscount Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasTableUsedDiscount(int tableId) {
+        if (tableId <= 0) return false;
+        try {
+            String sql = """
+                         SELECT COUNT(*)
+                         FROM Orders o
+                         JOIN TableSessions ts ON o.TableSessionId = ts.SessionId
+                         WHERE ts.TableId = ?
+                           AND ts.Status IN ('ACTIVE', 'Open')
+                           AND ts.IsDeleted = 0
+                           AND o.DiscountId IS NOT NULL
+                           AND o.DiscountAmount > 0
+                           AND o.OrderStatus <> 'Cancelled'
+                           AND o.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, tableId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("hasTableUsedDiscount Error: " + e.getMessage());
         }
         return false;
     }

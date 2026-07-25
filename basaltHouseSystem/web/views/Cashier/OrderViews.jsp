@@ -33,8 +33,7 @@
         <aside class="sidebar">
 
             <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
-                <div class="logo-icon">&#9749;</div>
-                <div class="logo-text">Basalt<span>House Coffee</span></div>
+                <div class="logo-text">BasaltHouse</div>
             </a>
             <nav class="sidebar-nav">
                 <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item">

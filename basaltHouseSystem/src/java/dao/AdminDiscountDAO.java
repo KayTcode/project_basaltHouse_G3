@@ -222,6 +222,7 @@ public class AdminDiscountDAO extends DBContext {
             FROM DiscountCodes
             WHERE IsDeleted = 0
               AND IsActive = 1
+              AND IsPublic = 0
               AND (StartDate IS NULL OR StartDate <= GETDATE())
               AND (EndDate IS NULL OR EndDate >= GETDATE())
             ORDER BY CreatedAt DESC

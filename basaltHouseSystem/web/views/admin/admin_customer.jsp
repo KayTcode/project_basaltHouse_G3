@@ -15,7 +15,7 @@
 
         <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_common.css?v=2">
         <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_account.css?v=2">
-        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_customer.css?v=7">
+        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/admin/admin_customer.css?v=8">
     </head>
     <body class="admin-dashboard-body">
 
@@ -408,7 +408,7 @@
                                             </c:forEach>
                                         </c:when>
                                         <c:otherwise>
-                                            <option disabled>Không có mã nào đang hoạt động</option>
+                                            <option disabled>Không có mã riêng tư nào đang hoạt động</option>
                                         </c:otherwise>
                                     </c:choose>
                                 </select>

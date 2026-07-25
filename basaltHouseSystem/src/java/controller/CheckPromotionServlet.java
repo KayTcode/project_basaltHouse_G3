@@ -21,7 +21,22 @@ public class CheckPromotionServlet extends HttpServlet {
 
         if ("discount".equals(action)) {
             String code = request.getParameter("code");
-            json = promotionService.checkDiscount(code);
+            String custIdStr = request.getParameter("customerId");
+            String tsIdStr = request.getParameter("tableSessionId");
+            String tIdStr = request.getParameter("tableId");
+            Integer custId = null;
+            Integer tableSessionId = null;
+            Integer tableId = null;
+            if (custIdStr != null && !custIdStr.trim().isEmpty()) {
+                try { custId = Integer.parseInt(custIdStr.trim()); } catch (Exception e) {}
+            }
+            if (tsIdStr != null && !tsIdStr.trim().isEmpty()) {
+                try { tableSessionId = Integer.parseInt(tsIdStr.trim()); } catch (Exception e) {}
+            }
+            if (tIdStr != null && !tIdStr.trim().isEmpty()) {
+                try { tableId = Integer.parseInt(tIdStr.trim()); } catch (Exception e) {}
+            }
+            json = promotionService.checkDiscount(code, custId, tableSessionId, tableId);
         } else if ("member".equals(action)) {
             String phone = request.getParameter("phone");
             json = promotionService.checkMember(phone);

@@ -18,8 +18,10 @@
     HashMap<Integer, Product> products = (HashMap<Integer, Product>) request.getAttribute("products");
     HashMap<Integer, String> sizes     = (HashMap<Integer, String>) request.getAttribute("sizes");
 
+    String currentTypeVal = (String) request.getAttribute("currentType");
+    if (currentTypeVal == null) currentTypeVal = "pos";
     String filterParam = request.getParameter("filter");
-    String filterQs    = (filterParam != null && !filterParam.isEmpty()) ? "&filter=" + filterParam : "";
+    String filterQs    = "&type=" + currentTypeVal + ((filterParam != null && !filterParam.isEmpty()) ? "&filter=" + filterParam : "");
 
     
     int pagePending   = (Integer) request.getAttribute("pendingPage");
@@ -92,15 +94,32 @@
             </div>
 
 
-            <div class="filter-bar">
-                <span class="filter-label">&#128269; Tìm kiếm:</span>
-                <div style="position:relative;flex:1;max-width:320px;">
-                    <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#8a8a9a;pointer-events:none;">search</span>
-                    <input type="text" id="orderSearchInput" placeholder="Nhập mã đơn (#POS001, #ONL002...)" oninput="searchOrders(this.value)"
-                           style="width:100%;padding:9px 14px 9px 38px;border:1px solid rgba(0,0,0,0.1);border-radius:24px;font-size:13.5px;font-family:inherit;background:#fff;outline:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:border-color 0.2s;"
-                           onfocus="this.style.borderColor = '#006e2f'" onblur="this.style.borderColor = 'rgba(0,0,0,0.1)'">
+            <div class="filter-bar" style="display:flex; align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:24px; margin-bottom:20px;">
+                <div class="order-type-tabs" style="display:flex; align-items:center; background:#e2e8f0; padding:4px; border-radius:30px; gap:4px; box-shadow:inset 0 1px 2px rgba(0,0,0,0.06);">
+                    <a href="${pageContext.request.contextPath}/bartender/view?type=pos<c:if test="${not empty currentFilter && currentFilter ne 'all'}">&filter=${currentFilter}</c:if>" 
+                       class="type-tab-btn ${currentType eq 'pos' or empty currentType ? 'active' : ''}" 
+                       style="display:flex; align-items:center; gap:6px; padding:7px 18px; border-radius:24px; text-decoration:none; font-size:13.5px; font-weight:700; transition:all 0.2s ease; ${currentType eq 'pos' or empty currentType ? 'background:#006e2f; color:#ffffff; box-shadow:0 2px 6px rgba(0,110,47,0.25);' : 'background:transparent; color:#475569;'}">
+                        <span class="material-symbols-outlined" style="font-size:17px;">point_of_sale</span>
+                        POS <span class="type-tab-count" style="font-size:12px; opacity:0.9;">(${countPos})</span>
+                    </a>
+                    <a href="${pageContext.request.contextPath}/bartender/view?type=online<c:if test="${not empty currentFilter && currentFilter ne 'all'}">&filter=${currentFilter}</c:if>" 
+                       class="type-tab-btn ${currentType eq 'online' ? 'active' : ''}" 
+                       style="display:flex; align-items:center; gap:6px; padding:7px 18px; border-radius:24px; text-decoration:none; font-size:13.5px; font-weight:700; transition:all 0.2s ease; ${currentType eq 'online' ? 'background:#2563eb; color:#ffffff; box-shadow:0 2px 6px rgba(37,99,235,0.25);' : 'background:transparent; color:#475569;'}">
+                        <span class="material-symbols-outlined" style="font-size:17px;">shopping_bag</span>
+                        ONLINE <span class="type-tab-count" style="font-size:12px; opacity:0.9;">(${countOnline})</span>
+                    </a>
                 </div>
-                <button onclick="searchOrders('')" style="padding:8px 14px;border-radius:24px;border:1px solid rgba(0,0,0,0.1);background:#fff;font-size:13px;cursor:pointer;color:#8a8a9a;font-family:inherit;display:none;" title="Xóa tìm kiếm" id="clearSearchBtn">&#x2715; Xóa</button>
+
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="filter-label" style="font-weight:600; font-size:13px; color:#475569;">&#128269; Tìm kiếm:</span>
+                    <div style="position:relative; width:280px;">
+                        <span class="material-symbols-outlined" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;color:#8a8a9a;pointer-events:none;">search</span>
+                        <input type="text" id="orderSearchInput" placeholder="Nhập mã đơn (#POS001, #ONL002...)" oninput="searchOrders(this.value)"
+                               style="width:100%;padding:9px 14px 9px 38px;border:1px solid rgba(0,0,0,0.1);border-radius:24px;font-size:13.5px;font-family:inherit;background:#fff;outline:none;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:border-color 0.2s;"
+                               onfocus="this.style.borderColor = '#006e2f'" onblur="this.style.borderColor = 'rgba(0,0,0,0.1)'">
+                    </div>
+                    <button onclick="searchOrders('')" style="padding:8px 14px;border-radius:24px;border:1px solid rgba(0,0,0,0.1);background:#fff;font-size:13px;cursor:pointer;color:#8a8a9a;font-family:inherit;display:none;" title="Xóa tìm kiếm" id="clearSearchBtn">&#x2715; Xóa</button>
+                </div>
             </div>
 
 
@@ -114,7 +133,7 @@
                             <span style="color:#d97706">Pending</span>
                             <span class="col-count pending" id="cnt-pending">${totalCol_0}</span>
                         </div>
-                        <span style="font-size:11px;color:#8a8a9a">Chờ bartender</span>
+                        <span style="font-size:11px;color:#8a8a9a">Bắt đầu pha chế</span>
                     </div>
                     <div class="col-body" id="col-pending"></div>
 
@@ -373,28 +392,33 @@
             }
 
             function renderAll() {
-            var colEls = {
-            pending:   document.getElementById('col-pending'),
+                var colEls = {
+                    pending:   document.getElementById('col-pending'),
                     preparing: document.getElementById('col-preparing'),
                     ready:     document.getElementById('col-ready')
-            };
-            var colData = { pending: ORDERS_PENDING, preparing: ORDERS_PREPARING, ready: ORDERS_READY };
-            ['pending', 'preparing', 'ready'].forEach(function(s) {
-            colEls[s].innerHTML = '';
-            var items = colData[s];
-            if (items.length === 0) {
-            var emp = document.createElement('div');
-            emp.className = 'empty-col';
-            emp.innerHTML = '<span class="material-symbols-outlined">coffee</span>Không có đơn nào';
-            colEls[s].appendChild(emp);
-            } else {
-            items.forEach(function(o) {
-            var card = buildCard(o);
-            card.classList.add('card-in');
-            colEls[s].appendChild(card);
-            });
-            }
-            });
+                };
+                var colData = { pending: ORDERS_PENDING, preparing: ORDERS_PREPARING, ready: ORDERS_READY };
+                ['pending', 'preparing', 'ready'].forEach(function(s) {
+                    colEls[s].innerHTML = '';
+                    var items = colData[s];
+                    if (items.length === 0) {
+                        var emp = document.createElement('div');
+                        emp.className = 'empty-col';
+                        emp.innerHTML = '<span class="material-symbols-outlined">coffee</span>Không có đơn ${currentType eq "online" ? "Online" : "POS"} nào';
+                        colEls[s].appendChild(emp);
+                    } else {
+                        items.forEach(function(o) {
+                            var card = buildCard(o);
+                            card.classList.add('card-in');
+                            colEls[s].appendChild(card);
+                        });
+                    }
+                });
+
+                var searchVal = document.getElementById('orderSearchInput') ? document.getElementById('orderSearchInput').value : '';
+                if (searchVal) {
+                    searchOrders(searchVal);
+                }
             }
 
 

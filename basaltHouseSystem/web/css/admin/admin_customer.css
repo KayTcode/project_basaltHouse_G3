@@ -594,15 +594,15 @@
 
 /* ── GIFT DISCOUNT BUTTON ── */
 .btn-icon-action.action-gift {
-    color: #7c3aed;
-    background: #f5f3ff;
-    border-color: #ede9fe;
+    color: #16a34a;
+    background: #f0fdf4;
+    border-color: #bbf7d0;
 }
 
 .btn-icon-action.action-gift:hover {
-    background: #ede9fe;
-    border-color: #c4b5fd;
-    color: #6d28d9;
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
 }
 
 /* ── GIFT MODAL SIZE ── */
@@ -610,3 +610,15 @@
     max-width: 480px;
 }
 
+.modal-card--gift .modal-card-header {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.modal-card--gift .modal-card-footer .btn-primary-action {
+    background: #16a34a;
+}
+
+.modal-card--gift .modal-card-footer .btn-primary-action:hover {
+    background: #15803d;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+}

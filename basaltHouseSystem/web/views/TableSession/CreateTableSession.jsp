@@ -240,6 +240,10 @@
                                                                                                         <%= s.getGuestCount() %> khách
                                                                                                     </span>
                                                                                                     <div class="session-actions-group">
+                                                                                                        <button type="button" class="session-action-btn btn-session-add"
+                                                                                                            onclick="selectSessionForOrder(event, <%= s.getTableId() %>, '<%= tbCode.replace("'", "\\'") %>', '<%= area.replace("'", "\\'") %>', <%= s.getSessionId() %>)">
+                                                                                                            <span class="material-symbols-outlined" style="font-size:15px">add_circle</span>Gọi thêm
+                                                                                                        </button>
                                                                                                         <button type="button" class="session-action-btn btn-session-view"
                                                                                                             onclick="openViewOrdersModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
                                                                                                             <span class="material-symbols-outlined">receipt_long</span>Xem đơn
@@ -603,11 +607,23 @@
                                         })
                                         .catch(function (err) {
                                             showToast('error', 'Lỗi kết nối', 'Không thể kết nối đến server.');
-                                            console.error('Network error:', err);
-                                            btnSubmit.disabled = false;
-                                            btnSubmit.innerHTML = '<span class="material-symbols-outlined">add_circle</span> Tạo Session';
                                         });
                                 }
+
+                                window.selectSessionForOrder = function (event, tableId, tableCode, area, tableSessionId) {
+                                    if (event) {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                    }
+                                    const message = {
+                                        type: 'TABLE_SELECTED',
+                                        tableId: tableId,
+                                        tableCode: tableCode,
+                                        area: area,
+                                        tableSessionId: tableSessionId
+                                    };
+                                    window.parent.postMessage(message, '*');
+                                };
 
                                 /* ── Toast ── */
                                 function showToast(type, title, msg) {

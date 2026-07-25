@@ -90,6 +90,14 @@ public class PromotionService {
     }
 
     public String checkDiscount(String code) {
+        return checkDiscount(code, null, null, null);
+    }
+
+    public String checkDiscount(String code, Integer customerId) {
+        return checkDiscount(code, customerId, null, null);
+    }
+
+    public String checkDiscount(String code, Integer customerId, Integer tableSessionId, Integer tableId) {
         if (code == null || code.trim().isEmpty()) {
             return "{\"valid\": false, \"msg\": \"Vui lòng nhập mã giảm giá.\"}";
         }
@@ -98,6 +106,21 @@ public class PromotionService {
         DiscountCode discount = dao.checkDiscountCode(code.trim());
 
         if (discount != null) {
+            if (tableSessionId != null && tableSessionId > 0) {
+                if (dao.hasTableSessionUsedDiscount(tableSessionId)) {
+                    return "{\"valid\": false, \"msg\": \"Mã đã được sử dụng không thể sử dụng được nữa\"}";
+                }
+            } else if (tableId != null && tableId > 0) {
+                if (dao.hasTableUsedDiscount(tableId)) {
+                    return "{\"valid\": false, \"msg\": \"Mã đã được sử dụng không thể sử dụng được nữa\"}";
+                }
+            }
+
+            if (customerId != null && customerId > 0) {
+                if (dao.hasCustomerUsedDiscount(customerId, code.trim())) {
+                    return "{\"valid\": false, \"msg\": \"Mã đã được sử dụng không thể sử dụng được nữa\"}";
+                }
+            }
             double pct    = discount.getDiscountPercent() != null ? discount.getDiscountPercent().doubleValue() : 0.0;
             double amount = discount.getDiscountAmount()  != null ? discount.getDiscountAmount().doubleValue()  : 0.0;
             int    id     = discount.getDiscountId();

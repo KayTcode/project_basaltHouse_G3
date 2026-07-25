@@ -274,6 +274,9 @@ public class CartService {
             List<model.DiscountCode> publicList = discountDAO.getDiscountCode();
             if (publicList != null) {
                 for (model.DiscountCode d : publicList) {
+                    if (accountId != null && accountId > 0 && discountDAO.hasAccountUsedDiscount(accountId, d.getCode())) {
+                        continue; // Đã sử dụng mã public này rồi -> Bỏ qua
+                    }
                     vouchers.add(new CustomerDiscountCode(
                         0, 0, d.getDiscountId(),
                         d.getDiscountPercent(), d.getDiscountAmount(),

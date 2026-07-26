@@ -58,18 +58,41 @@ public class ShipperService {
         }
     }
 
-    public ProcessOrderResult accecptOrder(int orderId, int shipperId) {
+    public ProcessOrderResult assignShipperToOrder(int orderId, int shipperId) {
         ProcessOrderResult result = new ProcessOrderResult();
-        if (orderId <= 0) {
-            result.addError("Mã đơn hàng không hợp lệ");
-            return result;
-        }
         try {
-            return shipperDAO.acceptOrder(orderId, shipperId);
+            boolean ok = shipperDAO.assignShipper(orderId, shipperId);
+            if (ok) {
+                result.setSuccess(true);
+            } else {
+                result.addError("Không thể gán shipper: đơn #" + orderId
+                        + " không còn ở trạng thái chờ gán (có thể đã có shipper khác nhận, "
+                        + "hoặc đơn chưa ở trạng thái 'Waiting_Shipper').");
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            result.addError("Lỗi hệ thống!");
+            result.addError("Lỗi hệ thống khi gán shipper.");
+        }
+        return result;
+    }
+
+    public ProcessOrderResult acceptOrder(int orderId, int shipperId) {
+        try {
+            return shipperDAO.acceptShipperOrder(orderId, shipperId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            ProcessOrderResult result = new ProcessOrderResult();
+            result.addError("Lỗi hệ thống khi nhận đơn.");
             return result;
+        }
+    }
+
+    public boolean rejectOrder(int orderId, int shipperId) {
+        try {
+            return shipperDAO.rejectShipper(orderId, shipperId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 

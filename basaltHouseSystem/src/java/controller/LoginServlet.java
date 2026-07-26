@@ -144,7 +144,6 @@ public class LoginServlet extends HttpServlet {
         session.setAttribute(AuthService.JWT_SESSION_KEY, result.getJwtToken());
         session.setAttribute(AuthService.USER_SESSION_KEY, result);
 
-        // Dòng này để HomePage.jsp dùng được sessionScope.currentUser
         session.setAttribute("currentUser", result);
         if (result.getRoleId() == 4) {
             dao.AuthDAO authDAO = new dao.AuthDAO();

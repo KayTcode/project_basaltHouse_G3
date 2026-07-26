@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import model.ProcessOrderResult;
 import model.Shipper;
 import services.ShipperService;
 
@@ -20,7 +19,7 @@ import services.ShipperService;
  *
  * @author KayT
  */
-public class AcceptOrderServlet extends HttpServlet {
+public class RejectOrderServlet extends HttpServlet {
 
     private final ShipperService shipperService = new ShipperService();
 
@@ -41,10 +40,10 @@ public class AcceptOrderServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet AcceptOrderServlet</title>");
+            out.println("<title>Servlet RejectOrderServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet AcceptOrderServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet RejectOrderServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -89,31 +88,14 @@ public class AcceptOrderServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
-        int orderId;
-        try {
-            orderId = Integer.parseInt(request.getParameter("orderId"));
-        } catch (NumberFormatException e) {
-            session.setAttribute("flashSuccess", false);
-            session.setAttribute("flashMessage", "Mã đơn không hợp lệ!");
-            response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
-            return;
-        }
-
-        ProcessOrderResult result = shipperService.acceptOrder(orderId, currentShipper.getShipperId());
-
-        session.setAttribute("flashSuccess", result.isSuccess());
-        session.setAttribute("flashMessage", result.isSuccess()
-                ? "Đã nhận đơn #" + orderId + ". Bắt đầu giao hàng!"
-                : buildErrorMessage(result));
-
+        
+        int orderId = Integer.parseInt(request.getParameter("orderId"));
+        boolean ok = shipperService.rejectOrder(orderId, currentShipper.getShipperId());
+        
+        session.setAttribute("flashSuccess", ok);
+        session.setAttribute("flashMessage", ok ? "Đã huỷ đơn #" + orderId + "." : "Không thể huỷ đơn này. Vui lòng thử lại.");
+        
         response.sendRedirect(request.getContextPath() + "/shipper/dashboard");
-    }
-
-    private String buildErrorMessage(ProcessOrderResult result) {
-        if (result.getErrors() == null || result.getErrors().isEmpty()) {
-            return "Không thể nhận đơn. Vui lòng thử lại.";
-        }
-        return String.join(" ", result.getErrors());
     }
 
     /**

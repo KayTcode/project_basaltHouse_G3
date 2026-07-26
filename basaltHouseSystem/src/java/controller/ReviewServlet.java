@@ -8,7 +8,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import model.Order;
@@ -26,13 +25,8 @@ public class ReviewServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         PrintWriter out = response.getWriter();
 
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("currentUser") == null) {
-            out.print("{\"success\":false,\"message\":\"Vui lòng đăng nhập.\"}");
-            return;
-        }
-
-        UserLoginDTO user = (UserLoginDTO) session.getAttribute("currentUser");
+        UserLoginDTO user = (UserLoginDTO) request.getSession(false)
+                .getAttribute("currentUser");
 
         // Parse params
         String orderIdStr = request.getParameter("orderId");

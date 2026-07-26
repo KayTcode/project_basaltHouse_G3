@@ -182,4 +182,40 @@ public class Bill {
         }
         return printedAt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
+
+    public String getStatusDisplayName() {
+        if (orderStatus == null) return "Đang xử lý";
+        String st = orderStatus.toLowerCase().trim();
+        if ("completed".equals(st) || "paid".equals(st)) {
+            return "Hoàn thành";
+        }
+        if ("cancelled".equals(st)) {
+            return "Đã hủy";
+        }
+        if ("pending".equals(st)) {
+            return "Chờ xác nhận";
+        }
+        if ("preparing".equals(st) || "in_progress".equals(st)) {
+            return "Đang chuẩn bị";
+        }
+        if ("ready".equals(st) || "waiting_shipper".equals(st)) {
+            return "Sẵn sàng";
+        }
+        if ("delivering".equals(st)) {
+            return "Đang giao";
+        }
+        return orderStatus;
+    }
+
+    public String getStatusBadgeClass() {
+        if (orderStatus == null) return "status-pending";
+        String st = orderStatus.toLowerCase().trim();
+        if ("completed".equals(st) || "paid".equals(st)) {
+            return "status-completed";
+        }
+        if ("cancelled".equals(st)) {
+            return "status-cancelled";
+        }
+        return "status-pending";
+    }
 }

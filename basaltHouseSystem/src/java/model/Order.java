@@ -6,6 +6,8 @@ package model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -33,7 +35,8 @@ public class Order {
     private String cashierName;
     private String shipperName;
     private String note;
-
+    private String discountCode;
+    private List<OrderDetail> orderDetails;
     public Order() {
     }
 
@@ -234,7 +237,13 @@ public class Order {
     public void setNote(String note) {
         this.note = note;
     }
-    
+    public String getDiscountCode() {
+        return discountCode;
+    }
+
+    public void setDiscountCode(String discountCode) {
+        this.discountCode = discountCode;
+    }
     public java.util.Date getCreatedAtDate() {
         if (createdAt == null) {
             return null;
@@ -243,5 +252,19 @@ public class Order {
                 .atZone(java.time.ZoneId.systemDefault())
                 .toInstant());
     }
-}
 
+    public List<OrderDetail> getOrderDetails() {
+        return orderDetails;
+    }
+
+    public void setOrderDetails(List<OrderDetail> orderDetails) {
+        this.orderDetails = orderDetails;
+    }
+
+    public void addOrderDetail(OrderDetail detail) {
+        if (this.orderDetails == null) {
+            this.orderDetails = new ArrayList<>();
+        }
+        this.orderDetails.add(detail);
+    }
+}

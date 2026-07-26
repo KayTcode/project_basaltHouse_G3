@@ -56,15 +56,28 @@ public class BillDAO extends DBContext {
         if (filterDate != null && !filterDate.isEmpty()) {
             sql.append("AND CAST(b.PrintedAt AS DATE) = ? ");
         }
+        boolean isGroupFilter = false;
         if (filterPayment != null && !filterPayment.isEmpty()) {
-            sql.append("AND b.PaymentMethod = ? ");
+            String fp = filterPayment.trim().toUpperCase();
+            if ("QR CODE".equals(fp) || "TRANSFER".equals(fp) || "MOMO".equals(fp)) {
+                sql.append("AND (UPPER(b.PaymentMethod) LIKE '%QR%' OR UPPER(b.PaymentMethod) LIKE '%MOMO%' OR UPPER(b.PaymentMethod) LIKE '%TRANSFER%' OR UPPER(b.PaymentMethod) LIKE '%BANK%') ");
+                isGroupFilter = true;
+            } else if ("CASH".equals(fp)) {
+                sql.append("AND (UPPER(b.PaymentMethod) LIKE '%CASH%' OR UPPER(b.PaymentMethod) LIKE N'%TIỀN MẶT%') ");
+                isGroupFilter = true;
+            } else if ("COD".equals(fp)) {
+                sql.append("AND UPPER(b.PaymentMethod) LIKE '%COD%' ");
+                isGroupFilter = true;
+            } else {
+                sql.append("AND b.PaymentMethod = ? ");
+            }
         }
         sql.append("ORDER BY b.PrintedAt DESC");
 
         try (PreparedStatement st = connection.prepareStatement(sql.toString())) {
             int idx = 1;
             if (filterDate != null && !filterDate.isEmpty()) st.setString(idx++, filterDate);
-            if (filterPayment != null && !filterPayment.isEmpty()) st.setString(idx++, filterPayment);
+            if (filterPayment != null && !filterPayment.isEmpty() && !isGroupFilter) st.setString(idx++, filterPayment);
 
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {

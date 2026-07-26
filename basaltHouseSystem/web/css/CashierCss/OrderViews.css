@@ -54,6 +54,7 @@
         .off-status-badge.pending   { background: #fff7ed; color: #c2410c; }
         .off-status-badge.preparing { background: #fff7ed; color: #c2410c; }
         .off-status-badge.ready     { background: #eff6ff; color: #1d4ed8; }
+        .off-status-badge.cancelled { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
         .off-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
         .off-datetime { font-size: 12px; color: #8a8a9a; font-weight: 500; }
 

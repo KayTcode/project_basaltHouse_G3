@@ -1,6 +1,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
+<%@taglib prefix="fmt" uri="jakarta.tags.fmt"%>
 <%@page import="java.util.List"%>
 <%@page import="model.Order"%>
 <%@page import="model.OrderDetail"%>
@@ -23,23 +24,14 @@
         <title>Orders Management | Coffee House</title>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-        <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=4" rel="stylesheet">
+        <link href="${pageContext.request.contextPath}/css/CashierCss/CashierNew.css?v=8" rel="stylesheet">
         <link href="${pageContext.request.contextPath}/css/CashierCss/OrderViews.css" rel="stylesheet">
     </head>
     <body>
-
-        <c:if test="${not empty sessionScope.flashMessage}">
-            <div class="alert ${sessionScope.flashSuccess ? 'alert-success' : 'alert-danger'}">
-                <c:out value="${sessionScope.flashMessage}"/>
-            </div>
-            <c:remove var="flashMessage" scope="session"/>
-            <c:remove var="flashSuccess" scope="session"/>
-        </c:if>
         <aside class="sidebar">
 
             <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">
-                <div class="logo-icon">&#9749;</div>
-                <div class="logo-text">Basalt<span>House Coffee</span></div>
+                <div class="logo-text">BasaltHouse</div>
             </a>
             <nav class="sidebar-nav">
                 <a href="${pageContext.request.contextPath}/cashier/dashboard" class="nav-item">
@@ -64,6 +56,9 @@
                         <div class="staff-status"><div class="status-dot"></div>Online</div>
                     </div>
                 </div>
+                <a href="${pageContext.request.contextPath}/home" class="btn-logout">
+                    <span class="material-symbols-outlined" style="font-size:16px; margin-right:6px;">logout</span>Thoát
+                </a>
             </div>
         </aside>
 
@@ -108,14 +103,15 @@
                                 }
                                 String oType = ord.getOrderType() != null ? ord.getOrderType().toLowerCase() : "pos";
                                 String statusClass = ord.getOrderStatus() != null ? ord.getOrderStatus().toLowerCase().replace(" ", "-") : "preparing";
+                                String orderCode = String.format("%s%03d", "pos".equals(oType) ? "POS" : "ONL", ord.getOrderId());
                             %>
-                            <tr data-type="<%=oType%>" data-id="ORD00${o.orderId}" data-cust="${o.customerName}">
-                                <td><strong>ORD00${o.orderId}</strong></td>
+                            <tr data-type="<%=oType%>" data-id="<%=orderCode%>" data-cust="${o.customerName}">
+                                <td><strong><%=orderCode%></strong></td>
                                 <td><span class="badge badge-<%=oType%>">${o.orderType}</span></td>
                                 <td>${o.customerName}</td>
-                                <td id="status-ORD00${o.orderId}"><span class="badge badge-<%=statusClass%>">${o.orderStatus}</span></td>
-                                <td><%=formatTime%></td><td><strong>${o.finalAmount} đ</strong></td>
-                                <td><button type="button" class="view-btn" onclick="openModal('ORD00${o.orderId}')"><span class="material-symbols-outlined" style="font-size:15px">visibility</span></button></td>
+                                <td id="status-<%=orderCode%>"><span class="badge badge-<%=statusClass%>">${o.orderStatus}</span></td>
+                                <td><%=formatTime%></td><td><strong><fmt:formatNumber value="${o.finalAmount}" type="number" maxFractionDigits="0"/> đ</strong></td>
+                                <td><button type="button" class="view-btn" onclick="openModal('<%=orderCode%>')"><span class="material-symbols-outlined" style="font-size:15px">visibility</span></button></td>
                             </tr>
                         </c:forEach>
                     </tbody>
@@ -142,7 +138,7 @@
 
         <div class="modal-overlay" id="offModal" onclick="closeIfOverlay(event, 'offModal')">
             <div class="off-modal" id="offModalBox">
-                <!-- built by JS -->
+
             </div>
         </div>
 
@@ -159,19 +155,29 @@
 
             var ORDERS = {
             <c:forEach items="${orderList}" var="o" varStatus="loop">
-            'ORD00${o.orderId}': {
+                <% 
+                Order ordJS = (Order) pageContext.getAttribute("o");
+                String oTypeJS = ordJS.getOrderType() != null ? ordJS.getOrderType().toLowerCase() : "pos";
+                String orderCodeJS = String.format("%s%03d", "pos".equals(oTypeJS) ? "POS" : "ONL", ordJS.getOrderId());
+                String timeJS = "";
+                if (ordJS.getCreatedAt() != null) {
+                    timeJS = ordJS.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+                }
+                %>
+            '<%=orderCodeJS%>': {
             id: '${o.orderId}',
                     type: '${o.orderType != null ? o.orderType.toLowerCase() : "pos"}',
                     customer: '${o.customerName}',
                     table: '${o.tableName != null ? o.tableName : "Walk-in"}',
                     cashier: '${not empty sessionScope.currentUser ? sessionScope.currentUser.fullName : "Cashier"}',
-                    time: '${o.createdAt}',
+                    time: '<%=timeJS%>',
                     note: '${o.note != null ? o.note : "---"}',
-                    payMethod: '${o.paymentMethod != null ? o.paymentMethod : "Cash"}',
-                    payMode: 'cod',
+                    payMethod: '${o.paymentMethod != null ? o.paymentMethod : "COD"}',
+                    payMode: '${o.paymentMethod != null ? o.paymentMethod.toLowerCase() : "cod"}',
                     total: ${o.finalAmount != null ? o.finalAmount : 0},
                     subtotal: ${o.totalAmount != null ? o.totalAmount : o.finalAmount},
                     discount: ${o.discountAmount != null ? o.discountAmount : 0},
+                    discountCode: '${o.discountCode != null ? o.discountCode : ""}',
                     status: '${o.orderStatus != null ? o.orderStatus.toLowerCase() : "preparing"}',
                     shipperId: ${o.shipperId != null ? o.shipperId : 0},
                     shipperName: '${o.shipperName != null ? o.shipperName : ""}',
@@ -258,8 +264,8 @@
 
             function statusLabelAndClass(s) {
             var map = { preparing:['Đang chuẩn bị', 'preparing'], pending_payment:['Chờ thanh toán', 'pending'],
-                    ready:['Sẵn sàng', 'ready'], waiting_shipper:['Sẵn sàng', 'ready'], delivering:['Đang giao', 'ready'], completed:['Hoàn thành', 'completed'], paid:['Đã thanh toán', 'paid'] };
-            return map[s] || [s === 'pending' ? 'Chờ xác nhận' : s, 'pending'];
+                    ready:['Sẵn sàng', 'ready'], waiting_shipper:['Sẵn sàng', 'ready'], delivering:['Đang giao', 'ready'], completed:['Hoàn thành', 'completed'], paid:['Đã thanh toán', 'paid'], cancelled:['Đã hủy', 'cancelled'] };
+            return map[s] || [s === 'pending' ? 'Chờ xác nhận' : (s === 'cancelled' ? 'Đã hủy' : s), s === 'cancelled' ? 'cancelled' : 'pending'];
             }
 
             function buildOfflineModal(o) {
@@ -398,52 +404,38 @@
             }
 
 
-            var couponAmt = o.coupon ? o.coupon.amount : 0;
-            var memAmt = o.member ? Math.round(o.total * o.member.pct / 100) : 0;
-            var grand = Math.max(0, o.total - couponAmt - memAmt);
-            var discSection = '';
-            if (o.coupon || o.member) {
-            discSection = '<hr class="off-divider">';
-            if (o.coupon) {
-            discSection +=
-                    '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px 2px;">' +
-                    '<span style="font-size:12.5px;color:#8a8a9a;">&#127991; Mã giảm giá</span>' +
-                    '<span style="font-size:12.5px;font-weight:700;color:#16a34a;background:#dcfce7;padding:3px 10px;border-radius:12px;">' +
-                    o.coupon.code + ' &minus;' + fmt(o.coupon.amount) +
-                    '</span>' +
-                    '</div>';
-            }
-            if (o.member) {
-            var TIER_BG = { none:'#f4f4f4', silver:'#f0f0f0', gold:'#fef9e7', diamond:'#e8f4fd' };
-            var TIER_CLR = { none:'#888', silver:'#555', gold:'#92700a', diamond:'#1565a0' };
-            var TIER_ICON = { none:'&#128100;', silver:'&#129752;', gold:'&#127941;', diamond:'&#128142;' };
-            var t = o.member.tier || 'none';
-            discSection +=
-                    '<div style="padding:4px 20px 6px;">' +
-                    '<div style="display:flex;align-items:center;gap:8px;background:' + TIER_BG[t] + ';border-radius:10px;padding:8px 12px;">' +
-                    '<span style="font-size:18px;">' + TIER_ICON[t] + '</span>' +
-                    '<div style="flex:1;">' +
-                    '<div style="font-size:12.5px;font-weight:700;">' + o.member.name + '</div>' +
-                    '<div style="font-size:11px;color:#888;text-transform:uppercase;">' + t + ' &bull; &#11088; ' + o.member.points + ' điểm</div>' +
-                    '</div>' +
-                    '<span style="font-size:12.5px;font-weight:700;color:' + TIER_CLR[t] + ';">&minus;' + o.member.pct + '% (' + fmt(memAmt) + ')</span>' +
-                    '</div>' +
-                    '</div>';
-            }
-            }
-
-
             var priceSection =
                     '<hr class="off-divider">' +
                     '<div class="off-price">' +
-                    '<div class="off-price-row"><span>Tạm tính</span><span>' + fmt(o.total) + '</span></div>' +
-                    (couponAmt > 0 ? '<div class="off-price-row disc-green"><span>&#127991; Giảm (mã)</span><span>&minus;' + fmt(couponAmt) + '</span></div>' : '') +
-                    (memAmt > 0 ? '<div class="off-price-row disc-green"><span>&#128100; Giảm (member)</span><span>&minus;' + fmt(memAmt) + '</span></div>' : '') +
-                    '<div class="off-price-row grand"><span>Tổng cộng</span><span>' + fmt(grand) + '</span></div>' +
+                    '<div class="off-price-row"><span>Tạm tính</span><span>' + fmt(o.subtotal) + '</span></div>' +
+                    (o.discount > 0 ? '<div class="off-price-row disc-green"><span>&#127991; Giảm giá</span><span>&minus;' + fmt(o.discount) + '</span></div>' : '') +
+                    '<div class="off-price-row grand"><span>Tổng cộng</span><span>' + fmt(o.total) + '</span></div>' +
                     '</div>';
-            var pm = o.payMode === 'cod' ? '&#128181; COD (Thanh toán khi nhận)' : '&#9989; Đã thanh toán online';
-            var pmBg = o.payMode === 'cod' ? '#fff7ed' : '#f0fdf4';
-            var pmClr = o.payMode === 'cod' ? '#c2410c' : '#15803d';
+            var discSection = '';
+            var pmStr = ((o.payMethod || o.payMode || 'cod') + '').toLowerCase().trim();
+            var pm = '';
+            var pmBg = '#f0fdf4';
+            var pmClr = '#15803d';
+
+            if (pmStr.indexOf('momo') !== -1) {
+                pm = '&#9989; Thanh toán MoMo';
+                pmBg = '#fdf2f8';
+                pmClr = '#c026d3';
+            } else if (pmStr.indexOf('qr') !== -1 || pmStr.indexOf('transfer') !== -1 || pmStr.indexOf('bank') !== -1 || pmStr.indexOf('vnpay') !== -1) {
+                pm = '&#9989; Chuyển khoản (QR Code)';
+                pmBg = '#eff6ff';
+                pmClr = '#1d4ed8';
+            } else if (pmStr.indexOf('cod') !== -1) {
+                pm = '&#128181; COD (Thanh toán khi nhận)';
+                pmBg = '#fff7ed';
+                pmClr = '#c2410c';
+            } else if (pmStr.indexOf('cash') !== -1 || pmStr.indexOf('tiền mặt') !== -1) {
+                pm = '&#128181; Tiền mặt (Cash)';
+                pmBg = '#f0fdf4';
+                pmClr = '#15803d';
+            } else {
+                pm = '&#9989; ' + (o.payMethod || 'Đã thanh toán');
+            }
             var paySection =
                     '<hr class="off-divider">' +
                     '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;">' +
@@ -487,18 +479,24 @@
             }
 
 
+            var stLower = (o.status || '').toLowerCase();
             var footerHtml = '';
-            if (!confirmed) {
-
-            footerHtml =
+            if (stLower === 'cancelled') {
+                footerHtml =
+                    '<div style="padding:8px 20px 16px;">' +
+                    '<button type="button" disabled style="width:100%;padding:13px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:12px;font-size:14px;font-weight:700;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;opacity:0.85;">' +
+                    '<span class="material-symbols-outlined" style="font-size:18px;">cancel</span>Đơn hàng đã bị hủy' +
+                    '</button>' +
+                    '</div>';
+            } else if (!confirmed) {
+                footerHtml =
                     '<div style="padding:8px 20px 16px;">' +
                     '<button type="button" onclick="confirmOnlineOrder()" style="width:100%;padding:13px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
                     '<span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>Xác nhận đơn đặt' +
                     '</button>' +
                     '</div>';
-            } else if (o.status === 'completed' || o.status === 'paid') {
-
-            footerHtml =
+            } else if (stLower === 'completed' || stLower === 'paid') {
+                footerHtml =
                     '<div style="padding:8px 20px 16px;">' +
                     '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
                     '<span style="font-size:16px;">&#10003;</span>' +
@@ -509,9 +507,8 @@
                             '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Đã giao bởi: ' + (o.shipperName || 'Shipper #' + o.shipperId) +
                             '</div>' : '') +
                     '</div>';
-            } else if (o.shipperId > 0 || o.status === 'delivering') {
-
-            footerHtml =
+            } else if (o.shipperId > 0 || stLower === 'delivering') {
+                footerHtml =
                     '<div style="padding:8px 20px 16px;">' +
                     '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">' +
                     '<span style="font-size:16px;">&#10003;</span>' +
@@ -522,22 +519,21 @@
                     '</div>' +
                     '</div>';
             } else {
-
-            if (o.status === 'waiting_shipper') {
-            footerHtml =
-                    '<div style="padding:8px 20px 16px;">' +
-                    '<button type="button" onclick="createDelivery()" style="width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
-                    '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Tạo đơn giao hàng' +
-                    '</button>' +
-                    '</div>';
-            } else {
-            footerHtml =
-                    '<div style="padding:8px 20px 16px;">' +
-                    '<button type="button" disabled style="width:100%;padding:13px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;">' +
-                    '<span class="material-symbols-outlined" style="font-size:18px;">hourglass_empty</span>Chờ pha chế hoàn thành' +
-                    '</button>' +
-                    '</div>';
-            }
+                if (stLower === 'waiting_shipper') {
+                    footerHtml =
+                        '<div style="padding:8px 20px 16px;">' +
+                        '<button type="button" onclick="createDelivery()" style="width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
+                        '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Tạo đơn giao hàng' +
+                        '</button>' +
+                        '</div>';
+                } else {
+                    footerHtml =
+                        '<div style="padding:8px 20px 16px;">' +
+                        '<button type="button" disabled style="width:100%;padding:13px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;">' +
+                        '<span class="material-symbols-outlined" style="font-size:18px;">hourglass_empty</span>Chờ pha chế hoàn thành' +
+                        '</button>' +
+                        '</div>';
+                }
             }
 
 
@@ -554,19 +550,22 @@
                     '<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;display:inline-block;margin-bottom:3px;">&#127760; Online</span>' +
                     '<div class="off-id" style="margin-bottom:2px;">#' + o.id + '</div>' +
                     '</div>' +
-                    '<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 20px;">' +
-                    '<div class="off-info-row" style="border-right:1px solid rgba(0,0,0,0.05);">' +
+                    '<div style="padding:0 20px;">' +
+                    '<div class="off-info-row">' +
                     '<div class="off-info-left"><span class="material-symbols-outlined">person</span>Khách hàng</div>' +
                     '<div class="off-info-val">' + o.customer + '</div>' +
                     '</div>' +
-                    '<div class="off-info-row" style="padding-left:12px;">' +
+                    '<div class="off-info-row">' +
                     '<div class="off-info-left"><span class="material-symbols-outlined">phone</span>Điện thoại</div>' +
                     '<div class="off-info-val">' + (o.phone || '---') + '</div>' +
                     '</div>' +
-                    '<div class="off-info-row" style="grid-column:1/-1; justify-content: flex-start; gap: 24px; align-items: flex-start;">' +
-                    '<div class="off-info-left" style="min-width: 90px;"><span class="material-symbols-outlined">location_on</span>Địa chỉ</div>' +
-                    '<div class="off-info-val" style="text-align:left; line-height: 1.4; padding-top: 1px;">' + (o.address || '---') + '</div>' +
-                    '</div>' +
+                    (function() {
+                        var cleanAddr = (o.address || '---').replace(/,([^\s])/g, ', $1');
+                        return '<div style="padding: 9px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 13.5px;">' +
+                               '<div class="off-info-left" style="margin-bottom: 4px;"><span class="material-symbols-outlined">location_on</span>Địa chỉ</div>' +
+                               '<div class="off-info-val" style="font-weight: 600; color: #1a1a2e; line-height: 1.4; padding-left: 24px; text-align: left; word-break: break-word;">' + cleanAddr + '</div>' +
+                               '</div>';
+                    })() +
                     '</div>' +
                     '<hr class="off-divider">' +
                     '<div class="off-sec">Danh sách món</div>' +
@@ -599,7 +598,6 @@
             o.sentToBartender = true;
             o.status = 'preparing';
             document.getElementById('status-' + currentId).innerHTML = badgeHtml('preparing');
-            showToast('&#127861; Đơn ' + currentId + ' đã gửi Bartender!');
             buildOnlineModal(o);
             } else {
             alert('Lỗi khi xác nhận đơn trên server!');

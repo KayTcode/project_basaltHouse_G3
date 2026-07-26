@@ -10,7 +10,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
@@ -41,17 +40,8 @@ public class MembershipRankServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-
-        UserLoginDTO user = (UserLoginDTO) session.getAttribute(AuthService.USER_SESSION_KEY);
-        if (user == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        UserLoginDTO user = (UserLoginDTO) request.getSession(false)
+                .getAttribute(AuthService.USER_SESSION_KEY);
 
         CustomerRanking cr = null;
         HashMap<String, Object> s = membershipService.getCustomeRankingById(user.getAccountId());

@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
 import model.Category;
+import model.CustomerDiscountCode;
 import model.DiscountCode;
 import model.Product;
 import services.CategoryService;
@@ -57,13 +58,33 @@ public class HomePageServlet extends HttpServlet {
         }
 
         HashMap<String, Object> s = Pservice.getBestSellingProducts(5);
-        List<Product> featuredProducts = null;
+        List<model.Product> featuredProducts = null;
         if (s.containsKey("error")) {
             request.setAttribute("error", s.get("error").toString());
 
         } else {
-            featuredProducts = (List<Product>) s.get("success");
+            featuredProducts = (List<model.Product>) s.get("success");
         }
+
+        // ── Load voucher cá nhân cho khách hàng đã đăng nhập ──────────────
+        Object userObj = request.getSession(false) != null
+                ? request.getSession(false).getAttribute("currentUser") : null;
+        if (userObj instanceof dto.UserLoginDTO) {
+            dto.UserLoginDTO currentUser = (dto.UserLoginDTO) userObj;
+            // Chỉ load voucher cho role Customer (roleId = 2)
+            if (currentUser.getRoleId() == 2) {
+                try {
+                    dao.DiscountCodeDAO discountCodeDAO = new dao.DiscountCodeDAO();
+                    List<CustomerDiscountCode> customerVouchers =
+                            discountCodeDAO.getVoucherById(currentUser.getAccountId());
+                    request.setAttribute("customerVouchers", customerVouchers);
+                    request.setAttribute("voucherCount", customerVouchers != null ? customerVouchers.size() : 0);
+                } catch (Exception e) {
+                    System.err.println("[HomePageServlet] Load voucher error: " + e.getMessage());
+                }
+            }
+        }
+
         request.setAttribute("Listd", listD);
         request.setAttribute("ListP", list);
         request.setAttribute("featuredProducts", featuredProducts);

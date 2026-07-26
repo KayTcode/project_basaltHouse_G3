@@ -68,7 +68,6 @@ public class ShipperDAO extends DBContext {
         }
         return null;
     }
-
     public List<Order> getPendingShipperOrders(int shipperId) {
         sql = """
           SELECT o.[OrderId], o.[CustomerId], o.[CashierId], o.[ShipperId],
@@ -116,7 +115,6 @@ public class ShipperDAO extends DBContext {
         }
         return list;
     }
-
     public Order getCurrentShippingOrder(int shipperId) {
         sql = """
               SELECT o.orderId, o.CustomerId, o.CashierId, o.ShipperId,
@@ -289,6 +287,7 @@ public class ShipperDAO extends DBContext {
             throw new RuntimeException(e);
         }
     }
+
 
     public ProcessOrderResult updateDeliveryStatus(int orderId, int shipperId, boolean isSuccess, String note, String proofImageUrl, String failReasion) {
         ProcessOrderResult result = new ProcessOrderResult();

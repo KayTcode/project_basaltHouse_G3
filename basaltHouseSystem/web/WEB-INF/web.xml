@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="6.0" xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
+    <filter>
+        <filter-name>RoleFilter</filter-name>
+        <filter-class>filter.RoleFilter</filter-class>
+    </filter>
+    <filter>
+        <filter-name>AuthenticationFilter</filter-name>
+        <filter-class>filter.AuthenticationFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthenticationFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>RoleFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
     <servlet>
         <servlet-name>HomePageServlet</servlet-name>
         <servlet-class>controller.HomePageServlet</servlet-class>
@@ -163,6 +179,10 @@
     <servlet>
         <servlet-name>AcceptOrderServlet</servlet-name>
         <servlet-class>controller.AcceptOrderServlet</servlet-class>
+      </servlet>
+       <servlet>
+        <servlet-name>CancelOrderServlet</servlet-name>
+        <servlet-class>controller.CancelOrderServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -335,6 +355,8 @@
     <servlet-mapping>
         <servlet-name>AcceptOrderServlet</servlet-name>
         <url-pattern>/shipper/accept-order</url-pattern>
+        <servlet-name>CancelOrderServlet</servlet-name>
+        <url-pattern>/cancel-order</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

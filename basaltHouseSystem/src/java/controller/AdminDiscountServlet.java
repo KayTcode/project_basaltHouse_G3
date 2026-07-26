@@ -8,13 +8,17 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.ActivityLog;
 import model.DiscountCode;
+import services.ActivityLogService;
 import services.AdminDiscountService;
+import java.time.LocalDateTime;
 
 @WebServlet(name = "AdminDiscountServlet", urlPatterns = {"/admin/discounts"})
 public class AdminDiscountServlet extends HttpServlet {
 
     private final AdminDiscountService discountService = new AdminDiscountService();
+    private final ActivityLogService logService = new ActivityLogService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -60,13 +64,15 @@ public class AdminDiscountServlet extends HttpServlet {
         String action = request.getParameter("action");
         String redirectUrl = request.getContextPath() + "/admin/discounts";
         String result;
+        int adminId = getAdminId(request);
 
         try {
             switch (action != null ? action : "") {
 
                 case "add":
+                    String addCode = request.getParameter("code");
                     result = discountService.addDiscount(
-                            request.getParameter("code"),
+                            addCode,
                             request.getParameter("discountType"),
                             request.getParameter("discountPercent"),
                             request.getParameter("discountAmount"),
@@ -75,15 +81,25 @@ public class AdminDiscountServlet extends HttpServlet {
                             request.getParameter("description"),
                             "on".equals(request.getParameter("isActive")),
                             "on".equals(request.getParameter("isPublic")),
-                            getAdminId(request)
+                            adminId
                     );
-                    redirectUrl += "success".equals(result) ? "?toast=add_success" : "?toast=add_fail";
+                    if ("success".equals(result)) {
+                        redirectUrl += "?toast=add_success";
+                        writeLog(adminId, "ADD", "Discount", 0,
+                                null, "Thêm mã giảm giá: " + addCode, "SUCCESS");
+                    } else {
+                        redirectUrl += "?toast=add_fail";
+                        writeLog(adminId, "ADD", "Discount", 0,
+                                null, "Thêm mã giảm giá thất bại: " + addCode, "FAIL");
+                    }
                     break;
 
                 case "update":
+                    String updateCode = request.getParameter("code");
+                    String updateIdStr = request.getParameter("discountId");
                     result = discountService.updateDiscount(
-                            request.getParameter("discountId"),
-                            request.getParameter("code"),
+                            updateIdStr,
+                            updateCode,
                             request.getParameter("discountType"),
                             request.getParameter("discountPercent"),
                             request.getParameter("discountAmount"),
@@ -93,12 +109,31 @@ public class AdminDiscountServlet extends HttpServlet {
                             "on".equals(request.getParameter("isActive")),
                             "on".equals(request.getParameter("isPublic"))
                     );
-                    redirectUrl += "success".equals(result) ? "?toast=update_success" : "?toast=update_fail";
+                    int updateId = parseIntSafe(updateIdStr);
+                    if ("success".equals(result)) {
+                        redirectUrl += "?toast=update_success";
+                        writeLog(adminId, "UPDATE", "Discount", updateId,
+                                "ID=" + updateId, "Cập nhật mã: " + updateCode, "SUCCESS");
+                    } else {
+                        redirectUrl += "?toast=update_fail";
+                        writeLog(adminId, "UPDATE", "Discount", updateId,
+                                "ID=" + updateId, "Cập nhật mã thất bại: " + updateCode, "FAIL");
+                    }
                     break;
 
                 case "delete":
-                    result = discountService.deleteDiscount(request.getParameter("discountId"));
-                    redirectUrl += "success".equals(result) ? "?toast=delete_success" : "?toast=delete_fail";
+                    String deleteIdStr = request.getParameter("discountId");
+                    result = discountService.deleteDiscount(deleteIdStr);
+                    int deleteId = parseIntSafe(deleteIdStr);
+                    if ("success".equals(result)) {
+                        redirectUrl += "?toast=delete_success";
+                        writeLog(adminId, "DELETE", "Discount", deleteId,
+                                "ID=" + deleteId, "Xóa mã giảm giá ID=" + deleteId, "SUCCESS");
+                    } else {
+                        redirectUrl += "?toast=delete_fail";
+                        writeLog(adminId, "DELETE", "Discount", deleteId,
+                                "ID=" + deleteId, "Xóa mã thất bại ID=" + deleteId, "FAIL");
+                    }
                     break;
 
                 default:
@@ -123,4 +158,20 @@ public class AdminDiscountServlet extends HttpServlet {
         }
         return 0;
     }
+
+    private int parseIntSafe(String s) {
+        try { return Integer.parseInt(s); } catch (Exception e) { return 0; }
+    }
+
+    private void writeLog(int accountId, String action, String module,
+                          int targetId, String oldValue, String newValue, String status) {
+        try {
+            ActivityLog log = new ActivityLog(accountId, action, module,
+                    targetId, oldValue, newValue, status, 0, LocalDateTime.now());
+            logService.ctreatActiveLog(log);
+        } catch (Exception e) {
+            System.err.println("[AdminDiscountServlet] writeLog error: " + e.getMessage());
+        }
+    }
 }
+

@@ -11,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -21,9 +22,11 @@ import model.Category;
 import model.Order;
 import model.ProcessOrderResult;
 import model.Shipper;
+import services.AdminAccountService;
 import services.OrderService;
 import services.ShipperService;
 import services.StockService;
+import utils.PasswordUtils;
 
 public class CashierServlet extends HttpServlet {
 
@@ -52,7 +55,6 @@ public class CashierServlet extends HttpServlet {
             case "/cashier/shippers":
                 List<Shipper> activeShippers = new ShipperDAO().getActiveShippers();
                 request.setAttribute("activeShippers", activeShippers);
-                // truyền orderId nếu có (khi từ trang tạo đơn sang)
                 String orderId = request.getParameter("orderId");
                 if (orderId != null) {
                     request.setAttribute("orderId", orderId);
@@ -70,9 +72,16 @@ public class CashierServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // ── Gán shipper cho đơn hàng ──
+         String actionParam = request.getParameter("action");
+        if ("addMember".equals(actionParam)) {
+            handleAddMemberAjax(request, response);
+            return;
+        }
+
+        
         String action = request.getServletPath();
         if ("/cashier/shippers".equals(action)) {
+<<<<<<< 181-fix-order-for-shipper
             String oId = request.getParameter("orderId");
             String sId = request.getParameter("shipperId");
 
@@ -94,6 +103,20 @@ public class CashierServlet extends HttpServlet {
             } catch (NumberFormatException e) {
                 session.setAttribute("flashSuccess", false);
                 session.setAttribute("flashMessage", "orderId/shipperId không hợp lệ");
+=======
+            String oId  = request.getParameter("orderId");
+            String sId  = request.getParameter("shipperId");
+            if (oId != null && sId != null) {
+                try {
+                    Integer cashierId = null;
+                    HttpSession httpSession = request.getSession(false);
+                    if (httpSession != null) {
+                        Object attr = httpSession.getAttribute("cashierId");
+                        if (attr instanceof Integer) cashierId = (Integer) attr;
+                    }
+                    new ShipperDAO().assignShipper(Integer.parseInt(oId), Integer.parseInt(sId), cashierId);
+                } catch (NumberFormatException ignored) {}
+>>>>>>> Develop
             }
             response.sendRedirect(request.getContextPath() + "/cashier/oderview");
             return;
@@ -109,13 +132,17 @@ public class CashierServlet extends HttpServlet {
         String discountCode = request.getParameter("discountCode");
         String discountAmountStr = request.getParameter("discountAmount");
         String finalAmountStr = request.getParameter("finalAmount");
+        String isEarnPointsStr = request.getParameter("isEarnPoints");
         String tableIdStr = request.getParameter("tableId");
+        String tableSessionIdStr = request.getParameter("tableSessionId");
 
         if (cartData == null || cartData.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write("Cart is empty");
             return;
         }
+
+        
         Integer cashierId = null;
         var httpSession = request.getSession(false);
         if (httpSession != null) {
@@ -124,11 +151,12 @@ public class CashierServlet extends HttpServlet {
                 cashierId = (Integer) attr;
             }
         }
+
         try {
             OrderService orderService = new OrderService();
             int orderId = orderService.createOfflineOrder(cartData, totalAmountStr, discountAmountStr, finalAmountStr,
-                    paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr, cashierId);
-
+                                                          paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr, cashierId, isEarnPointsStr, tableSessionIdStr);
+                                                          
             if (orderId != -1) {
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.getWriter().write("Order created successfully: " + orderId);
@@ -204,14 +232,39 @@ public class CashierServlet extends HttpServlet {
 
         request.getRequestDispatcher("/views/Cashier/OrderViews.jsp").forward(request, response);
     }
+    
+    private void handleAddMemberAjax(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        try {
+            String fullName = request.getParameter("fullName");
+            String email = request.getParameter("email");
+            String phone = request.getParameter("phone");
+            String password = request.getParameter("password");
+            
+            
+            String hashedPass = PasswordUtils.hashSHA256(password);
+            AdminAccountService accService = new AdminAccountService();
+            boolean isSuccess = accService.processAddAccount(email, hashedPass, "2", fullName, phone, "true");
+            
+            if (isSuccess) {
+                response.getWriter().write("{\"success\":true}");
+            } else {
+                response.getWriter().write("{\"success\":false,\"message\":\"Thêm tài khoản thất bại! Số điện thoại hoặc email có thể đã tồn tại.\"}");
+            }
+        } catch (Exception e) {
+            response.getWriter().write("{\"success\":false,\"message\":\"Lỗi hệ thống: " + e.getMessage() + "\"}");
+        }
+    }
 
+    
     private void handlePosPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         ProductDAO pDao = new ProductDAO();
         List<Product> allProducts = pDao.getAllProductsForPOS();
 
         CategoryDAO cDao = new CategoryDAO();
-        List<Category> categoryList = cDao.getAllCategories();
+        List<Category> categoryList = cDao.getAllCategoriesForPOS();
 
         StockService ssInit = new StockService();
         HashMap<Product, HashMap<String, Integer>> stockMapInit = ssInit.calculateProduct();
@@ -278,10 +331,18 @@ public class CashierServlet extends HttpServlet {
         int end = Math.min(start + PAGE_SIZE, totalProducts);
         List<Product> pagedProducts = filtered.subList(start, end);
 
-        request.setAttribute("pagedProducts", pagedProducts);
-        request.setAttribute("categoryList", categoryList);
-        request.setAttribute("maxStockMap", maxStockMap);
-        request.setAttribute("productPage", productPage);
+       
+        try {
+            dao.IngredientDAO iDao = new dao.IngredientDAO();
+            request.setAttribute("ingredientsList", iDao.getAllIngredients().values());
+        } catch (Exception e) {
+            System.err.println("Error setting ingredientsList: " + e.getMessage());
+        }
+
+        request.setAttribute("pagedProducts",   pagedProducts);
+        request.setAttribute("categoryList",    categoryList);
+        request.setAttribute("maxStockMap",     maxStockMap);
+        request.setAttribute("productPage",     productPage);
         request.setAttribute("totalProductPages", totalProductPages);
         request.setAttribute("currentCat", catParam);
 

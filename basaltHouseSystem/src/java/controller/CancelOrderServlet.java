@@ -60,19 +60,31 @@ public class CancelOrderServlet extends HttpServlet {
         }
 
         String status = order.getOrderStatus();
-        boolean cancellable = "Pending".equalsIgnoreCase(status)
-                           || "Preparing".equalsIgnoreCase(status)
-                           || "In_Progress".equalsIgnoreCase(status);
+        boolean cancellable = "Pending".equalsIgnoreCase(status);
 
         if (!cancellable) {
             String msg;
             switch (status) {
+                case "Preparing":
+                case "In_Progress":
+                    msg = "Bartender đã nhận đơn, không thể hủy.";
+                    break;
                 case "Ready":
-                case "Waiting_Shipper": msg = "Đơn hàng đã pha chế xong, không thể hủy."; break;
-                case "Delivering":      msg = "Đơn hàng đang được giao, không thể hủy."; break;
-                case "Completed":       msg = "Đơn hàng đã hoàn thành, không thể hủy."; break;
-                case "Cancelled":       msg = "Đơn hàng đã bị hủy trước đó."; break;
-                default:                msg = "Không thể hủy đơn hàng ở trạng thái hiện tại."; break;
+                case "Waiting_Shipper":
+                    msg = "Đơn hàng đã pha chế xong, không thể hủy.";
+                    break;
+                case "Delivering":
+                    msg = "Đơn hàng đang được giao, không thể hủy.";
+                    break;
+                case "Completed":
+                    msg = "Đơn hàng đã hoàn thành, không thể hủy.";
+                    break;
+                case "Cancelled":
+                    msg = "Đơn hàng đã bị hủy trước đó.";
+                    break;
+                default:
+                    msg = "Không thể hủy đơn hàng ở trạng thái hiện tại.";
+                    break;
             }
             session.setAttribute("cancelError", msg);
             response.sendRedirect(ctx + "/my-orders");

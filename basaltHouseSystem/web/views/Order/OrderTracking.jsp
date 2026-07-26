@@ -393,8 +393,8 @@
                                             </div>
                                         </c:if>
                                      </div>
-                                     <%-- Nút Hủy đơn - chỉ hiện khi chưa pha chế xong --%>
-                                     <c:if test="${order.orderStatus == 'Pending' || order.orderStatus == 'Preparing' || order.orderStatus == 'In_Progress'}">
+                                     <%-- Nút Hủy đơn --%>
+                                     <c:if test="${order.orderStatus == 'Pending'}">
                                          <form method="post" action="${pageContext.request.contextPath}/cancel-order"
                                                style="display:inline;"
                                                onsubmit="return confirm('Hủy đơn #BH-${order.orderId}? Hành động này không thể hoàn tác.')">
@@ -404,6 +404,12 @@
                                                  Hủy đơn
                                              </button>
                                          </form>
+                                     </c:if>             
+                                     <c:if test="${order.orderStatus == 'Preparing' || order.orderStatus == 'In_Progress'}">
+                                         <div class="ot-no-cancel-note">
+                                             <span class="material-symbols-outlined">info</span>
+                                             Đang pha chế, không thể hủy
+                                         </div>
                                      </c:if>
                                      <%-- Nút Xác nhận đã nhận hàng - chỉ hiện khi đã giao (Delivered) --%>
                                      <c:if test="${order.orderStatus == 'Delivered'}">

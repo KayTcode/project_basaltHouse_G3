@@ -4,6 +4,8 @@
  */
 package dao;
 
+import dto.IngredientStockDTO;
+import dto.SupplierOptionDTO;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,17 +30,17 @@ public class ImportVoiceDAO extends DBContext {
     PreparedStatement st;
     ResultSet rs;
 
-    public List<HashMap<String, Object>> getIngredientStockRowsBySupplier(int supplierId) {
+    public List<IngredientStockDTO> getIngredientStockRowsBySupplier(int supplierId) {
         return queryIngredientStockRows(null, supplierId);
     }
 
-    public List<HashMap<String, Object>> getIngredientStockRows(String key) {
+    public List<IngredientStockDTO> getIngredientStockRows(String key) {
         return queryIngredientStockRows(key, null);
     }
 
-    private List<HashMap<String, Object>> queryIngredientStockRows(
+    private List<IngredientStockDTO> queryIngredientStockRows(
             String key, Integer supplierId) {
-        List<HashMap<String, Object>> rows = new ArrayList<>();
+        List<IngredientStockDTO> rows = new ArrayList<>();
         String normalizedKey = normalizeSearchKey(key);
         String searchPattern = "%";
         if (normalizedKey != null) {
@@ -84,26 +86,22 @@ public class ImportVoiceDAO extends DBContext {
         return rows;
     }
 
-    private HashMap<String, Object> mapIngredientStockRow(ResultSet result)
+    private IngredientStockDTO mapIngredientStockRow(ResultSet result)
             throws SQLException {
-        HashMap<String, Object> row = new HashMap<>();
-        row.put("ingredientId", result.getInt("IngredientId"));
-        row.put("ingredientName", result.getString("IngredientName"));
-        row.put("unit", result.getString("Unit"));
-        row.put("stockQuantity", result.getBigDecimal("StockQuantity"));
-        row.put("minStockQuantity", result.getBigDecimal("MinStockQuantity"));
-        Object supplierId = result.getObject("SupplierId");
-        if (supplierId == null) {
-            row.put("supplierId", "");
-        } else {
-            row.put("supplierId", supplierId);
-        }
-        row.put("supplierName", result.getString("SupplierName"));
-        return row;
+        int supplierId = result.getInt("SupplierId");
+        Integer nullableSupplierId = result.wasNull() ? null : supplierId;
+        return new IngredientStockDTO(
+                result.getInt("IngredientId"),
+                result.getString("IngredientName"),
+                result.getString("Unit"),
+                result.getBigDecimal("StockQuantity"),
+                result.getBigDecimal("MinStockQuantity"),
+                nullableSupplierId,
+                result.getString("SupplierName"));
     }
 
-    public List<HashMap<String, Object>> getSupplierOptions() {
-        List<HashMap<String, Object>> list = new ArrayList<>();
+    public List<SupplierOptionDTO> getSupplierOptions() {
+        List<SupplierOptionDTO> list = new ArrayList<>();
         try {
             String sql = """
                          SELECT SupplierId, COALESCE(SupplierName, N'Chua co NCC') AS SupplierName
@@ -114,10 +112,9 @@ public class ImportVoiceDAO extends DBContext {
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
-                HashMap<String, Object> row = new HashMap<>();
-                row.put("id", rs.getInt("SupplierId"));
-                row.put("name", rs.getString("SupplierName"));
-                list.add(row);
+                list.add(new SupplierOptionDTO(
+                        rs.getInt("SupplierId"),
+                        rs.getString("SupplierName")));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -145,9 +142,9 @@ public class ImportVoiceDAO extends DBContext {
         return null;
     }
 
-    public boolean insertImportInvoice(ImportInvoice v, List<ImportDetail> details) {
-        if (details == null || details.isEmpty()) {
-            return false;
+    public int insertImportInvoice(ImportInvoice v, List<ImportDetail> details) {
+        if (connection == null || details == null || details.isEmpty()) {
+            return 0;
         }
         boolean oldAutoCommit = true;
         try {
@@ -229,7 +226,7 @@ public class ImportVoiceDAO extends DBContext {
             }
 
             connection.commit();
-            return true;
+            return importId;
         } catch (Exception e) {
             try {
                 connection.rollback();
@@ -237,7 +234,7 @@ public class ImportVoiceDAO extends DBContext {
                 System.err.println(rollbackError.getMessage());
             }
             System.err.println(e.getMessage());
-            return false;
+            return 0;
         } finally {
             try {
                 connection.setAutoCommit(oldAutoCommit);
@@ -351,14 +348,19 @@ public class ImportVoiceDAO extends DBContext {
                      LEFT JOIN Suppliers su ON i.SupplierId = su.SupplierId
                      WHERE i.IsDeleted = 0
                        AND (? = 0 OR i.ImportId = ?)
-                       AND EXISTS (
-                           SELECT 1
-                           FROM ImportDetails searchedDetail
-                           JOIN Ingredients searchedIngredient
-                             ON searchedIngredient.IngredientId = searchedDetail.IngredientId
-                           WHERE searchedDetail.ImportId = i.ImportId
-                             AND searchedDetail.IsDeleted = 0
-                             AND searchedIngredient.IngredientName LIKE ?
+                       AND (
+                           i.ImportCode LIKE ?
+                           OR COALESCE(i.SupplierInvoiceCode, '') LIKE ?
+                           OR COALESCE(su.SupplierName, '') LIKE ?
+                           OR EXISTS (
+                               SELECT 1
+                               FROM ImportDetails searchedDetail
+                               JOIN Ingredients searchedIngredient
+                                 ON searchedIngredient.IngredientId = searchedDetail.IngredientId
+                               WHERE searchedDetail.ImportId = i.ImportId
+                                 AND searchedDetail.IsDeleted = 0
+                                 AND searchedIngredient.IngredientName LIKE ?
+                           )
                        )
                      ORDER BY i.OrderedDate DESC,
                               i.ImportId DESC,
@@ -369,6 +371,9 @@ public class ImportVoiceDAO extends DBContext {
             statement.setInt(1, selectedImportId);
             statement.setInt(2, selectedImportId);
             statement.setString(3, searchPattern);
+            statement.setString(4, searchPattern);
+            statement.setString(5, searchPattern);
+            statement.setString(6, searchPattern);
 
             try (ResultSet result = statement.executeQuery()) {
                 while (result.next()) {
@@ -423,11 +428,10 @@ public class ImportVoiceDAO extends DBContext {
     public boolean updateImportInvoice(
             int importId,
             String status,
+            int confirmedByStaffId,
             String note,
-            String rejectReason,
-            int actingStaffId,
-            List<ImportDetail> details) {
-        if (connection == null || details == null || details.isEmpty()) {
+            String rejectReason) {
+        if (connection == null) {
             return false;
         }
 
@@ -436,23 +440,11 @@ public class ImportVoiceDAO extends DBContext {
             oldAutoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
 
-            List<ImportInvoicesDetail> oldDetails = getImportInvoiceDetailsById(importId);
-            validateSubmittedDetails(importId, oldDetails, details);
-
-            HashMap<Integer, BigDecimal> stockChanges =
-                    calculateStockChanges(oldDetails, status);
-            updateInvoiceHeader(
-                    importId, status, note, rejectReason, actingStaffId);
-            for (ImportDetail detail : details) {
-                updateInvoiceDetail(detail);
-            }
-
-            for (java.util.Map.Entry<Integer, BigDecimal> entry : stockChanges.entrySet()) {
-                if (entry.getValue().compareTo(BigDecimal.ZERO) != 0) {
-                    adjustStockAfterImportEdit(
-                            importId, entry.getKey(), entry.getValue(), actingStaffId);
-                }
-            }
+            String oldStatus = getImportStatusForUpdate(importId);
+            updateImportInvoiceHeader(
+                    importId, status, confirmedByStaffId, note, rejectReason);
+            applyImportStockChanges(
+                    importId, oldStatus, status, confirmedByStaffId);
 
             connection.commit();
             return true;
@@ -465,66 +457,30 @@ public class ImportVoiceDAO extends DBContext {
         }
     }
 
-    private void validateSubmittedDetails(
-            int importId,
-            List<ImportInvoicesDetail> oldDetails,
-            List<ImportDetail> submittedDetails) throws SQLException {
-        if (oldDetails.isEmpty() || oldDetails.size() != submittedDetails.size()) {
-            throw new SQLException("Chi tiết phiếu nhập không hợp lệ.");
-        }
-
-        HashMap<Integer, ImportInvoicesDetail> oldById = new HashMap<>();
-        for (ImportInvoicesDetail oldDetail : oldDetails) {
-            oldById.put(oldDetail.getImportDetailId(), oldDetail);
-        }
-
-        for (ImportDetail submittedDetail : submittedDetails) {
-            if (submittedDetail.getImportId() != importId
-                    || oldById.remove(submittedDetail.getImportDetailId()) == null) {
-                throw new SQLException("Chi tiết phiếu nhập không hợp lệ.");
+    private String getImportStatusForUpdate(int importId) throws SQLException {
+        String sql = """
+                     SELECT Status
+                     FROM ImportInvoices 
+                     WHERE ImportId = ?
+                       AND IsDeleted = 0
+                     """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, importId);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return result.getString("Status");
+                }
             }
         }
-        if (!oldById.isEmpty()) {
-            throw new SQLException("Chi tiết phiếu nhập không hợp lệ.");
-        }
+        throw new SQLException("Không tìm thấy phiếu nhập.");
     }
 
-    private HashMap<Integer, BigDecimal> calculateStockChanges(
-            List<ImportInvoicesDetail> oldDetails, String newStatus) {
-        HashMap<Integer, BigDecimal> changes = new HashMap<>();
-        String oldStatus = oldDetails.get(0).getStatus();
-        for (ImportInvoicesDetail detail : oldDetails) {
-            BigDecimal stockDelta = calculateStockDelta(
-                    oldStatus, newStatus, detail.getReceivedQuantity());
-            if (stockDelta.compareTo(BigDecimal.ZERO) != 0) {
-                mergeStockChange(
-                        changes,
-                        detail.getIngredientId(),
-                        stockDelta);
-            }
-        }
-        return changes;
-    }
-
-    static BigDecimal calculateStockDelta(
-            String oldStatus, String newStatus, BigDecimal receivedQuantity) {
-        BigDecimal delta = BigDecimal.ZERO;
-        BigDecimal safeQuantity = safe(receivedQuantity);
-        if (isStockAppliedStatus(oldStatus)) {
-            delta = delta.subtract(safeQuantity);
-        }
-        if (isStockAppliedStatus(newStatus)) {
-            delta = delta.add(safeQuantity);
-        }
-        return delta;
-    }
-
-    private void updateInvoiceHeader(
+    private void updateImportInvoiceHeader(
             int importId,
             String status,
+            int confirmedByStaffId,
             String note,
-            String rejectReason,
-            int actingStaffId) throws SQLException {
+            String rejectReason) throws SQLException {
         String sql = """
                      UPDATE ImportInvoices
                      SET Status = ?,
@@ -536,8 +492,8 @@ public class ImportVoiceDAO extends DBContext {
                      """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, status);
-            if (isStockAppliedStatus(status)) {
-                statement.setInt(2, actingStaffId);
+            if ("Confirmed".equals(status)) {
+                statement.setInt(2, confirmedByStaffId);
             } else {
                 statement.setNull(2, Types.INTEGER);
             }
@@ -550,68 +506,53 @@ public class ImportVoiceDAO extends DBContext {
         }
     }
 
-    private void updateInvoiceDetail(ImportDetail detail) throws SQLException {
-        String sql = """
-                     UPDATE ImportDetails
-                     SET DiscrepancyNote = ?,
-                         Note = ?
-                     WHERE ImportDetailId = ?
-                       AND ImportId = ?
-                       AND IsDeleted = 0
-                     """;
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, detail.getDiscrepancyNote());
-            statement.setString(2, detail.getNote());
-            statement.setInt(3, detail.getImportDetailId());
-            statement.setInt(4, detail.getImportId());
-            if (statement.executeUpdate() != 1) {
-                throw new SQLException("Không cập nhật được chi tiết phiếu nhập.");
+    private void applyImportStockChanges(
+            int importId, String oldStatus, String newStatus, int staffId)
+            throws SQLException {
+        if (isConfirmed(oldStatus) == isConfirmed(newStatus)) {
+            return;
+        }
+
+        String detailSql = """
+                           SELECT IngredientId,
+                                  SUM(COALESCE(ReceivedQuantity, 0)) AS ReceivedQuantity
+                           FROM ImportDetails
+                           WHERE ImportId = ?
+                             AND IsDeleted = 0
+                           GROUP BY IngredientId
+                           """;
+        try (PreparedStatement statement = connection.prepareStatement(detailSql)) {
+            statement.setInt(1, importId);
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    BigDecimal stockDelta = calculateStockDelta(
+                            oldStatus,
+                            newStatus,
+                            result.getBigDecimal("ReceivedQuantity"));
+                    if (stockDelta.compareTo(BigDecimal.ZERO) != 0) {
+                        applyIngredientStockChange(
+                                importId,
+                                result.getInt("IngredientId"),
+                                stockDelta,
+                                staffId);
+                    }
+                }
             }
         }
     }
 
-    private void rollbackQuietly() {
-        try {
-            connection.rollback();
-        } catch (SQLException rollbackError) {
-            System.err.println(rollbackError.getMessage());
-        }
-    }
-
-    private void restoreAutoCommit(boolean oldAutoCommit) {
-        try {
-            connection.setAutoCommit(oldAutoCommit);
-        } catch (SQLException e) {
-            System.err.println(e.getMessage());
-        }
-    }
-
-    private static boolean isStockAppliedStatus(String status) {
-        return "Confirmed".equalsIgnoreCase(status);
-    }
-
-    private String normalizeSearchKey(String key) {
-        if (key == null || key.trim().isEmpty()) {
-            return null;
-        }
-        return key.trim();
-    }
-
-    private static BigDecimal safe(BigDecimal value) {
-        if (value == null) {
+    static BigDecimal calculateStockDelta(
+            String oldStatus, String newStatus, BigDecimal receivedQuantity) {
+        BigDecimal quantity = receivedQuantity == null
+                ? BigDecimal.ZERO : receivedQuantity;
+        if (isConfirmed(oldStatus) == isConfirmed(newStatus)) {
             return BigDecimal.ZERO;
         }
-        return value;
+        return isConfirmed(newStatus) ? quantity : quantity.negate();
     }
 
-    private void mergeStockChange(
-            HashMap<Integer, BigDecimal> changes, int ingredientId, BigDecimal quantity) {
-        changes.put(ingredientId,
-                changes.getOrDefault(ingredientId, BigDecimal.ZERO).add(quantity));
-    }
-
-    private void adjustStockAfterImportEdit(
-            int importId, int ingredientId, BigDecimal quantityChanged, int staffId)
+    private void applyIngredientStockChange(
+            int importId, int ingredientId, BigDecimal stockDelta, int staffId)
             throws SQLException {
         BigDecimal quantityBefore;
         BigDecimal quantityAfter;
@@ -621,12 +562,14 @@ public class ImportVoiceDAO extends DBContext {
                            OUTPUT deleted.StockQuantity AS QuantityBefore,
                                   inserted.StockQuantity AS QuantityAfter
                            WHERE IngredientId = ?
+                             AND IsDeleted = 0
+                             AND IsActive = 1
                              AND StockQuantity + ? >= 0
                            """;
         try (PreparedStatement statement = connection.prepareStatement(updateSql)) {
-            statement.setBigDecimal(1, quantityChanged);
+            statement.setBigDecimal(1, stockDelta);
             statement.setInt(2, ingredientId);
-            statement.setBigDecimal(3, quantityChanged);
+            statement.setBigDecimal(3, stockDelta);
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) {
                     throw new SQLException(
@@ -642,18 +585,46 @@ public class ImportVoiceDAO extends DBContext {
                                    (IngredientId, ChangeType, QuantityBefore,
                                     QuantityChanged, QuantityAfter, RefType,
                                     RefId, StaffId, IsDeleted)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+                        VALUES (?, ?, ?, ?, ?, 'ImportInvoice', ?, ?, 0)
                         """;
         try (PreparedStatement statement = connection.prepareStatement(logSql)) {
             statement.setInt(1, ingredientId);
-            statement.setString(2, "ImportEdit");
+            statement.setString(
+                    2, stockDelta.signum() > 0 ? "Import" : "ImportEdit");
             statement.setBigDecimal(3, quantityBefore);
-            statement.setBigDecimal(4, quantityChanged);
+            statement.setBigDecimal(4, stockDelta);
             statement.setBigDecimal(5, quantityAfter);
-            statement.setString(6, "ImportInvoice");
-            statement.setInt(7, importId);
-            statement.setInt(8, staffId);
+            statement.setInt(6, importId);
+            statement.setInt(7, staffId);
             statement.executeUpdate();
         }
     }
+
+    private static boolean isConfirmed(String status) {
+        return "Confirmed".equalsIgnoreCase(status);
+    }
+
+    private void rollbackQuietly() {
+        try {
+            connection.rollback();
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    private void restoreAutoCommit(boolean oldAutoCommit) {
+        try {
+            connection.setAutoCommit(oldAutoCommit);
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    private String normalizeSearchKey(String key) {
+        if (key == null || key.trim().isEmpty()) {
+            return null;
+        }
+        return key.trim();
+    }
+
 }

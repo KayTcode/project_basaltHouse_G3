@@ -102,6 +102,7 @@ public class DiscountCodeService {
         try {
             DiscountCode publicVoucher = findPublicVoucher(voucherCode);
             if (publicVoucher != null) {
+                result.put("voucher", publicVoucher);
                 result.put("success", "Thêm mã giảm giá thành công");
                 return result;
             }
@@ -109,6 +110,7 @@ public class DiscountCodeService {
             if (accountId != null) {
                 DiscountCode customerVoucher = findCustomerVoucher(voucherCode, accountId);
                 if (customerVoucher != null) {
+                    result.put("voucher", customerVoucher);
                     result.put("success", "Thêm mã giảm giá thành công");
                     return result;
                 }
@@ -117,7 +119,7 @@ public class DiscountCodeService {
             System.err.println(e.getMessage());
         }
 
-        result.put("error", "Mã code không tồn tại hoặc đã hết hạn");
+        result.put("error", "Mã code sai hoặc không còn hoạt động");
         return result;
     }
 
@@ -173,7 +175,7 @@ public class DiscountCodeService {
             LocalDateTime endDate,
             LocalDateTime now) {
         String status = "available";
-        String statusText = "Khả dụng";
+        String statusText = "Khả Dụng";
         String statusClass = "";
 
         if (endDate != null) {
@@ -181,11 +183,11 @@ public class DiscountCodeService {
 
             if (daysLeft < 0) {
                 status = "expired";
-                statusText = "Hết hạn";
+                statusText = "Hết Hạn";
                 statusClass = "voucher-status--expired";
             } else if (daysLeft <= EXPIRING_DAYS) {
                 status = "expiring";
-                statusText = "Sắp hết hạn";
+                statusText = "Sắp Hết Hạn";
                 statusClass = "voucher-status--warning";
             }
         }

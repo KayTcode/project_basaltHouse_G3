@@ -190,7 +190,7 @@
                             <div class="warning-chip ${item.status}" data-warning-status="${item.status}">
                                 <span class="material-symbols-outlined"><c:out value="${item.statusIcon}"/></span>
                                 <div>
-                                    <strong><c:out value="${item.name}"/></strong>
+                                    <strong><c:out value="${item.ingredientName}"/></strong>
                                     <span>Còn <c:out value="${item.stockText}"/> <c:out value="${item.unit}"/></span>
                                 </div>
                             </div>

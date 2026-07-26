@@ -10,7 +10,7 @@ public class RecipeService {
 
     private static final RecipeDAO dao = new RecipeDAO();
 
-    // Lấy toàn bộ công thức và gom theo ProductId -> SizeId.
+
     public HashMap<String, Object> getRecipeMap() {
         HashMap<String, Object> result = new HashMap<>();
         try {
@@ -27,7 +27,7 @@ public class RecipeService {
         return result;
     }
 
-    // Lấy danh sách nguyên liệu công thức theo đúng sản phẩm và size.
+    
     public List<Recipe> getRecipes(
             HashMap<Integer, HashMap<Integer, List<Recipe>>> recipeMap,
             int productId,

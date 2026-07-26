@@ -5,8 +5,8 @@
 package services;
 
 import dao.ImportVoiceDAO;
+import dto.IngredientStockDTO;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -25,15 +25,10 @@ public class StaffService {
                 return s;
             }
 
-            List<HashMap<String, Object>> ingredients = new ArrayList<>();
-            List<HashMap<String, Object>> rows = dao.getIngredientStockRowsBySupplier(supplierId);
-            for (HashMap<String, Object> row : rows) {
-                HashMap<String, Object> item = new HashMap<>();
-                item.put("id", row.get("ingredientId"));
-                item.put("name", row.get("ingredientName"));
-                item.put("unit", row.get("unit"));
-                item.put("stockText", formatStock(row.get("stockQuantity")));
-                ingredients.add(item);
+            List<IngredientStockDTO> ingredients
+                    = dao.getIngredientStockRowsBySupplier(supplierId);
+            for (IngredientStockDTO ingredient : ingredients) {
+                ingredient.setStockText(formatStock(ingredient.getStockQuantity()));
             }
             s.put("success", ingredients);
         } catch (Exception e) {
@@ -43,13 +38,11 @@ public class StaffService {
         return s;
     }
 
-    private String formatStock(Object value) {
+    private String formatStock(BigDecimal value) {
         if (value == null) {
             return "0";
         }
-        BigDecimal number = value instanceof BigDecimal
-                ? (BigDecimal) value : new BigDecimal(value.toString());
-        return number.stripTrailingZeros().toPlainString();
+        return value.stripTrailingZeros().toPlainString();
     }
 
      public HashMap<String, Object> getStaffIdByAccountId(int id) {

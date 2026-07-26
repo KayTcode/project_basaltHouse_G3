@@ -18,10 +18,8 @@ public final class ImportVoiceDAORegressionTest {
 
     private static void expectDelta(String expected, String oldStatus,
             String newStatus, String receivedQuantity) {
-        BigDecimal quantity = null;
-        if (receivedQuantity != null) {
-            quantity = new BigDecimal(receivedQuantity);
-        }
+        BigDecimal quantity = receivedQuantity == null
+                ? null : new BigDecimal(receivedQuantity);
         BigDecimal actual = ImportVoiceDAO.calculateStockDelta(
                 oldStatus, newStatus, quantity);
         if (actual.compareTo(new BigDecimal(expected)) != 0) {

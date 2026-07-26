@@ -20,7 +20,7 @@
                 <div class="hero-copy">
                     <p class="eyebrow">Nhân viên / Lịch sử nhập kho / Chi tiết</p>
                     <h1>Chi tiết hóa đơn nhập</h1>
-                    <p>Kiểm tra thông tin phiếu nhập, chỉnh sửa số lượng và cập nhật trạng thái nhận hàng.</p>
+                    <p>Kiểm tra chi tiết phiếu nhập, cập nhật trạng thái và ghi chú nhận hàng.</p>
                 </div>
 
                 <a class="hero-back" href="${pageContext.request.contextPath}/staff/history">
@@ -246,6 +246,7 @@
                                             <span>Chênh lệch</span>
                                             <textarea name="discrepancyNote"
                                                       rows="4"
+                                                      readonly
                                                       placeholder="Ghi nhận thiếu, thừa hoặc hàng lỗi"><c:out value="${detail.discrepancyNote}"/></textarea>
                                         </label>
 
@@ -253,6 +254,7 @@
                                             <span>Ghi chú chi tiết</span>
                                             <textarea name="detailNote"
                                                       rows="4"
+                                                      readonly
                                                       placeholder="Ghi chú cho nguyên liệu"><c:out value="${detail.detailNote}"/></textarea>
                                         </label>
                                     </div>

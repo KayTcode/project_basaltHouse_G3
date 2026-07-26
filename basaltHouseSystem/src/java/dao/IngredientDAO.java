@@ -4,6 +4,7 @@
  */
 package dao;
 
+import dto.IngredientStockSnapshotDTO;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -53,8 +54,8 @@ public class IngredientDAO extends DBContext {
     }
 
 
-    public List<HashMap<String, Object>> getStockSnapshotByDate(LocalDate auditDate) {
-        List<HashMap<String, Object>> rows = new ArrayList<>();
+    public List<IngredientStockSnapshotDTO> getStockSnapshotByDate(LocalDate auditDate) {
+        List<IngredientStockSnapshotDTO> rows = new ArrayList<>();
         String sql = """
                      DECLARE @AuditDate DATE = ?;
                      DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
@@ -66,7 +67,7 @@ public class IngredientDAO extends DBContext {
                                 WHEN @AuditDate = CAST(GETDATE() AS DATE) THEN i.StockQuantity
                                 ELSE COALESCE(endLog.QuantityAfter, i.StockQuantity)
                             END AS ClosingStock,
-                            CASE WHEN endLog.LogId IS NULL THEN 0 ELSE 1 END AS HasStockLog
+                            CASE WHEN firstLog.LogId IS NULL THEN 0 ELSE 1 END AS HasStockLog
                      FROM Ingredients i
                      OUTER APPLY (
                          SELECT TOP 1 LogId, QuantityAfter
@@ -77,7 +78,7 @@ public class IngredientDAO extends DBContext {
                          ORDER BY CreatedAt DESC, LogId DESC
                      ) prevLog
                      OUTER APPLY (
-                         SELECT TOP 1 QuantityBefore
+                         SELECT TOP 1 LogId, QuantityBefore
                          FROM IngredientStockLogs
                          WHERE IngredientId = i.IngredientId
                            AND IsDeleted = 0
@@ -99,12 +100,11 @@ public class IngredientDAO extends DBContext {
             ps.setDate(1, java.sql.Date.valueOf(auditDate));
             try (ResultSet rs2 = ps.executeQuery()) {
                 while (rs2.next()) {
-                    HashMap<String, Object> row = new HashMap<>();
-                    row.put("ingredientId", rs2.getInt("IngredientId"));
-                    row.put("openingStock", rs2.getBigDecimal("OpeningStock"));
-                    row.put("closingStock", rs2.getBigDecimal("ClosingStock"));
-                    row.put("hasStockLog", rs2.getBoolean("HasStockLog"));
-                    rows.add(row);
+                    rows.add(new IngredientStockSnapshotDTO(
+                            rs2.getInt("IngredientId"),
+                            rs2.getBigDecimal("OpeningStock"),
+                            rs2.getBigDecimal("ClosingStock"),
+                            rs2.getBoolean("HasStockLog")));
                 }
             }
         } catch (Exception e) {

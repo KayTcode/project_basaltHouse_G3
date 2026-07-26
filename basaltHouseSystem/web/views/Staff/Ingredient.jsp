@@ -14,7 +14,7 @@
                 <div class="search-box">
                     <span class="material-symbols-outlined">search</span>
                     <input name="search"
-                           value="${key}"
+                           value="${fn:escapeXml(key)}"
                            placeholder="Tìm nguyên liệu">
                 </div>
             </form>
@@ -77,7 +77,7 @@
 
                             <td class="ingredient-primary">
                                 <div class="ingredient-name">
-                                    <c:out value="${item.name}"/>
+                                    <c:out value="${item.ingredientName}"/>
                                 </div>
 
                                 <div class="ingredient-unit">

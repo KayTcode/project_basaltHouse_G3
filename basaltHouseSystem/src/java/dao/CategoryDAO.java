@@ -37,6 +37,30 @@ public class CategoryDAO extends DBContext {
         }
         return list;
     }
+
+    public List<Category> getAllCategoriesForPOS() {
+        List<Category> list = new ArrayList<>();
+        try {
+            String sql = "SELECT DISTINCT c.CategoryId, c.CategoryName, c.Description, c.IsDeleted "
+                       + "FROM Categories c "
+                       + "JOIN Products p ON c.CategoryId = p.CategoryId "
+                       + "WHERE c.IsDeleted = 0 AND p.IsDeleted = 0 AND p.IsActive = 1";
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                Category c = new Category(
+                        rs.getInt("CategoryId"),
+                        rs.getString("CategoryName"),
+                        rs.getString("Description"),
+                        rs.getBoolean("IsDeleted")
+                );
+                list.add(c);
+            }
+        } catch (SQLException e) {
+            System.err.println(e.getMessage());
+        }
+        return list;
+    }
     public List<Category> getCategory() {
         List<Category> list = new ArrayList<>();
         try {

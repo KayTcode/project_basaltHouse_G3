@@ -179,7 +179,7 @@
                                 <tr>
                                     <td><strong>${prod.productName}</strong></td>
                                     <td><span class="badge badge-info">${prod.sizeName}</span></td>
-                                    <td style="font-weight: 600; color: #10b981;">${prod.totalCups} cốc</td>
+                                    <td style="font-weight: 600; color: #10b981;">${prod.totalCups}</td>
                                     <td style="text-align: right;">
                                         <button type="button" class="btn-secondary" onclick="toggleDetails('details-${status.index}')" style="color: #3b82f6; font-size: 13px; font-weight: 600; padding: 6px 12px; height: auto;">
                                             <i class="fas fa-eye"></i> Xem nguyên liệu
@@ -188,7 +188,7 @@
                                 </tr>
                                 <tr id="details-${status.index}" style="display: none; background: #f8fafc;">
                                     <td colspan="4" style="padding: 16px;">
-                                        <div style="font-size: 13px; color: #475569; margin-bottom: 8px;"><strong>Nguyên liệu tiêu hao cho ${prod.totalCups} cốc:</strong></div>
+                                        <div style="font-size: 13px; color: #475569; margin-bottom: 8px;"><strong>Nguyên liệu tiêu hao cho ${prod.totalCups}:</strong></div>
                                         <table class="data-table" style="box-shadow: none; border: 1px solid #e2e8f0; margin: 0;">
                                             <thead>
                                                 <tr>

@@ -139,20 +139,40 @@
         </div>
 
         <div class="panel" style="margin-top:24px">
-            <div class="panel-title">Thống kê nguyên liệu đã dùng (Hôm nay)</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                <div class="panel-title" style="margin-bottom:0;">
+                    Thống kê nguyên liệu đã dùng 
+                    <span style="font-size:13.5px; font-weight:500; color:#64748b;">
+                        <c:choose>
+                            <c:when test="${selectedUsageDate eq todayDateStr}">(Hôm nay)</c:when>
+                            <c:otherwise>(${selectedUsageDate})</c:otherwise>
+                        </c:choose>
+                    </span>
+                </div>
+                <form method="GET" action="${pageContext.request.contextPath}/admin/ingredients" style="display:flex; align-items:center; gap:8px;">
+                    <c:if test="${not empty key}"><input type="hidden" name="search" value="${key}"/></c:if>
+                    <c:if test="${not empty param.pageIngredient}"><input type="hidden" name="pageIngredient" value="${param.pageIngredient}"/></c:if>
+                    <c:if test="${not empty param.pageImport}"><input type="hidden" name="pageImport" value="${param.pageImport}"/></c:if>
+                    <label style="font-size:13px; font-weight:600; color:#475569; display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-calendar-alt"></i> Chọn ngày xem:
+                    </label>
+                    <input type="date" name="usageDate" value="${selectedUsageDate}" onchange="this.form.submit()" 
+                           style="padding:6px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:'Inter',sans-serif; outline:none; cursor:pointer; background:#fff; color:#1e293b; font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,0.05);" />
+                </form>
+            </div>
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>Sản phẩm</th>
                         <th>Size</th>
-                        <th>Đã bán (Hôm nay)</th>
+                        <th>Đã bán</th>
                         <th style="text-align: right;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
                     <c:choose>
                         <c:when test="${empty todayUsageList}">
-                            <tr><td colspan="5" class="empty-state">Chưa dùng nguyên liệu nào hôm nay</td></tr>
+                            <tr><td colspan="5" class="empty-state">Chưa dùng nguyên liệu nào vào ngày ${selectedUsageDate}</td></tr>
                         </c:when>
                         <c:otherwise>
                             <c:forEach var="prod" items="${todayUsageList}" varStatus="status">
@@ -198,6 +218,7 @@
                 <div class="pagination" style="padding: 20px; display: flex; justify-content: center; gap: 8px;">
                     <c:url value="/admin/ingredients" var="prevUsageUrl">
                         <c:param name="pageUsage" value="${currentUsagePage - 1}"/>
+                        <c:if test="${not empty selectedUsageDate}"><c:param name="usageDate" value="${selectedUsageDate}"/></c:if>
                         <c:if test="${not empty key}"><c:param name="search" value="${key}"/></c:if>
                         <c:if test="${not empty param.pageIngredient}"><c:param name="pageIngredient" value="${param.pageIngredient}"/></c:if>
                         <c:if test="${not empty param.pageImport}"><c:param name="pageImport" value="${param.pageImport}"/></c:if>
@@ -207,6 +228,7 @@
                     <c:forEach begin="1" end="${totalUsagePages}" var="pg">
                         <c:url value="/admin/ingredients" var="pageUsageUrl">
                             <c:param name="pageUsage" value="${pg}"/>
+                            <c:if test="${not empty selectedUsageDate}"><c:param name="usageDate" value="${selectedUsageDate}"/></c:if>
                             <c:if test="${not empty key}"><c:param name="search" value="${key}"/></c:if>
                             <c:if test="${not empty param.pageIngredient}"><c:param name="pageIngredient" value="${param.pageIngredient}"/></c:if>
                             <c:if test="${not empty param.pageImport}"><c:param name="pageImport" value="${param.pageImport}"/></c:if>
@@ -216,6 +238,7 @@
                     
                     <c:url value="/admin/ingredients" var="nextUsageUrl">
                         <c:param name="pageUsage" value="${currentUsagePage + 1}"/>
+                        <c:if test="${not empty selectedUsageDate}"><c:param name="usageDate" value="${selectedUsageDate}"/></c:if>
                         <c:if test="${not empty key}"><c:param name="search" value="${key}"/></c:if>
                         <c:if test="${not empty param.pageIngredient}"><c:param name="pageIngredient" value="${param.pageIngredient}"/></c:if>
                         <c:if test="${not empty param.pageImport}"><c:param name="pageImport" value="${param.pageImport}"/></c:if>
@@ -234,8 +257,8 @@
                         <th>Mã phiếu</th>
                         <th>Nhà cung cấp</th>
                         <th>Trạng thái</th>
-                        <th>Tổng đặt</th>
-                        <th>Tổng nhận</th>
+                        <th>Tổng tiền đặt</th>
+                        <th>Tổng tiền nhận</th>
                         <th>Ngày đặt</th>
                     </tr>
                 </thead>
@@ -254,8 +277,8 @@
                                             ${inv.status}
                                         </span>
                                     </td>
-                                    <td><fmt:formatNumber value="${inv.totalOrderedAmount}" type="number" maxFractionDigits="2"/> ${inv.unit}</td>
-                                    <td><fmt:formatNumber value="${inv.totalReceivedAmount != null ? inv.totalReceivedAmount : 0}" type="number" maxFractionDigits="2"/> ${inv.unit}</td>
+                                    <td style="font-weight: 600;"><fmt:formatNumber value="${inv.totalOrderedAmount}" type="number" maxFractionDigits="0"/> đ</td>
+                                    <td style="font-weight: 600; color: #10b981;"><fmt:formatNumber value="${inv.totalReceivedAmount != null ? inv.totalReceivedAmount : 0}" type="number" maxFractionDigits="0"/> đ</td>
                                     <td>${fn:substring(fn:replace(inv.orderedDate, 'T', ' '), 0, 16)}</td>
                                 </tr>
                             </c:forEach>

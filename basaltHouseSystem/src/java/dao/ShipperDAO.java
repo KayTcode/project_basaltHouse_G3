@@ -10,7 +10,6 @@ import java.sql.ResultSet;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import jdk.jfr.Timespan;
 import model.Order;
 import model.OrderAddress;
 import model.ProcessOrderResult;
@@ -69,25 +68,23 @@ public class ShipperDAO extends DBContext {
         }
         return null;
     }
-
     public List<Order> getPendingShipperOrders(int shipperId) {
         sql = """
           SELECT o.[OrderId], o.[CustomerId], o.[CashierId], o.[ShipperId],
                  o.[TableSessionId], o.[OrderAddressId], o.[DiscountId],
                  o.[OrderType], o.[OrderStatus], o.[PaymentMethod], o.[PaymentStatus],
                  o.[TotalAmount], o.[DiscountAmount], o.[FinalAmount],
-                 o.[CreatedAt], o.[IsDeleted],
-                 ISNULL(c.fullName, 'Khách tại quán') AS customerName
+                 o.[CreatedAt], o.[IsDeleted], c.[FullName] AS customerName
           FROM [Orders] o
           LEFT JOIN [Customers] c ON o.[CustomerId] = c.[CustomerId]
-          WHERE o.[OrderStatus] = 'Preparing' AND o.[ShipperId] = ?
+          WHERE o.[OrderStatus] = 'Waiting_Shipper_Accept' AND o.[ShipperId] = ?
             AND o.[IsDeleted] = 0
           ORDER BY o.[CreatedAt] ASC
           """;
         List<Order> list = new ArrayList<>();
         try {
             ps = connection.prepareStatement(sql);
-            ps.setInt(1, shipperId);
+            ps.setObject(1, shipperId);
             rs = ps.executeQuery();
             while (rs.next()) {
                 Order o = new Order();
@@ -118,15 +115,13 @@ public class ShipperDAO extends DBContext {
         }
         return list;
     }
-
     public Order getCurrentShippingOrder(int shipperId) {
         sql = """
               SELECT o.orderId, o.CustomerId, o.CashierId, o.ShipperId,
                                      o.TableSessionId, o.OrderAddressId, o.DiscountId,
                                      o.OrderType, o.OrderStatus, o.PaymentMethod, o.PaymentStatus,
                                      o.TotalAmount, o.DiscountAmount, o.FinalAmount,
-                                     o.CreatedAt, o.IsDeleted,
-                                     ISNULL(c.fullName, 'Khách tại quán') AS customerName
+                                     o.CreatedAt, o.IsDeleted, c.FullName AS customerName
                               FROM Orders o
                               LEFT JOIN Customers c ON o.customerId = c.customerId
                               WHERE o.shipperId = ?
@@ -209,59 +204,11 @@ public class ShipperDAO extends DBContext {
         return null;
     }
 
-    public ProcessOrderResult acceptOrder(int orderId, int shipperId) throws SQLException {
-        ProcessOrderResult result = new ProcessOrderResult();
-        try {
-            connection.setAutoCommit(false);
-            if (hasActiveShippingOrder(connection, shipperId)) {
-                result.addError("Bạn phải hoàn thành đơn hàng trước khi nhận đơn");
-                connection.rollback();
-                return result;
-            }
-            String updateOrderSql = """
-                                UPDATE Orders
-                                SET OrderStatus = 'Delivering'
-                                WHERE OrderId = ? AND ShipperId = ? AND OrderStatus = 'Preparing'
-                                """;
-            try (PreparedStatement ps = connection.prepareStatement(updateOrderSql)) {
-                ps.setObject(1, orderId);
-                ps.setObject(2, shipperId);
-                int rows = ps.executeUpdate();
-                if (rows == 0) {
-                    result.addError("Đơn hàng không hợp lệ hoặc không được gán cho bạn.");
-                    connection.rollback();
-                    return result;
-                }
-            }
-            String insertLogSql = """
-                              INSERT INTO DeliveryLogs
-                              (OrderId, ShipperId, Status, PickedUpAt, CreatedAt, IsDeleted)
-                              VALUES (?,?,'Delivering', ?, ?, 0)
-                              """;
-            try (PreparedStatement ps = connection.prepareStatement(insertLogSql)) {
-                LocalDateTime now = LocalDateTime.now();
-                ps.setObject(1, orderId);
-                ps.setObject(2, shipperId);
-                ps.setTimestamp(3, Timestamp.valueOf(now));
-                ps.setTimestamp(4, Timestamp.valueOf(now));
-                ps.executeUpdate();
-            }
-            connection.commit();
-            result.setSuccess(true);
-        } catch (SQLException e) {
-            connection.rollback();
-            throw new RuntimeException(e);
-        } finally {
-            connection.setAutoCommit(true);
-        }
-        return result;
-    }
-
     public boolean assignShipper(int orderId, int shipperId) {
         sql = """
           UPDATE [dbo].[Orders]
-          SET [ShipperId] = ?
-          WHERE [OrderId] = ? AND [OrderStatus] = 'Preparing'
+          SET [ShipperId] = ?, [OrderStatus] = 'Waiting_Shipper_Accept'
+          WHERE [OrderId] = ? AND [OrderStatus] = 'Waiting_Shipper'
             AND [ShipperId] IS NULL AND [IsDeleted] = 0
           """;
         try {
@@ -274,12 +221,80 @@ public class ShipperDAO extends DBContext {
         }
     }
 
+    public ProcessOrderResult acceptShipperOrder(int orderId, int shipperId) {
+        ProcessOrderResult result = new ProcessOrderResult();
+        try {
+            if (hasActiveShippingOrder(connection, shipperId)) {
+                result.addError("Bạn đang có một đơn hàng khác đang giao. Vui lòng hoàn thành trước khi nhận đơn mới.");
+                return result;
+            }
+
+            connection.setAutoCommit(false);
+            try {
+                String updateOrderSql = """
+                                         UPDATE [dbo].[Orders]
+                                         SET [OrderStatus] = 'Delivering'
+                                         WHERE [OrderId] = ? AND [ShipperId] = ?
+                                           AND [OrderStatus] = 'Waiting_Shipper_Accept' AND [IsDeleted] = 0
+                                         """;
+                try (PreparedStatement ps1 = connection.prepareStatement(updateOrderSql)) {
+                    ps1.setInt(1, orderId);
+                    ps1.setInt(2, shipperId);
+                    int rows = ps1.executeUpdate();
+                    if (rows == 0) {
+                        result.addError("Đơn hàng không còn khả dụng để nhận (có thể đã được xử lý hoặc huỷ).");
+                        connection.rollback();
+                        return result;
+                    }
+                }
+
+                String insertLogSql = """
+                                       INSERT INTO [dbo].[DeliveryLogs] ([OrderId], [ShipperId], [Status])
+                                       VALUES (?, ?, 'Delivering')
+                                       """;
+                try (PreparedStatement ps2 = connection.prepareStatement(insertLogSql)) {
+                    ps2.setInt(1, orderId);
+                    ps2.setInt(2, shipperId);
+                    ps2.executeUpdate();
+                }
+
+                connection.commit();
+                result.setSuccess(true);
+            } catch (SQLException e) {
+                connection.rollback();
+                throw new RuntimeException(e);
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            result.addError("Lỗi hệ thống khi kiểm tra trạng thái shipper.");
+        }
+        return result;
+    }
+
+    public boolean rejectShipper(int orderId, int shipperId) {
+        sql = """
+              UPDATE [dbo].[Orders]
+              SET [ShipperId] = NULL, [OrderStatus] = 'Waiting_Shipper'
+              WHERE [OrderId] = ? AND [ShipperId] = ? AND [OrderStatus] = 'Waiting_Shipper_Accept' AND [IsDeleted] = 0
+              """;
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setObject(1, orderId);
+            ps.setObject(2, shipperId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     public ProcessOrderResult updateDeliveryStatus(int orderId, int shipperId, boolean isSuccess, String note, String proofImageUrl, String failReasion) {
         ProcessOrderResult result = new ProcessOrderResult();
         try {
             connection.setAutoCommit(false);
             try {
-                String newOrderStatus = isSuccess ? "Delivered" : "Failed";
+                String newOrderStatus = isSuccess ? "Completed" : "Failed";
                 String newLogStatus = isSuccess ? "Delivered" : "Failed";
 
                 String updateOrderSql = """
@@ -340,8 +355,12 @@ public class ShipperDAO extends DBContext {
             } catch (SQLException e) {
                 connection.rollback();
                 throw new RuntimeException(e);
+            } finally {
+                connection.setAutoCommit(true);
             }
         } catch (Exception e) {
+            e.printStackTrace();
+            result.addError("Lỗi hệ thống khi cập nhật trạng thái giao hàng.");
         }
         return result;
     }

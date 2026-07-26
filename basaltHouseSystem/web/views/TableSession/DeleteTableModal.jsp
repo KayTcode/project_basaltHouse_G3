@@ -5,10 +5,10 @@
         <div class="modal-content del-table-modal-content">
             <div class="del-table-modal-header">
                 <div>
-                    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px">
+                    <div class="modal-header-subtitle">
                         Quản lý bàn</div>
-                    <h5 id="deleteTableModalLabel" style="margin:0;font-size:18px;font-weight:700;color:#fff">
-                        <span class="material-symbols-outlined" style="font-size:20px;vertical-align:middle;margin-right:6px">delete</span>Xóa Bàn
+                    <h5 id="deleteTableModalLabel" class="modal-header-title">
+                        <span class="material-symbols-outlined modal-header-title-icon">delete</span>Xóa Bàn
                     </h5>
                 </div>
                 <button type="button" class="add-table-close-btn" data-bs-dismiss="modal">
@@ -19,9 +19,9 @@
                 <div class="del-confirm-icon">
                     <span class="material-symbols-outlined">warning</span>
                 </div>
-                <p style="font-weight:700;font-size:15px;color:var(--text-dark);margin-bottom:6px">
+                <p class="modal-confirm-title">
                     Xác nhận xóa bàn?</p>
-                <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">
+                <p class="modal-confirm-text">
                     Bàn <strong id="delTableCodeDisplay"></strong> sẽ bị xóa khỏi hệ thống.<br>
                     Bàn đang có khách sẽ không thể xóa.
                 </p>
@@ -29,7 +29,7 @@
                     <input type="hidden" name="tableId" id="delTableId" value="">
                     <input type="hidden" name="tableCode" id="delTableCode" value="">
                     <button type="submit" class="btn-del-confirm mb-2" id="btnDelConfirm">
-                        <span class="material-symbols-outlined" style="font-size:18px">delete_forever</span>Xóa bàn
+                        <span class="material-symbols-outlined modal-button-icon">delete_forever</span>Xóa bàn
                     </button>
                 </form>
                 <button type="button" class="btn-del-cancel" data-bs-dismiss="modal">Hủy bỏ</button>
@@ -46,12 +46,12 @@
         document.getElementById('delTableCodeDisplay').textContent = tableCode;
         const btn = document.getElementById('btnDelConfirm');
         btn.disabled = false;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">delete_forever</span> Xóa bàn';
+        btn.innerHTML = '<span class="material-symbols-outlined modal-button-icon">delete_forever</span> Xóa bàn';
         new bootstrap.Modal(document.getElementById('deleteTableModal')).show();
     }
     document.getElementById('deleteTableForm').addEventListener('submit', function () {
         const btn = document.getElementById('btnDelConfirm');
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Đang xóa...';
+        btn.innerHTML = '<span class="material-symbols-outlined btn-spin-icon">progress_activity</span> Đang xóa...';
     });
 </script>

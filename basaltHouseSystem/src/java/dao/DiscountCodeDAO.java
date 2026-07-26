@@ -82,6 +82,87 @@ public class DiscountCodeDAO extends DBContext {
         }
         return dto;
     }
+public List<Customer> searchCustomerMembershipByName(String name) {
+        List<Customer> list = new ArrayList<>();
+        try {
+            String sql = """
+                      SELECT c.CustomerId, c.FullName, c.Phone, c.AccountId, r.RankName, r.DiscountValue 
+                      FROM Customers c 
+                      LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
+                      LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
+                      WHERE (c.FullName LIKE ? OR c.Phone LIKE ?) AND c.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setString(1, "%" + name + "%");
+            st.setString(2, "%" + name + "%");
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                Customer dto = new Customer();
+                dto.setCustomerId(rs.getInt("CustomerId"));
+                dto.setFullName(rs.getString("FullName"));
+                dto.setPhone(rs.getString("Phone"));
+                dto.setAccountId(rs.getInt("AccountId"));
+                dto.setRankName(rs.getString("RankName"));
+                dto.setDiscountValue(rs.getBigDecimal("DiscountValue"));
+                list.add(dto);
+            }
+        } catch (Exception e) {
+            System.err.println("searchCustomerMembershipByName Error: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public Customer getCustomerMembershipByAccountId(int accountId) {
+        Customer dto = null;
+        try {
+            String sql = """
+                      SELECT c.CustomerId, c.FullName, r.RankName, r.DiscountValue 
+                      FROM Customers c 
+                      LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
+                      LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
+                      WHERE c.AccountId = ? AND c.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                dto = new Customer();
+                dto.setCustomerId(rs.getInt("CustomerId"));
+                dto.setFullName(rs.getString("FullName"));
+                dto.setRankName(rs.getString("RankName"));
+                dto.setDiscountValue(rs.getBigDecimal("DiscountValue"));
+            }
+        } catch (Exception e) {
+            System.err.println("getCustomerMembershipByAccountId Error: " + e.getMessage());
+        }
+        return dto;
+    }
+
+    public Customer getCustomerMembershipByCustomerId(int customerId) {
+        Customer dto = null;
+        try {
+            String sql = """
+                      SELECT c.CustomerId, c.FullName, r.RankName, r.DiscountValue 
+                      FROM Customers c 
+                      LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
+                      LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
+                      WHERE c.CustomerId = ? AND c.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, customerId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                dto = new Customer();
+                dto.setCustomerId(rs.getInt("CustomerId"));
+                dto.setFullName(rs.getString("FullName"));
+                dto.setRankName(rs.getString("RankName"));
+                dto.setDiscountValue(rs.getBigDecimal("DiscountValue"));
+            }
+        } catch (Exception e) {
+            System.err.println("getCustomerMembershipByCustomerId Error: " + e.getMessage());
+        }
+        return dto;
+    }
 
     public List<DiscountCode> getDiscountCode() {
         List<DiscountCode> list = new ArrayList<>();
@@ -134,7 +215,6 @@ public class DiscountCodeDAO extends DBContext {
                                 d.EndDate,
                                 cd.IsUsed,
                                 cd.UsedDate,
-                                cd.[Status],
                                 d.Description,
                                 DATEDIFF(DAY, GETDATE(), d.EndDate) AS DayTime
                          FROM CustomerDiscountCodes cd
@@ -145,6 +225,7 @@ public class DiscountCodeDAO extends DBContext {
                            AND ISNULL(cd.IsUsed, 0) = 0
                          ORDER BY d.EndDate ASC
                          """;
+
             PreparedStatement st = connection.prepareStatement(sql);
             st.setObject(1, accountId);
             ResultSet rs = st.executeQuery();
@@ -162,7 +243,7 @@ public class DiscountCodeDAO extends DBContext {
                         rs.getString("Description"),
                         rs.getInt("DayTime"),
                         rs.getString("Code"),
-                        rs.getInt("Status"));
+                        rs.getBoolean("IsUsed") ? 0 : 1);
                 list.add(c);
             }
         } catch (Exception e) {
@@ -173,7 +254,6 @@ public class DiscountCodeDAO extends DBContext {
 
     public CustomerDiscountCode getCustomerVoucherByCode(int accountId, String code) {
         try {
-            markExpiredVouchersAsDeleted();
             String sql = """
                          SELECT cd.CustomerDiscountId,
                                 cd.AccountId,
@@ -185,15 +265,16 @@ public class DiscountCodeDAO extends DBContext {
                                 d.EndDate,
                                 cd.IsUsed,
                                 cd.UsedDate,
-                                cd.[Status],
                                 d.Description,
                                 DATEDIFF(DAY, GETDATE(), d.EndDate) AS DayTime
                          FROM CustomerDiscountCodes cd
                          JOIN DiscountCodes d ON cd.DiscountId = d.DiscountId
                          WHERE d.IsActive = 1
                            AND d.IsDeleted = 0
+                           AND d.IsPublic = 0
                            AND cd.AccountId = ?
                            AND UPPER(d.Code) = UPPER(?)
+                           AND (d.EndDate IS NULL OR d.EndDate >= GETDATE())
                          """;
             PreparedStatement st = connection.prepareStatement(sql);
             st.setObject(1, accountId);
@@ -206,14 +287,14 @@ public class DiscountCodeDAO extends DBContext {
                         rs.getInt("DiscountId"),
                         rs.getBigDecimal("DiscountPercent"),
                         rs.getBigDecimal("DiscountAmount"),
-                        rs.getObject("StartDate", LocalDateTime.class),
-                        rs.getObject("EndDate", LocalDateTime.class),
+                        rs.getTimestamp("StartDate") != null ? rs.getTimestamp("StartDate").toLocalDateTime() : null,
+                        rs.getTimestamp("EndDate") != null ? rs.getTimestamp("EndDate").toLocalDateTime() : null,
                         rs.getBoolean("IsUsed"),
-                        rs.getObject("UsedDate", LocalDateTime.class),
+                        rs.getTimestamp("UsedDate") != null ? rs.getTimestamp("UsedDate").toLocalDateTime() : null,
                         rs.getString("Description"),
                         rs.getInt("DayTime"),
                         rs.getString("Code"),
-                        rs.getInt("Status"));
+                        rs.getBoolean("IsUsed") ? 0 : 1);
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -240,6 +321,134 @@ public class DiscountCodeDAO extends DBContext {
         return false;
     }
 
+    public boolean markVoucherAsUsed(int accountId, String code) {
+        try {
+            String sql = """
+                         UPDATE CustomerDiscountCodes
+                         SET IsUsed   = 1,
+                             UsedDate = GETDATE()
+                         WHERE AccountId  = ?
+                           AND DiscountId IN (
+                                   SELECT DiscountId FROM DiscountCodes
+                                   WHERE UPPER(Code) = UPPER(?)
+                               )
+                           AND ISNULL(IsUsed, 0) = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            st.setString(2, code);
+            return st.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.err.println("markVoucherAsUsed Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasCustomerUsedDiscount(int customerId, String code) {
+        if (customerId <= 0 || code == null || code.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            String sql = """
+                         SELECT COUNT(*)
+                         FROM Orders o
+                         JOIN DiscountCodes d ON o.DiscountId = d.DiscountId
+                         WHERE o.CustomerId = ?
+                           AND UPPER(d.Code) = UPPER(?)
+                           AND o.OrderStatus <> 'Cancelled'
+                           AND o.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, customerId);
+            st.setString(2, code.trim());
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("hasCustomerUsedDiscount Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasAccountUsedDiscount(int accountId, String code) {
+        if (accountId <= 0 || code == null || code.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            String sql = """
+                         SELECT COUNT(*)
+                         FROM Orders o
+                         JOIN Customers c ON o.CustomerId = c.CustomerId
+                         JOIN DiscountCodes d ON o.DiscountId = d.DiscountId
+                         WHERE c.AccountId = ?
+                           AND UPPER(d.Code) = UPPER(?)
+                           AND o.OrderStatus <> 'Cancelled'
+                           AND o.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, accountId);
+            st.setString(2, code.trim());
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("hasAccountUsedDiscount Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasTableSessionUsedDiscount(int tableSessionId) {
+        if (tableSessionId <= 0) return false;
+        try {
+            String sql = """
+                         SELECT COUNT(*)
+                         FROM Orders
+                         WHERE TableSessionId = ?
+                           AND DiscountId IS NOT NULL
+                           AND DiscountAmount > 0
+                           AND OrderStatus <> 'Cancelled'
+                           AND IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, tableSessionId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("hasTableSessionUsedDiscount Error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean hasTableUsedDiscount(int tableId) {
+        if (tableId <= 0) return false;
+        try {
+            String sql = """
+                         SELECT COUNT(*)
+                         FROM Orders o
+                         JOIN TableSessions ts ON o.TableSessionId = ts.SessionId
+                         WHERE ts.TableId = ?
+                           AND ts.Status IN ('ACTIVE', 'Open')
+                           AND ts.IsDeleted = 0
+                           AND o.DiscountId IS NOT NULL
+                           AND o.DiscountAmount > 0
+                           AND o.OrderStatus <> 'Cancelled'
+                           AND o.IsDeleted = 0
+                         """;
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, tableId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("hasTableUsedDiscount Error: " + e.getMessage());
+        }
+        return false;
+    }
 
     public void updateActiveAt1(int id) {
         try {

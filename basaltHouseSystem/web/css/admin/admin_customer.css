@@ -1,7 +1,6 @@
-
 :root {
-    --primary-color: #006e2f;
-    --primary-hover: #005c25;
+    --primary-color: #006233;
+    --primary-hover: #004d27;
     --border-subtle: #cbd5e1;
     --text-dark: #1e293b;
     --text-muted: #64748b;
@@ -590,4 +589,36 @@
     border-color: var(--basalt-blue, #1c7ed6) !important;
     color: var(--basalt-blue, #1c7ed6) !important;
     background-color: #f8f9fa !important;
+}
+
+
+/* ── GIFT DISCOUNT BUTTON ── */
+.btn-icon-action.action-gift {
+    color: #16a34a;
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.btn-icon-action.action-gift:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
+}
+
+/* ── GIFT MODAL SIZE ── */
+.modal-card--gift {
+    max-width: 480px;
+}
+
+.modal-card--gift .modal-card-header {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.modal-card--gift .modal-card-footer .btn-primary-action {
+    background: #16a34a;
+}
+
+.modal-card--gift .modal-card-footer .btn-primary-action:hover {
+    background: #15803d;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }

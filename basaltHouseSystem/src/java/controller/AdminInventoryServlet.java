@@ -98,7 +98,15 @@ public class AdminInventoryServlet extends HttpServlet {
             }
 
            
-            List<Map<String, Object>> todayUsage = new dao.IngredientDAO().getTodayIngredientUsage();
+            String todayDateStr = java.time.LocalDate.now().toString();
+            String usageDate = request.getParameter("usageDate");
+            if (usageDate == null || usageDate.trim().isEmpty()) {
+                usageDate = todayDateStr;
+            }
+            request.setAttribute("selectedUsageDate", usageDate);
+            request.setAttribute("todayDateStr", todayDateStr);
+
+            List<Map<String, Object>> todayUsage = new dao.IngredientDAO().getIngredientUsageByDate(usageDate);
             paginateList(request, todayUsage, 5, "pageUsage", "todayUsageList", "currentUsagePage", "totalUsagePages", null);
 
 

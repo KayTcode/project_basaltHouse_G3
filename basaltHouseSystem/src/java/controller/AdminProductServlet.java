@@ -13,7 +13,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import services.AdminProductService;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.Map;
+import model.ActivityLog;
+import services.ActivityLogService;
 
 /**
  *
@@ -23,6 +26,7 @@ public class AdminProductServlet extends HttpServlet {
     // Khai báo Service điều hướng dữ liệu
 
     private final AdminProductService productService = new AdminProductService();
+    private final ActivityLogService logService = new ActivityLogService();
 
     // Thiết lập số lượng sản phẩm trên mỗi trang (Ví dụ: 10 sản phẩm/trang)
     private static final int PAGE_SIZE = 10;
@@ -129,8 +133,12 @@ public class AdminProductServlet extends HttpServlet {
 
                     if (isSuccess) {
                         request.getSession().setAttribute("toastMessage", "Thêm sản phẩm mới thành công!");
+                        writeLog(getAdminId(request), "ADD", "Product", 0,
+                                null, "Thêm sản phẩm: " + name, "SUCCESS");
                     } else {
                         request.getSession().setAttribute("toastError", "Lỗi: Không thể thêm sản phẩm!");
+                        writeLog(getAdminId(request), "ADD", "Product", 0,
+                                null, "Thêm sản phẩm thất bại: " + name, "FAIL");
                     }
                     break;
 
@@ -162,8 +170,14 @@ public class AdminProductServlet extends HttpServlet {
 
                     if (isEditSuccess) {
                         request.getSession().setAttribute("toastMessage", "Cập nhật sản phẩm thành công!");
+                        writeLog(getAdminId(request), "UPDATE", "Product",
+                                parseIntSafe(editProductId), "ID=" + editProductId,
+                                "Cập nhật sản phẩm: " + editName, "SUCCESS");
                     } else {
                         request.getSession().setAttribute("toastError", "Lỗi: Không thể cập nhật sản phẩm!");
+                        writeLog(getAdminId(request), "UPDATE", "Product",
+                                parseIntSafe(editProductId), "ID=" + editProductId,
+                                "Cập nhật sản phẩm thất bại: " + editName, "FAIL");
                     }
                     break;
 
@@ -173,16 +187,42 @@ public class AdminProductServlet extends HttpServlet {
 
                     if (isDeleteSuccess) {
                         request.getSession().setAttribute("toastMessage", "Xóa sản phẩm thành công!");
+                        writeLog(getAdminId(request), "DELETE", "Product",
+                                parseIntSafe(deleteProductId), "ID=" + deleteProductId,
+                                "Xóa sản phẩm ID=" + deleteProductId, "SUCCESS");
                     } else {
                         request.getSession().setAttribute("toastError", "Lỗi: Không thể xóa sản phẩm!");
+                        writeLog(getAdminId(request), "DELETE", "Product",
+                                parseIntSafe(deleteProductId), "ID=" + deleteProductId,
+                                "Xóa sản phẩm thất bại ID=" + deleteProductId, "FAIL");
                     }
                     break;
             }
         }
 
-        // Sau khi thực hiện POST (Thêm/Sửa/Xóa) xong, chuyển hướng (Redirect) về lại trang GET 
-        // để tránh lỗi trùng lặp dữ liệu khi người dùng F5 (Tải lại trang)
         response.sendRedirect(request.getContextPath() + "/admin/products");
+    }
+
+    private int getAdminId(HttpServletRequest request) {
+        Object obj = request.getSession(false) != null
+                ? request.getSession(false).getAttribute("currentUser") : null;
+        if (obj instanceof dto.UserLoginDTO) return ((dto.UserLoginDTO) obj).getAccountId();
+        return 0;
+    }
+
+    private int parseIntSafe(String s) {
+        try { return Integer.parseInt(s); } catch (Exception e) { return 0; }
+    }
+
+    private void writeLog(int accountId, String action, String module,
+                          int targetId, String oldValue, String newValue, String status) {
+        try {
+            ActivityLog log = new ActivityLog(accountId, action, module,
+                    targetId, oldValue, newValue, status, 0, LocalDateTime.now());
+            logService.ctreatActiveLog(log);
+        } catch (Exception e) {
+            System.err.println("[AdminProductServlet] writeLog error: " + e.getMessage());
+        }
     }
 
     /**

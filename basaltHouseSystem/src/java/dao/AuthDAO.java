@@ -147,6 +147,7 @@ public class AuthDAO extends DBContext {
 
         return result;
     }
+
     public Integer getCashierIdByAccountId(int accountId) {
         String sqlQuery = "SELECT CashierId FROM Cashiers WHERE AccountId = ? AND IsDeleted = 0";
         try {
@@ -161,6 +162,7 @@ public class AuthDAO extends DBContext {
         }
         return null;
     }
+
     public void incrementFailedAttempts(int accountId) {
         sql = """
               UPDATE Accounts
@@ -423,6 +425,22 @@ public class AuthDAO extends DBContext {
                                      VALUES
                                            (?,?,?,GETDATE(),0)
                                 """;
+        String insertMembership = """
+                               INSERT INTO [dbo].[CustomerMemberships]
+                                          ([CustomerId]
+                                          ,[RankId]
+                                          ,[TotalSpent])
+                                    VALUES
+                                          (?,1,0)
+                               """;
+        String insertVoucher = """
+                            INSERT INTO [dbo].[CustomerDiscountCodes]
+                                       ([AccountId]
+                                       ,[DiscountId]
+                                       ,[IsUsed]
+                                 VALUES
+                                       (?,1,0)
+                            """;
         try {
             connection.setAutoCommit(false);
             int newAccountId;
@@ -444,6 +462,14 @@ public class AuthDAO extends DBContext {
 
                 psInsertCustomer.setObject(3, avatarUrl);
                 psInsertCustomer.executeUpdate();
+            }
+            try (PreparedStatement psInsertMemberShip = connection.prepareStatement(insertMembership)) {
+                psInsertMemberShip.setObject(1, newAccountId);
+                psInsertMemberShip.executeUpdate();
+            }
+            try (PreparedStatement psInsertVoucher = connection.prepareStatement(insertVoucher)) {
+                psInsertVoucher.setObject(1, newAccountId);
+                psInsertVoucher.executeUpdate();
             }
             connection.commit();
             result.put("success", true);

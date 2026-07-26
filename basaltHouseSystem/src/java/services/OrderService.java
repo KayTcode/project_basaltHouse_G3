@@ -1,6 +1,7 @@
 package services;
 
 import dao.BillDAO;
+import dao.CustomerDAO;
 import dao.DiscountCodeDAO;
 import dao.OrderDAO;
 import dao.ProductDAO;
@@ -26,9 +27,10 @@ public class OrderService {
     private final OrderDAO dao = new OrderDAO();
     private final TableSessionDAO sesioneDAO = new TableSessionDAO();
 
-    public int createOfflineOrder(String cartData, String totalAmountStr, String discountAmountStr, String finalAmountStr,
-            String paymentMethod, String tableName, String note,
-            String customerIdStr, String discountCode, String tableIdStr, Integer cashierId) throws Exception {
+   public int createOfflineOrder(String cartData, String totalAmountStr, String discountAmountStr, String finalAmountStr,
+                                  String paymentMethod, String tableName, String note,
+                                  String customerIdStr, String discountCode, String tableIdStr, Integer cashierId, String isEarnPointsStr,
+                                  String tableSessionIdStr) throws Exception {
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         BigDecimal discountAmount = BigDecimal.ZERO;
@@ -60,7 +62,16 @@ public class OrderService {
             order.setCashierId(cashierId);
         }
 
-        if (tableIdStr != null && !tableIdStr.trim().isEmpty()) {
+        if (tableSessionIdStr != null && !tableSessionIdStr.trim().isEmpty()) {
+            try {
+                int explicitSessionId = Integer.parseInt(tableSessionIdStr);
+                if (explicitSessionId > 0) {
+                    order.setTableSessionId(explicitSessionId);
+                }
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        } else if (tableIdStr != null && !tableIdStr.trim().isEmpty()) {
             try {
                 int tableId = Integer.parseInt(tableIdStr);
                 dao.TableSessionDAO tsDao = new dao.TableSessionDAO();
@@ -77,15 +88,30 @@ public class OrderService {
             }
         }
 
-        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
-            try {
-                order.setCustomerId(Integer.parseInt(customerIdStr));
-            } catch (Exception e) {
-            }
+       if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+            try { order.setCustomerId(Integer.parseInt(customerIdStr)); } catch (Exception e) {}
         }
 
         if (discountCode != null && !discountCode.trim().isEmpty()) {
+            try {
+                dao.DiscountCodeDAO dcDao = new dao.DiscountCodeDAO();
+                for (model.DiscountCode dc : dcDao.getDiscountCode()) {
+                    if (discountCode.equalsIgnoreCase(dc.getCode())) {
+                        order.setDiscountId(dc.getDiscountId());
+                        break;
+                    }
+                }
+            } catch (Exception e) {}
+        }
+
+        int customerDiscountIdToUse = -1;
+        if (discountCode != null && !discountCode.trim().isEmpty()) {
             DiscountCodeDAO dcDao = new DiscountCodeDAO();
+            if (order.getTableSessionId() != null && order.getTableSessionId() > 0) {
+                if (dcDao.hasTableSessionUsedDiscount(order.getTableSessionId())) {
+                    throw new Exception("Mã đã được sử dụng không thể sử dụng được nữa");
+                }
+            }
             DiscountCode dto = dcDao.checkDiscountCode(discountCode);
             if (dto != null) {
                 order.setDiscountId(dto.getDiscountId());
@@ -142,8 +168,20 @@ public class OrderService {
 
         OrderDAO orderDAO = new OrderDAO();
         int newOrderId = orderDAO.insertOfflineOrder(order, details);
-
         if (newOrderId != -1) {
+            
+            if ("true".equalsIgnoreCase(isEarnPointsStr) && order.getCustomerId() != null) {
+                dao.CustomerMembershipDAO memDao = new dao.CustomerMembershipDAO();
+                memDao.addTotalSpent(order.getCustomerId(), order.getFinalAmount());
+            }
+
+            if (discountCode != null && !discountCode.trim().isEmpty() && order.getCustomerId() != null) {
+                dao.CustomerDAO custDao = new dao.CustomerDAO();
+                int accId = custDao.getAccountIdByCustomerId(order.getCustomerId());
+                if (accId > 0) {
+                    new DiscountCodeDAO().markVoucherAsUsed(accId, discountCode.trim());
+                }
+            }
 
             Bill bill = new Bill();
             bill.setOrderId(newOrderId);
@@ -382,4 +420,23 @@ public class OrderService {
         }
         return dao.updateOrderTotal(orderId, total);
     }
+
+    public String confirmDelivery(int orderId, int customerId) {
+        Order order = dao.getOrderById(orderId);
+        if (order == null) {
+            return "Đơn hàng không tồn tại.";
+        }
+
+        if (order.getCustomerId() == null || order.getCustomerId() != customerId) {
+            return "Bạn không có quyền xác nhận đơn hàng này.";
+        }
+
+        if (!"Delivered".equalsIgnoreCase(order.getOrderStatus())) {
+            return "Đơn hàng chưa được giao hoặc đã hoàn thành.";
+        }
+
+        boolean ok = dao.confirmDelivery(orderId);
+        return ok ? "OK" : "Lỗi hệ thống khi xác nhận đơn hàng.";
+    }
 }
+

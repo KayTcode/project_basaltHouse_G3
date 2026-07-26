@@ -129,10 +129,6 @@
         <servlet-class>controller.ShipperDashboardServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>AcceptOrderServlet</servlet-name>
-        <servlet-class>controller.AcceptOrderServlet</servlet-class>
-    </servlet>
-    <servlet>
         <servlet-name>UpdateDeliveryServlet</servlet-name>
         <servlet-class>controller.UpdateDeliveryServlet</servlet-class>
     </servlet>
@@ -175,6 +171,18 @@
     <servlet>
         <servlet-name>AdminMembership</servlet-name>
         <servlet-class>controller.AdminMembership</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>RejectOrderServlet</servlet-name>
+        <servlet-class>controller.RejectOrderServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AcceptOrderServlet</servlet-name>
+        <servlet-class>controller.AcceptOrderServlet</servlet-class>
+      </servlet>
+       <servlet>
+        <servlet-name>CancelOrderServlet</servlet-name>
+        <servlet-class>controller.CancelOrderServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
@@ -317,10 +325,6 @@
         <url-pattern>/shipper/dashboard</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
-        <servlet-name>AcceptOrderServlet</servlet-name>
-        <url-pattern>/shipper/accept-order</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
         <servlet-name>UpdateDeliveryServlet</servlet-name>
         <url-pattern>/shipper/update-delivery</url-pattern>
     </servlet-mapping>
@@ -343,6 +347,16 @@
     <servlet-mapping>
         <servlet-name>AdminMembership</servlet-name>
         <url-pattern>/admin/memberships</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>RejectOrderServlet</servlet-name>
+        <url-pattern>/shipper/reject-order</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AcceptOrderServlet</servlet-name>
+        <url-pattern>/shipper/accept-order</url-pattern>
+        <servlet-name>CancelOrderServlet</servlet-name>
+        <url-pattern>/cancel-order</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>60</session-timeout>

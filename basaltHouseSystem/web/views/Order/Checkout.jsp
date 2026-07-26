@@ -58,7 +58,7 @@
                                 <span class="material-symbols-outlined">info</span>
                                 <div>
                                     <div class="co-zone-title">Khu vực giao hàng</div>
-                                    <div class="co-zone-desc">Chúng tôi chỉ giao hàng trong khu vực Hòa Lạc — Vui lòng nhập địa chỉ trong phạm vi phục vụ của chúng tôi.</div>
+                                    <div class="co-zone-desc">Chúng tôi chỉ giao hàng trong khu vực — Vui lòng nhập địa chỉ trong phạm vi phục vụ của chúng tôi.</div>
                                 </div>
                             </div>
 
@@ -85,13 +85,11 @@
                                     <label>Khu vực (Hòa Lạc) <span class="req">*</span></label>
                                     <select name="district" id="district" class="co-select">
                                         <option value=""> Chọn khu vực </option>
-                                        <option value="Thạch Hòa, Huyện Thạch Thất, Hà Nội">Thạch Hòa, Thạch Thất, Hà Nội</option>
-                                        <option value="Tân Xã, Huyện Thạch Thất, Hà Nội">Tân Xã, Thạch Thất, Hà Nội</option>
-                                        <option value="Hạ Bằng, Huyện Thạch Thất, Hà Nội">Hạ Bằng, Thạch Thất, Hà Nội</option>
-                                        <option value="Bình Yên, Huyện Thạch Thất, Hà Nội">Bình Yên, Thạch Thất, Hà Nội</option>
-                                        <option value="Đồng Trúc, Huyện Thạch Thất, Hà Nội">Đồng Trúc, Thạch Thất, Hà Nội</option>
-                                        <option value="Cẩm Yên, Huyện Thạch Thất, Hà Nội">Cẩm Yên, Thạch Thất, Hà Nội</option>
-                                        <option value="Liên Quan, Huyện Thạch Thất, Hà Nội">Liên Quan, Thạch Thất, Hà Nội</option>
+                                        <c:forEach var="zone" items="${activeZones}">
+                                            <option value="${zone.wardName}, ${zone.district}, ${zone.province}">
+                                                ${zone.wardName}, ${zone.district}, ${zone.province}
+                                            </option>
+                                        </c:forEach>
                                     </select>
                                 </div>
                                 <div class="co-field full">
@@ -169,6 +167,18 @@
                             <h3>Đơn Hàng Của Bạn</h3>
                         </div>
 
+                        <c:if test="${not empty memberTier}">
+                            <div class="co-member-badge-container">
+                                <span class="material-symbols-outlined member-icon">stars</span>
+                                <span class="member-text">
+                                    Thành viên: <span class="badge">${memberTier}</span>
+                                    <c:if test="${memberDiscountPercent > 0}">
+                                        (Ưu đãi giảm <fmt:formatNumber value="${memberDiscountPercent}" pattern="0.#"/>%)
+                                    </c:if>
+                                </span>
+                            </div>
+                        </c:if>
+
                         <div class="co-summary-body">
                             <!-- Items list -->
                             <div class="co-summary-items-list">
@@ -198,10 +208,22 @@
                                     <span>Tạm tính</span>
                                     <span><fmt:formatNumber value="${totalAmount}" pattern="#,###"/>₫</span>
                                 </div>
-                                <c:if test="${discountAmount > 0}">
+                                <c:if test="${memberDiscountAmount > 0}">
+                                    <div class="co-pricing-row discount member-disc">
+                                        <span class="co-pricing-row-label-with-icon">
+                                            <span class="material-symbols-outlined">stars</span>
+                                            Ưu đãi hội viên (${memberTier})
+                                        </span>
+                                        <span>- <fmt:formatNumber value="${memberDiscountAmount}" pattern="#,###"/>₫</span>
+                                    </div>
+                                </c:if>
+                                <c:if test="${couponDiscountAmount > 0}">
                                     <div class="co-pricing-row discount">
-                                        <span>Giảm giá</span>
-                                        <span>- <fmt:formatNumber value="${discountAmount}" pattern="#,###"/>₫</span>
+                                        <span class="co-pricing-row-label-with-icon">
+                                            <span class="material-symbols-outlined">sell</span>
+                                            Voucher giảm giá
+                                        </span>
+                                        <span>- <fmt:formatNumber value="${couponDiscountAmount}" pattern="#,###"/>₫</span>
                                     </div>
                                 </c:if>
                                 <div class="co-summary-divider"></div>

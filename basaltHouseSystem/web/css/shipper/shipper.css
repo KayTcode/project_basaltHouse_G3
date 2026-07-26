@@ -538,3 +538,239 @@ label.fail-lbl-active {
         margin: 0 auto;
     }
 }
+:root {
+    --brand: #2f6f4e;
+    --brand-dark: #234f38;
+    --red: #d9403f;
+    --amber: #e0a527;
+    --bg: #f4f6f5;
+    --card-border: #e4e7e6;
+}
+body {
+    background: var(--bg);
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+.shipper-header {
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    color: #fff;
+    border-radius: 0 0 20px 20px;
+    padding: 22px 20px 26px;
+}
+.shipper-header .avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,.6);
+    background:#fff;
+}
+.avail-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    padding:3px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.18);
+}
+.avail-dot {
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#8bd18b;
+}
+.avail-dot.off {
+    background:#e0a5a5;
+}
+
+.tab-bar {
+    display:flex;
+    gap:8px;
+    margin: 16px 16px 0;
+    background:#fff;
+    border-radius:12px;
+    padding:6px;
+    border:1px solid var(--card-border);
+}
+.tab-btn {
+    flex:1;
+    border:0;
+    background:transparent;
+    padding:10px 8px;
+    border-radius:9px;
+    font-weight:600;
+    font-size:14px;
+    color:#666;
+    cursor:pointer;
+}
+.tab-btn.active {
+    background: var(--brand);
+    color:#fff;
+}
+.tab-panel {
+    display:none;
+    padding: 14px 16px 30px;
+}
+.tab-panel.active {
+    display:block;
+}
+
+.order-card {
+    background:#fff;
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:14px;
+}
+.order-card .order-top {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+}
+.order-id {
+    font-weight:700;
+    font-size:15px;
+    color:#222;
+}
+.order-time {
+    font-size:12px;
+    color:#888;
+}
+.order-amount {
+    font-weight:700;
+    color: var(--brand-dark);
+    font-size:16px;
+}
+.order-meta {
+    font-size:13px;
+    color:#555;
+    margin-top:6px;
+    line-height:1.6;
+}
+.order-meta i {
+    width:16px;
+    color:#999;
+}
+
+.btn-accept, .btn-reject, .btn-success-deliver, .btn-fail-deliver {
+    border-radius:8px;
+    padding:10px 14px;
+    font-weight:600;
+    font-size:14px;
+    border:1px solid transparent;
+}
+.btn-accept {
+    background: var(--brand);
+    color:#fff;
+}
+.btn-accept:hover {
+    background: var(--brand-dark);
+    color:#fff;
+}
+.btn-reject {
+    background:#fff;
+    border-color: var(--red);
+    color: var(--red);
+}
+.btn-reject:hover {
+    background: var(--red);
+    color:#fff;
+}
+.btn-success-deliver {
+    background:#1f9d55;
+    color:#fff;
+}
+.btn-success-deliver:hover {
+    background:#187a42;
+    color:#fff;
+}
+.btn-fail-deliver {
+    background:#fff;
+    border-color: var(--red);
+    color: var(--red);
+}
+.btn-fail-deliver:hover {
+    background: var(--red);
+    color:#fff;
+}
+
+.empty-state {
+    text-align:center;
+    color:#888;
+    padding:40px 10px;
+}
+.empty-state i {
+    font-size:34px;
+    color:#ccc;
+    display:block;
+    margin-bottom:10px;
+}
+
+.flash-alert {
+    margin: 14px 16px 0;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:14px;
+}
+.flash-alert.ok {
+    background:#e6f4ea;
+    color:#1f6b3a;
+    border:1px solid #b9e0c4;
+}
+.flash-alert.err {
+    background:#fdeaea;
+    color:#a5312f;
+    border:1px solid #f3bcbb;
+}
+
+/* Modal */
+.modal-backdrop-custom {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.4);
+    z-index:1000;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+}
+.modal-backdrop-custom.show {
+    display:flex;
+}
+.modal-box {
+    background:#fff;
+    border-radius:14px;
+    width:100%;
+    max-width:420px;
+    padding:20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.15);
+}
+.modal-box h5 {
+    margin-bottom:14px;
+    font-weight:700;
+}
+.modal-box textarea, .modal-box input[type=text] {
+    width:100%;
+    border:1px solid var(--card-border);
+    border-radius:8px;
+    padding:9px 10px;
+    font-size:14px;
+    margin-bottom:10px;
+}
+.modal-actions {
+    display:flex;
+    gap:8px;
+    justify-content:flex-end;
+    margin-top:6px;
+}
+.modal-actions button {
+    border-radius:8px;
+    padding:8px 16px;
+    font-size:14px;
+    border:1px solid var(--card-border);
+    background:#fff;
+}
+.modal-actions .primary {
+    border:0;
+}

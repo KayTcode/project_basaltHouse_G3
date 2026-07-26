@@ -112,9 +112,12 @@ public class IngredientDAO extends DBContext {
         }
         return rows;
     }
-    public List<Map<String, Object>> getTodayIngredientUsage() {
+    public List<Map<String, Object>> getIngredientUsageByDate(String selectedDate) {
         List<Map<String, Object>> list = new ArrayList<>();
         try {
+            if (selectedDate == null || selectedDate.trim().isEmpty()) {
+                selectedDate = java.time.LocalDate.now().toString();
+            }
             String sql = """
                          SELECT p.ProductName, s.SizeName, SUM(od.Quantity) AS TotalCups, i.IngredientName, i.Unit, SUM(od.Quantity * r.QuantityNeeded) AS UsedQuantity
                          FROM Orders o
@@ -123,13 +126,14 @@ public class IngredientDAO extends DBContext {
                          JOIN Sizes s ON od.SizeId = s.SizeId
                          JOIN Recipes r ON od.ProductId = r.ProductId AND od.SizeId = r.SizeId
                          JOIN Ingredients i ON r.IngredientId = i.IngredientId
-                         WHERE CAST(o.CreatedAt AS DATE) = CAST(GETDATE() AS DATE)
+                         WHERE CAST(o.CreatedAt AS DATE) = ?
                            AND o.IsDeleted = 0
                            AND o.OrderStatus NOT IN ('Cancelled', 'Pending')
                          GROUP BY p.ProductId, p.ProductName, s.SizeId, s.SizeName, i.IngredientId, i.IngredientName, i.Unit
                          ORDER BY p.ProductName, s.SizeName, UsedQuantity DESC
                          """;
             st = connection.prepareStatement(sql);
+            st.setString(1, selectedDate);
             rs = st.executeQuery();
             
             Map<String, Map<String, Object>> productGroups = new java.util.LinkedHashMap<>();
@@ -160,8 +164,12 @@ public class IngredientDAO extends DBContext {
             }
             list.addAll(productGroups.values());
         } catch (Exception e) {
-            System.err.println("Error in getTodayIngredientUsage: " + e.getMessage());
+            System.err.println("Error in getIngredientUsageByDate: " + e.getMessage());
         }
         return list;
+    }
+
+    public List<Map<String, Object>> getTodayIngredientUsage() {
+        return getIngredientUsageByDate(java.time.LocalDate.now().toString());
     }
 }

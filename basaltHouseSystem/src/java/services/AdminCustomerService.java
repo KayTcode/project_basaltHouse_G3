@@ -1,7 +1,9 @@
 package services;
 
 import dao.AdminCustomerDAO;
+import dao.AdminDiscountDAO;
 import dto.CustomerViewDTO;
+import model.DiscountCode;
 import model.MembershipRank;
 import model.Order;
 import java.util.Collections;
@@ -13,23 +15,21 @@ import java.util.stream.Collectors;
 public class AdminCustomerService {
 
     private final AdminCustomerDAO dao = new AdminCustomerDAO();
+    private final AdminDiscountDAO discountDAO = new AdminDiscountDAO();
 
     public Map<String, Object> getCustomerDashboardPage(
             String search, String rankStr, String status, String pageStr, int pageSize) {
 
         Map<String, Object> pageData = new HashMap<>();
 
-        // 1. Lấy toàn bộ danh sách khách hàng từ DB
         List<CustomerViewDTO> all = dao.getAllCustomers();
         if (all == null) {
             all = Collections.emptyList();
         }
 
-        // 1b. Lấy danh sách hạng thành viên từ DB
         List<MembershipRank> ranks = dao.getAllRanks();
         pageData.put("ranks", ranks);
 
-        // 2. Tính thống kê trên toàn bộ danh sách (trước khi lọc)
         Map<String, Long> stats = new HashMap<>();
         stats.put("total", (long) all.size());
         stats.put("active", all.stream().filter(c -> !c.getAccount().isIsLocked()).count());
@@ -38,7 +38,6 @@ public class AdminCustomerService {
         stats.put("locked", all.stream().filter(c -> c.getAccount().isIsLocked()).count());
         pageData.put("stats", stats);
 
-        // 3. Chuẩn hóa tham số bộ lọc
         String cleanSearch = (search != null) ? search.trim().toLowerCase() : "";
         String cleanStatus = (status != null) ? status.trim() : "";
 
@@ -99,7 +98,10 @@ public class AdminCustomerService {
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
             return false;
         }
-        int rankId = parseIntSafe(rankIdStr, 1);
+        int rankId = parseIntSafe(rankIdStr, 0);
+        if (rankId <= 0) {
+            return false;
+        }
         double totalSpent = parseDoubleSafe(spentStr, 0);
         return dao.addCustomer(email.trim(), password.trim(), fullName, phone, rankId, totalSpent);
     }
@@ -110,7 +112,10 @@ public class AdminCustomerService {
         if (accountId == -1 || email == null || email.isBlank()) {
             return false;
         }
-        int rankId = parseIntSafe(rankIdStr, 1);
+        int rankId = parseIntSafe(rankIdStr, 0);
+        if (rankId <= 0) {
+            return false;
+        }
         double totalSpent = parseDoubleSafe(spentStr, 0);
         boolean isLocked = "true".equalsIgnoreCase(isLockedStr);
         return dao.updateCustomer(accountId, email.trim(), fullName, phone, rankId, totalSpent, isLocked);
@@ -141,5 +146,19 @@ public class AdminCustomerService {
         data.put("customerName", info[0]);
         data.put("email",        info[1]);
         return data;
+    }
+
+
+    public List<DiscountCode> getActiveDiscountsForGift() {
+        return discountDAO.getActiveDiscountsForGift();
+    }
+
+    public String processGiftDiscount(String accountIdStr, String discountIdStr) {
+        int accountId = parseIntSafe(accountIdStr, -1);
+        int discountId = parseIntSafe(discountIdStr, -1);
+        if (accountId <= 0 || discountId <= 0) {
+            return "error";
+        }
+        return discountDAO.giftDiscountToCustomer(accountId, discountId);
     }
 }

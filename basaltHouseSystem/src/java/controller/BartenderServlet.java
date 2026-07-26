@@ -43,7 +43,7 @@ public class BartenderServlet extends HttpServlet {
         }
 
         try {
-            int orderId = Integer.parseInt(orderIdStr.replace("ORD00", "").trim());
+            int orderId = Integer.parseInt(orderIdStr.replaceAll("\\D+", ""));
             
             Integer cashierId = null;
             if (request.getSession(false) != null) {
@@ -90,6 +90,36 @@ public class BartenderServlet extends HttpServlet {
         throws ServletException, IOException {
             dao.OrderDAO oDao = new dao.OrderDAO();
             List<Order> allOrders = oDao.getBartenderOrders();
+
+            // Calculate active order counts per type (POS vs Online) in Backend
+            int countPos = 0;
+            int countOnline = 0;
+            for (Order o : allOrders) {
+                String type = o.getOrderType() != null ? o.getOrderType().toLowerCase() : "pos";
+                if ("online".equals(type)) {
+                    countOnline++;
+                } else {
+                    countPos++;
+                }
+            }
+            request.setAttribute("countPos", countPos);
+            request.setAttribute("countOnline", countOnline);
+
+            String orderType = request.getParameter("type");
+            if (orderType == null || orderType.trim().isEmpty()) {
+                orderType = "pos";
+            }
+            orderType = orderType.toLowerCase();
+            request.setAttribute("currentType", orderType);
+
+            List<Order> typeFiltered = new ArrayList<>();
+            for (Order o : allOrders) {
+                String type = o.getOrderType() != null ? o.getOrderType().toLowerCase() : "pos";
+                if (orderType.equals(type)) {
+                    typeFiltered.add(o);
+                }
+            }
+            allOrders = typeFiltered;
 
             String filter = request.getParameter("filter");
             if (filter != null && !filter.isEmpty() && !"all".equals(filter)) {
@@ -138,10 +168,24 @@ public class BartenderServlet extends HttpServlet {
 
     private void handleBartenderHistory(HttpServletRequest request, HttpServletResponse response) 
         throws ServletException, IOException {
+            String todayDateStr = java.time.LocalDate.now().toString();
+            String historyDate = request.getParameter("historyDate");
+            if (historyDate == null || historyDate.trim().isEmpty()) {
+                historyDate = todayDateStr;
+            }
+            request.setAttribute("selectedHistoryDate", historyDate);
+            request.setAttribute("todayDateStr", todayDateStr);
+
+            String orderType = request.getParameter("orderType");
+            if (orderType == null || orderType.trim().isEmpty()) {
+                orderType = "all";
+            }
+            request.setAttribute("selectedOrderType", orderType);
+
             dao.OrderDAO oDao = new dao.OrderDAO();
-            List<Order> allOrders = oDao.getCompletedOrders();
+            List<Order> allOrders = oDao.getCompletedOrdersByDate(historyDate, orderType);
             
-            paginateList(request, allOrders, 9, "page", "orderList", 
+            paginateList(request, allOrders, 6, "page", "orderList", 
                     "historyPage", "historyPages", "totalHistory");
 
             dao.ProductDAO pDao = new dao.ProductDAO();

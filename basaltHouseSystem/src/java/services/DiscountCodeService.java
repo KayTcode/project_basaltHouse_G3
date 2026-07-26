@@ -20,13 +20,13 @@ public class DiscountCodeService {
         try {
             List<DiscountCode> list = dao.getDiscountCode();
             if (list == null) {
-                s.put("error", "Danh sach DiscountCode loi");
+                s.put("error", "Danh sách mã giảm giá bị lỗi");
             } else {
                 s.put("success", list);
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            s.put("error", "Danh sach DiscountCode loi");
+            s.put("error", "Danh sách mã giảm giá bị lỗi");
         }
         return s;
     }
@@ -36,13 +36,13 @@ public class DiscountCodeService {
         try {
             List<CustomerDiscountCode> list = dao.getVoucherById(id);
             if (list == null) {
-                s.put("error", "Danh sach DiscountCode loi");
+                s.put("error", "Danh sách mã giảm giá bị lỗi");
             } else {
                 s.put("success", list);
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            s.put("error", "Danh sach DiscountCode loi");
+            s.put("error", "Danh sách mã giảm giá bị lỗi");
         }
         return s;
     }
@@ -71,6 +71,7 @@ public class DiscountCodeService {
 
             if (id != null) {
                 List<CustomerDiscountCode> list = dao.getVoucherById(id);
+                list.removeIf(item -> item.getStatus() != ACTIVE_CUSTOMER_VOUCHER_STATUS);
                 for (CustomerDiscountCode item : list) {
                     putVoucherStatus(voucherStatus, voucherStatusText, voucherStatusClass,
                             item.getCustomerDiscountId(), item.getEndDate(), now);
@@ -83,7 +84,7 @@ public class DiscountCodeService {
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            s.put("error", "Danh sach voucher loi");
+            s.put("error", "Danh sách voucher bị lỗi");
         }
 
         return s;

@@ -88,17 +88,6 @@
                     </article>
 
                     <article class="membership-kpi-card">
-                        <div class="kpi-icon kpi-icon-active">
-                            <i class="fa-solid fa-user-check"></i>
-                        </div>
-                        <div>
-                            <span class="kpi-label">Đang hoạt động</span>
-                            <strong class="kpi-value">${empty activeMembers ? 0 : activeMembers}</strong>
-                            <span class="kpi-note">Tài khoản đang mở</span>
-                        </div>
-                    </article>
-
-                    <article class="membership-kpi-card">
                         <div class="kpi-icon kpi-icon-spend">
                             <i class="fa-solid fa-chart-line"></i>
                         </div>
@@ -145,7 +134,14 @@
                                     <article class="rank-card rank-card-${status.index % 4}">
                                         <div class="rank-card__top">
                                             <span class="rank-card__kicker">Hạng ${rankPageStart + status.index}</span>
-                                            <span class="rank-status is-live">Đang dùng</span>
+                                            <c:choose>
+                                                <c:when test="${rank.isDeleted}">
+                                                    <span class="rank-status is-paused">Tạm ẩn</span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="rank-status is-live">Đang dùng</span>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                         <h3>${rank.rankName}</h3>
                                         <div class="rank-discount">${rank.discountValue}%</div>
@@ -177,7 +173,7 @@
                                 </c:forEach>
                             </c:when>
                             <c:otherwise>
-                                <p class="rank-empty">Chưa có hạng thành viên đang hoạt động.</p>
+                                <p class="rank-empty">Chưa có hạng thành viên.</p>
                             </c:otherwise>
                         </c:choose>
                     </div>
@@ -245,15 +241,6 @@
                             </select>
                         </label>
 
-                        <label class="filter-select">
-                            <span>Trạng thái</span>
-                            <select name="status">
-                                <option value="">Tất cả</option>
-                                <option value="active" ${selectedStatus == 'active' ? 'selected' : ''}>Hoạt động</option>
-                                <option value="locked" ${selectedStatus == 'locked' ? 'selected' : ''}>Tạm khóa</option>
-                            </select>
-                        </label>
-
                         <button type="submit" name="submitAction" value="filterMemberships" class="btn-filter">
                             <i class="fa-solid fa-filter"></i>
                             Lọc
@@ -269,8 +256,6 @@
                                     <th>Hạng</th>
                                     <th>Chi tiêu tích lũy</th>
                                     <th>Ưu đãi</th>
-                                    <th>Trạng thái</th>
-                                    <th class="table-actions-col">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -300,32 +285,12 @@
                                                     <fmt:formatNumber value="${empty member.totalSpent ? 0 : member.totalSpent}" type="currency" currencySymbol="đ" maxFractionDigits="0" />
                                                 </td>
                                                 <td><strong>${empty member.discountValue ? 0 : member.discountValue}%</strong></td>
-                                                <td>
-                                                    <span class="member-status ${member.status == 'locked' ? 'status-locked' : (member.status == 'quiet' ? 'status-quiet' : 'status-active')}">
-                                                        ${member.status == 'locked' ? 'Tạm khóa' : (member.status == 'quiet' ? 'Ít tương tác' : 'Hoạt động')}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div class="table-actions">
-                                                        <form action="${pageContext.request.contextPath}/admin/memberships" method="POST" onsubmit="return confirm('${member.status == 'locked' ? 'Mở khóa membership của khách hàng này?' : 'Tạm khóa membership của khách hàng này?'}');">
-                                                            <input type="hidden" name="action" value="toggleMemberStatus">
-                                                            <input type="hidden" name="customerId" value="${member.customerId}">
-                                                            <input type="hidden" name="returnPage" value="${currentPage}">
-                                                            <input type="hidden" name="returnSearch" value="${fn:escapeXml(searchValue)}">
-                                                            <input type="hidden" name="returnRankId" value="${selectedRankId == 0 ? '' : selectedRankId}">
-                                                            <input type="hidden" name="returnStatus" value="${selectedStatus}">
-                                                            <button type="submit" name="submitAction" value="toggleMemberStatus" class="btn-icon-action ${member.status == 'locked' ? '' : 'danger'}" title="${member.status == 'locked' ? 'Mở khóa membership' : 'Tạm khóa membership'}">
-                                                                <i class="fa-solid ${member.status == 'locked' ? 'fa-lock-open' : 'fa-lock'}"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
                                             </tr>
                                         </c:forEach>
                                     </c:when>
                                     <c:otherwise>
                                         <tr>
-                                            <td colspan="7">
+                                            <td colspan="5">
                                                 <div class="member-cell">
                                                     <div class="member-avatar">0</div>
                                                     <div>
@@ -347,7 +312,6 @@
                                 <form action="${pageContext.request.contextPath}/admin/memberships" method="GET">
                                     <input type="hidden" name="search" value="${fn:escapeXml(searchValue)}">
                                     <input type="hidden" name="rankId" value="${selectedRankId == 0 ? '' : selectedRankId}">
-                                    <input type="hidden" name="status" value="${selectedStatus}">
                                     <button type="submit" name="page" value="${currentPage - 1}" class="pagination-button" ${currentPage == 1 ? 'disabled' : ''} title="Trang trước">
                                         <i class="fa-solid fa-chevron-left"></i>
                                     </button>
@@ -357,7 +321,6 @@
                                     <form action="${pageContext.request.contextPath}/admin/memberships" method="GET">
                                         <input type="hidden" name="search" value="${fn:escapeXml(searchValue)}">
                                         <input type="hidden" name="rankId" value="${selectedRankId == 0 ? '' : selectedRankId}">
-                                        <input type="hidden" name="status" value="${selectedStatus}">
                                         <button type="submit" name="page" value="${pageNumber}" class="pagination-button ${pageNumber == currentPage ? 'is-active' : ''}" ${pageNumber == currentPage ? 'aria-current="page"' : ''}>${pageNumber}</button>
                                     </form>
                                 </c:forEach>
@@ -365,7 +328,6 @@
                                 <form action="${pageContext.request.contextPath}/admin/memberships" method="GET">
                                     <input type="hidden" name="search" value="${fn:escapeXml(searchValue)}">
                                     <input type="hidden" name="rankId" value="${selectedRankId == 0 ? '' : selectedRankId}">
-                                    <input type="hidden" name="status" value="${selectedStatus}">
                                     <button type="submit" name="page" value="${currentPage + 1}" class="pagination-button" ${currentPage == totalPages ? 'disabled' : ''} title="Trang sau">
                                         <i class="fa-solid fa-chevron-right"></i>
                                     </button>

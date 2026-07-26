@@ -161,7 +161,6 @@
                             <div class="fin-legend-wrap">
                                 <span class="fin-legend-dot fin-dot-revenue"></span><span class="fin-legend-text">Doanh thu</span>
                                 <span class="fin-legend-dot fin-dot-cost"></span><span class="fin-legend-text">Chi phí</span>
-                                <span class="fin-legend-dot fin-dot-profit"></span><span class="fin-legend-text">Lợi nhuận</span>
                             </div>
                         </div>
                         <div class="fin-chart-canvas-wrap">
@@ -317,29 +316,37 @@
 
         <%-- ══ DỮ LIỆU CHO CHART.JS (inject từ JSTL) ══ --%>
         <script>
-            /* ══════════════════════════════════════════
-               CHART 1: Doanh Thu vs Chi Phí vs Lợi Nhuận (tháng hiện tại)
-               ══════════════════════════════════════════ */
+
             (function () {
                 const labels  = [];
                 const revenue = [];
                 const cost    = [];
-                const profit  = [];
 
                 <c:forEach var="w" items="${weeklyBreakdown}">
                     labels.push('${w.label}');
                     revenue.push(${w.revenue});
                     cost.push(${w.cost});
-                    profit.push(${w.profit});
                 </c:forEach>
 
-                // Nếu không có dữ liệu tuần thì hiển thị placeholder
                 if (labels.length === 0) {
                     labels.push('Chưa có dữ liệu');
-                    revenue.push(0); cost.push(0); profit.push(0);
+                    revenue.push(0); cost.push(0);
                 }
 
-                const fmt = v => new Intl.NumberFormat('vi-VN').format(Math.round(v / 1000000) * 1000000 / 1000000) + 'M đ';
+                const fmt = function (v) {
+                    if (v === 0) return '0đ';
+                    const abs = Math.abs(v);
+                    if (abs >= 1000000) {
+                        let val = (v / 1000000).toFixed(1);
+                        if (val.endsWith('.0')) val = Math.round(v / 1000000);
+                        return val.toString().replace('.', ',') + 'M đ';
+                    }
+                    if (abs >= 1000) {
+                        let val = Math.round(v / 1000);
+                        return new Intl.NumberFormat('vi-VN').format(val) + 'k đ';
+                    }
+                    return new Intl.NumberFormat('vi-VN').format(v) + 'đ';
+                };
 
                 const ctx = document.getElementById('chartRevenueCost').getContext('2d');
                 new Chart(ctx, {
@@ -351,24 +358,13 @@
                                 label: 'Doanh thu',
                                 data: revenue,
                                 backgroundColor: 'rgba(0, 110, 47, 0.85)',
-                                borderRadius: 6, borderSkipped: false, order: 2
+                                borderRadius: 6, borderSkipped: false
                             },
                             {
                                 label: 'Chi phí',
                                 data: cost,
                                 backgroundColor: 'rgba(220, 53, 69, 0.75)',
-                                borderRadius: 6, borderSkipped: false, order: 2
-                            },
-                            {
-                                label: 'Lợi nhuận',
-                                data: profit,
-                                type: 'line',
-                                borderColor: '#e67e00',
-                                backgroundColor: 'rgba(230, 126, 0, 0.1)',
-                                borderWidth: 2.5,
-                                pointBackgroundColor: '#e67e00',
-                                pointRadius: 5, pointHoverRadius: 7,
-                                tension: 0.4, fill: true, order: 1
+                                borderRadius: 6, borderSkipped: false
                             }
                         ]
                     },
@@ -391,9 +387,9 @@
                 });
             })();
 
-            /* ══════════════════════════════════════════
+            /* 
                CHART 2: Donut — Cơ cấu doanh thu
-               ══════════════════════════════════════════ */
+              */
             (function () {
                 const labels = [];
                 const data   = [];

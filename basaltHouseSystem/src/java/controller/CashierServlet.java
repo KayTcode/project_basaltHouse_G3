@@ -11,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -19,26 +20,31 @@ import java.util.HashMap;
 import model.Product;
 import model.Category;
 import model.Order;
+import model.ProcessOrderResult;
 import model.Shipper;
+import services.AdminAccountService;
 import services.OrderService;
+import services.ShipperService;
 import services.StockService;
-
+import utils.PasswordUtils;
 
 public class CashierServlet extends HttpServlet {
-    
-   @Override
-   protected void doGet(HttpServletRequest request, HttpServletResponse response)
+
+    private final ShipperService shipperService = new ShipperService();
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getServletPath();
         switch (action) {
             case "/cashier/pos":
                 handlePosPage(request, response);
                 break;
-                
+
             case "/cashier/oderview":
                 handlePage(request, response);
                 break;
-                
+
             case "/cashier/dashboard":
                 dao.OrderDAO orderDAO = new dao.OrderDAO();
                 Map<String, Object> stats = orderDAO.getCashierDashboard();
@@ -49,9 +55,10 @@ public class CashierServlet extends HttpServlet {
             case "/cashier/shippers":
                 List<Shipper> activeShippers = new ShipperDAO().getActiveShippers();
                 request.setAttribute("activeShippers", activeShippers);
-                // truyền orderId nếu có (khi từ trang tạo đơn sang)
                 String orderId = request.getParameter("orderId");
-                if (orderId != null) request.setAttribute("orderId", orderId);
+                if (orderId != null) {
+                    request.setAttribute("orderId", orderId);
+                }
                 request.getRequestDispatcher("/views/Cashier/AddShipper.jsp").forward(request, response);
                 break;
 
@@ -60,52 +67,95 @@ public class CashierServlet extends HttpServlet {
                 break;
         }
     }
-   
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // ── Gán shipper cho đơn hàng ──
+         String actionParam = request.getParameter("action");
+        if ("addMember".equals(actionParam)) {
+            handleAddMemberAjax(request, response);
+            return;
+        }
+
+        
         String action = request.getServletPath();
         if ("/cashier/shippers".equals(action)) {
+<<<<<<< 181-fix-order-for-shipper
+            String oId = request.getParameter("orderId");
+            String sId = request.getParameter("shipperId");
+
+            var session = request.getSession();
+
+            if (oId == null || oId.isBlank() || sId == null || sId.isBlank()) {
+                session.setAttribute("flashSuccess", false);
+                session.setAttribute("flashMessage", "Thiếu orderId hoặc shipperId khi gán đơn.");
+                response.sendRedirect(request.getContextPath() + "/cashier/oderview");
+                return;
+            }
+            try {
+                int orderId = Integer.parseInt(oId);
+                int shipperId = Integer.parseInt(sId);
+                ProcessOrderResult result = shipperService.assignShipperToOrder(orderId, shipperId);
+                session.setAttribute("flashSuccess", result.isSuccess());
+                session.setAttribute("flashMessage", result.isSuccess() ? "Đã giao đơn #" + orderId + "cho shipper.Chờ shipper xác nhận."
+                        : String.join(" ", result.getErrors()));
+            } catch (NumberFormatException e) {
+                session.setAttribute("flashSuccess", false);
+                session.setAttribute("flashMessage", "orderId/shipperId không hợp lệ");
+=======
             String oId  = request.getParameter("orderId");
             String sId  = request.getParameter("shipperId");
             if (oId != null && sId != null) {
                 try {
-                    new ShipperDAO().assignShipper(Integer.parseInt(oId), Integer.parseInt(sId));
+                    Integer cashierId = null;
+                    HttpSession httpSession = request.getSession(false);
+                    if (httpSession != null) {
+                        Object attr = httpSession.getAttribute("cashierId");
+                        if (attr instanceof Integer) cashierId = (Integer) attr;
+                    }
+                    new ShipperDAO().assignShipper(Integer.parseInt(oId), Integer.parseInt(sId), cashierId);
                 } catch (NumberFormatException ignored) {}
+>>>>>>> Develop
             }
             response.sendRedirect(request.getContextPath() + "/cashier/oderview");
             return;
         }
-        
+
         String cartData = request.getParameter("cartData");
         String totalAmountStr = request.getParameter("totalAmount");
         String paymentMethod = request.getParameter("paymentMethod");
         String tableName = request.getParameter("tableName");
         String note = request.getParameter("note");
-        
+
         String customerIdStr = request.getParameter("customerId");
         String discountCode = request.getParameter("discountCode");
         String discountAmountStr = request.getParameter("discountAmount");
         String finalAmountStr = request.getParameter("finalAmount");
+        String isEarnPointsStr = request.getParameter("isEarnPoints");
         String tableIdStr = request.getParameter("tableId");
+        String tableSessionIdStr = request.getParameter("tableSessionId");
 
         if (cartData == null || cartData.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write("Cart is empty");
             return;
         }
-       Integer cashierId = null;
+
+        
+        Integer cashierId = null;
         var httpSession = request.getSession(false);
         if (httpSession != null) {
             Object attr = httpSession.getAttribute("cashierId");
-            if (attr instanceof Integer) cashierId = (Integer) attr;
+            if (attr instanceof Integer) {
+                cashierId = (Integer) attr;
+            }
         }
+
         try {
             OrderService orderService = new OrderService();
-             int orderId = orderService.createOfflineOrder(cartData, totalAmountStr, discountAmountStr, finalAmountStr,
-              paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr, cashierId);
+            int orderId = orderService.createOfflineOrder(cartData, totalAmountStr, discountAmountStr, finalAmountStr,
+                                                          paymentMethod, tableName, note, customerIdStr, discountCode, tableIdStr, cashierId, isEarnPointsStr, tableSessionIdStr);
                                                           
             if (orderId != -1) {
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -119,98 +169,135 @@ public class CashierServlet extends HttpServlet {
             response.getWriter().write("Failed to create order: " + e.getMessage());
         }
     }
+
     private void handlePage(HttpServletRequest request, HttpServletResponse response)
-          throws ServletException, IOException{
+            throws ServletException, IOException {
         int page = 1;
-                String pageStr = request.getParameter("page");
-                if (pageStr != null && !pageStr.isEmpty()) {
-                    try {
-                        page = Integer.parseInt(pageStr);
-                    } catch (NumberFormatException e) {
-                        page = 1;
-                    }
-                }
-                int limit = 10;
-                
-                String typeParam = request.getParameter("type");
-                if (typeParam == null || typeParam.isEmpty()) {
-                    typeParam = "all";
-                }
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+        int limit = 10;
 
-                OrderDAO oDao = new OrderDAO();
-                List<Order> fullList = oDao.getAllOrdersWithCustomerName();
-                
-                if (!"all".equalsIgnoreCase(typeParam)) {
-                    List<model.Order> filteredList = new ArrayList<>();
-                    for (model.Order o : fullList) {
-                        String oType = o.getOrderType() != null ? o.getOrderType().toLowerCase() : "pos";
-                        if (typeParam.equalsIgnoreCase(oType)) {
-                            filteredList.add(o);
-                        }
-                    }
-                    fullList = filteredList;
+        String typeParam = request.getParameter("type");
+        if (typeParam == null || typeParam.isEmpty()) {
+            typeParam = "all";
+        }
+
+        OrderDAO oDao = new OrderDAO();
+        List<Order> fullList = oDao.getAllOrdersWithCustomerName();
+
+        if (!"all".equalsIgnoreCase(typeParam)) {
+            List<model.Order> filteredList = new ArrayList<>();
+            for (model.Order o : fullList) {
+                String oType = o.getOrderType() != null ? o.getOrderType().toLowerCase() : "pos";
+                if (typeParam.equalsIgnoreCase(oType)) {
+                    filteredList.add(o);
                 }
-                
-                int totalOrders = fullList.size();
-                int totalPages = (int) Math.ceil((double) totalOrders / limit);
-                
-                if (page > totalPages && totalPages > 0) page = totalPages;
-                if (page < 1) page = 1;
-                
-                int start = (page - 1) * limit;
-                int end = Math.min(start + limit, totalOrders);
-                
-                List<model.Order> orderList = fullList.subList(start, end);
-                
-                request.setAttribute("orderList", orderList);
-                request.setAttribute("currentPage", page);
-                request.setAttribute("totalPages", totalPages);
-                request.setAttribute("currentType", typeParam);
+            }
+            fullList = filteredList;
+        }
 
-                ProductDAO pDao = new ProductDAO();
-                java.util.HashMap<Integer, model.Product> products = pDao.getProduct();
-                request.setAttribute("products", products);
-                
-                SizeDAO sDao = new SizeDAO();
-                java.util.HashMap<Integer, String> sizes = sDao.getSize();
-                request.setAttribute("sizes", sizes);
+        int totalOrders = fullList.size();
+        int totalPages = (int) Math.ceil((double) totalOrders / limit);
 
-                request.getRequestDispatcher("/views/Cashier/OrderViews.jsp").forward(request, response);
+        if (page > totalPages && totalPages > 0) {
+            page = totalPages;
+        }
+        if (page < 1) {
+            page = 1;
+        }
+
+        int start = (page - 1) * limit;
+        int end = Math.min(start + limit, totalOrders);
+
+        List<model.Order> orderList = fullList.subList(start, end);
+
+        request.setAttribute("orderList", orderList);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentType", typeParam);
+
+        ProductDAO pDao = new ProductDAO();
+        java.util.HashMap<Integer, model.Product> products = pDao.getProduct();
+        request.setAttribute("products", products);
+
+        SizeDAO sDao = new SizeDAO();
+        java.util.HashMap<Integer, String> sizes = sDao.getSize();
+        request.setAttribute("sizes", sizes);
+
+        request.getRequestDispatcher("/views/Cashier/OrderViews.jsp").forward(request, response);
     }
+    
+    private void handleAddMemberAjax(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        try {
+            String fullName = request.getParameter("fullName");
+            String email = request.getParameter("email");
+            String phone = request.getParameter("phone");
+            String password = request.getParameter("password");
+            
+            
+            String hashedPass = PasswordUtils.hashSHA256(password);
+            AdminAccountService accService = new AdminAccountService();
+            boolean isSuccess = accService.processAddAccount(email, hashedPass, "2", fullName, phone, "true");
+            
+            if (isSuccess) {
+                response.getWriter().write("{\"success\":true}");
+            } else {
+                response.getWriter().write("{\"success\":false,\"message\":\"Thêm tài khoản thất bại! Số điện thoại hoặc email có thể đã tồn tại.\"}");
+            }
+        } catch (Exception e) {
+            response.getWriter().write("{\"success\":false,\"message\":\"Lỗi hệ thống: " + e.getMessage() + "\"}");
+        }
+    }
+
     
     private void handlePosPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         ProductDAO pDao = new ProductDAO();
         List<Product> allProducts = pDao.getAllProductsForPOS();
- 
+
         CategoryDAO cDao = new CategoryDAO();
-        List<Category> categoryList = cDao.getAllCategories();
+        List<Category> categoryList = cDao.getAllCategoriesForPOS();
 
         StockService ssInit = new StockService();
         HashMap<Product, HashMap<String, Integer>> stockMapInit = ssInit.calculateProduct();
         HashMap<Integer, Integer> maxStockMap = new HashMap<>();
         for (Map.Entry<Product, HashMap<String, Integer>> entry : stockMapInit.entrySet()) {
-            if (entry.getKey() == null) continue;
+            if (entry.getKey() == null) {
+                continue;
+            }
             int max = 0;
             for (Integer val : entry.getValue().values()) {
-                if (val > max) max = val;
+                if (val > max) {
+                    max = val;
+                }
             }
             maxStockMap.put(entry.getKey().getProductId(), max);
         }
 
-        
-        int PAGE_SIZE = 6; 
+        int PAGE_SIZE = 6;
 
         String catParam = request.getParameter("cat");
-        if (catParam == null || catParam.isEmpty()) catParam = "all";
+        if (catParam == null || catParam.isEmpty()) {
+            catParam = "all";
+        }
 
         String pageStr = request.getParameter("productPage");
         int productPage = 1;
         if (pageStr != null && !pageStr.isEmpty()) {
-            try { productPage = Integer.parseInt(pageStr); } catch (NumberFormatException ignored) {}
+            try {
+                productPage = Integer.parseInt(pageStr);
+            } catch (NumberFormatException ignored) {
+            }
         }
 
-        
         List<Product> filtered;
         if ("all".equalsIgnoreCase(catParam)) {
             filtered = allProducts;
@@ -219,31 +306,45 @@ public class CashierServlet extends HttpServlet {
             try {
                 int catId = Integer.parseInt(catParam);
                 for (Product p : allProducts) {
-                    if (p.getCategoryId() == catId) filtered.add(p);
+                    if (p.getCategoryId() == catId) {
+                        filtered.add(p);
+                    }
                 }
             } catch (NumberFormatException e) {
                 filtered = allProducts;
             }
         }
 
-        
         int totalProducts = filtered.size();
         int totalProductPages = (int) Math.ceil((double) totalProducts / PAGE_SIZE);
-        if (totalProductPages < 1) totalProductPages = 1;
-        if (productPage < 1) productPage = 1;
-        if (productPage > totalProductPages) productPage = totalProductPages;
+        if (totalProductPages < 1) {
+            totalProductPages = 1;
+        }
+        if (productPage < 1) {
+            productPage = 1;
+        }
+        if (productPage > totalProductPages) {
+            productPage = totalProductPages;
+        }
 
         int start = (productPage - 1) * PAGE_SIZE;
-        int end   = Math.min(start + PAGE_SIZE, totalProducts);
+        int end = Math.min(start + PAGE_SIZE, totalProducts);
         List<Product> pagedProducts = filtered.subList(start, end);
 
        
+        try {
+            dao.IngredientDAO iDao = new dao.IngredientDAO();
+            request.setAttribute("ingredientsList", iDao.getAllIngredients().values());
+        } catch (Exception e) {
+            System.err.println("Error setting ingredientsList: " + e.getMessage());
+        }
+
         request.setAttribute("pagedProducts",   pagedProducts);
         request.setAttribute("categoryList",    categoryList);
         request.setAttribute("maxStockMap",     maxStockMap);
         request.setAttribute("productPage",     productPage);
         request.setAttribute("totalProductPages", totalProductPages);
-        request.setAttribute("currentCat",      catParam);
+        request.setAttribute("currentCat", catParam);
 
         request.getRequestDispatcher("/views/Cashier/POSOrders.jsp").forward(request, response);
     }

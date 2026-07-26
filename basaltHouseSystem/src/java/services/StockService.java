@@ -243,12 +243,8 @@ public class StockService {
     private List<ProductSaleAuditDTO> loadSoldRows(
             SalesAuditContext context, LocalDate selectedDate) {
         OrderService orderService = new OrderService();
-        HashMap<String, Object> soldResult;
-        if (selectedDate == null) {
-            soldResult = orderService.getTodaySoldProductSizeRows();
-        } else {
-            soldResult = orderService.getSoldProductSizeRowsByDate(selectedDate);
-        }
+        HashMap<String, Object> soldResult
+                = orderService.getSoldProductSizeRowsByDate(context.auditDate);
         if (soldResult.containsKey("error")) {
             context.dataError = stringValue(soldResult.get("error"));
             return new ArrayList<>();
@@ -265,7 +261,7 @@ public class StockService {
             return rows;
         }
 
-        context.dataError = "Không đọc được dữ liệu bán hàng hôm nay.";
+        context.dataError = "Không đọc được dữ liệu bán hàng theo ngày đã chọn.";
         return new ArrayList<>();
     }
 
@@ -462,7 +458,11 @@ public class StockService {
         boolean hasStockLog = snapshot != null && snapshot.isHasStockLog();
 
         if (!hasStockLog) {
-            return reconcileStock(null, ingredient.getStockQuantity(), imported, expectedUsed);
+            BigDecimal closingStock = null;
+            if (LocalDate.now().equals(context.auditDate)) {
+                closingStock = ingredient.getStockQuantity();
+            }
+            return reconcileStock(null, closingStock, imported, expectedUsed);
         }
         return reconcileStock(
                 snapshot.getOpeningStock(),
@@ -580,8 +580,7 @@ public class StockService {
     }
 
     private Map<Integer, BigDecimal> getImportedQuantityByIngredient(LocalDate auditDate) {
-        LocalDate targetDate = auditDate == null ? LocalDate.now() : auditDate;
-        return importVoiceDAO.getReceivedQuantityByIngredient(targetDate);
+        return importVoiceDAO.getReceivedQuantityByIngredient(auditDate);
     }
 
     

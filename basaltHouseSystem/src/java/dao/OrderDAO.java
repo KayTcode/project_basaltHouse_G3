@@ -1196,35 +1196,39 @@ public class OrderDAO extends DBContext {
     public List<ProductSaleAuditDTO> getSoldProductSizeRowsByDate(LocalDate auditDate) {
         List<ProductSaleAuditDTO> rows = new ArrayList<>();
         String sql = """
+                     DECLARE @AuditDate DATE = ?;
+                     DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
+                     DECLARE @End DATETIME2 = DATEADD(DAY, 1, @Start);
+
                      SELECT od.ProductId,
                             od.SizeId,
                             p.ProductName,
                             s.SizeName,
                             SUM(od.Quantity) AS SoldQuantity,
                             MAX(od.UnitPrice) AS UnitPrice,
-                            SUM(od.Quantity * od.UnitPrice) AS Revenue
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
+                            @AuditDate AS AuditDate
                      FROM OrderDetails od
                      JOIN Orders o ON o.OrderId = od.OrderId
+                     LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
                      OUTER APPLY (
-                         SELECT TOP 1 op.PaidAt
-                         FROM OnlinePayments op
-                         WHERE op.OrderId = o.OrderId
-                           AND op.IsDeleted = 0
-                         ORDER BY op.PaidAt DESC, op.CreatedAt DESC
-                     ) payment
+                         SELECT TOP 1 l.CreatedAt AS AppliedAt
+                         FROM IngredientStockLogs l
+                         WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
+                         ORDER BY l.CreatedAt ASC, l.LogId ASC
+                     ) stockLog
                      JOIN Products p ON p.ProductId = od.ProductId
                      JOIN Sizes s ON s.SizeId = od.SizeId
                      WHERE od.IsDeleted = 0
                        AND o.IsDeleted = 0
                        AND o.PaymentStatus = 'Paid'
-                       AND COALESCE(payment.PaidAt, o.CreatedAt) >= ?
-                       AND COALESCE(payment.PaidAt, o.CreatedAt) < ?
+                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= @Start
+                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < @End
                      GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
                      ORDER BY p.ProductName ASC, s.SizeName ASC
                      """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setTimestamp(1, Timestamp.valueOf(auditDate.atStartOfDay()));
-            ps.setTimestamp(2, Timestamp.valueOf(auditDate.plusDays(1).atStartOfDay()));
+            ps.setDate(1, java.sql.Date.valueOf(auditDate));
             try (ResultSet rs2 = ps.executeQuery()) {
                 while (rs2.next()) {
                     rows.add(mapProductSaleAudit(rs2));

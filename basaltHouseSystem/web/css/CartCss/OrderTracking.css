@@ -1078,3 +1078,20 @@ h1, h2, h3, h4 { font-family: var(--font-montserrat); }
 }
 .ot-confirm-btn .material-symbols-outlined { font-size: 14px; }
 
+/* ── No-Cancel Note (bartender đã nhận) ──────────────────────── */
+.ot-no-cancel-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 50px;
+    border: 1.5px solid #93c5fd;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-inter);
+    white-space: nowrap;
+}
+.ot-no-cancel-note .material-symbols-outlined { font-size: 14px; }
+

@@ -205,13 +205,21 @@ public class RegisterDAO extends DBContext {
                                 ORDER BY MinTotalSpent, RankId
                                 """;
         String sqlMembership = """
-                                INSERT INTO [dbo].[CustomerMemberships]
-                                           ([CustomerId]
-                                           ,[RankId]
-                                           ,[TotalSpent])
-                                     VALUES
-                                           (?,?,0)
-                                """;
+                               INSERT INTO [dbo].[CustomerMemberships]
+                                          ([CustomerId]
+                                          ,[RankId]
+                                          ,[TotalSpent])
+                                    VALUES
+                                          (?,1,0)
+                               """;
+        String sqlVoucher = """
+                            INSERT INTO [dbo].[CustomerDiscountCodes]
+                                       ([AccountId]
+                                       ,[DiscountId]
+                                       ,[IsUsed]
+                                 VALUES
+                                       (?,1,0)
+                            """;
         try {
             connection.setAutoCommit(false);
             int roleId = -1;
@@ -267,6 +275,10 @@ public class RegisterDAO extends DBContext {
                 throw new SQLException("Không thể tạo membership cho khách hàng");
             }
 
+            PreparedStatement psVoucher = connection.prepareStatement(sqlVoucher);
+            psVoucher.setObject(1, newAccountId);
+            psVoucher.executeUpdate();
+            
             markPendingAsUsed(pendingId, connection);
             connection.commit();
         } catch (SQLException e) {

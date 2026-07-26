@@ -28,8 +28,6 @@
         <link href="${pageContext.request.contextPath}/css/CashierCss/OrderViews.css" rel="stylesheet">
     </head>
     <body>
-
-
         <aside class="sidebar">
 
             <a href="${pageContext.request.contextPath}/home" class="sidebar-logo" style="text-decoration:none;">

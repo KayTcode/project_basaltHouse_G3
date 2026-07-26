@@ -80,7 +80,6 @@ public class ShipperDashboardServlet extends HttpServlet {
         int accountId = currentUser.getAccountId();
         Shipper currentShipper = shipperService.getShipperByAccountId(accountId);
         if (currentShipper == null) {
-            // accountId không khớp bất kỳ Shipper nào trong DB
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -90,9 +89,11 @@ public class ShipperDashboardServlet extends HttpServlet {
         Order currentOrder = shipperService.getCurrentShippingOrder(shipperId);
 
         OrderAddress deliveryAddress = null;
+        if (currentOrder != null && currentOrder.getOrderAddressId() > 0) {
+            deliveryAddress = shipperService.getOrderAddress(currentOrder.getOrderAddressId());
+        }
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
-// Tạo Map lưu thời gian đã format theo orderId
         Map<Integer, String> orderTimeMap = new HashMap<>();
         for (Order o : pendingOrders) {
             if (o.getCreatedAt() != null) {
@@ -152,5 +153,4 @@ public class ShipperDashboardServlet extends HttpServlet {
         }
         return null;
     }
-
 }

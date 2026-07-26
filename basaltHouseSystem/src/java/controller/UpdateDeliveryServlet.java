@@ -31,13 +31,13 @@ import utils.ConfigLoader;
  * @author KayT
  */
 @MultipartConfig(
-        fileSizeThreshold = 1024 * 1024, // 1 MB
-        maxFileSize = 5 * 1024 * 1024, // 5 MB
-        maxRequestSize = 10 * 1024 * 1024 // 10 MB
+        maxFileSize = 15 * 1024 * 1024, // 5MB / ảnh
+        maxRequestSize = 20 * 1024 * 1024
 )
 public class UpdateDeliveryServlet extends HttpServlet {
 
     private final ShipperService shipperService = new ShipperService();
+
     private static final String CLOUD_NAME = ConfigLoader.get("cloudinary.cloudName");
     private static final String API_KEY = ConfigLoader.get("cloudinary.apiKey");
     private static final String API_SECRET = ConfigLoader.get("cloudinary.apiSecret");
@@ -96,6 +96,7 @@ public class UpdateDeliveryServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+        request.setCharacterEncoding("UTF-8");
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
@@ -103,73 +104,64 @@ public class UpdateDeliveryServlet extends HttpServlet {
             return;
         }
         UserLoginDTO currentUser = (UserLoginDTO) session.getAttribute("currentUser");
-        Shipper shipper = shipperService.getShipperByAccountId(currentUser.getAccountId());
-        if (shipper == null) {
+        Shipper currentShipper = shipperService.getShipperByAccountId(currentUser.getAccountId());
+        if (currentShipper == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
-        // ── Đọc tham số form ────────────────────────────────────
-        int orderId = parseIntParam(request.getParameter("orderId"), 0);
-        boolean isSuccess = "true".equalsIgnoreCase(request.getParameter("isSuccess"));
-        String note = trimOrEmpty(request.getParameter("note"));
-        String failReason = trimOrEmpty(request.getParameter("failReason"));
-
-        if (orderId <= 0) {
+        int orderId = parseIntParam(request.getParameter("orderId"), -1);
+        if (orderId == -1) {
             flashAndRedirect(request, response, false, "Mã đơn hàng không hợp lệ.");
             return;
         }
 
-        // ── Upload ảnh lên Cloudinary (chỉ khi thành công) ─────
+        boolean isSuccess = "true".equalsIgnoreCase(trimOrEmpty(request.getParameter("isSuccess")));
+        String note = trimOrEmpty(request.getParameter("note"));
+        String failReason = trimOrEmpty(request.getParameter("failReason"));
+
+        if (!isSuccess && failReason.isEmpty()) {
+            flashAndRedirect(request, response, false, "Vui lòng nhập lí do giao hàng thất bại!");
+            return;
+        }
+
         String proofImageUrl = null;
         if (isSuccess) {
-            Part imagePart = request.getPart("proofImage");
-            if (imagePart == null || imagePart.getSize() == 0) {
-                flashAndRedirect(request, response, false, "Vui lòng chụp/chọn ảnh xác nhận giao hàng.");
-                return;
-            }
             try {
-                proofImageUrl = uploadToCloudinary(imagePart);
+                Part imagePart = request.getPart("proofImage");
+                if (imagePart != null && imagePart.getSize() > 0) {
+                    proofImageUrl = uploadToCloudinary(imagePart);
+                }
             } catch (Exception e) {
-                System.err.println("[UpdateDelivery] Cloudinary upload error: " + e.getMessage());
                 e.printStackTrace();
-                String debugMsg = "Lỗi: " + e.getClass().getSimpleName() + " - " + e.getMessage();
-                flashAndRedirect(request, response, false, debugMsg);
+                flashAndRedirect(request, response, false,
+                        "Không thể tải ảnh xác nhận lên Cloudinary: " + e.getMessage());
                 return;
             }
         }
 
-        // ── Gọi service cập nhật DB ─────────────────────────────
         ProcessOrderResult result = shipperService.updateDeliveryStatus(
-                orderId, shipper.getShipperId(), isSuccess, note, proofImageUrl, failReason);
+                orderId, currentShipper.getShipperId(), isSuccess, note, proofImageUrl, failReason);
 
-        if (result.isSuccess()) {
-            String msg = isSuccess
-                    ? "Giao hàng thành công! Đơn #" + orderId + " đã hoàn tất."
-                    : "Đã ghi nhận giao hàng thất bại cho đơn #" + orderId + ".";
-            flashAndRedirect(request, response, true, msg);
-        } else {
-            String err = result.getErrors() != null && !result.getErrors().isEmpty()
-                    ? result.getErrors().get(0) : "Cập nhật thất bại. Vui lòng thử lại.";
-            flashAndRedirect(request, response, false, err);
-        }
+        flashAndRedirect(request, response, result.isSuccess(), result.isSuccess()
+                ? (isSuccess ? "Đã xác nhận giao thành công đơn #" + orderId + "."
+                        : "Đã ghi nhận giao thất bại đơn #" + orderId + ".")
+                : buildErrorMessage(result));
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
         return "Short description";
-    }// </editor-fold>
-
-    private void setFlashMessage(HttpSession session, boolean isSuccess, String message) {
-        session.setAttribute("flashSuccess", isSuccess);
-        session.setAttribute("flashMessage", message);
     }
 
+    private String buildErrorMessage(ProcessOrderResult result) {
+        if (result.getErrors() == null || result.getErrors().isEmpty()) {
+            return "Không thể cập nhật trạng thái giao hàng. Vui lòng thử lại.";
+        }
+        return String.join(" ", result.getErrors());
+    }
+
+    // ── Cloudinary upload ──────────────────────────────────────
     private String uploadToCloudinary(Part imagePart) throws Exception {
         long timestamp = System.currentTimeMillis() / 1000;
         String toSign = "folder=" + UPLOAD_FOLDER + "&timestamp=" + timestamp + API_SECRET;

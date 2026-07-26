@@ -58,7 +58,7 @@
                                 <span class="material-symbols-outlined">info</span>
                                 <div>
                                     <div class="co-zone-title">Khu vực giao hàng</div>
-                                    <div class="co-zone-desc">Chúng tôi chỉ giao hàng trong khu vực Hòa Lạc — Vui lòng nhập địa chỉ trong phạm vi phục vụ của chúng tôi.</div>
+                                    <div class="co-zone-desc">Chúng tôi chỉ giao hàng trong khu vực — Vui lòng nhập địa chỉ trong phạm vi phục vụ của chúng tôi.</div>
                                 </div>
                             </div>
 

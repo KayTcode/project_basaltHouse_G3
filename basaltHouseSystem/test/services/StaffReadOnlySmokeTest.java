@@ -1,6 +1,7 @@
 package services;
 
 import dao.AuthDAO;
+import dao.OrderDAO;
 import dto.IngredientStockDTO;
 import dto.IngredientStockSnapshotDTO;
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ public final class StaffReadOnlySmokeTest {
         verifyDashboardAndSupplierLookup();
         verifyImportHistoryAndDetail();
         verifySalesAudit();
+        verifyCashierDashboard();
         verifyEmptyDayHasNoStockLog();
         verifyStaffProfileLookup();
     }
@@ -78,11 +80,32 @@ public final class StaffReadOnlySmokeTest {
     }
 
     private static void verifySalesAudit() {
+        OrderService orderService = new OrderService();
+        require(
+                orderService.getTodaySoldProductSizeRows().containsKey("success"),
+                "today sales lookup failed");
+        require(
+                orderService.getSoldProductSizeRowsByDate(LocalDate.now())
+                        .containsKey("success"),
+                "sales lookup by date failed");
+
         HashMap<String, Object> audit =
                 new StockService().getSalesAuditData(LocalDate.now());
         require(audit.containsKey("productSales"), "sales rows are missing");
         require(audit.containsKey("ingredientAudit"), "ingredient audit is missing");
         require(audit.containsKey("auditWarningCount"), "audit warning count is missing");
+    }
+
+    private static void verifyCashierDashboard() {
+        Map<String, Object> dashboard = new OrderDAO().getCashierDashboard();
+        require(dashboard.get("todayRevenue") != null,
+                "cashier revenue is missing");
+        require(dashboard.get("todayOrders") != null,
+                "cashier order count is missing");
+        require(dashboard.get("pendingOrders") != null,
+                "cashier pending count is missing");
+        require(dashboard.get("newCustomers") != null,
+                "cashier customer count is missing");
     }
 
     @SuppressWarnings("unchecked")

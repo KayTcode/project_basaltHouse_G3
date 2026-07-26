@@ -8,6 +8,7 @@ import dto.IngredientStockSnapshotDTO;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,8 +59,6 @@ public class IngredientDAO extends DBContext {
         List<IngredientStockSnapshotDTO> rows = new ArrayList<>();
         String sql = """
                      DECLARE @AuditDate DATE = ?;
-                     DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
-                     DECLARE @End DATETIME2 = DATEADD(DAY, 1, @Start);
 
                      SELECT i.IngredientId,
                             COALESCE(firstLog.QuantityBefore, prevLog.QuantityAfter, i.StockQuantity) AS OpeningStock,
@@ -69,31 +68,36 @@ public class IngredientDAO extends DBContext {
                             END AS ClosingStock,
                             CASE WHEN firstLog.LogId IS NULL THEN 0 ELSE 1 END AS HasStockLog
                      FROM Ingredients i
-                     OUTER APPLY (
-                         SELECT TOP 1 LogId, QuantityAfter
-                         FROM IngredientStockLogs
-                         WHERE IngredientId = i.IngredientId
-                           AND IsDeleted = 0
-                           AND CreatedAt < @Start
-                         ORDER BY CreatedAt DESC, LogId DESC
-                     ) prevLog
-                     OUTER APPLY (
-                         SELECT TOP 1 LogId, QuantityBefore
-                         FROM IngredientStockLogs
-                         WHERE IngredientId = i.IngredientId
-                           AND IsDeleted = 0
-                           AND CreatedAt >= @Start
-                           AND CreatedAt < @End
-                         ORDER BY CreatedAt ASC, LogId ASC
-                     ) firstLog
-                     OUTER APPLY (
-                         SELECT TOP 1 LogId, QuantityAfter
-                         FROM IngredientStockLogs
-                         WHERE IngredientId = i.IngredientId
-                           AND IsDeleted = 0
-                           AND CreatedAt < @End
-                         ORDER BY CreatedAt DESC, LogId DESC
-                     ) endLog
+                     LEFT JOIN IngredientStockLogs prevLog
+                       ON prevLog.LogId = (
+                           SELECT TOP 1 log.LogId
+                           FROM IngredientStockLogs log
+                           WHERE log.IngredientId = i.IngredientId
+                             AND log.IsDeleted = 0
+                             AND log.CreatedAt < @AuditDate
+                           ORDER BY log.CreatedAt DESC, log.LogId DESC
+                       )
+                     LEFT JOIN IngredientStockLogs firstLog
+                       ON firstLog.LogId = (
+                           SELECT TOP 1 log.LogId
+                           FROM IngredientStockLogs log
+                           WHERE log.IngredientId = i.IngredientId
+                             AND log.IsDeleted = 0
+                             AND log.CreatedAt >= @AuditDate
+                             AND log.CreatedAt
+                                 < DATEADD(DAY, 1, @AuditDate)
+                           ORDER BY log.CreatedAt, log.LogId
+                       )
+                     LEFT JOIN IngredientStockLogs endLog
+                       ON endLog.LogId = (
+                           SELECT TOP 1 log.LogId
+                           FROM IngredientStockLogs log
+                           WHERE log.IngredientId = i.IngredientId
+                             AND log.IsDeleted = 0
+                             AND log.CreatedAt
+                                 < DATEADD(DAY, 1, @AuditDate)
+                           ORDER BY log.CreatedAt DESC, log.LogId DESC
+                       )
                      WHERE i.IsDeleted = 0 AND i.IsActive = 1
                      """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -119,17 +123,27 @@ public class IngredientDAO extends DBContext {
                 selectedDate = java.time.LocalDate.now().toString();
             }
             String sql = """
-                         SELECT p.ProductName, s.SizeName, SUM(od.Quantity) AS TotalCups, i.IngredientName, i.Unit, SUM(od.Quantity * r.QuantityNeeded) AS UsedQuantity
+                         SELECT p.ProductName,
+                                s.SizeName,
+                                SUM(od.Quantity) AS TotalCups,
+                                i.IngredientName,
+                                i.Unit,
+                                SUM(od.Quantity * r.QuantityNeeded)
+                                    AS UsedQuantity
                          FROM Orders o
                          JOIN OrderDetails od ON o.OrderId = od.OrderId
                          JOIN Products p ON od.ProductId = p.ProductId
                          JOIN Sizes s ON od.SizeId = s.SizeId
-                         JOIN Recipes r ON od.ProductId = r.ProductId AND od.SizeId = r.SizeId
+                         JOIN Recipes r
+                           ON od.ProductId = r.ProductId
+                          AND od.SizeId = r.SizeId
                          JOIN Ingredients i ON r.IngredientId = i.IngredientId
                          WHERE CAST(o.CreatedAt AS DATE) = ?
                            AND o.IsDeleted = 0
                            AND o.OrderStatus NOT IN ('Cancelled', 'Pending')
-                         GROUP BY p.ProductId, p.ProductName, s.SizeId, s.SizeName, i.IngredientId, i.IngredientName, i.Unit
+                         GROUP BY p.ProductId, p.ProductName,
+                                  s.SizeId, s.SizeName,
+                                  i.IngredientId, i.IngredientName, i.Unit
                          ORDER BY p.ProductName, s.SizeName, UsedQuantity DESC
                          """;
             st = connection.prepareStatement(sql);
@@ -139,34 +153,42 @@ public class IngredientDAO extends DBContext {
             Map<String, Map<String, Object>> productGroups = new java.util.LinkedHashMap<>();
             
             while (rs.next()) {
-                String pName = rs.getString("ProductName");
-                String sName = rs.getString("SizeName");
-                String key = pName + "-" + sName;
-                
-                Map<String, Object> prodGroup = productGroups.get(key);
-                if (prodGroup == null) {
-                    prodGroup = new HashMap<>();
-                    prodGroup.put("productName", pName);
-                    prodGroup.put("sizeName", sName);
-                    prodGroup.put("totalCups", rs.getInt("TotalCups"));
-                    prodGroup.put("ingredients", new ArrayList<Map<String, Object>>());
-                    productGroups.put(key, prodGroup);
-                }
-                
-                Map<String, Object> ing = new HashMap<>();
-                ing.put("ingredientName", rs.getString("IngredientName"));
-                ing.put("unit", rs.getString("Unit"));
-                ing.put("usedQuantity", rs.getBigDecimal("UsedQuantity"));
-                
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> ingList = (List<Map<String, Object>>) prodGroup.get("ingredients");
-                ingList.add(ing);
+                addIngredientUsageRow(productGroups, rs);
             }
             list.addAll(productGroups.values());
         } catch (Exception e) {
             System.err.println("Error in getIngredientUsageByDate: " + e.getMessage());
         }
         return list;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addIngredientUsageRow(
+            Map<String, Map<String, Object>> productGroups,
+            ResultSet result) throws SQLException {
+        String productName = result.getString("ProductName");
+        String sizeName = result.getString("SizeName");
+        String key = productName + "-" + sizeName;
+
+        Map<String, Object> productGroup = productGroups.get(key);
+        if (productGroup == null) {
+            productGroup = new HashMap<>();
+            productGroup.put("productName", productName);
+            productGroup.put("sizeName", sizeName);
+            productGroup.put("totalCups", result.getInt("TotalCups"));
+            productGroup.put("ingredients",
+                    new ArrayList<Map<String, Object>>());
+            productGroups.put(key, productGroup);
+        }
+
+        Map<String, Object> ingredient = new HashMap<>();
+        ingredient.put("ingredientName",
+                result.getString("IngredientName"));
+        ingredient.put("unit", result.getString("Unit"));
+        ingredient.put("usedQuantity",
+                result.getBigDecimal("UsedQuantity"));
+        ((List<Map<String, Object>>) productGroup.get("ingredients"))
+                .add(ingredient);
     }
 
     public List<Map<String, Object>> getTodayIngredientUsage() {

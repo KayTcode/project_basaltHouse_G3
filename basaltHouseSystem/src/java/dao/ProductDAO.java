@@ -33,15 +33,8 @@ public class ProductDAO extends DBContext {
             st = connection.prepareStatement(sql);
             st.setInt(1, productId);
             rs = st.executeQuery();
-            while (rs.next()) {
-                return new Product(
-                        rs.getInt("ProductId"),
-                        rs.getString("ProductName"),
-                        rs.getString("Description"),
-                        rs.getBigDecimal("Price"),
-                        rs.getString("ImageUrl"),
-                        rs.getBoolean("IsActive")
-                );
+            if (rs.next()) {
+                return mapProduct(rs);
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -68,11 +61,9 @@ public class ProductDAO extends DBContext {
                       LEFT JOIN (
                           SELECT od.ProductId, SUM(od.Quantity) AS TotalSold
                           FROM OrderDetails od
-                          LEFT JOIN Orders o
-                                  ON o.OrderId = od.OrderId
-                                 AND o.IsDeleted = 0
+                          JOIN Orders o ON o.OrderId = od.OrderId
                           WHERE od.IsDeleted = 0
-                            AND o.OrderId IS NOT NULL
+                            AND o.IsDeleted = 0
                           GROUP BY od.ProductId
                       ) s ON s.ProductId = p.ProductId
                       LEFT JOIN (
@@ -86,33 +77,40 @@ public class ProductDAO extends DBContext {
                       ) r ON r.ProductId = p.ProductId
                       WHERE p.IsDeleted = 0
                         AND p.IsActive = 1
-                      ORDER BY COALESCE(s.TotalSold, 0) DESC,
-                               COALESCE(r.AverageRating, 0) DESC,
-                               COALESCE(r.ReviewCount, 0) DESC,
-                               p.ProductId ASC
+                      ORDER BY TotalSold DESC,
+                               AverageRating DESC,
+                               ReviewCount DESC,
+                               p.ProductId
                          """;
-            st = connection.prepareStatement(sql);
-            st.setMaxRows(safeLimit);
-            rs = st.executeQuery();
-            while (rs.next()) {
-                Product p = new Product(
-                        rs.getInt("ProductId"),
-                        rs.getString("ProductName"),
-                        rs.getString("Description"),
-                        rs.getBigDecimal("Price"),
-                        rs.getString("ImageUrl"),
-                        rs.getBoolean("IsActive"),
-                        rs.getInt("TotalSold"),
-                        rs.getDouble("AverageRating"),
-                        rs.getInt("ReviewCount")
-                );
-                p.setCategoryId(rs.getInt("CategoryId"));
-                list.add(p);
+            try (PreparedStatement statement
+                    = connection.prepareStatement(sql)) {
+                statement.setMaxRows(safeLimit);
+                try (ResultSet result = statement.executeQuery()) {
+                    while (result.next()) {
+                        list.add(mapBestSellingProduct(result));
+                    }
+                }
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
         return list;
+    }
+
+    private Product mapBestSellingProduct(ResultSet result)
+            throws SQLException {
+        Product product = new Product(
+                result.getInt("ProductId"),
+                result.getString("ProductName"),
+                result.getString("Description"),
+                result.getBigDecimal("Price"),
+                result.getString("ImageUrl"),
+                result.getBoolean("IsActive"),
+                result.getInt("TotalSold"),
+                result.getDouble("AverageRating"),
+                result.getInt("ReviewCount"));
+        product.setCategoryId(result.getInt("CategoryId"));
+        return product;
     }
 
     public HashMap<Integer, Product> getProduct() {
@@ -177,15 +175,7 @@ public class ProductDAO extends DBContext {
             st.setInt(1, categoryId);
             rs = st.executeQuery();
             while (rs.next()) {
-                Product p = new Product(
-                        rs.getInt("ProductId"),
-                        rs.getString("ProductName"),
-                        rs.getString("Description"),
-                        rs.getBigDecimal("Price"),
-                        rs.getString("ImageUrl"),
-                        rs.getBoolean("IsActive")
-                );
-                list.add(p);
+                list.add(mapProduct(rs));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -195,6 +185,7 @@ public class ProductDAO extends DBContext {
 
     public List<Product> getProductByName(String keyword) {
         List<Product> list = new ArrayList<>();
+        String searchKey = keyword == null ? "" : keyword.trim();
         try {
             String sql = """
                          SELECT ProductId, ProductName, Description, Price, ImageUrl, IsActive
@@ -204,18 +195,10 @@ public class ProductDAO extends DBContext {
                            AND ProductName LIKE ?
                          """;
             st = connection.prepareStatement(sql);
-            st.setString(1, "%" + keyword.trim() + "%");
+            st.setString(1, "%" + searchKey + "%");
             rs = st.executeQuery();
             while (rs.next()) {
-                Product p = new Product(
-                        rs.getInt("ProductId"),
-                        rs.getString("ProductName"),
-                        rs.getString("Description"),
-                        rs.getBigDecimal("Price"),
-                        rs.getString("ImageUrl"),
-                        rs.getBoolean("IsActive")
-                );
-                list.add(p);
+                list.add(mapProduct(rs));
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
@@ -249,6 +232,16 @@ public class ProductDAO extends DBContext {
             System.err.println(e.getMessage());
         }
         return list;
+    }
+
+    private Product mapProduct(ResultSet result) throws SQLException {
+        return new Product(
+                result.getInt("ProductId"),
+                result.getString("ProductName"),
+                result.getString("Description"),
+                result.getBigDecimal("Price"),
+                result.getString("ImageUrl"),
+                result.getBoolean("IsActive"));
     }
 
 }

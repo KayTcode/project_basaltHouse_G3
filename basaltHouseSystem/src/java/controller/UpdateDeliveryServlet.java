@@ -96,7 +96,6 @@ public class UpdateDeliveryServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        request.setCharacterEncoding("UTF-8");
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
@@ -147,11 +146,6 @@ public class UpdateDeliveryServlet extends HttpServlet {
                 ? (isSuccess ? "Đã xác nhận giao thành công đơn #" + orderId + "."
                         : "Đã ghi nhận giao thất bại đơn #" + orderId + ".")
                 : buildErrorMessage(result));
-    }
-
-    @Override
-    public String getServletInfo() {
-        return "Short description";
     }
 
     private String buildErrorMessage(ProcessOrderResult result) {
@@ -289,5 +283,10 @@ public class UpdateDeliveryServlet extends HttpServlet {
     private String trimOrEmpty(String val) {
         return val != null ? val.trim() : "";
     }
+
+    @Override
+    public String getServletInfo() {
+        return "Short description";
+    }// </editor-fold>
 
 }

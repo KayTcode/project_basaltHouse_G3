@@ -179,8 +179,8 @@
     <servlet>
         <servlet-name>AcceptOrderServlet</servlet-name>
         <servlet-class>controller.AcceptOrderServlet</servlet-class>
-      </servlet>
-       <servlet>
+    </servlet>
+    <servlet>
         <servlet-name>CancelOrderServlet</servlet-name>
         <servlet-class>controller.CancelOrderServlet</servlet-class>
     </servlet>
@@ -355,6 +355,8 @@
     <servlet-mapping>
         <servlet-name>AcceptOrderServlet</servlet-name>
         <url-pattern>/shipper/accept-order</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>CancelOrderServlet</servlet-name>
         <url-pattern>/cancel-order</url-pattern>
     </servlet-mapping>

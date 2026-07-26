@@ -228,7 +228,7 @@ public class CashierServlet extends HttpServlet {
         List<Product> allProducts = pDao.getAllProductsForPOS();
  
         CategoryDAO cDao = new CategoryDAO();
-        List<Category> categoryList = cDao.getAllCategories();
+        List<Category> categoryList = cDao.getAllCategoriesForPOS();
 
         StockService ssInit = new StockService();
         HashMap<Product, HashMap<String, Integer>> stockMapInit = ssInit.calculateProduct();

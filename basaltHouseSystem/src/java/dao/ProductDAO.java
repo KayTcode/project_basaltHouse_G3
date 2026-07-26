@@ -118,7 +118,7 @@ public class ProductDAO extends DBContext {
     public HashMap<Integer, Product> getProduct() {
         HashMap<Integer, Product> productMap = new HashMap<>();
         try {
-            String sql = "SELECT ProductId, ProductName,Description, ImageUrl,IsActive FROM Products WHERE IsDeleted = 0";
+            String sql = "SELECT ProductId, ProductName,Description, ImageUrl,IsActive FROM Products WHERE IsDeleted = 0 AND IsActive = 1";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
@@ -141,7 +141,7 @@ public class ProductDAO extends DBContext {
     public List<Product> getAllProductsForPOS() {
         List<Product> list = new ArrayList<>();
         try {
-            String sql = "SELECT ProductId, ProductName, CategoryId, Price, Description, ImageUrl, IsActive FROM Products WHERE IsDeleted = 0";
+            String sql = "SELECT ProductId, ProductName, CategoryId, Price, Description, ImageUrl, IsActive FROM Products WHERE IsDeleted = 0 AND IsActive = 1";
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {

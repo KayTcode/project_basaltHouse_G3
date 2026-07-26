@@ -82,6 +82,14 @@
                                 <span class="detail-label">Phương thức thanh toán:</span>
                                 <span class="detail-value">${bill.paymentMethod}</span>
                             </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Trạng thái đơn hàng:</span>
+                                <span class="detail-value">
+                                     <span class="status-badge ${bill.statusBadgeClass}">
+                                         ● ${bill.statusDisplayName}
+                                     </span>
+                                </span>
+                            </div>
                         </div>
                     </div>
 

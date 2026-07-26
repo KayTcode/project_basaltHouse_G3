@@ -163,8 +163,8 @@
     </div>
 
    
-    <c:if test="${historyPages > 1}">
-    <div class="pagination" style="padding:20px 0;">
+    <c:if test="${historyPages >= 1 and not empty orderList}">
+    <div class="pagination" style="padding:20px 0; display:flex; justify-content:center; align-items:center; gap:8px;">
         <a href="?page=<%=historyPage - 1%><c:if test="${not empty selectedHistoryDate}">&historyDate=${selectedHistoryDate}</c:if><c:if test="${not empty selectedOrderType}">&orderType=${selectedOrderType}</c:if>"
            class="btn-page <%= historyPage <= 1 ? "disabled" : "" %>">&#171;</a>
 

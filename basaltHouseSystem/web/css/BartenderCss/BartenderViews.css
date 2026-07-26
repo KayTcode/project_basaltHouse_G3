@@ -215,10 +215,12 @@ body{font-family:'Inter',sans-serif;background:#f4f1ec;display:flex;min-height:1
     color: #fff;
     border-color: #2c1a0e;
 }
-.btn-page:disabled {
-    opacity: 0.5;
+.btn-page:disabled, .btn-page.disabled {
+    opacity: 0.4;
+    pointer-events: none;
     cursor: not-allowed;
-    background: #f9f9f9;
+    background: #f1f5f9;
+    color: #94a3b8;
 }
 
 /* ─── COMPACT CARD ─── */

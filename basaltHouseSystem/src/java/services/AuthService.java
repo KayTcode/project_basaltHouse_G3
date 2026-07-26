@@ -238,7 +238,7 @@ public class AuthService {
             }
             String roleName = authDAO.getRoleNameById(account.getRoleId());
             Map<String, String> profileInfo = authDAO.getFullNameAndAvatarByAccount(account);
-            String dbFullName = profileInfo.get("FullName");
+            String dbFullName = profileInfo.get("fullName");
             String dbAvatarUrl = profileInfo.get("avatarUrl");
             String displayName = (dbFullName != null && !dbFullName.equals(account.getEmail())) ? dbFullName : fullName;
             String displayAvatar = (dbAvatarUrl != null) ? dbAvatarUrl : avatarUrl;

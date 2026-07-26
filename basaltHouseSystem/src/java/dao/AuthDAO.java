@@ -437,7 +437,7 @@ public class AuthDAO extends DBContext {
                             INSERT INTO [dbo].[CustomerDiscountCodes]
                                        ([AccountId]
                                        ,[DiscountId]
-                                       ,[IsUsed]
+                                       ,[IsUsed])
                                  VALUES
                                        (?,1,0)
                             """;

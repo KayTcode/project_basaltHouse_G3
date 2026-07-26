@@ -73,23 +73,23 @@
                                 <div class="container">
 
                                     <%-- Alert from server --%>
-                                        <% String errorMsg=(String) request.getAttribute("errorMsg"); String
-                                            successMsg=(String) request.getAttribute("successMsg"); String
-                                            addTableMsg=(String) request.getAttribute("addTableMsg"); String
-                                            delTableMsg=(String) request.getAttribute("delTableMsg"); String
-                                            checkoutSuccessMsg=(String) request.getAttribute("checkoutSuccessMsg");
-                                            HashMap<Integer, Table> tablesMap = (HashMap<Integer, Table>)
-                                                request.getAttribute("tablesMap");
-                                                HashMap<Integer, TableSession> sessionsMap = (HashMap<Integer,
-                                                        TableSession>) request.getAttribute("sessionsMap");
-                                                        Collection<Table> tables = tablesMap != null ?
-                                                            tablesMap.values() : new java.util.ArrayList<>();
-                                                                Collection<TableSession> activeSessions = sessionsMap !=
-                                                                    null ? sessionsMap.values() : new
-                                                                    java.util.ArrayList<>();
-                                                                        String moveTableMsg = (String)
-                                                                        request.getAttribute("moveTableMsg");
-                                                                        %>
+                                    <% String errorMsg=(String) request.getAttribute("errorMsg"); String
+                                        successMsg=(String) request.getAttribute("successMsg"); String
+                                        addTableMsg=(String) request.getAttribute("addTableMsg"); String
+                                        delTableMsg=(String) request.getAttribute("delTableMsg"); String
+                                        checkoutSuccessMsg=(String) request.getAttribute("checkoutSuccessMsg");
+                                        HashMap<Integer, Table> tablesMap = (HashMap<Integer, Table>)
+                                            request.getAttribute("tablesMap");
+                                            HashMap<Integer, TableSession> sessionsMap = (HashMap<Integer,
+                                                    TableSession>) request.getAttribute("sessionsMap");
+                                                    Collection<Table> tables = tablesMap != null ?
+                                                        tablesMap.values() : new java.util.ArrayList<>();
+                                                            Collection<TableSession> activeSessions = sessionsMap !=
+                                                                null ? sessionsMap.values() : new
+                                                                java.util.ArrayList<>();
+                                                                    String moveTableMsg = (String)
+                                                                    request.getAttribute("moveTableMsg");
+                                    %>
 
                                                                         <div class="row g-4">
                                                                             <!-- ── Left: Table Grid ── -->
@@ -102,114 +102,114 @@
 
                                                                                     <!-- Filter -->
                                                                                     <div class="filter-bar"
-                                                                                        id="filterBar">
+                                                                                         id="filterBar">
                                                                                         <button
                                                                                             class="filter-btn active"
                                                                                             data-filter="all">Tất
                                                                                             cả</button>
                                                                                         <button class="filter-btn"
-                                                                                            data-filter="available">Còn
+                                                                                                data-filter="available">Còn
                                                                                             chỗ</button>
                                                                                         <button class="filter-btn"
-                                                                                            data-filter="partial">Đang
+                                                                                                data-filter="partial">Đang
                                                                                             phục vụ</button>
                                                                                         <button class="filter-btn"
-                                                                                            data-filter="full">Hết
+                                                                                                data-filter="full">Hết
                                                                                             chỗ</button>
                                                                                     </div>
 
                                                                                     <!-- Table Cards Grid -->
                                                                                     <div class="tables-grid"
-                                                                                        id="tablesGrid">
-                                                                <% 
-                                                                    if (tables != null && !tables.isEmpty()) { 
-                                                                        for (Table t : tables) { 
-                                                                            int cap = t.getCapacity(); 
-                                                                            int used = t.getCurrentGuests(); 
-                                                                            int avail = cap - used; 
-                                                                            double pct = cap > 0 ? (double) used / cap * 100 : 0;
+                                                                                         id="tablesGrid">
+                                                                                        <% 
+                                                                                            if (tables != null && !tables.isEmpty()) { 
+                                                                                                for (Table t : tables) { 
+                                                                                                    int cap = t.getCapacity(); 
+                                                                                                    int used = t.getCurrentGuests(); 
+                                                                                                    int avail = cap - used; 
+                                                                                                    double pct = cap > 0 ? (double) used / cap * 100 : 0;
 
-                                                                            String cardClass  = "table-card";
-                                                                            String dotClass   = "table-status-dot dot-available";
-                                                                            String fillClass  = "table-cap-fill";
-                                                                            String seatsClass = "avail";
-                                                                            String filterAttr = "available";
+                                                                                                    String cardClass  = "table-card";
+                                                                                                    String dotClass   = "table-status-dot dot-available";
+                                                                                                    String fillClass  = "table-cap-fill";
+                                                                                                    String seatsClass = "avail";
+                                                                                                    String filterAttr = "available";
 
-                                                                            if (avail <= 0) { 
-                                                                                cardClass  += " full";
-                                                                                dotClass   = "table-status-dot dot-full";
-                                                                                fillClass  += " full-fill";
-                                                                                seatsClass = "full-text";
-                                                                                filterAttr = "full";
-                                                                            } else if (used > 0) {
-                                                                                dotClass   = "table-status-dot dot-partial";
-                                                                                fillClass  += " warn";
-                                                                                seatsClass = "warn-text";
-                                                                                filterAttr = "partial";
-                                                                            }
-                                                                %>
-                                                                                                <div class="<%= cardClass %>"
-                                                                                                    data-table-id="<%= t.getTableId() %>"
-                                                                                                    data-table-code="<%= t.getTableCode() %>"
-                                                                                                    data-area="<%= t.getArea() %>"
-                                                                                                    data-capacity="<%= cap %>"
-                                                                                                    data-used="<%= used %>"
-                                                                                                    data-avail="<%= avail %>"
-                                                                                                    data-filter="<%= filterAttr %>"
-                                                                                                    onclick="selectTable(this)">
-                                                                                                    <!-- Xóa bàn button -->
-                                                                                                    <button
-                                                                                                        class="btn-delete-table-card"
-                                                                                                        onclick="openDeleteModal(event, '<%= t.getTableId() %>', '<%= t.getTableCode() %>')"
-                                                                                                        title="Xóa bàn">
-                                                                                                        <span
-                                                                                                            class="material-symbols-outlined">delete</span>
-                                                                                                    </button>
-                                                                                                    <div
-                                                                                                        class="<%= dotClass %>">
-                                                                                                    </div>
-                                                                                                    <div
-                                                                                                        class="table-card-icon">
-                                                                                                        <span
-                                                                                                            class="material-symbols-outlined">table_restaurant</span>
-                                                                                                    </div>
-                                                                                                    <div
-                                                                                                        class="table-code">
-                                                                                                        <%= t.getTableCode()
-                                                                                                            %>
-                                                                                                    </div>
-                                                                                                    <div
-                                                                                                        class="table-area">
-                                                                                                        <%= t.getArea()
-                                                                                                            %>
-                                                                                                    </div>
-                                                                                                    <div
-                                                                                                        class="table-cap-bar">
-                                                                                                        <div class="<%= fillClass %>"
-                                                                                                            style="width:<%= Math.min(pct,100) %>%">
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <div
-                                                                                                        class="table-seats-label">
-                                                                                                        <span
-                                                                                                            class="<%= seatsClass %>">
-                                                                                                            <%= avail %>
-                                                                                                        </span>/<%= cap
-                                                                                                            %> ghế trống
-                                                                                                    </div>
+                                                                                                    if (avail <= 0) { 
+                                                                                                        cardClass  += " full";
+                                                                                                        dotClass   = "table-status-dot dot-full";
+                                                                                                        fillClass  += " full-fill";
+                                                                                                        seatsClass = "full-text";
+                                                                                                        filterAttr = "full";
+                                                                                                    } else if (used > 0) {
+                                                                                                        dotClass   = "table-status-dot dot-partial";
+                                                                                                        fillClass  += " warn";
+                                                                                                        seatsClass = "warn-text";
+                                                                                                        filterAttr = "partial";
+                                                                                                    }
+                                                                                        %>
+                                                                                        <div class="<%= cardClass %>"
+                                                                                             data-table-id="<%= t.getTableId() %>"
+                                                                                             data-table-code="<%= t.getTableCode() %>"
+                                                                                             data-area="<%= t.getArea() %>"
+                                                                                             data-capacity="<%= cap %>"
+                                                                                             data-used="<%= used %>"
+                                                                                             data-avail="<%= avail %>"
+                                                                                             data-filter="<%= filterAttr %>"
+                                                                                             onclick="selectTable(this)">
+                                                                                            <!-- Xóa bàn button -->
+                                                                                            <button
+                                                                                                class="btn-delete-table-card"
+                                                                                                onclick="openDeleteModal(event, '<%= t.getTableId() %>', '<%= t.getTableCode() %>')"
+                                                                                                title="Xóa bàn">
+                                                                                                <span
+                                                                                                    class="material-symbols-outlined">delete</span>
+                                                                                            </button>
+                                                                                            <div
+                                                                                                class="<%= dotClass %>">
+                                                                                            </div>
+                                                                                            <div
+                                                                                                class="table-card-icon">
+                                                                                                <span
+                                                                                                    class="material-symbols-outlined">table_restaurant</span>
+                                                                                            </div>
+                                                                                            <div
+                                                                                                class="table-code">
+                                                                                                <%= t.getTableCode()
+                                                                                                %>
+                                                                                            </div>
+                                                                                            <div
+                                                                                                class="table-area">
+                                                                                                <%= t.getArea()
+                                                                                                %>
+                                                                                            </div>
+                                                                                            <div
+                                                                                                class="table-cap-bar">
+                                                                                                <div class="<%= fillClass %>"
+                                                                                                     style="width:<%= Math.min(pct,100) %>%">
                                                                                                 </div>
-                                                                                                <% } } else { %>
-                                                                                                    <div
-                                                                                                        style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-muted);">
-                                                                                                        <span
-                                                                                                            class="material-symbols-outlined"
-                                                                                                            style="font-size:48px;display:block;margin-bottom:12px;color:#ccc;">chair</span>
-                                                                                                        Chưa có dữ liệu
-                                                                                                        bàn. Vui lòng
-                                                                                                        thêm
-                                                                                                        bàn trước.
-                                                                                                    </div>
-                                                                                                    <% } %>
+                                                                                            </div>
+                                                                                            <div
+                                                                                                class="table-seats-label">
+                                                                                                <span
+                                                                                                    class="<%= seatsClass %>">
+                                                                                                    <%= avail %>
+                                                                                                </span>/<%= cap
+                                                                                                %> ghế trống
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <% } } else { %>
+                                                                                        <div
+                                                                                            style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-muted);">
+                                                                                            <span
+                                                                                                class="material-symbols-outlined"
+                                                                                                style="font-size:48px;display:block;margin-bottom:12px;color:#ccc;">chair</span>
+                                                                                            Chưa có dữ liệu
+                                                                                            bàn. Vui lòng
+                                                                                            thêm
+                                                                                            bàn trước.
+                                                                                        </div>
+                                                                                        <% } %>
                                                                                     </div>
                                                                                 </div>
 
@@ -219,52 +219,52 @@
                                                                                     <div class="panel-title">Session Hiện Tại</div>
 
                                                                                     <% if (activeSessions != null && !activeSessions.isEmpty()) { %>
-                                                                                        <ul class="session-list">
-                                                                                            <% 
-                                                                                                for (TableSession s : activeSessions) { 
-                                                                                                    Table t = tablesMap != null ? tablesMap.get(s.getTableId()) : null;
-                                                                                                    String tbCode = t != null ? t.getTableCode() : "";
-                                                                                                    String area   = t != null ? t.getArea() : "";
-                                                                                                    String openTime = s.getOpenedAt() != null ? s.getOpenedAt().toString().replace("T", " ").substring(0, 16) : "--";
-                                                                                            %>
-                                                                                                <li class="session-item">
-                                                                                                    <div class="session-avatar">
-                                                                                                        <span class="material-symbols-outlined">group</span>
-                                                                                                    </div>
-                                                                                                    <div>
-                                                                                                        <div class="session-code"><%= s.getSessionCode() %></div>
-                                                                                                        <div class="session-meta">Check-in: <%= openTime %></div>
-                                                                                                    </div>
-                                                                                                    <span class="session-badge">
-                                                                                                        <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">person</span>
-                                                                                                        <%= s.getGuestCount() %> khách
-                                                                                                    </span>
-                                                                                                    <div class="session-actions-group">
-                                                                                                        <button type="button" class="session-action-btn btn-session-add"
-                                                                                                            onclick="selectSessionForOrder(event, <%= s.getTableId() %>, '<%= tbCode.replace("'", "\\'") %>', '<%= area.replace("'", "\\'") %>', <%= s.getSessionId() %>)">
-                                                                                                            <span class="material-symbols-outlined" style="font-size:15px">add_circle</span>Gọi thêm
-                                                                                                        </button>
-                                                                                                        <button type="button" class="session-action-btn btn-session-view"
-                                                                                                            onclick="openViewOrdersModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
-                                                                                                            <span class="material-symbols-outlined">receipt_long</span>Xem đơn
-                                                                                                        </button>
-                                                                                                        <button type="button" class="session-action-btn btn-session-move"
-                                                                                                            onclick="openMoveTableModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
-                                                                                                            <span class="material-symbols-outlined">swap_horiz</span>Đổi bàn
-                                                                                                        </button>
-                                                                                                        <button type="button" class="session-action-btn btn-session-checkout"
-                                                                                                            onclick="openCheckoutModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
-                                                                                                            <span class="material-symbols-outlined">logout</span>Trả bàn
-                                                                                                        </button>
-                                                                                                    </div>
-                                                                                                </li>
-                                                                                            <% } %>
-                                                                                        </ul>
+                                                                                    <ul class="session-list">
+                                                                                        <% 
+                                                                                            for (TableSession s : activeSessions) { 
+                                                                                                Table t = tablesMap != null ? tablesMap.get(s.getTableId()) : null;
+                                                                                                String tbCode = t != null ? t.getTableCode() : "";
+                                                                                                String area   = t != null ? t.getArea() : "";
+                                                                                                String openTime = s.getOpenedAt() != null ? s.getOpenedAt().toString().replace("T", " ").substring(0, 16) : "--";
+                                                                                        %>
+                                                                                        <li class="session-item">
+                                                                                            <div class="session-avatar">
+                                                                                                <span class="material-symbols-outlined">group</span>
+                                                                                            </div>
+                                                                                            <div>
+                                                                                                <div class="session-code"><%= s.getSessionCode() %></div>
+                                                                                                <div class="session-meta">Check-in: <%= openTime %></div>
+                                                                                            </div>
+                                                                                            <span class="session-badge">
+                                                                                                <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle">person</span>
+                                                                                                <%= s.getGuestCount() %> khách
+                                                                                            </span>
+                                                                                            <div class="session-actions-group">
+                                                                                                <button type="button" class="session-action-btn btn-session-add"
+                                                                                                        onclick="selectSessionForOrder(event, <%= s.getTableId() %>, '<%= tbCode.replace("'", "\\'") %>', '<%= area.replace("'", "\\'") %>', <%= s.getSessionId() %>)">
+                                                                                                    <span class="material-symbols-outlined" style="font-size:15px">add_circle</span>Gọi thêm
+                                                                                                </button>
+                                                                                                <button type="button" class="session-action-btn btn-session-view"
+                                                                                                        onclick="openViewOrdersModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
+                                                                                                    <span class="material-symbols-outlined">receipt_long</span>Xem đơn
+                                                                                                </button>
+                                                                                                <button type="button" class="session-action-btn btn-session-move"
+                                                                                                        onclick="openMoveTableModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>', <%= s.getTableId() %>)">
+                                                                                                    <span class="material-symbols-outlined">swap_horiz</span>Đổi bàn
+                                                                                                </button>
+                                                                                                <button type="button" class="session-action-btn btn-session-checkout"
+                                                                                                        onclick="openCheckoutModal(event, <%= s.getSessionId() %>, '<%= s.getSessionCode() %>')">
+                                                                                                    <span class="material-symbols-outlined">logout</span>Trả bàn
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </li>
+                                                                                        <% } %>
+                                                                                    </ul>
                                                                                     <% } else { %>
-                                                                                        <div style="text-align:center;padding:32px 0;color:var(--text-muted);">
-                                                                                            <span class="material-symbols-outlined" style="font-size:40px;display:block;margin-bottom:8px;color:#d1d5db;">sensors_off</span>
-                                                                                            Chưa có session nào đang hoạt động.
-                                                                                        </div>
+                                                                                    <div style="text-align:center;padding:32px 0;color:var(--text-muted);">
+                                                                                        <span class="material-symbols-outlined" style="font-size:40px;display:block;margin-bottom:8px;color:#d1d5db;">sensors_off</span>
+                                                                                        Chưa có session nào đang hoạt động.
+                                                                                    </div>
                                                                                     <% } %>
                                                                                 </div>
                                                                             </div>
@@ -281,7 +281,7 @@
 
                                                                                         <!-- No selection hint -->
                                                                                         <div class="no-selection-hint"
-                                                                                            id="noSelectionHint">
+                                                                                             id="noSelectionHint">
                                                                                             <span
                                                                                                 class="material-symbols-outlined">touch_app</span>
                                                                                             Vui lòng chọn một bàn bên
@@ -290,27 +290,27 @@
 
                                                                                         <!-- Selected table info card -->
                                                                                         <div class="selected-table-info"
-                                                                                            id="selectedTableInfo">
+                                                                                             id="selectedTableInfo">
                                                                                             <div class="sti-row">
                                                                                                 <span
                                                                                                     class="sti-label">Bàn
                                                                                                     đã chọn</span>
                                                                                                 <span class="sti-value"
-                                                                                                    id="stiCode">--</span>
+                                                                                                      id="stiCode">--</span>
                                                                                             </div>
                                                                                             <div class="sti-row">
                                                                                                 <span
                                                                                                     class="sti-label">Khu
                                                                                                     vực</span>
                                                                                                 <span class="sti-value"
-                                                                                                    id="stiArea">--</span>
+                                                                                                      id="stiArea">--</span>
                                                                                             </div>
                                                                                             <div class="sti-row">
                                                                                                 <span
                                                                                                     class="sti-label">Sức
                                                                                                     chứa</span>
                                                                                                 <span class="sti-value"
-                                                                                                    id="stiCapacity">--</span>
+                                                                                                      id="stiCapacity">--</span>
                                                                                             </div>
                                                                                             <div class="sti-row">
                                                                                                 <span
@@ -318,7 +318,7 @@
                                                                                                     hiện
                                                                                                     tại</span>
                                                                                                 <span class="sti-value"
-                                                                                                    id="stiUsed">--</span>
+                                                                                                      id="stiUsed">--</span>
                                                                                             </div>
                                                                                             <div class="sti-row">
                                                                                                 <span
@@ -333,16 +333,16 @@
                                                                                         <!-- Form -->
                                                                                         <form id="createSessionForm">
                                                                                             <input type="hidden"
-                                                                                                name="action"
-                                                                                                value="create">
+                                                                                                   name="action"
+                                                                                                   value="create">
                                                                                             <input type="hidden"
-                                                                                                name="tableId"
-                                                                                                id="formTableId"
-                                                                                                value="">
+                                                                                                   name="tableId"
+                                                                                                   id="formTableId"
+                                                                                                   value="">
 
                                                                                             <div class="mb-3"
-                                                                                                id="guestCountSection"
-                                                                                                style="display:none;">
+                                                                                                 id="guestCountSection"
+                                                                                                 style="display:none;">
                                                                                                 <label
                                                                                                     class="form-label-custom"
                                                                                                     for="guestCount">
@@ -350,7 +350,7 @@
                                                                                                         style="color:var(--accent-red)">*</span>
                                                                                                 </label>
                                                                                                 <div class="guest-input-wrap"
-                                                                                                    id="guestInputWrap">
+                                                                                                     id="guestInputWrap">
                                                                                                     <button
                                                                                                         type="button"
                                                                                                         class="guest-btn"
@@ -362,12 +362,12 @@
                                                                                                             style="font-size:20px">remove</span>
                                                                                                     </button>
                                                                                                     <input type="number"
-                                                                                                        id="guestCount"
-                                                                                                        name="guestCount"
-                                                                                                        value="1"
-                                                                                                        min="1" max="99"
-                                                                                                        onchange="validateGuest()"
-                                                                                                        oninput="validateGuest()">
+                                                                                                           id="guestCount"
+                                                                                                           name="guestCount"
+                                                                                                           value="1"
+                                                                                                           min="1" max="99"
+                                                                                                           onchange="validateGuest()"
+                                                                                                           oninput="validateGuest()">
                                                                                                     <button
                                                                                                         type="button"
                                                                                                         class="guest-btn"
@@ -387,7 +387,7 @@
                                                                                                     cho bàn này
                                                                                                 </div>
                                                                                                 <div class="error-msg"
-                                                                                                    id="guestError">
+                                                                                                     id="guestError">
                                                                                                     <span
                                                                                                         class="material-symbols-outlined"
                                                                                                         style="font-size:14px;vertical-align:middle">error</span>
@@ -400,9 +400,9 @@
                                                                                             <div class="divider"></div>
 
                                                                                             <button type="button"
-                                                                                                class="btn-create-session"
-                                                                                                id="btnSubmit" disabled
-                                                                                                onclick="submitCreateSession()">
+                                                                                                    class="btn-create-session"
+                                                                                                    id="btnSubmit" disabled
+                                                                                                    onclick="submitCreateSession()">
                                                                                                 <span
                                                                                                     class="material-symbols-outlined">add_circle</span>
                                                                                                 Tạo Session

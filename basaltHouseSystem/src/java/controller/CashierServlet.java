@@ -81,7 +81,6 @@ public class CashierServlet extends HttpServlet {
         
         String action = request.getServletPath();
         if ("/cashier/shippers".equals(action)) {
-<<<<<<< 181-fix-order-for-shipper
             String oId = request.getParameter("orderId");
             String sId = request.getParameter("shipperId");
 
@@ -103,20 +102,6 @@ public class CashierServlet extends HttpServlet {
             } catch (NumberFormatException e) {
                 session.setAttribute("flashSuccess", false);
                 session.setAttribute("flashMessage", "orderId/shipperId không hợp lệ");
-=======
-            String oId  = request.getParameter("orderId");
-            String sId  = request.getParameter("shipperId");
-            if (oId != null && sId != null) {
-                try {
-                    Integer cashierId = null;
-                    HttpSession httpSession = request.getSession(false);
-                    if (httpSession != null) {
-                        Object attr = httpSession.getAttribute("cashierId");
-                        if (attr instanceof Integer) cashierId = (Integer) attr;
-                    }
-                    new ShipperDAO().assignShipper(Integer.parseInt(oId), Integer.parseInt(sId), cashierId);
-                } catch (NumberFormatException ignored) {}
->>>>>>> Develop
             }
             response.sendRedirect(request.getContextPath() + "/cashier/oderview");
             return;

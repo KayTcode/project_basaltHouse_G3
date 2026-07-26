@@ -243,8 +243,12 @@ public class StockService {
     private List<ProductSaleAuditDTO> loadSoldRows(
             SalesAuditContext context, LocalDate selectedDate) {
         OrderService orderService = new OrderService();
-        HashMap<String, Object> soldResult
-                = orderService.getSoldProductSizeRowsByDate(context.auditDate);
+        HashMap<String, Object> soldResult;
+        if (selectedDate == null) {
+            soldResult = orderService.getTodaySoldProductSizeRows();
+        } else {
+            soldResult = orderService.getSoldProductSizeRowsByDate(selectedDate);
+        }
         if (soldResult.containsKey("error")) {
             context.dataError = stringValue(soldResult.get("error"));
             return new ArrayList<>();
@@ -261,7 +265,7 @@ public class StockService {
             return rows;
         }
 
-        context.dataError = "Không đọc được dữ liệu bán hàng theo ngày đã chọn.";
+        context.dataError = "Không đọc được dữ liệu bán hàng hôm nay.";
         return new ArrayList<>();
     }
 

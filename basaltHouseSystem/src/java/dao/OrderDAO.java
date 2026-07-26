@@ -1,5 +1,6 @@
 package dao;
 
+import dto.ProductSaleAuditDTO;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -1111,16 +1112,86 @@ public class OrderDAO extends DBContext {
         }
         return null;
     }
-    /**
-     * Gom số lượng sản phẩm theo size của các đơn đã thanh toán trong ngày.
-     * Đơn online dùng PaidAt; đơn không có bản ghi thanh toán dùng CreatedAt.
-     */
-    public List<HashMap<String, Object>> getSoldProductSizeRowsByDate(LocalDate auditDate) {
-        List<HashMap<String, Object>> rows = new ArrayList<>();
-        if (auditDate == null) {
-            return rows;
+    public List<ProductSaleAuditDTO> getTodaySoldProductSizeRows() {
+        List<ProductSaleAuditDTO> rows = new ArrayList<>();
+        String sql = """
+                     SET NOCOUNT ON;
+
+                     DECLARE @Today DATE = CAST(GETDATE() AS DATE);
+                     DECLARE @AuditDate DATE = @Today;
+                     DECLARE @Start DATETIME2;
+                     DECLARE @End DATETIME2;
+
+                     IF NOT EXISTS (
+                         SELECT 1
+                         FROM Orders o
+                         LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
+                         OUTER APPLY (
+                             SELECT TOP 1 l.CreatedAt AS AppliedAt
+                             FROM IngredientStockLogs l
+                             WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
+                             ORDER BY l.CreatedAt ASC, l.LogId ASC
+                         ) stockLog
+                         WHERE o.IsDeleted = 0
+                           AND o.PaymentStatus = 'Paid'
+                           AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= CAST(@AuditDate AS DATETIME2)
+                           AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < DATEADD(DAY, 1, CAST(@AuditDate AS DATETIME2))
+                     )
+                     BEGIN
+                         SELECT TOP 1 @AuditDate = CAST(COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) AS DATE)
+                         FROM Orders o
+                         LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
+                         OUTER APPLY (
+                             SELECT TOP 1 l.CreatedAt AS AppliedAt
+                             FROM IngredientStockLogs l
+                             WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
+                             ORDER BY l.CreatedAt ASC, l.LogId ASC
+                         ) stockLog
+                         WHERE o.IsDeleted = 0
+                           AND o.PaymentStatus = 'Paid'
+                         ORDER BY COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) DESC;
+                     END
+
+                     SET @Start = CAST(@AuditDate AS DATETIME2);
+                     SET @End = DATEADD(DAY, 1, @Start);
+
+                     SELECT od.ProductId,
+                            od.SizeId,
+                            p.ProductName,
+                            s.SizeName,
+                            SUM(od.Quantity) AS SoldQuantity,
+                            MAX(od.UnitPrice) AS UnitPrice,
+                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
+                            @AuditDate AS AuditDate
+                     FROM OrderDetails od
+                     JOIN Orders o ON o.OrderId = od.OrderId
+                     LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
+                     OUTER APPLY (
+                         SELECT TOP 1 l.CreatedAt AS AppliedAt
+                         FROM IngredientStockLogs l
+                         WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
+                         ORDER BY l.CreatedAt ASC, l.LogId ASC
+                     ) stockLog
+                     JOIN Products p ON p.ProductId = od.ProductId
+                     JOIN Sizes s ON s.SizeId = od.SizeId
+                     WHERE od.IsDeleted = 0
+                       AND o.IsDeleted = 0
+                       AND o.PaymentStatus = 'Paid'
+                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= @Start
+                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < @End
+                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
+                     ORDER BY p.ProductName ASC, s.SizeName ASC
+                     """;
+        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs2 = ps.executeQuery()) {
+            while (rs2.next()) {
+                rows.add(mapProductSaleAudit(rs2));
+            }
+        } catch (Exception e) {
+            System.err.println("getTodaySoldProductSizeRows Error: " + e.getMessage());
         }
 
+    public List<ProductSaleAuditDTO> getSoldProductSizeRowsByDate(LocalDate auditDate) {
+        List<ProductSaleAuditDTO> rows = new ArrayList<>();
         String sql = """
                      SELECT od.ProductId,
                             od.SizeId,
@@ -1153,21 +1224,27 @@ public class OrderDAO extends DBContext {
             ps.setTimestamp(2, Timestamp.valueOf(auditDate.plusDays(1).atStartOfDay()));
             try (ResultSet rs2 = ps.executeQuery()) {
                 while (rs2.next()) {
-                    HashMap<String, Object> row = new HashMap<>();
-                    row.put("productId", rs2.getInt("ProductId"));
-                    row.put("sizeId", rs2.getInt("SizeId"));
-                    row.put("productName", rs2.getString("ProductName"));
-                    row.put("sizeName", rs2.getString("SizeName"));
-                    row.put("soldQuantity", rs2.getInt("SoldQuantity"));
-                    row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
-                    row.put("revenue", rs2.getBigDecimal("Revenue"));
-                    rows.add(row);
+                    rows.add(mapProductSaleAudit(rs2));
                 }
             }
         } catch (Exception e) {
             System.err.println("getSoldProductSizeRowsByDate Error: " + e.getMessage());
         }
         return rows;
+    }
+
+    private ProductSaleAuditDTO mapProductSaleAudit(ResultSet result)
+            throws SQLException {
+        java.sql.Date auditDate = result.getDate("AuditDate");
+        return new ProductSaleAuditDTO(
+                result.getInt("ProductId"),
+                result.getInt("SizeId"),
+                result.getString("ProductName"),
+                result.getString("SizeName"),
+                result.getInt("SoldQuantity"),
+                result.getBigDecimal("UnitPrice"),
+                result.getBigDecimal("Revenue"),
+                auditDate == null ? null : auditDate.toLocalDate());
     }
 
     public Map<String, Object> getCashierDashboard() {

@@ -7,6 +7,10 @@ package services;
 import dao.ProductDAO;
 import dao.SizeDAO;
 import dao.ImportVoiceDAO;
+import dto.IngredientAuditDTO;
+import dto.IngredientStockDTO;
+import dto.IngredientStockSnapshotDTO;
+import dto.ProductSaleAuditDTO;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -113,18 +117,18 @@ public class StockService {
     }
 
     public HashMap<String, Object> getStaffDashboardData(String key, boolean includeImportOptions) {
-        List<HashMap<String, Object>> rows = importVoiceDAO.getIngredientStockRows(key);
+        List<IngredientStockDTO> rows = importVoiceDAO.getIngredientStockRows(key);
 
-        List<HashMap<String, Object>> ingredients = new ArrayList<>();
-        List<HashMap<String, Object>> warnings = new ArrayList<>();
+        List<IngredientStockDTO> ingredients = new ArrayList<>();
+        List<IngredientStockDTO> warnings = new ArrayList<>();
 
         int warningCount = 0;
         int outCount = 0;
         int okCount = 0;
 
-        for (HashMap<String, Object> row : rows) {
-            BigDecimal stock = toBigDecimal(row.get("stockQuantity"));
-            BigDecimal minStock = toBigDecimal(row.get("minStockQuantity"));
+        for (IngredientStockDTO row : rows) {
+            BigDecimal stock = toBigDecimal(row.getStockQuantity());
+            BigDecimal minStock = toBigDecimal(row.getMinStockQuantity());
             String status;
             String statusLabel;
             String statusIcon;
@@ -146,21 +150,16 @@ public class StockService {
                 okCount++;
             }
 
-            HashMap<String, Object> item = new HashMap<>();
-            item.put("id", row.get("ingredientId"));
-            item.put("name", row.get("ingredientName"));
-            item.put("unit", row.get("unit"));
-            item.put("supplierName", row.get("supplierName"));
-            item.put("stockText", formatDecimal(stock));
-            item.put("minStockText", formatDecimal(minStock));
-            item.put("status", status);
-            item.put("statusLabel", statusLabel);
-            item.put("statusIcon", statusIcon);
-            item.put("barPercent", calculateBarPercent(stock, minStock));
+            row.setStockText(formatDecimal(stock));
+            row.setMinStockText(formatDecimal(minStock));
+            row.setStatus(status);
+            row.setStatusLabel(statusLabel);
+            row.setStatusIcon(statusIcon);
+            row.setBarPercent(calculateBarPercent(stock, minStock));
 
-            ingredients.add(item);
+            ingredients.add(row);
             if (!"ok".equals(status)) {
-                warnings.add(item);
+                warnings.add(row);
             }
         }
 
@@ -177,7 +176,7 @@ public class StockService {
         return data;
     }
 
-    // Dựng dữ liệu kiểm kê bán hàng theo ngày được chọn.
+    
     public HashMap<String, Object> getSalesAuditData(LocalDate selectedDate) {
         SalesAuditContext context = new SalesAuditContext(
                 loadIngredientMap(),
@@ -189,17 +188,20 @@ public class StockService {
             context.auditDate = selectedDate;
         }
 
-        List<HashMap<String, Object>> soldRows = loadSoldRows(context);
+        List<ProductSaleAuditDTO> soldRows = loadSoldRows(context, selectedDate);
+        if (selectedDate == null) {
+            context.auditDate = resolveAuditDate(soldRows);
+        }
         context.importedByIngredient = getImportedQuantityByIngredient(context.auditDate);
         context.stockSnapshotByIngredient = loadStockSnapshotByIngredient(context.auditDate);
 
-        List<HashMap<String, Object>> productSales = buildProductSales(soldRows, context);
-        List<HashMap<String, Object>> ingredientAudit = buildIngredientAudit(context);
+        List<ProductSaleAuditDTO> productSales = buildProductSales(soldRows, context);
+        List<IngredientAuditDTO> ingredientAudit = buildIngredientAudit(context);
 
         return buildSalesAuditData(productSales, ingredientAudit, context);
     }
 
-    // Lấy danh sách nguyên liệu qua service để hạn chế gọi IngredientDAO trực tiếp.
+   
     private HashMap<Integer, Ingredient> loadIngredientMap() {
         HashMap<String, Object> result = ingredientCheckService.getAllIngredients();
         Object success = result.get("success");
@@ -209,7 +211,7 @@ public class StockService {
         return new HashMap<>();
     }
 
-    // Lấy map công thức qua RecipeService để StockService không gọi RecipeDAO trực tiếp.
+  
     private HashMap<Integer, HashMap<Integer, List<Recipe>>> loadRecipeMap() {
         HashMap<String, Object> result = recipeService.getRecipeMap();
         Object success = result.get("success");
@@ -219,9 +221,9 @@ public class StockService {
         return new HashMap<>();
     }
 
-    // Lấy tồn đầu/tồn cuối theo ngày từ log kho.
-    private Map<Integer, HashMap<String, Object>> loadStockSnapshotByIngredient(LocalDate auditDate) {
-        Map<Integer, HashMap<String, Object>> map = new HashMap<>();
+    private Map<Integer, IngredientStockSnapshotDTO> loadStockSnapshotByIngredient(
+            LocalDate auditDate) {
+        Map<Integer, IngredientStockSnapshotDTO> map = new HashMap<>();
         HashMap<String, Object> result = ingredientCheckService.getStockSnapshotByDate(auditDate);
         Object success = result.get("success");
         if (!(success instanceof List<?>)) {
@@ -229,17 +231,17 @@ public class StockService {
         }
 
         for (Object item : (List<?>) success) {
-            if (!(item instanceof HashMap<?, ?>)) {
-                continue;
+            if (item instanceof IngredientStockSnapshotDTO) {
+                IngredientStockSnapshotDTO snapshot
+                        = (IngredientStockSnapshotDTO) item;
+                map.put(snapshot.getIngredientId(), snapshot);
             }
-            HashMap<String, Object> row = (HashMap<String, Object>) item;
-            map.put(toInt(row.get("ingredientId")), row);
         }
         return map;
     }
 
-    // Lấy dữ liệu sản phẩm đã bán trong ngày kiểm kê từ OrderService.
-    private List<HashMap<String, Object>> loadSoldRows(SalesAuditContext context) {
+    private List<ProductSaleAuditDTO> loadSoldRows(
+            SalesAuditContext context, LocalDate selectedDate) {
         OrderService orderService = new OrderService();
         HashMap<String, Object> soldResult
                 = orderService.getSoldProductSizeRowsByDate(context.auditDate);
@@ -250,26 +252,32 @@ public class StockService {
 
         Object success = soldResult.get("success");
         if (success instanceof List<?>) {
-            return (List<HashMap<String, Object>>) success;
+            List<ProductSaleAuditDTO> rows = new ArrayList<>();
+            for (Object item : (List<?>) success) {
+                if (item instanceof ProductSaleAuditDTO) {
+                    rows.add((ProductSaleAuditDTO) item);
+                }
+            }
+            return rows;
         }
 
         context.dataError = "Không đọc được dữ liệu bán hàng theo ngày đã chọn.";
         return new ArrayList<>();
     }
 
-    // Gom doanh thu và định mức nguyên liệu theo từng sản phẩm + size đã bán.
-    private List<HashMap<String, Object>> buildProductSales(
-            List<HashMap<String, Object>> soldRows,
+  
+    private List<ProductSaleAuditDTO> buildProductSales(
+            List<ProductSaleAuditDTO> soldRows,
             SalesAuditContext context) {
-        List<HashMap<String, Object>> productSales = new ArrayList<>();
-        for (HashMap<String, Object> row : soldRows) {
-            int productId = toInt(row.get("productId"));
-            int sizeId = toInt(row.get("sizeId"));
-            int soldQuantity = toInt(row.get("soldQuantity"));
-            String productName = stringValue(row.get("productName"));
-            String sizeName = stringValue(row.get("sizeName"));
-            BigDecimal unitPrice = toBigDecimal(row.get("unitPrice"));
-            BigDecimal revenue = toBigDecimal(row.get("revenue"));
+        List<ProductSaleAuditDTO> productSales = new ArrayList<>();
+        for (ProductSaleAuditDTO row : soldRows) {
+            int productId = row.getProductId();
+            int sizeId = row.getSizeId();
+            int soldQuantity = row.getSoldQuantity();
+            String productName = row.getProductName();
+            String sizeName = row.getSizeName();
+            BigDecimal unitPrice = toBigDecimal(row.getUnitPrice());
+            BigDecimal revenue = toBigDecimal(row.getRevenue());
 
             context.totalSoldCups += soldQuantity;
             context.totalRevenue = context.totalRevenue.add(revenue);
@@ -290,16 +298,16 @@ public class StockService {
                 }
             }
 
-            productSales.add(createProductSaleRow(productName, sizeName, soldQuantity,
-                    unitPrice, revenue, recipeParts, expectedParts, missingRecipe));
+            productSales.add(prepareProductSaleRow(
+                    row, unitPrice, revenue, recipeParts, expectedParts, missingRecipe));
         }
 
         return productSales;
     }
 
-    // Gom nguyên liệu đã dùng, nhập trong ngày và tồn đầu/tồn cuối theo ngày để kiểm kê.
-    private List<HashMap<String, Object>> buildIngredientAudit(SalesAuditContext context) {
-        List<HashMap<String, Object>> ingredientAudit = new ArrayList<>();
+
+    private List<IngredientAuditDTO> buildIngredientAudit(SalesAuditContext context) {
+        List<IngredientAuditDTO> ingredientAudit = new ArrayList<>();
         for (Map.Entry<Integer, Ingredient> entry : context.ingredientMap.entrySet()) {
             int ingredientId = entry.getKey();
             Ingredient ingredient = entry.getValue();
@@ -329,10 +337,10 @@ public class StockService {
         return ingredientAudit;
     }
 
-    // Đóng gói toàn bộ dữ liệu cuối cùng để JSP có thể đọc bằng salesAudit.
+   
     private HashMap<String, Object> buildSalesAuditData(
-            List<HashMap<String, Object>> productSales,
-            List<HashMap<String, Object>> ingredientAudit,
+            List<ProductSaleAuditDTO> productSales,
+            List<IngredientAuditDTO> ingredientAudit,
             SalesAuditContext context) {
         HashMap<String, Object> data = new HashMap<>();
         data.put("totalSoldCups", context.totalSoldCups);
@@ -351,7 +359,7 @@ public class StockService {
         return data;
     }
 
-    // Cộng lượng nguyên liệu dự kiến theo công thức của một sản phẩm/size.
+  
     private void addRecipeUsage(
             Recipe recipe,
             String productName,
@@ -389,37 +397,31 @@ public class StockService {
         expectedParts.add(formatDecimal(expectedUsed) + " " + unit + " " + ingredientName);
     }
 
-    // Tạo một dòng hiển thị cho bảng sản phẩm bán ra.
-    private HashMap<String, Object> createProductSaleRow(
-            String productName,
-            String sizeName,
-            int soldQuantity,
+    
+    private ProductSaleAuditDTO prepareProductSaleRow(
+            ProductSaleAuditDTO sale,
             BigDecimal unitPrice,
             BigDecimal revenue,
             List<String> recipeParts,
             List<String> expectedParts,
             boolean missingRecipe) {
-        HashMap<String, Object> sale = new HashMap<>();
-        sale.put("productName", productName);
-        sale.put("sizeName", sizeName);
-        sale.put("soldQuantity", soldQuantity);
-        sale.put("unitPriceText", formatMoney(unitPrice));
-        sale.put("revenueText", formatMoney(revenue));
-        sale.put("recipeText", String.join("; ", recipeParts));
-        sale.put("expectedUsageText", String.join("; ", expectedParts));
+        sale.setUnitPriceText(formatMoney(unitPrice));
+        sale.setRevenueText(formatMoney(revenue));
+        sale.setRecipeText(String.join("; ", recipeParts));
+        sale.setExpectedUsageText(String.join("; ", expectedParts));
         String statusClass = "ok";
         String statusIcon = "check_circle";
         if (missingRecipe) {
             statusClass = "danger";
             statusIcon = "error";
         }
-        sale.put("statusClass", statusClass);
-        sale.put("statusIcon", statusIcon);
+        sale.setStatusClass(statusClass);
+        sale.setStatusIcon(statusIcon);
         return sale;
     }
 
-    // Tạo một dòng hiển thị cho bảng đối chiếu nguyên liệu.
-    private HashMap<String, Object> createIngredientAuditRow(
+  
+    private IngredientAuditDTO createIngredientAuditRow(
             int ingredientId,
             Ingredient ingredient,
             BigDecimal expectedUsed,
@@ -427,32 +429,33 @@ public class StockService {
             StockNumbers stockNumbers,
             StockStatus status,
             SalesAuditContext context) {
-        HashMap<String, Object> audit = new HashMap<>();
-        audit.put("ingredientName", ingredient.getIngredientName());
-        audit.put("expectedUsedText", formatDecimal(expectedUsed) + " " + ingredient.getUnit());
-        audit.put("importedTodayText", formatDecimal(imported) + " " + ingredient.getUnit());
-        audit.put("currentStockText", formatStockValue(stockNumbers.closingStock, ingredient.getUnit()));
-        audit.put("openingEstimateText", formatStockValue(stockNumbers.openingStock, ingredient.getUnit()));
-        audit.put("expectedClosingText", formatStockValue(stockNumbers.expectedClosingStock, ingredient.getUnit()));
-        audit.put("cupsText", context.cupsByIngredient
+        IngredientAuditDTO audit = new IngredientAuditDTO();
+        audit.setIngredientName(ingredient.getIngredientName());
+        audit.setExpectedUsedText(formatDecimal(expectedUsed) + " " + ingredient.getUnit());
+        audit.setImportedTodayText(formatDecimal(imported) + " " + ingredient.getUnit());
+        audit.setCurrentStockText(formatStockValue(stockNumbers.closingStock, ingredient.getUnit()));
+        audit.setOpeningEstimateText(formatStockValue(stockNumbers.openingStock, ingredient.getUnit()));
+        audit.setExpectedClosingText(formatStockValue(stockNumbers.expectedClosingStock, ingredient.getUnit()));
+        audit.setCupsText(context.cupsByIngredient
                 .getOrDefault(ingredientId, "Không có sản phẩm bán trong ngày này"));
-        audit.put("usageDetails", context.usageDetailsByIngredient
+        audit.setUsageDetails(context.usageDetailsByIngredient
                 .getOrDefault(ingredientId, new ArrayList<>()));
-        audit.put("statusClass", status.statusClass);
-        audit.put("statusIcon", status.statusIcon);
-        audit.put("statusLabel", status.statusLabel);
+        audit.setStatusClass(status.statusClass);
+        audit.setStatusIcon(status.statusIcon);
+        audit.setStatusLabel(status.statusLabel);
         return audit;
     }
 
-    // Lấy tồn đầu/tồn cuối từ log; thiếu log thì đánh dấu không đủ dữ liệu đối chiếu.
+
     private StockNumbers getStockNumbers(
             int ingredientId,
             Ingredient ingredient,
             BigDecimal expectedUsed,
             BigDecimal imported,
             SalesAuditContext context) {
-        HashMap<String, Object> snapshot = context.stockSnapshotByIngredient.get(ingredientId);
-        boolean hasStockLog = snapshot != null && Boolean.TRUE.equals(snapshot.get("hasStockLog"));
+        IngredientStockSnapshotDTO snapshot
+                = context.stockSnapshotByIngredient.get(ingredientId);
+        boolean hasStockLog = snapshot != null && snapshot.isHasStockLog();
 
         if (!hasStockLog) {
             BigDecimal closingStock = null;
@@ -462,8 +465,8 @@ public class StockService {
             return reconcileStock(null, closingStock, imported, expectedUsed);
         }
         return reconcileStock(
-                toBigDecimal(snapshot.get("openingStock")),
-                toBigDecimal(snapshot.get("closingStock")),
+                snapshot.getOpeningStock(),
+                snapshot.getClosingStock(),
                 imported,
                 expectedUsed);
     }
@@ -495,7 +498,7 @@ public class StockService {
                 true);
     }
 
-    // Xác định trạng thái kiểm kê của nguyên liệu để hiển thị cảnh báo.
+
     private StockStatus getStockStatus(Ingredient ingredient, StockNumbers stockNumbers) {
         if (!stockNumbers.hasStockLog) {
             return new StockStatus("warning", "help", "Không đủ dữ liệu log");
@@ -525,7 +528,16 @@ public class StockService {
         return new StockStatus("ok", "check_circle", "Khớp");
     }
 
-    // Format ngày theo kiểu dd/MM/yyyy cho giao diện.
+    
+    private LocalDate resolveAuditDate(List<ProductSaleAuditDTO> soldRows) {
+        if (soldRows == null || soldRows.isEmpty()) {
+            return LocalDate.now();
+        }
+        LocalDate auditDate = soldRows.get(0).getAuditDate();
+        return auditDate == null ? LocalDate.now() : auditDate;
+    }
+
+   
     private String formatDate(LocalDate date) {
         if (date == null) {
             return "";
@@ -533,10 +545,7 @@ public class StockService {
         return date.format(DISPLAY_DATE_FORMAT);
     }
 
-    // Giữ các biến trung gian trong quá trình dựng dữ liệu kiểm kê.
-    // Gói các số tồn kho theo ngày để đối chiếu.
-    // Gói trạng thái tồn kho để không phải truyền nhiều chuỗi riêng lẻ.
-    // Ép dữ liệu dạng Object về BigDecimal an toàn.
+  
     private BigDecimal toBigDecimal(Object value) {
         if (value instanceof BigDecimal) {
             return (BigDecimal) value;
@@ -547,22 +556,7 @@ public class StockService {
         return BigDecimal.ZERO;
     }
 
-    // Ép dữ liệu dạng Object về int an toàn.
-    private int toInt(Object value) {
-        if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
-        if (value == null) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(value.toString());
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
-    // Trả về chuỗi rỗng nếu dữ liệu null.
+   
     private String stringValue(Object value) {
         if (value == null) {
             return "";
@@ -570,7 +564,7 @@ public class StockService {
         return value.toString();
     }
 
-    // Nối danh sách sản phẩm/size đã dùng cùng một nguyên liệu.
+
     private void appendCupText(Map<Integer, String> map, int ingredientId, String text) {
         String current = map.get(ingredientId);
         if (current == null || current.isEmpty()) {
@@ -580,18 +574,16 @@ public class StockService {
         map.put(ingredientId, current + "; " + text);
     }
 
-    // Thêm một dòng chi tiết công thức đã dùng cho từng nguyên liệu.
     private void appendUsageDetail(Map<Integer, List<String>> map, int ingredientId, String text) {
         map.putIfAbsent(ingredientId, new ArrayList<>());
         map.get(ingredientId).add(text);
     }
 
-    // Tính tổng lượng nguyên liệu đã nhập theo ngày kiểm kê.
     private Map<Integer, BigDecimal> getImportedQuantityByIngredient(LocalDate auditDate) {
         return importVoiceDAO.getReceivedQuantityByIngredient(auditDate);
     }
 
-    // Format số lượng nguyên liệu, bỏ số 0 dư phía sau.
+    
     private String formatDecimal(BigDecimal value) {
         if (value == null) {
             return "0";
@@ -603,7 +595,7 @@ public class StockService {
         return value == null ? "—" : formatDecimal(value) + " " + unit;
     }
 
-    // Format tiền Việt Nam để hiển thị trên JSP.
+ 
     private String formatMoney(BigDecimal value) {
         if (value == null) {
             return "0 đ";
@@ -611,7 +603,7 @@ public class StockService {
         return String.format("%,.0f đ", value).replace(",", ".");
     }
 
-    // Tính phần trăm thanh tồn kho trên dashboard nguyên liệu.
+    
     private int calculateBarPercent(BigDecimal stock, BigDecimal minStock) {
         if (stock == null || stock.compareTo(BigDecimal.ZERO) <= 0) {
             return 0;

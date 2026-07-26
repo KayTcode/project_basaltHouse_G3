@@ -5,6 +5,7 @@
 package services;
 
 import dao.IngredientDAO;
+import dto.IngredientStockSnapshotDTO;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +22,8 @@ public class IngredientCheckService {
     public HashMap<String, Object> getStockSnapshotByDate(LocalDate auditDate) {
         HashMap<String, Object> result = new HashMap<>();
         try {
-            List<HashMap<String, Object>> list = ingredientDAO.getStockSnapshotByDate(auditDate);
+            List<IngredientStockSnapshotDTO> list
+                    = ingredientDAO.getStockSnapshotByDate(auditDate);
             if (list == null) {
                 result.put("error", "Không đọc được tồn kho theo ngày.");
             } else {

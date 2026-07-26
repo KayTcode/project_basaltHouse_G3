@@ -19,8 +19,9 @@ public class ImportVoiceService {
             ImportInvoice invoice, List<ImportDetail> details) {
         HashMap<String, Object> result = new HashMap<>();
         try {
-            if (dao.insertImportInvoice(invoice, details)) {
-                result.put("success", true);
+            int importId = dao.insertImportInvoice(invoice, details);
+            if (importId > 0) {
+                result.put("success", importId);
             } else {
                 result.put("error", "Không thể tạo phiếu nhập.");
             }
@@ -34,14 +35,13 @@ public class ImportVoiceService {
     public HashMap<String, Object> updateImportInvoice(
             int importId,
             String status,
+            int confirmedByStaffId,
             String note,
-            String rejectReason,
-            int actingStaffId,
-            List<ImportDetail> details) {
+            String rejectReason) {
         HashMap<String, Object> result = new HashMap<>();
         try {
             boolean updated = dao.updateImportInvoice(
-                    importId, status, note, rejectReason, actingStaffId, details);
+                    importId, status, confirmedByStaffId, note, rejectReason);
             if (updated) {
                 result.put("success", true);
             } else {

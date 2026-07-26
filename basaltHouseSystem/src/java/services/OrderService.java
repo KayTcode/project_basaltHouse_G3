@@ -307,19 +307,7 @@ public class OrderService {
     }
 
     public HashMap<String, Object> getTodaySoldProductSizeRows() {
-        HashMap<String, Object> result = new HashMap<>();
-        try {
-            List<ProductSaleAuditDTO> list = dao.getTodaySoldProductSizeRows();
-            if (list == null) {
-                result.put("error", "Danh sách bán hàng hôm nay lỗi");
-            } else {
-                result.put("success", list);
-            }
-        } catch (Exception e) {
-            result.put("error", e.getMessage());
-            System.err.println(e.getMessage());
-        }
-        return result;
+        return getSoldProductSizeRowsByDate(LocalDate.now());
     }
 
     public HashMap<String, Object> getSoldProductSizeRowsByDate(LocalDate auditDate) {

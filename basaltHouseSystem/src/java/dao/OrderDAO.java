@@ -69,8 +69,6 @@ public class OrderDAO extends DBContext {
         return null;
     }
 
-
-
     /**
      * Lấy chi tiết các sản phẩm trong một đơn hàng.
      */
@@ -260,9 +258,6 @@ public class OrderDAO extends DBContext {
         }
         return list;
     }
-
-
-
 
     /**
      * Xác nhận thanh toán MoMo và trừ kho trong cùng một transaction.
@@ -495,21 +490,21 @@ public class OrderDAO extends DBContext {
                 historyDate = java.time.LocalDate.now().toString();
             }
             StringBuilder sql = new StringBuilder(
-                "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, "
-                + "o.Note, tb.TableCode AS TableName, c.FullName "
-                + "FROM Orders o "
-                + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
-                + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
-                + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
-                + "WHERE o.IsDeleted = 0 AND o.OrderStatus = 'Completed' AND CAST(o.CreatedAt AS DATE) = ? "
+                    "SELECT o.OrderId, o.OrderType, o.OrderStatus, o.CreatedAt, "
+                    + "o.Note, tb.TableCode AS TableName, c.FullName "
+                    + "FROM Orders o "
+                    + "LEFT JOIN Customers c ON o.CustomerId = c.CustomerId "
+                    + "LEFT JOIN TableSessions ts ON o.TableSessionId = ts.SessionId "
+                    + "LEFT JOIN Tables tb ON ts.TableId = tb.TableId "
+                    + "WHERE o.IsDeleted = 0 AND o.OrderStatus = 'Completed' AND CAST(o.CreatedAt AS DATE) = ? "
             );
-            
+
             boolean filterType = orderType != null && !orderType.trim().isEmpty() && !"all".equalsIgnoreCase(orderType);
             if (filterType) {
                 sql.append("AND LOWER(o.OrderType) = LOWER(?) ");
             }
             sql.append("ORDER BY o.CreatedAt DESC");
-            
+
             st = connection.prepareStatement(sql.toString());
             st.setString(1, historyDate);
             if (filterType) {
@@ -545,7 +540,7 @@ public class OrderDAO extends DBContext {
         return getCompletedOrdersByDate(java.time.LocalDate.now().toString(), null);
     }
 
-   public int insertOfflineOrder(Order order, List<OrderDetail> details) {
+    public int insertOfflineOrder(Order order, List<OrderDetail> details) {
         int orderId = -1;
         String storedPaymentStatus = order.getPaymentStatus() != null
                 ? order.getPaymentStatus() : "Paid";
@@ -795,7 +790,7 @@ public class OrderDAO extends DBContext {
                 try (ResultSet rs2 = ps.executeQuery()) {
                     while (rs2.next()) {
                         toRestore.put(rs2.getInt("IngredientId"),
-                                      rs2.getBigDecimal("Qty"));
+                                rs2.getBigDecimal("Qty"));
                     }
                 }
             }
@@ -836,9 +831,15 @@ public class OrderDAO extends DBContext {
         } catch (Exception e) {
             System.err.println("[OrderDAO] restoreStockForOrder FAILED orderId=" + orderId
                     + ": " + e.getMessage());
-            try { connection.rollback(); } catch (Exception ignored) {}
+            try {
+                connection.rollback();
+            } catch (Exception ignored) {
+            }
         } finally {
-            try { connection.setAutoCommit(true); } catch (Exception ignored) {}
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -879,7 +880,6 @@ public class OrderDAO extends DBContext {
             }
         }
     }
-
 
     public Order getOfflineOrderById(int orderId) {
         try {
@@ -1112,6 +1112,7 @@ public class OrderDAO extends DBContext {
         }
         return null;
     }
+
     public List<ProductSaleAuditDTO> getTodaySoldProductSizeRows() {
         List<ProductSaleAuditDTO> rows = new ArrayList<>();
         String sql = """
@@ -1189,6 +1190,8 @@ public class OrderDAO extends DBContext {
         } catch (Exception e) {
             System.err.println("getTodaySoldProductSizeRows Error: " + e.getMessage());
         }
+        return rows;
+    }
 
     public List<ProductSaleAuditDTO> getSoldProductSizeRowsByDate(LocalDate auditDate) {
         List<ProductSaleAuditDTO> rows = new ArrayList<>();

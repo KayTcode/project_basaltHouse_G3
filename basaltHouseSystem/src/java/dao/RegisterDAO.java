@@ -206,6 +206,14 @@ public class RegisterDAO extends DBContext {
                                     VALUES
                                           (?,1,0)
                                """;
+        String sqlVoucher = """
+                            INSERT INTO [dbo].[CustomerDiscountCodes]
+                                       ([AccountId]
+                                       ,[DiscountId]
+                                       ,[IsUsed]
+                                 VALUES
+                                       (?,1,0)
+                            """;
         try {
             connection.setAutoCommit(false);
             int roleId = -1;
@@ -249,6 +257,10 @@ public class RegisterDAO extends DBContext {
             psMembership.setObject(1, newCustomerId);
             psMembership.executeUpdate();
 
+            PreparedStatement psVoucher = connection.prepareStatement(sqlVoucher);
+            psVoucher.setObject(1, newAccountId);
+            psVoucher.executeUpdate();
+            
             markPendingAsUsed(pendingId, connection);
             connection.commit();
         } catch (SQLException e) {

@@ -1,391 +1,221 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c"   uri="jakarta.tags.core" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<%@ taglib prefix="fn"  uri="jakarta.tags.functions" %>
 <!DOCTYPE html>
 <html lang="vi">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Coffeely – Shipper Dashboard</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/shipper/shipper.css" />
-    </head>
-    <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipper Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/shipper/shipper.css" />
+</head>
+<body>
 
-        <%-- ══ HEADER ══════════════════════════════════════════════ --%>
-        <header class="s-header">
-            <div class="s-header__left">
-                <c:choose>
-                    <c:when test="${not empty currentShipper.avatarUrl}">
-                        <img src="${fn:escapeXml(currentShipper.avatarUrl)}" alt="avatar" class="s-avatar">
-                    </c:when>
-                    <c:otherwise>
-                        <div class="s-avatar-ph"><i class="bi bi-person-fill"></i></div>
-                        </c:otherwise>
-                    </c:choose>
-                <div>
-                    <div class="s-header__name"><c:out value="${currentShipper.fullName}"/></div>
-                    <div class="s-header__role"><i class="bi bi-bicycle me-1"></i>Tài xế giao hàng</div>
+    <%-- ───────── Flash message ───────── --%>
+    <c:if test="${not empty sessionScope.flashMessage}">
+        <div class="flash-alert ${sessionScope.flashSuccess ? 'ok' : 'err'}">
+            <i class="bi ${sessionScope.flashSuccess ? 'bi-check-circle' : 'bi-exclamation-triangle'}"></i>
+            <c:out value="${sessionScope.flashMessage}"/>
+        </div>
+        <c:remove var="flashMessage" scope="session"/>
+        <c:remove var="flashSuccess" scope="session"/>
+    </c:if>
+
+    <%-- ───────── Header ───────── --%>
+    <div class="shipper-header">
+        <div class="d-flex align-items-center gap-3">
+            <img class="avatar"
+                 src="${not empty currentShipper.avatarUrl ? currentShipper.avatarUrl : 'https://api.dicebear.com/7.x/initials/svg?seed='.concat(currentShipper.fullName)}"
+                 alt="avatar">
+            <div>
+                <div style="font-weight:700;font-size:16px"><c:out value="${currentShipper.fullName}"/></div>
+                <div style="font-size:13px;opacity:.85"><c:out value="${currentShipper.phone}"/></div>
+                <span class="avail-badge">
+                    <span class="avail-dot ${currentShipper.isAvailable ? '' : 'off'}"></span>
+                    ${currentShipper.isAvailable ? 'Đang nhận đơn' : 'Tạm ngưng nhận đơn'}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <%-- ───────── Tabs ───────── --%>
+    <div class="tab-bar">
+        <button type="button" class="tab-btn active" data-tab="pending" onclick="switchTab('pending')">
+            Đơn chờ nhận <c:if test="${not empty pendingOrders}">(${pendingOrders.size()})</c:if>
+        </button>
+        <button type="button" class="tab-btn" data-tab="current" onclick="switchTab('current')">
+            Đang giao ${not empty currentOrder ? '(1)' : ''}
+        </button>
+    </div>
+
+    <%-- ───────── Tab: Đơn chờ nhận ───────── --%>
+    <div id="tab-pending" class="tab-panel active">
+        <c:choose>
+            <c:when test="${empty pendingOrders}">
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    Chưa có đơn nào chờ bạn xác nhận.
                 </div>
-            </div>
-            <a href="${pageContext.request.contextPath}/logout" class="btn-logout">
-                <i class="bi bi-box-arrow-right me-1"></i>Thoát
-            </a>
-        </header>
-
-        <%-- ══ FLASH MESSAGE ════════════════════════════════════════ --%>
-        <c:if test="${not empty sessionScope.flashMessage}">
-            <div class="flash-wrap">
-                <c:choose>
-                    <c:when test="${sessionScope.flashSuccess == true}">
-                        <div class="alert alert-success flash-alert">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <c:out value="${sessionScope.flashMessage}"/>
+            </c:when>
+            <c:otherwise>
+                <c:forEach var="o" items="${pendingOrders}">
+                    <div class="order-card">
+                        <div class="order-top">
+                            <div>
+                                <div class="order-id">Đơn #${o.orderId}</div>
+                                <div class="order-time">${orderTimeMap[o.orderId]}</div>
+                            </div>
+                            <div class="order-amount"><fmt:formatNumber value="${o.finalAmount}" type="number"/>đ</div>
                         </div>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="alert alert-danger flash-alert">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <c:out value="${sessionScope.flashMessage}"/>
+                        <div class="order-meta">
+                            <div><i class="bi bi-person"></i> <c:out value="${not empty o.customerName ? o.customerName : 'Khách lẻ'}"/></div>
+                            <div><i class="bi bi-credit-card"></i> ${o.paymentMethod} · ${o.paymentStatus}</div>
                         </div>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-            <c:remove var="flashMessage" scope="session"/>
-            <c:remove var="flashSuccess"  scope="session"/>
-        </c:if>
 
-        <%-- ══ STATS BAR ════════════════════════════════════════════ --%>
-        <div class="stats-bar">
-            <div class="stat-card">
-                <div class="stat-card__val">${fn:length(pendingOrders)}</div>
-                <div class="stat-card__lbl">Đơn chờ</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card__val">${not empty currentOrder ? 1 : 0}</div>
-                <div class="stat-card__lbl">Đang giao</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-card__val">${currentShipper.isAvailable ? '🟢' : '🔴'}</div>
-                <div class="stat-card__lbl">${currentShipper.isAvailable ? 'Sẵn sàng' : 'Bận'}</div>
-            </div>
-        </div>
-
-        <%-- ══ TAB BAR ══════════════════════════════════════════════ --%>
-        <div class="tab-bar">
-            <button class="tab-btn active" id="btn-tab1" onclick="switchTab(1)">
-                <i class="bi bi-inbox-fill"></i>
-                Đơn mới
-                <c:if test="${not empty pendingOrders}">
-                    <span class="badge-cnt">${fn:length(pendingOrders)}</span>
-                </c:if>
-            </button>
-            <button class="tab-btn" id="btn-tab2" onclick="switchTab(2)">
-                <i class="bi bi-geo-alt-fill"></i>
-                Đang giao
-                <c:if test="${not empty currentOrder}">
-                    <span class="badge-on">1</span>
-                </c:if>
-            </button>
-        </div>
-
-        <%-- ══════════════════════════════════════════════════════════
-             TAB 1 — ĐƠN MỚI (Preparing)
-             ══════════════════════════════════════════════════════════ --%>
-        <div class="tab-content active" id="tab1">
-            <p class="section-title">
-                <i class="bi bi-clock-history me-1"></i>Đơn hàng chờ giao
-            </p>
-
-            <c:choose>
-                <c:when test="${empty pendingOrders}">
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <span>Không có đơn hàng nào đang chờ giao.</span>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <c:forEach var="o" items="${pendingOrders}">
-                        <div class="order-card">
-                            <div class="order-card__head">
-                                <div>
-                                    <div class="order-id">#<c:out value="${o.orderId}"/></div>
-                                    <div class="order-time">${orderTimeMap[o.orderId]}</div>
-                                </div>
-                                <span class="status-badge status-preparing">Chờ giao</span>
-                            </div>
-
-                            <div class="order-row">
-                                <i class="bi bi-person"></i>
-                                <span><c:out value="${o.customerName}"/></span>
-                            </div>
-
-                            <div class="order-row">
-                                <i class="bi bi-credit-card"></i>
-                                <span><c:out value="${o.paymentMethod}"/> –
-                                    <c:out value="${o.paymentStatus}"/></span>
-                            </div>
-
-                            <div class="order-amount">
-                                <fmt:formatNumber value="${o.finalAmount}" type="number"
-                                                  groupingUsed="true"/> đ
-                            </div>
-
-                            <%-- Nút nhận đơn — chỉ hiện nếu shipper chưa có đơn đang giao --%>
-                            <c:if test="${empty currentOrder}">
+                        <c:if test="${empty currentOrder}">
+                            <div class="d-flex gap-2" style="margin-top:12px">
                                 <form action="${pageContext.request.contextPath}/shipper/accept-order"
-                                      method="post" style="margin:0">
+                                      method="post" style="margin:0;flex:1">
                                     <input type="hidden" name="orderId" value="${o.orderId}">
-                                    <button type="submit" class="btn-accept">
-                                        <i class="bi bi-check2-circle"></i>Nhận đơn này
+                                    <button type="submit" class="btn-accept" style="width:100%">
+                                        <i class="bi bi-check2-circle"></i> Nhận đơn này
                                     </button>
                                 </form>
-                            </c:if>
-                            <c:if test="${not empty currentOrder}">
-                                <div style="font-size:12px;color:var(--text-light);margin-top:10px;
-                                     text-align:center;padding:8px;background:var(--cream);
-                                     border-radius:8px;">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Hoàn thành đơn hiện tại trước khi nhận đơn mới.
-                                </div>
-                            </c:if>
-                        </div>
-                    </c:forEach>
-                </c:otherwise>
-            </c:choose>
-        </div>
-
-        <%-- ══════════════════════════════════════════════════════════
-             TAB 2 — ĐANG GIAO (Delivering)
-             ══════════════════════════════════════════════════════════ --%>
-        <div class="tab-content" id="tab2">
-
-            <c:choose>
-                <c:when test="${empty currentOrder}">
-                    <div class="empty-state">
-                        <i class="bi bi-geo-alt"></i>
-                        <span>Bạn chưa nhận đơn nào.<br>Sang tab <strong>Đơn mới</strong> để nhận đơn.</span>
-                    </div>
-                </c:when>
-
-                <c:otherwise>
-                    <%-- Thông tin đơn đang giao --%>
-                    <div class="current-panel">
-                        <div class="current-panel__label">
-                            <div class="pulse-dot"></div>
-                            Đơn đang giao
-                        </div>
-
-                        <div class="order-card__head" style="margin-bottom:10px">
-                            <div>
-                                <div class="order-id">#<c:out value="${currentOrder.orderId}"/></div>
-                                <div class="order-time">${currentOrderTime}</div>
+                                <form action="${pageContext.request.contextPath}/shipper/reject-order"
+                                      method="post" style="margin:0;flex:1"
+                                      onsubmit="return confirm('Huỷ nhận đơn #${o.orderId}?');">
+                                    <input type="hidden" name="orderId" value="${o.orderId}">
+                                    <button type="submit" class="btn-reject" style="width:100%">
+                                        <i class="bi bi-x-circle"></i> Huỷ đơn
+                                    </button>
+                                </form>
                             </div>
-                            <span class="status-badge status-delivering">Đang giao</span>
-                        </div>
+                        </c:if>
+                        <c:if test="${not empty currentOrder}">
+                            <div class="order-meta" style="margin-top:10px;color:#b8860b">
+                                <i class="bi bi-info-circle"></i> Hoàn thành đơn đang giao trước khi nhận đơn mới.
+                            </div>
+                        </c:if>
+                    </div>
+                </c:forEach>
+            </c:otherwise>
+        </c:choose>
+    </div>
 
-                        <div class="order-row">
-                            <i class="bi bi-person"></i>
-                            <span><c:out value="${currentOrder.customerName}"/></span>
+    <%-- ───────── Tab: Đang giao ───────── --%>
+    <div id="tab-current" class="tab-panel">
+        <c:choose>
+            <c:when test="${empty currentOrder}">
+                <div class="empty-state">
+                    <i class="bi bi-truck"></i>
+                    Bạn chưa nhận đơn nào để giao.
+                </div>
+            </c:when>
+            <c:otherwise>
+                <div class="order-card">
+                    <div class="order-top">
+                        <div>
+                            <div class="order-id">Đơn #${currentOrder.orderId}</div>
+                            <div class="order-time">${currentOrderTime}</div>
                         </div>
+                        <div class="order-amount"><fmt:formatNumber value="${currentOrder.finalAmount}" type="number"/>đ</div>
+                    </div>
+
+                    <div class="order-meta">
+                        <div><i class="bi bi-person"></i> <c:out value="${not empty currentOrder.customerName ? currentOrder.customerName : 'Khách lẻ'}"/></div>
+                        <div><i class="bi bi-credit-card"></i> ${currentOrder.paymentMethod} · ${currentOrder.paymentStatus}</div>
 
                         <c:if test="${not empty deliveryAddress}">
-                            <div class="order-row">
-                                <i class="bi bi-geo-alt-fill"></i>
-                                <span>
-                                    <c:out value="${deliveryAddress.recipientName}"/>
-                                    (<c:out value="${deliveryAddress.recipientPhone}"/>) –
-                                    <c:out value="${deliveryAddress.addressDetail}"/>
-                                </span>
+                            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--card-border)">
+                                <div><i class="bi bi-geo-alt"></i> <c:out value="${deliveryAddress.recipientName}"/> — <c:out value="${deliveryAddress.recipientPhone}"/></div>
+                                <div><i class="bi bi-signpost"></i> <c:out value="${deliveryAddress.addressDetail}"/></div>
+                                <c:if test="${not empty deliveryAddress.note}">
+                                    <div><i class="bi bi-chat-left-text"></i> <c:out value="${deliveryAddress.note}"/></div>
+                                </c:if>
                             </div>
-                            <c:if test="${not empty deliveryAddress.note}">
-                                <div class="order-row">
-                                    <i class="bi bi-sticky"></i>
-                                    <span><c:out value="${deliveryAddress.note}"/></span>
-                                </div>
-                            </c:if>
                         </c:if>
-
-                        <div class="order-row">
-                            <i class="bi bi-credit-card"></i>
-                            <span><c:out value="${currentOrder.paymentMethod}"/></span>
-                        </div>
-
-                        <div class="order-amount">
-                            <fmt:formatNumber value="${currentOrder.finalAmount}"
-                                              type="number" groupingUsed="true"/> đ
-                        </div>
                     </div>
 
-                    <%-- ── FORM CẬP NHẬT TRẠNG THÁI + UPLOAD ẢNH ── --%>
-                    <div class="upload-section">
-                        <h6><i class="bi bi-camera me-1"></i>Cập nhật kết quả giao hàng</h6>
-
-                        <form action="${pageContext.request.contextPath}/shipper/update-delivery"
-                              method="post"
-                              enctype="multipart/form-data"
-                              id="deliveryForm">
-
-                            <input type="hidden" name="orderId" value="${currentOrder.orderId}">
-
-                            <%-- Toggle thành công / thất bại --%>
-                            <div class="result-toggle">
-                                <input type="radio" name="isSuccess" id="radio-success"
-                                       value="true" checked onchange="toggleDeliveryMode(true)">
-                                <label for="radio-success" id="lbl-success"
-                                       class="lbl-success">
-                                    <i class="bi bi-check-circle me-1"></i>Thành công
-                                </label>
-
-                                <input type="radio" name="isSuccess" id="radio-fail"
-                                       value="false" onchange="toggleDeliveryMode(false)">
-                                <label for="radio-fail" id="lbl-fail" class="lbl-fail">
-                                    <i class="bi bi-x-circle me-1"></i>Thất bại
-                                </label>
-                            </div>
-
-
-                            <%-- Phần thành công: upload ảnh + ghi chú --%>
-                            <div id="section-success">
-                                <label class="form-label-sm">📷 Ảnh xác nhận giao hàng *</label>
-                                <div class="img-preview-wrap" onclick="document.getElementById('proofImageInput').click()">
-                                    <div class="img-preview-placeholder" id="imgPlaceholder">
-                                        <i class="bi bi-camera-fill"></i>
-                                        <span>Chụp ảnh hoặc chọn từ thư viện</span>
-                                    </div>
-                                    <img id="previewImg" alt="Ảnh xác nhận giao hàng" style="display:none">
-                                </div>
-                                <input type="file" name="proofImage" id="proofImageInput"
-                                       accept="image/*" capture="environment"
-                                       onchange="previewImage(this)">
-                                <label class="form-label-sm" for="noteInput">Ghi chú (tùy chọn)</label>
-                                <textarea id="noteInput" name="note" rows="2"
-                                          class="form-control-sm-custom"
-                                          placeholder="Để tại cửa, đã gặp khách..."></textarea>
-                            </div>
-
-                            <%-- Phần thất bại: lý do --%>
-                            <div id="section-fail" style="display:none">
-                                <label class="form-label-sm" for="failReasonInput">
-                                    Lý do thất bại *
-                                </label>
-                                <textarea id="failReasonInput" name="failReason" rows="3"
-                                          class="form-control-sm-custom"
-                                          placeholder="Khách không nghe máy, sai địa chỉ..."></textarea>
-                            </div>
-
-                            <%-- Nút submit (đổi màu theo mode) --%>
-                            <button type="submit" class="btn-submit-delivery btn-submit-success"
-                                    id="submitBtn" onclick="return validateForm()">
-                                <i class="bi bi-check2-circle" id="submitIcon"></i>
-                                <span id="submitText">Xác nhận giao thành công</span>
-                            </button>
-
-                        </form>
+                    <div class="d-flex gap-2" style="margin-top:14px">
+                        <button type="button" class="btn-success-deliver" style="flex:1"
+                                onclick="openModal('modal-success')">
+                            <i class="bi bi-check2-circle"></i> Giao thành công
+                        </button>
+                        <button type="button" class="btn-fail-deliver" style="flex:1"
+                                onclick="openModal('modal-fail')">
+                            <i class="bi bi-x-octagon"></i> Giao thất bại
+                        </button>
                     </div>
-                </c:otherwise>
-            </c:choose>
+                </div>
+            </c:otherwise>
+        </c:choose>
+    </div>
+
+    <%-- ───────── Modal: xác nhận giao thành công ───────── --%>
+    <div class="modal-backdrop-custom" id="modal-success">
+        <div class="modal-box">
+            <h5><i class="bi bi-check2-circle text-success"></i> Xác nhận giao thành công</h5>
+            <form action="${pageContext.request.contextPath}/shipper/update-delivery" method="post"
+                  enctype="multipart/form-data">
+                <input type="hidden" name="orderId" value="${currentOrder.orderId}">
+                <input type="hidden" name="isSuccess" value="true">
+                <label style="font-size:13px;color:#666">Ảnh xác nhận giao hàng (tuỳ chọn)</label>
+                <input type="file" name="proofImage" accept="image/*" capture="environment">
+                <label style="font-size:13px;color:#666;margin-top:8px;display:block">Ghi chú (tuỳ chọn)</label>
+                <textarea name="note" rows="2" placeholder="Ví dụ: đã giao tận tay khách"></textarea>
+                <div class="modal-actions">
+                    <button type="button" onclick="closeModal('modal-success')">Huỷ</button>
+                    <button type="submit" class="primary btn-success-deliver">Xác nhận</button>
+                </div>
+            </form>
         </div>
+    </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-                                        // ── Tab switching ──────────────────────────────────────
-                                        function switchTab(n) {
-                                            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-                                            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-                                            document.getElementById('tab' + n).classList.add('active');
-                                            document.getElementById('btn-tab' + n).classList.add('active');
-                                        }
+    <%-- ───────── Modal: báo giao thất bại ───────── --%>
+    <div class="modal-backdrop-custom" id="modal-fail">
+        <div class="modal-box">
+            <h5><i class="bi bi-x-octagon text-danger"></i> Báo giao thất bại</h5>
+            <form action="${pageContext.request.contextPath}/shipper/update-delivery" method="post"
+                  onsubmit="return validateFailForm(this);">
+                <input type="hidden" name="orderId" value="${currentOrder.orderId}">
+                <input type="hidden" name="isSuccess" value="false">
+                <label style="font-size:13px;color:#666">Lí do giao thất bại (bắt buộc)</label>
+                <textarea name="failReason" rows="3" required
+                          placeholder="Ví dụ: khách không nghe máy, sai địa chỉ..."></textarea>
+                <div class="modal-actions">
+                    <button type="button" onclick="closeModal('modal-fail')">Huỷ</button>
+                    <button type="submit" class="primary btn-fail-deliver">Xác nhận thất bại</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                                        // ── Toggle success / fail mode ─────────────────────────
-                                        function toggleDeliveryMode(isSuccess) {
-                                            const secSuccess = document.getElementById('section-success');
-                                            const secFail = document.getElementById('section-fail');
-                                            const btn = document.getElementById('submitBtn');
-                                            const icon = document.getElementById('submitIcon');
-                                            const text = document.getElementById('submitText');
-                                            const lblSuccess = document.getElementById('lbl-success');
-                                            const lblFail = document.getElementById('lbl-fail');
+    <script>
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-' + name).classList.add('active');
+        }
+        function openModal(id) { document.getElementById(id).classList.add('show'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+        function validateFailForm(form) {
+            const reason = form.querySelector('[name=failReason]').value.trim();
+            if (!reason) {
+                alert('Vui lòng nhập lí do giao hàng thất bại!');
+                return false;
+            }
+            return true;
+        }
+        // Đóng modal khi bấm ra ngoài
+        document.querySelectorAll('.modal-backdrop-custom').forEach(bd => {
+            bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('show'); });
+        });
 
-                                            if (isSuccess) {
-                                                secSuccess.style.display = '';
-                                                secFail.style.display = 'none';
-                                                btn.className = 'btn-submit-delivery btn-submit-success';
-                                                icon.className = 'bi bi-check2-circle';
-                                                text.textContent = 'Xác nhận giao thành công';
-                                                lblSuccess.style.background = 'var(--green)';
-                                                lblSuccess.style.color = '#fff';
-                                                lblFail.style.background = '';
-                                                lblFail.style.color = 'var(--red)';
-                                            } else {
-                                                secSuccess.style.display = 'none';
-                                                secFail.style.display = '';
-                                                btn.className = 'btn-submit-delivery btn-submit-fail';
-                                                icon.className = 'bi bi-x-circle';
-                                                text.textContent = 'Xác nhận giao thất bại';
-                                                lblFail.style.background = 'var(--red)';
-                                                lblFail.style.color = '#fff';
-                                                lblSuccess.style.background = '';
-                                                lblSuccess.style.color = 'var(--green)';
-                                            }
-                                        }
-
-                                        // Khởi tạo màu ban đầu
-                                        toggleDeliveryMode(true);
-
-                                        // ── Image preview ──────────────────────────────────────
-                                        function previewImage(input) {
-                                            if (!input.files || !input.files[0])
-                                                return;
-                                            const file = input.files[0];
-                                            if (file.size > 5 * 1024 * 1024) {
-                                                alert('Ảnh không được vượt quá 5 MB.');
-                                                input.value = '';
-                                                return;
-                                            }
-                                            const reader = new FileReader();
-                                            reader.onload = e => {
-                                                const img = document.getElementById('previewImg');
-                                                img.src = e.target.result;
-                                                img.style.display = 'block';
-                                                document.getElementById('imgPlaceholder').style.display = 'none';
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
-
-                                        // ── Validate trước submit ──────────────────────────────
-                                        function validateForm() {
-                                            const isSuccess = document.getElementById('radio-success').checked;
-                                            if (isSuccess) {
-                                                const file = document.getElementById('proofImageInput').files;
-                                                if (!file || file.length === 0) {
-                                                    alert('Vui lòng chụp hoặc chọn ảnh xác nhận giao hàng.');
-                                                    return false;
-                                                }
-                                            } else {
-                                                const reason = document.getElementById('failReasonInput').value.trim();
-                                                if (!reason) {
-                                                    alert('Vui lòng nhập lý do giao hàng thất bại.');
-                                                    return false;
-                                                }
-                                            }
-
-                                            // Disable nút SAU khi form đã bắt đầu submit, tránh Chrome hủy submit
-                                            setTimeout(() => {
-                                                const btn = document.getElementById('submitBtn');
-                                                btn.disabled = true;
-                                                btn.querySelector('span').textContent = 'Đang xử lý...';
-                                            }, 0);
-
-                                            return true;
-                                        }
-
-                                        // ── Auto-switch sang tab 2 nếu đang có đơn ────────────
-            <c:if test="${not empty currentOrder}">
-                                        switchTab(2);
-            </c:if>
-        </script>
-    </body>
+        <c:if test="${not empty currentOrder}">
+        // Nếu đang có đơn giao, mặc định mở tab "Đang giao" cho tiện thao tác
+        switchTab('current');
+        </c:if>
+    </script>
+</body>
 </html>

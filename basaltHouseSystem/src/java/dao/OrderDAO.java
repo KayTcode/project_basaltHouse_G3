@@ -1,5 +1,6 @@
 package dao;
 
+import dto.ProductSaleAuditDTO;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -1015,8 +1016,8 @@ public class OrderDAO extends DBContext {
         }
         return null;
     }
-    public List<HashMap<String, Object>> getTodaySoldProductSizeRows() {
-        List<HashMap<String, Object>> rows = new ArrayList<>();
+    public List<ProductSaleAuditDTO> getTodaySoldProductSizeRows() {
+        List<ProductSaleAuditDTO> rows = new ArrayList<>();
         String sql = """
                      SET NOCOUNT ON;
 
@@ -1087,16 +1088,7 @@ public class OrderDAO extends DBContext {
                      """;
         try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs2 = ps.executeQuery()) {
             while (rs2.next()) {
-                HashMap<String, Object> row = new HashMap<>();
-                row.put("productId", rs2.getInt("ProductId"));
-                row.put("sizeId", rs2.getInt("SizeId"));
-                row.put("productName", rs2.getString("ProductName"));
-                row.put("sizeName", rs2.getString("SizeName"));
-                row.put("soldQuantity", rs2.getInt("SoldQuantity"));
-                row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
-                row.put("revenue", rs2.getBigDecimal("Revenue"));
-                row.put("auditDate", rs2.getDate("AuditDate"));
-                rows.add(row);
+                rows.add(mapProductSaleAudit(rs2));
             }
         } catch (Exception e) {
             System.err.println("getTodaySoldProductSizeRows Error: " + e.getMessage());
@@ -1104,8 +1096,8 @@ public class OrderDAO extends DBContext {
         return rows;
     }
 
-    public List<HashMap<String, Object>> getSoldProductSizeRowsByDate(LocalDate auditDate) {
-        List<HashMap<String, Object>> rows = new ArrayList<>();
+    public List<ProductSaleAuditDTO> getSoldProductSizeRowsByDate(LocalDate auditDate) {
+        List<ProductSaleAuditDTO> rows = new ArrayList<>();
         String sql = """
                      DECLARE @AuditDate DATE = ?;
                      DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
@@ -1142,22 +1134,27 @@ public class OrderDAO extends DBContext {
             ps.setDate(1, java.sql.Date.valueOf(auditDate));
             try (ResultSet rs2 = ps.executeQuery()) {
                 while (rs2.next()) {
-                    HashMap<String, Object> row = new HashMap<>();
-                    row.put("productId", rs2.getInt("ProductId"));
-                    row.put("sizeId", rs2.getInt("SizeId"));
-                    row.put("productName", rs2.getString("ProductName"));
-                    row.put("sizeName", rs2.getString("SizeName"));
-                    row.put("soldQuantity", rs2.getInt("SoldQuantity"));
-                    row.put("unitPrice", rs2.getBigDecimal("UnitPrice"));
-                    row.put("revenue", rs2.getBigDecimal("Revenue"));
-                    row.put("auditDate", rs2.getDate("AuditDate"));
-                    rows.add(row);
+                    rows.add(mapProductSaleAudit(rs2));
                 }
             }
         } catch (Exception e) {
             System.err.println("getSoldProductSizeRowsByDate Error: " + e.getMessage());
         }
         return rows;
+    }
+
+    private ProductSaleAuditDTO mapProductSaleAudit(ResultSet result)
+            throws SQLException {
+        java.sql.Date auditDate = result.getDate("AuditDate");
+        return new ProductSaleAuditDTO(
+                result.getInt("ProductId"),
+                result.getInt("SizeId"),
+                result.getString("ProductName"),
+                result.getString("SizeName"),
+                result.getInt("SoldQuantity"),
+                result.getBigDecimal("UnitPrice"),
+                result.getBigDecimal("Revenue"),
+                auditDate == null ? null : auditDate.toLocalDate());
     }
 
     public Map<String, Object> getCashierDashboard() {

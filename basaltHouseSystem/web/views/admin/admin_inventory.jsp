@@ -84,7 +84,7 @@
                         <c:otherwise>
                             <c:forEach var="item" items="${ingredients}">
                                 <tr>
-                                    <td><strong>${item.name}</strong></td>
+                                    <td><strong>${item.ingredientName}</strong></td>
                                     <td>${item.supplierName}</td>
                                     <td>${item.unit}</td>
                                     <td>${item.stockText}</td>

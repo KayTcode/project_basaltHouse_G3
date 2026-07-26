@@ -12,7 +12,9 @@
                         <form action="${pageContext.request.contextPath}/staff/history">
                             <div class="search-box history-search">
                             <span class="material-symbols-outlined">search</span>
-                            <input id="historySearch" name="search" value="${key}" placeholder="Tìm hóa đơn, nguyên liệu" >
+                            <input id="historySearch" name="search"
+                                   value="${fn:escapeXml(key)}"
+                                   placeholder="Tìm mã phiếu, hóa đơn, nhà cung cấp hoặc nguyên liệu">
                         </div>
                         </form>
                         
@@ -67,7 +69,7 @@
 
                                 <c:forEach var="row" items="${listP}">
                                     <tr class="history-row">
-                                        <td><strong><c:out value="${row.orderedDate}"/></strong></td>
+                                        <td><strong><c:out value="${row.orderedDateText}"/></strong></td>
                                         <td>
                                             <strong><c:out value="${row.importCode}"/></strong>
                                             <span class="invoice-sub">#<c:out value="${row.importId}"/></span>
@@ -75,7 +77,7 @@
                                         <td>
                                             <div class="ingredient-name history-ingredient-summary"><c:out value="${row.ingredientName}"/></div>
                                         </td>
-                                        <td><c:out value="${row.sppliendName}"/></td>
+                                        <td><c:out value="${row.supplierName}"/></td>
                                         <td>
                                             <strong><c:out value="${row.ingredientCount}"/> loại</strong>
                                         </td>
@@ -90,6 +92,7 @@
                                                 <span class="material-symbols-outlined">
                                                     <c:choose>
                                                         <c:when test="${row.status eq 'Pending'}">schedule</c:when>
+                                                        <c:when test="${row.status eq 'Rejected'}">block</c:when>
                                                         <c:otherwise>check_circle</c:otherwise>
                                                     </c:choose>
                                                 </span>

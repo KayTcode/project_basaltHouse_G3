@@ -1,5 +1,6 @@
 package controller;
 
+import dto.IngredientStockDTO;
 import dto.UserLoginDTO;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -43,7 +44,7 @@ public class StaffImportServlet extends HttpServlet {
                 request.setAttribute(entry.getKey(), entry.getValue());
             }
 
-            request.setAttribute("importIngredients", new ArrayList<HashMap<String, Object>>());
+            request.setAttribute("importIngredients", new ArrayList<IngredientStockDTO>());
             String supplierValue = trimToNull(request.getParameter("supplierId"));
             if (supplierValue != null) {
                 int selectedSupplierId = Integer.parseInt(supplierValue);
@@ -136,6 +137,14 @@ public class StaffImportServlet extends HttpServlet {
                 ));
             }
 
+            LocalDateTime orderedDate =
+                    parseDateTime(request.getParameter("orderedDate"));
+            LocalDateTime expectedDate =
+                    parseDateTime(request.getParameter("expectedDate"));
+            LocalDateTime receivedDate =
+                    parseDateTime(request.getParameter("receivedDate"));
+            validateImportDates(orderedDate, expectedDate, receivedDate);
+
             ImportInvoice invoice = new ImportInvoice(
                     0,
                     importCode,
@@ -143,9 +152,9 @@ public class StaffImportServlet extends HttpServlet {
                     staffId,
                     null,
                     "Pending",
-                    parseDateTime(request.getParameter("orderedDate")),
-                    parseDateTime(request.getParameter("expectedDate")),
-                    parseDateTime(request.getParameter("receivedDate")),
+                    orderedDate,
+                    expectedDate,
+                    receivedDate,
                     trimToNull(request.getParameter("supplierInvoiceCode")),
                     totalOrderedAmount,
                     totalReceivedAmount,
@@ -161,10 +170,11 @@ public class StaffImportServlet extends HttpServlet {
                 return;
             }
 
+            int createdImportId = (Integer) createResult.get("success");
             activityService.ctreatActiveLog(new ActivityLog(user.getAccountId(),
-                    "Create new Import In Voice ",
-                    "ImportInVoice",
-                    user.getAccountId(),
+                    "Create import invoice",
+                    "ImportInvoice",
+                    createdImportId,
                     null,
                     importCode,
                     "Success",
@@ -174,6 +184,23 @@ public class StaffImportServlet extends HttpServlet {
         } catch (Exception e) {
             request.setAttribute("errorMessage", e.getMessage());
             doGet(request, response);
+        }
+    }
+
+    private void validateImportDates(
+            LocalDateTime orderedDate,
+            LocalDateTime expectedDate,
+            LocalDateTime receivedDate) {
+        if (orderedDate == null) {
+            throw new IllegalArgumentException("Vui lòng nhập ngày đặt hàng.");
+        }
+        if (expectedDate != null && expectedDate.isBefore(orderedDate)) {
+            throw new IllegalArgumentException(
+                    "Ngày dự kiến không được trước ngày đặt hàng.");
+        }
+        if (receivedDate != null && receivedDate.isBefore(orderedDate)) {
+            throw new IllegalArgumentException(
+                    "Ngày nhận không được trước ngày đặt hàng.");
         }
     }
 

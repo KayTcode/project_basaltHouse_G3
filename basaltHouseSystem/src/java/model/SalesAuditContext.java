@@ -1,5 +1,6 @@
 package model;
 
+import dto.IngredientStockSnapshotDTO;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -13,7 +14,7 @@ public class SalesAuditContext {
     public final Map<Integer, BigDecimal> expectedByIngredient = new HashMap<>();
     public final Map<Integer, String> cupsByIngredient = new HashMap<>();
     public final Map<Integer, List<String>> usageDetailsByIngredient = new HashMap<>();
-    public Map<Integer, HashMap<String, Object>> stockSnapshotByIngredient = new HashMap<>();
+    public Map<Integer, IngredientStockSnapshotDTO> stockSnapshotByIngredient = new HashMap<>();
     public Map<Integer, BigDecimal> importedByIngredient = new HashMap<>();
     public LocalDate auditDate = LocalDate.now();
     public String dataError;

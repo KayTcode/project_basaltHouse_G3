@@ -92,7 +92,7 @@ public class AuthDAO extends DBContext {
         int roleId = account.getRoleId();
 
         switch (roleId) {
-            case 1:
+            case 2:
                 sql = """
                       SELECT FullName, AvatarUrl
                       FROM Customers
@@ -100,7 +100,7 @@ public class AuthDAO extends DBContext {
                       """;
                 break;
 
-            case 2:
+            case 3:
                 sql = """
                       SELECT FullName, AvatarUrl
                       FROM Staffs

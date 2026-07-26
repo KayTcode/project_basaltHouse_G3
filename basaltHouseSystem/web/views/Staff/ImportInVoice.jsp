@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core"%>
+<%@taglib prefix="fn" uri="jakarta.tags.functions"%>
 
 <section class="staff-view active" id="importView">
     <aside class="panel import-panel" id="importForm">
@@ -31,8 +32,8 @@
                             required>
                         <option value="">Chọn nhà cung cấp</option>
                         <c:forEach var="supplier" items="${suppliers}">
-                            <option value="${supplier.id}" ${supplier.id == selectedSupplierId ? 'selected' : ''}>
-                                <c:out value="${supplier.name}"/>
+                            <option value="${supplier.supplierId}" ${supplier.supplierId == selectedSupplierId ? 'selected' : ''}>
+                                <c:out value="${supplier.supplierName}"/>
                             </option>
                         </c:forEach>
                     </select>
@@ -50,7 +51,7 @@
                         <span>Mã hóa đơn NCC</span>
                         <input type="text"
                                name="supplierInvoiceCode"
-                               value="${param.supplierInvoiceCode}"
+                               value="${fn:escapeXml(param.supplierInvoiceCode)}"
                                placeholder="SUP-INV-001">
                     </label>
 
@@ -113,8 +114,8 @@
                                 <option value="">Chọn nguyên liệu</option>
 
                                 <c:forEach var="item" items="${importIngredients}">
-                                    <option value="${item.id}">
-                                        <c:out value="${item.name}"/>
+                                    <option value="${item.ingredientId}">
+                                        <c:out value="${item.ingredientName}"/>
                                         - còn
                                         <c:out value="${item.stockText}"/>
                                         <c:out value="${item.unit}"/>

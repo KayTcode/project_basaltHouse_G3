@@ -6,6 +6,7 @@ import dao.OrderDAO;
 import dao.ProductDAO;
 import dao.SizeDAO;
 import dao.TableSessionDAO;
+import dto.ProductSaleAuditDTO;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -270,7 +271,7 @@ public class OrderService {
     public HashMap<String, Object> getTodaySoldProductSizeRows() {
         HashMap<String, Object> result = new HashMap<>();
         try {
-            List<HashMap<String, Object>> list = dao.getTodaySoldProductSizeRows();
+            List<ProductSaleAuditDTO> list = dao.getTodaySoldProductSizeRows();
             if (list == null) {
                 result.put("error", "Danh sách bán hàng hôm nay lỗi");
             } else {
@@ -286,7 +287,7 @@ public class OrderService {
     public HashMap<String, Object> getSoldProductSizeRowsByDate(LocalDate auditDate) {
         HashMap<String, Object> result = new HashMap<>();
         try {
-            List<HashMap<String, Object>> list = dao.getSoldProductSizeRowsByDate(auditDate);
+            List<ProductSaleAuditDTO> list = dao.getSoldProductSizeRowsByDate(auditDate);
             if (list == null) {
                 result.put("error", "Danh sách bán hàng theo ngày lỗi");
             } else {

@@ -6,9 +6,12 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import model.ActivityLog;
 import model.DiscountCode;
+import services.ActivityLogService;
 import services.AdminCustomerService;
 
 
@@ -16,6 +19,7 @@ import services.AdminCustomerService;
 public class AdminCustomerServlet extends HttpServlet {
 
     private final AdminCustomerService customerService = new AdminCustomerService();
+    private final ActivityLogService logService = new ActivityLogService();
     private static final int PAGE_SIZE = 10;
 
     @Override
@@ -92,8 +96,12 @@ public class AdminCustomerServlet extends HttpServlet {
         boolean ok = customerService.processAddCustomer(email, password, fullName, phone, rankIdStr, spentStr);
         if (ok) {
             request.getSession().setAttribute("toastMessage", "Thêm khách hàng thành công!");
+            writeLog(getAdminId(request), "ADD", "Customer", 0,
+                    null, "Thêm khách hàng: " + email, "SUCCESS");
         } else {
             request.getSession().setAttribute("errorMessage", "Thêm thất bại! Email có thể đã tồn tại.");
+            writeLog(getAdminId(request), "ADD", "Customer", 0,
+                    null, "Thêm khách hàng thất bại: " + email, "FAIL");
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/customers");
@@ -109,10 +117,15 @@ public class AdminCustomerServlet extends HttpServlet {
         String isLockedStr  = request.getParameter("isLocked");
 
         boolean ok = customerService.processUpdateCustomer(accountIdStr, email, fullName, phone, rankIdStr, spentStr, isLockedStr);
+        int accountId = parseIntSafe(accountIdStr);
         if (ok) {
             request.getSession().setAttribute("toastMessage", "Cập nhật thông tin thành công!");
+            writeLog(getAdminId(request), "UPDATE", "Customer", accountId,
+                    "AccountId=" + accountId, "Cập nhật khách hàng: " + email, "SUCCESS");
         } else {
             request.getSession().setAttribute("errorMessage", "Cập nhật thất bại. Vui lòng thử lại!");
+            writeLog(getAdminId(request), "UPDATE", "Customer", accountId,
+                    "AccountId=" + accountId, "Cập nhật khách hàng thất bại: " + email, "FAIL");
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/customers");
@@ -121,16 +134,50 @@ public class AdminCustomerServlet extends HttpServlet {
     private void handleGiftDiscount(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String accountIdStr  = request.getParameter("accountId");
         String discountIdStr = request.getParameter("discountId");
+        int accountId  = parseIntSafe(accountIdStr);
+        int discountId = parseIntSafe(discountIdStr);
 
         String result = customerService.processGiftDiscount(accountIdStr, discountIdStr);
         switch (result) {
-            case "success" ->
+            case "success" -> {
                 request.getSession().setAttribute("toastMessage", "✅ Tặng mã giảm giá thành công!");
-            case "already_gifted" ->
+                writeLog(getAdminId(request), "GIFT_VOUCHER", "Voucher", accountId,
+                        "AccountId=" + accountId, "Tặng mã DiscountId=" + discountId + " cho AccountId=" + accountId, "SUCCESS");
+            }
+            case "already_gifted" -> {
                 request.getSession().setAttribute("errorMessage", "⚠️ Khách hàng này đã có mã giảm giá này rồi!");
-            default ->
+                writeLog(getAdminId(request), "GIFT_VOUCHER", "Voucher", accountId,
+                        "AccountId=" + accountId, "Tặng mã trùng (already_gifted) DiscountId=" + discountId, "WARNING");
+            }
+            default -> {
                 request.getSession().setAttribute("errorMessage", "❌ Tặng mã thất bại. Vui lòng thử lại!");
+                writeLog(getAdminId(request), "GIFT_VOUCHER", "Voucher", accountId,
+                        "AccountId=" + accountId, "Tặng mã thất bại DiscountId=" + discountId, "FAIL");
+            }
         }
         response.sendRedirect(request.getContextPath() + "/admin/customers");
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+    private int getAdminId(HttpServletRequest request) {
+        Object obj = request.getSession(false) != null
+                ? request.getSession(false).getAttribute("currentUser") : null;
+        if (obj instanceof dto.UserLoginDTO) return ((dto.UserLoginDTO) obj).getAccountId();
+        return 0;
+    }
+
+    private int parseIntSafe(String s) {
+        try { return Integer.parseInt(s); } catch (Exception e) { return 0; }
+    }
+
+    private void writeLog(int accountId, String action, String module,
+                          int targetId, String oldValue, String newValue, String status) {
+        try {
+            ActivityLog log = new ActivityLog(accountId, action, module,
+                    targetId, oldValue, newValue, status, 0, LocalDateTime.now());
+            logService.ctreatActiveLog(log);
+        } catch (Exception e) {
+            System.err.println("[AdminCustomerServlet] writeLog error: " + e.getMessage());
+        }
     }
 }

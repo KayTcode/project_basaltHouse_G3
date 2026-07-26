@@ -221,11 +221,11 @@ public List<Customer> searchCustomerMembershipByName(String name) {
                          JOIN DiscountCodes d ON cd.DiscountId = d.DiscountId
                          WHERE d.IsActive = 1
                            AND d.IsDeleted = 0
-                           AND d.IsPublic = 0
                            AND cd.AccountId = ?
                            AND ISNULL(cd.IsUsed, 0) = 0
                          ORDER BY d.EndDate ASC
                          """;
+
             PreparedStatement st = connection.prepareStatement(sql);
             st.setObject(1, accountId);
             ResultSet rs = st.executeQuery();

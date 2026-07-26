@@ -117,6 +117,18 @@
                                     <span class="badge-cart cart-badge visible" id="navCartBadge">${headerCartQty}</span>
                                 </c:if>
                             </a>
+
+                            <%-- ── Bell thông báo voucher (chỉ hiện khi là Customer) ──── --%>
+                            <c:if test="${not empty sessionScope.currentUser and sessionScope.currentUser.roleId == 2}">
+                                <button type="button" class="btn-nav-icon bell-btn" id="bellBtn"
+                                        title="Mã giảm giá của bạn" style="position:relative;background:none;border:none;cursor:pointer;">
+                                    <span class="material-symbols-outlined">notifications</span>
+                                    <c:if test="${voucherCount > 0}">
+                                        <span class="bell-badge" id="bellBadge">${voucherCount}</span>
+                                    </c:if>
+                                </button>
+                            </c:if>
+
                             <%-- ── Khu vực tài khoản: 2 trạng thái ──── --%>
                             <c:choose>
 
@@ -328,10 +340,210 @@
                 </div>
             </nav>
         </header>
+        <%-- ══ POPUP Voucher ══ --%>
+        <c:if test="${not empty sessionScope.currentUser and sessionScope.currentUser.roleId == 2}">
+        <div class="voucher-popup-overlay" id="voucherOverlay" onclick="closeBellPopup(event)"></div>
+        <div class="voucher-popup" id="voucherPopup">
+            <div class="voucher-popup-header">
+                <span class="voucher-popup-title">🎁 Mã giảm giá của bạn</span>
+                <button class="voucher-popup-close" onclick="closeBellPopupBtn()" type="button">&times;</button>
+            </div>
+            <div class="voucher-popup-body">
+                <c:choose>
+                    <c:when test="${empty customerVouchers}">
+                        <div class="voucher-empty">
+                            <span class="material-symbols-outlined" style="font-size:40px;color:#d1d5db;">local_offer</span>
+                            <p>Bạn chưa có mã giảm giá nào.</p>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <c:forEach var="v" items="${customerVouchers}">
+                            <div class="voucher-card">
+                                <div class="voucher-card-left">
+                                    <span class="voucher-icon">🎟️</span>
+                                </div>
+                                <div class="voucher-card-body">
+                                    <span class="voucher-code">${v.code}</span>
+                                    <span class="voucher-desc">${not empty v.description ? v.description : 'Mã giảm giá'}</span>
+                                    <span class="voucher-value">${v.discountValueFormatted}</span>
+                                    <c:if test="${not empty v.endDateFormatted}">
+                                        <span class="voucher-exp">HSD: ${v.endDateFormatted}</span>
+                                    </c:if>
+                                </div>
+                                <div class="voucher-card-copy">
+                                    <button class="voucher-copy-btn" onclick="copyVoucherCode('${v.code}', this)" type="button"
+                                            title="Copy mã">
+                                        <span class="material-symbols-outlined" style="font-size:16px;">content_copy</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
+        </c:if>
+
+        <style>
+        /* ── Bell Button ─────────────────────────────────────────── */
+        .bell-btn { position: relative; }
+        .bell-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            pointer-events: none;
+        }
+        /* ── Overlay ─────────────────────────────────────────────── */
+        .voucher-popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+        }
+        .voucher-popup-overlay.open { display: block; }
+        /* ── Popup box ───────────────────────────────────────────── */
+        .voucher-popup {
+            display: none;
+            position: fixed;
+            top: 70px; right: 16px;
+            width: 340px;
+            max-height: 480px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,.18);
+            z-index: 9999;
+            overflow: hidden;
+            flex-direction: column;
+            animation: fadeSlideDown .22s ease;
+        }
+        .voucher-popup.open { display: flex; }
+        @keyframes fadeSlideDown {
+            from { opacity:0; transform:translateY(-12px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        .voucher-popup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            background: linear-gradient(135deg,#7c3aed,#4f46e5);
+            color: #fff;
+        }
+        .voucher-popup-title {
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: .02em;
+        }
+        .voucher-popup-close {
+            background: rgba(255,255,255,.2);
+            border: none;
+            color: #fff;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .2s;
+        }
+        .voucher-popup-close:hover { background: rgba(255,255,255,.35); }
+        .voucher-popup-body {
+            overflow-y: auto;
+            flex: 1;
+            padding: 10px 0;
+        }
+        .voucher-empty {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 30px 20px;
+            color: #9ca3af;
+            font-size: 14px;
+            gap: 8px;
+        }
+        /* ── Voucher card ────────────────────────────────────────── */
+        .voucher-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            margin: 4px 10px;
+            background: linear-gradient(135deg,#f5f3ff,#ede9fe);
+            border: 1.5px dashed #c4b5fd;
+            border-radius: 12px;
+            transition: box-shadow .2s;
+        }
+        .voucher-card:hover { box-shadow: 0 2px 12px rgba(124,58,237,.15); }
+        .voucher-icon { font-size: 22px; flex-shrink: 0; }
+        .voucher-card-body {
+            flex: 1;
+            display: flex; flex-direction: column; gap: 2px;
+            min-width: 0;
+        }
+        .voucher-code {
+            font-weight: 700;
+            font-size: 13px;
+            color: #4f46e5;
+            letter-spacing: .05em;
+            font-family: 'Courier New', monospace;
+        }
+        .voucher-desc {
+            font-size: 11px;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .voucher-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #16a34a;
+        }
+        .voucher-exp {
+            font-size: 10px;
+            color: #f59e0b;
+        }
+        .voucher-card-copy { flex-shrink: 0; }
+        .voucher-copy-btn {
+            background: #ede9fe;
+            border: none;
+            border-radius: 8px;
+            padding: 5px;
+            cursor: pointer;
+            color: #7c3aed;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .2s, transform .1s;
+        }
+        .voucher-copy-btn:hover { background: #c4b5fd; transform: scale(1.1); }
+        </style>
+
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 const trigger = document.getElementById("userMenuTrigger");
                 const dropdown = document.getElementById("userDropdown");
+
+                /* ── Bell popup ─────────────────────────────── */
+                const bellBtn     = document.getElementById('bellBtn');
+                const voucherPopup  = document.getElementById('voucherPopup');
+                const voucherOverlay= document.getElementById('voucherOverlay');
+
+                if (bellBtn && voucherPopup) {
+                    bellBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const isOpen = voucherPopup.classList.toggle('open');
+                        voucherOverlay && voucherOverlay.classList.toggle('open', isOpen);
+                    });
+                }
 
                 if (!trigger || !dropdown) {
                     return;
@@ -360,5 +572,32 @@
                         trigger.focus();
                     }
                 });
+            });
+        </script>
+        <script>
+            function closeBellPopup(e) {
+                if (e.target.id === 'voucherOverlay') closeBellPopupBtn();
+            }
+            function closeBellPopupBtn() {
+                const p = document.getElementById('voucherPopup');
+                const o = document.getElementById('voucherOverlay');
+                if (p) p.classList.remove('open');
+                if (o) o.classList.remove('open');
+            }
+            function copyVoucherCode(code, btn) {
+                navigator.clipboard.writeText(code).then(function() {
+                    const original = btn.innerHTML;
+                    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;color:#16a34a;">check</span>';
+                    setTimeout(function() { btn.innerHTML = original; }, 1800);
+                }).catch(function() {
+                    // fallback
+                    const ta = document.createElement('textarea');
+                    ta.value = code; document.body.appendChild(ta);
+                    ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta);
+                });
+            }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeBellPopupBtn();
             });
         </script>

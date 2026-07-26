@@ -16,8 +16,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import model.ActivityLog;
+import services.ActivityLogService;
 import services.AdminAccountService;
 import utils.PasswordUtils;
 
@@ -29,6 +32,7 @@ import utils.PasswordUtils;
 public class AdminAccountServlet extends HttpServlet {
 
     private final AdminAccountService accountService = new AdminAccountService();
+    private final ActivityLogService logService = new ActivityLogService();
     private static final int PAGE_SIZE = 10; // Định số dòng trên mỗi trang hiển thị
 
     /**
@@ -162,12 +166,15 @@ public class AdminAccountServlet extends HttpServlet {
         boolean isSuccess = accountService.processAddAccount(email, hashedPass, roleIdStr, fullName, phone, isActiveStr);
 
         if (!isSuccess) {
-            // Bạn có thể lưu thông báo lỗi vào Session nếu muốn hiển thị Alert sau khi redirect
             request.getSession().setAttribute("toastMessage", "Thêm tài khoản thất bại!");
+            writeLog(getAdminId(request), "ADD", "Account", 0,
+                    null, "Thêm tài khoản thất bại: " + email, "FAIL");
+        } else {
+            writeLog(getAdminId(request), "ADD", "Account", 0,
+                    null, "Thêm tài khoản: " + email, "SUCCESS");
         }
 
-        // Redirect về trang danh sách để tránh trùng lặp dữ liệu khi F5 (Pattern POST-REDIRECT-GET)
-        response.sendRedirect(request.getContextPath() + "/admin/accounts");// màn hình phụ đưa lại màn hình chính
+        response.sendRedirect(request.getContextPath() + "/admin/accounts");
     }
 
     // 2. Xử lý cập nhật tài khoản
@@ -184,8 +191,14 @@ public class AdminAccountServlet extends HttpServlet {
         // Giao việc cho Service xử lý logic cập nhật tài khoản và cập nhật profile đi kèm
         boolean isSuccess = accountService.processUpdateAccount(idStr, email, roleIdStr, fullName, phone, oldRoleIdStr, isActiveStr, isLockedStr);
 
+        int accountId = parseIntSafe(idStr);
         if (!isSuccess) {
             request.getSession().setAttribute("toastMessage", "Cập nhật tài khoản thất bại!");
+            writeLog(getAdminId(request), "UPDATE", "Account", accountId,
+                    "AccountId=" + accountId, "Cập nhật tài khoản thất bại: " + email, "FAIL");
+        } else {
+            writeLog(getAdminId(request), "UPDATE", "Account", accountId,
+                    "AccountId=" + accountId, "Cập nhật tài khoản: " + email, "SUCCESS");
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/accounts");
@@ -199,11 +212,39 @@ public class AdminAccountServlet extends HttpServlet {
         // Gọi service xử lý cập nhật trạng thái IsDeleted = 1 cho cả Accounts và bảng Profile
         boolean isSuccess = accountService.processDeleteAccount(idStr, roleIdStr);
 
+        int accountId = parseIntSafe(idStr);
         if (!isSuccess) {
             request.getSession().setAttribute("toastMessage", "Xóa tài khoản thất bại!");
+            writeLog(getAdminId(request), "DELETE", "Account", accountId,
+                    "AccountId=" + accountId, "Xóa tài khoản thất bại ID=" + accountId, "FAIL");
+        } else {
+            writeLog(getAdminId(request), "DELETE", "Account", accountId,
+                    "AccountId=" + accountId, "Xóa tài khoản ID=" + accountId, "SUCCESS");
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/accounts");
+    }
+
+    private int getAdminId(HttpServletRequest request) {
+        Object obj = request.getSession(false) != null
+                ? request.getSession(false).getAttribute("currentUser") : null;
+        if (obj instanceof dto.UserLoginDTO) return ((dto.UserLoginDTO) obj).getAccountId();
+        return 0;
+    }
+
+    private int parseIntSafe(String s) {
+        try { return Integer.parseInt(s); } catch (Exception e) { return 0; }
+    }
+
+    private void writeLog(int accountId, String action, String module,
+                          int targetId, String oldValue, String newValue, String status) {
+        try {
+            ActivityLog log = new ActivityLog(accountId, action, module,
+                    targetId, oldValue, newValue, status, 0, LocalDateTime.now());
+            logService.ctreatActiveLog(log);
+        } catch (Exception e) {
+            System.err.println("[AdminAccountServlet] writeLog error: " + e.getMessage());
+        }
     }
 }
 

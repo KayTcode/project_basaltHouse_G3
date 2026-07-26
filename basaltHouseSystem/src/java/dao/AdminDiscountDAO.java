@@ -222,11 +222,10 @@ public class AdminDiscountDAO extends DBContext {
             FROM DiscountCodes
             WHERE IsDeleted = 0
               AND IsActive = 1
-              AND IsPublic = 0
-              AND (StartDate IS NULL OR StartDate <= GETDATE())
               AND (EndDate IS NULL OR EndDate >= GETDATE())
             ORDER BY CreatedAt DESC
             """;
+
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             ResultSet rs = st.executeQuery();
@@ -247,6 +246,7 @@ public class AdminDiscountDAO extends DBContext {
         return list;
     }
 
+
     public String giftDiscountToCustomer(int accountId, int discountId) {
         // 1. Kiểm tra trùng
         String checkSql = """
@@ -266,20 +266,45 @@ public class AdminDiscountDAO extends DBContext {
             return "error";
         }
 
-        String insertSql = """
-            INSERT INTO CustomerDiscountCodes (AccountId, DiscountId, IsUsed, [Status])
-            VALUES (?, ?, 0, 1)
+        // 2. Thử Insert không có cột [Status] trước
+        String insertSql1 = """
+            INSERT INTO CustomerDiscountCodes (AccountId, DiscountId, IsUsed)
+            VALUES (?, ?, 0)
             """;
-        try {
-            PreparedStatement st = connection.prepareStatement(insertSql);
+        try (PreparedStatement st = connection.prepareStatement(insertSql1)) {
             st.setInt(1, accountId);
             st.setInt(2, discountId);
             int rows = st.executeUpdate();
             return rows > 0 ? "success" : "error";
-        } catch (Exception e) {
-            System.err.println("[AdminDiscountDAO.giftDiscountToCustomer] Tặng mã lỗi: " + e.getMessage());
-            e.printStackTrace();
-            return "error";
+        } catch (Exception e1) {
+            // Thử Insert có cột [Status] nếu bảng trong DB yêu cầu cột Status
+            String insertSql2 = """
+                INSERT INTO CustomerDiscountCodes (AccountId, DiscountId, IsUsed, [Status])
+                VALUES (?, ?, 0, 1)
+                """;
+            try (PreparedStatement st2 = connection.prepareStatement(insertSql2)) {
+                st2.setInt(1, accountId);
+                st2.setInt(2, discountId);
+                int rows = st2.executeUpdate();
+                return rows > 0 ? "success" : "error";
+            } catch (Exception e2) {
+                // Fallback chỉ thêm AccountId và DiscountId
+                String insertSql3 = """
+                    INSERT INTO CustomerDiscountCodes (AccountId, DiscountId)
+                    VALUES (?, ?)
+                    """;
+                try (PreparedStatement st3 = connection.prepareStatement(insertSql3)) {
+                    st3.setInt(1, accountId);
+                    st3.setInt(2, discountId);
+                    int rows = st3.executeUpdate();
+                    return rows > 0 ? "success" : "error";
+                } catch (Exception e3) {
+                    System.err.println("[AdminDiscountDAO.giftDiscountToCustomer] Tặng mã thất bại: " + e3.getMessage());
+                    e3.printStackTrace();
+                    return "error";
+                }
+            }
         }
     }
 }
+

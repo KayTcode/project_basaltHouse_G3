@@ -38,7 +38,7 @@
                             <select name="filterPayment">
                                 <option value="">Tất cả</option>
                                 <option value="Cash"    ${filterPayment == 'Cash'    ? 'selected' : ''}>Tiền mặt (Cash)</option>
-                                <option value="QR Code" ${filterPayment == 'QR Code' ? 'selected' : ''}>Chuyển khoản (QR Code)</option>
+                                <option value="QR Code" ${filterPayment == 'QR Code' ? 'selected' : ''}>Chuyển khoản (QR Code / MOMO)</option>
                                 <option value="COD"     ${filterPayment == 'COD'     ? 'selected' : ''}>Khi nhận hàng (COD)</option>
                             </select>
                         </div>
@@ -93,13 +93,13 @@
                                                         <c:otherwise>---</c:otherwise>
                                                     </c:choose>
                                                 </td>
-                                                    <td class="currency"><strong><fmt:formatNumber value="${b.finalAmount}" type="currency" currencySymbol="đ" maxFractionDigits="0"/></strong></td>
-                                                <td><strong>${b.paymentMethod}</strong></td>
-                                                <td>
-                                                    <a href="${pageContext.request.contextPath}/admin/bill-detail?id=${b.billId}" style="text-decoration:none;color:#3b82f6;font-weight:600;font-size:14px;display:flex;align-items:center;gap:4px;">
-                                                        <i class="fas fa-eye"></i> Xem chi tiết
-                                                    </a>
-                                                </td>
+                                                 <td class="currency"><strong><fmt:formatNumber value="${b.finalAmount}" type="currency" currencySymbol="đ" maxFractionDigits="0"/></strong></td>
+                                                 <td style="white-space:nowrap;"><strong>${b.paymentMethod}</strong></td>
+                                                 <td style="white-space:nowrap;">
+                                                     <a href="${pageContext.request.contextPath}/admin/bill-detail?id=${b.billId}" style="text-decoration:none;color:#3b82f6;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">
+                                                         <i class="fas fa-eye"></i> Xem chi tiết
+                                                     </a>
+                                                 </td>
                                             </tr>
                                         </c:forEach>
                                     </tbody>

@@ -41,6 +41,11 @@
                 Nhật Ký Hoạt Động
                 <span class="tab-badge">${logStats.total}</span>
             </a>
+            <a href="${pageContext.request.contextPath}/admin/logs?tab=sendvoucher"
+               class="tab-btn ${tab == 'sendvoucher' ? 'active' : ''}">
+                <i class="fa-solid fa-gift"></i>
+                Gửi Voucher &amp; Thông Báo
+            </a>
         </div>
 
         <%-- ══════════════════════════════════════════ --%>
@@ -126,14 +131,15 @@
                 <table class="logs-table">
                     <thead>
                         <tr>
-                            <th style="width:5%;">#</th>
-                            <th style="width:16%;">Tài khoản</th>
-                            <th style="width:35%;">Tiêu đề &amp; Nội dung</th>
-                            <th style="width:12%; text-align:center;">Trạng thái</th>
-                            <th style="width:15%;">Thời gian</th>
-                            <th style="width:17%; text-align:center;">Thao tác</th>
+                            <th class="th-w-5">#</th>
+                            <th class="th-w-16">Tài khoản</th>
+                            <th class="th-w-35">Tiêu đề &amp; Nội dung</th>
+                            <th class="th-w-12 cell-center">Trạng thái</th>
+                            <th class="th-w-15">Thời gian</th>
+                            <th class="th-w-17 cell-center">Thao tác</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         <c:forEach var="n" items="${notifications}">
                             <tr>
@@ -150,7 +156,8 @@
                                         <span class="noti-msg">${n.message}</span>
                                     </div>
                                 </td>
-                                <td style="text-align:center;">
+                                <td class="cell-center">
+
                                     <c:choose>
                                         <c:when test="${n.isDeleted}">
                                             <span class="badge badge-deleted">🗑️ Đã xóa</span>
@@ -193,7 +200,7 @@
                                             <c:when test="${!n.isDeleted}">
                                                 <form method="POST"
                                                       action="${pageContext.request.contextPath}/admin/logs"
-                                                      style="display:inline;"
+                                                      class="form-inline"
                                                       onsubmit="return confirm('Xóa mềm thông báo này?')">
                                                     <input type="hidden" name="action"  value="deleteNoti">
                                                     <input type="hidden" name="id"      value="${n.notificationId}">
@@ -209,7 +216,7 @@
                                             <c:otherwise>
                                                 <form method="POST"
                                                       action="${pageContext.request.contextPath}/admin/logs"
-                                                      style="display:inline;">
+                                                      class="form-inline">
                                                     <input type="hidden" name="action"  value="restoreNoti">
                                                     <input type="hidden" name="id"      value="${n.notificationId}">
                                                     <input type="hidden" name="tab"     value="notifications">
@@ -222,8 +229,9 @@
                                                 </form>
                                                 <form method="POST"
                                                       action="${pageContext.request.contextPath}/admin/logs"
-                                                      style="display:inline;"
+                                                      class="form-inline"
                                                       onsubmit="return confirm('Xóa vĩnh viễn thông báo này? Không thể hoàn tác!')">
+
                                                     <input type="hidden" name="action"  value="hardDeleteNoti">
                                                     <input type="hidden" name="id"      value="${n.notificationId}">
                                                     <input type="hidden" name="tab"     value="notifications">
@@ -371,17 +379,18 @@
                 <table class="logs-table">
                     <thead>
                         <tr>
-                            <th style="width:5%;">#</th>
-                            <th style="width:13%;">Tài khoản</th>
-                            <th style="width:10%;">Hành động</th>
-                            <th style="width:10%;">Module</th>
-                            <th style="width:7%; text-align:center;">Target</th>
-                            <th style="width:20%;">Thay đổi (Cũ → Mới)</th>
-                            <th style="width:10%; text-align:center;">Trạng thái</th>
-                            <th style="width:14%;">Thời gian</th>
-                            <th style="width:11%; text-align:center;">Thao tác</th>
+                            <th class="th-w-5">#</th>
+                            <th class="th-w-13">Tài khoản</th>
+                            <th class="th-w-10">Hành động</th>
+                            <th class="th-w-10">Module</th>
+                            <th class="th-w-7 cell-center">Target</th>
+                            <th class="th-w-20">Thay đổi (Cũ → Mới)</th>
+                            <th class="th-w-10 cell-center">Trạng thái</th>
+                            <th class="th-w-14">Thời gian</th>
+                            <th class="th-w-11 cell-center">Thao tác</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         <c:forEach var="lg" items="${activityLogs}">
                             <tr>
@@ -398,7 +407,7 @@
                                 <td>
                                     <span class="badge badge-module">${lg.module}</span>
                                 </td>
-                                <td style="text-align:center;">
+                                <td class="cell-center">
                                     <span class="cell-id">${lg.targetId > 0 ? lg.targetId : '—'}</span>
                                 </td>
                                 <td>
@@ -406,7 +415,7 @@
                                         <c:choose>
                                             <c:when test="${not empty lg.oldValue}">
                                                 <span class="val-old" title="${fn:escapeXml(lg.oldValue)}">
-                                                    <i class="fa-solid fa-minus" style="font-size:9px;"></i>
+                                                    <i class="fa-solid fa-minus icon-sm"></i>
                                                     ${fn:length(lg.oldValue) > 30 ? fn:substring(lg.oldValue,0,30).concat('…') : lg.oldValue}
                                                 </span>
                                             </c:when>
@@ -417,7 +426,7 @@
                                         <c:choose>
                                             <c:when test="${not empty lg.newValue}">
                                                 <span class="val-new" title="${fn:escapeXml(lg.newValue)}">
-                                                    <i class="fa-solid fa-plus" style="font-size:9px;"></i>
+                                                    <i class="fa-solid fa-plus icon-sm"></i>
                                                     ${fn:length(lg.newValue) > 30 ? fn:substring(lg.newValue,0,30).concat('…') : lg.newValue}
                                                 </span>
                                             </c:when>
@@ -427,7 +436,8 @@
                                         </c:choose>
                                     </div>
                                 </td>
-                                <td style="text-align:center;">
+                                <td class="cell-center">
+
                                     <c:choose>
                                         <c:when test="${lg.status == 'SUCCESS'}">
                                             <span class="badge badge-success">✅ SUCCESS</span>
@@ -477,8 +487,9 @@
                                         <%-- Soft-delete log --%>
                                         <form method="POST"
                                               action="${pageContext.request.contextPath}/admin/logs"
-                                              style="display:inline;"
+                                              class="form-inline"
                                               onsubmit="return confirm('Xóa nhật ký này khỏi danh sách?')">
+
                                             <input type="hidden" name="action"  value="deleteLog">
                                             <input type="hidden" name="id"      value="${lg.logId}">
                                             <input type="hidden" name="tab"     value="activitylogs">
@@ -532,6 +543,195 @@
 
         </c:if><%-- end activitylogs tab --%>
 
+        <%-- ══════════════════════════════════════════ --%>
+        <%-- ══  TAB 3: GỬI VOUCHER & THÔNG BÁO  ══     --%>
+        <%-- ══════════════════════════════════════════ --%>
+        <c:if test="${tab == 'sendvoucher'}">
+
+            <%-- Toast Alert Messages --%>
+            <c:if test="${not empty sessionScope.toastMessage}">
+                <div class="logs-alert logs-alert-success">
+                    <i class="fa-solid fa-circle-check logs-alert-icon"></i>
+                    <div>${sessionScope.toastMessage}</div>
+                </div>
+                <c:remove var="toastMessage" scope="session"/>
+            </c:if>
+            <c:if test="${not empty sessionScope.errorMessage}">
+                <div class="logs-alert logs-alert-error">
+                    <i class="fa-solid fa-triangle-exclamation logs-alert-icon"></i>
+                    <div>${sessionScope.errorMessage}</div>
+                </div>
+                <c:remove var="errorMessage" scope="session"/>
+            </c:if>
+
+            <form method="POST" action="${pageContext.request.contextPath}/admin/logs" id="sendVoucherForm">
+                <input type="hidden" name="action" value="sendVoucher">
+                <input type="hidden" name="tab" value="sendvoucher">
+
+                <div class="sendvoucher-card">
+                    <h3 class="sendvoucher-title">
+                        <span>🎁</span> Tạo &amp; Gửi Mã Giảm Giá Cho Khách Hàng
+                    </h3>
+
+                    <div class="sendvoucher-grid">
+                        <%-- Cột trái: Chọn Mã & Soạn Nội Dung --%>
+                        <div>
+                            <div class="sendvoucher-form-group">
+                                <label class="sendvoucher-label">Chọn Mã Giảm Giá <span class="required-star">*</span></label>
+                                <select name="discountId" required class="sendvoucher-select">
+                                    <option value="">-- Chọn mã giảm giá đang kích hoạt --</option>
+                                    <c:forEach var="d" items="${activeDiscounts}">
+                                        <option value="${d.discountId}">
+                                            [${d.code}] - ${d.discountValueFormatted} (${not empty d.description ? d.description : 'Không mô tả'})
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <div class="sendvoucher-form-group">
+                                <label class="sendvoucher-label">Tiêu Đề Thông Báo</label>
+                                <input type="text" name="title" placeholder="Ví dụ: Bạn nhận được mã giảm giá tri ân! 🎁"
+                                       value="Bạn nhận được mã giảm giá mới! 🎁"
+                                       class="sendvoucher-input">
+                            </div>
+
+                            <div>
+                                <label class="sendvoucher-label">Nội Dung Thông Báo</label>
+                                <textarea name="message" rows="4" placeholder="Nhập nội dung thông báo gửi cho khách hàng..."
+                                          class="sendvoucher-textarea">Chúc mừng bạn đã nhận được mã giảm giá từ Basalt House. Hãy kiểm tra và sử dụng ngay!</textarea>
+                            </div>
+                        </div>
+
+                        <%-- Cột phải: Đối Tượng Nhận --%>
+                        <div class="sendvoucher-target-box">
+                            <label class="sendvoucher-label">Đối Tượng Nhận Voucher <span class="required-star">*</span></label>
+
+                            <div class="sendvoucher-radio-group">
+                                <label class="sendvoucher-radio-label">
+                                    <input type="radio" name="targetMode" value="selected" checked onchange="toggleTargetMode('selected')">
+                                    Tích chọn danh sách khách hàng bên dưới
+                                </label>
+                                <label class="sendvoucher-radio-label">
+                                    <input type="radio" name="targetMode" value="all" onchange="toggleTargetMode('all')">
+                                    Gửi cho TẤT CẢ khách hàng (${fn:length(customers)} người)
+                                </label>
+                                <label class="sendvoucher-radio-label">
+                                    <input type="radio" name="targetMode" value="rank" onchange="toggleTargetMode('rank')">
+                                    Gửi theo Hạng Thành Viên (Rank)
+                                </label>
+                            </div>
+
+                            <div id="rankSelectWrapper" class="sendvoucher-rank-wrapper">
+                                <label class="sendvoucher-sublabel">Chọn Hạng Thành Viên:</label>
+                                <select name="targetRankId" class="sendvoucher-rank-select">
+                                    <option value="0">-- Chọn Hạng --</option>
+                                    <c:forEach var="r" items="${ranks}">
+                                        <option value="${r.rankId}">${r.rankName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <div class="sendvoucher-action-footer">
+                                <button type="submit" class="btn-sendvoucher-submit">
+                                    <i class="fa-solid fa-paper-plane"></i> Gửi Voucher &amp; Thông Báo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <%-- Bảng lọc danh sách khách hàng --%>
+                    <div id="customerTableSection" class="sendvoucher-form-group">
+                        <div class="sendvoucher-table-header">
+                            <h4 class="sendvoucher-table-title">
+                                <i class="fa-solid fa-users"></i> Danh Sách Khách Hàng (Tích chọn từng người)
+                            </h4>
+                            <div class="sendvoucher-filter-group">
+                                <span class="sendvoucher-filter-label">Lọc danh sách theo rank:</span>
+                                <select onchange="window.location.href='${pageContext.request.contextPath}/admin/logs?tab=sendvoucher&filterRankId=' + this.value"
+                                        class="sendvoucher-filter-select">
+                                    <option value="0">Tất cả hạng</option>
+                                    <c:forEach var="r" items="${ranks}">
+                                        <option value="${r.rankId}" ${filterRankId == r.rankId ? 'selected' : ''}>${r.rankName}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="logs-table-wrapper">
+                            <table class="logs-table">
+                                <thead>
+                                    <tr>
+                                        <th class="th-w-40">
+                                            <input type="checkbox" id="selectAllCust" onchange="toggleSelectAllCust(this)">
+                                        </th>
+                                        <th>Họ và Tên</th>
+                                        <th>Email</th>
+                                        <th>Số Điện Thoại</th>
+                                        <th>Hạng Thành Viên</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:choose>
+                                        <c:when test="${empty customers}">
+                                            <tr>
+                                                <td colspan="5" class="cell-center text-muted">
+                                                    Không tìm thấy khách hàng nào.
+                                                </td>
+                                            </tr>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach var="c" items="${customers}">
+                                                <tr>
+                                                    <td class="cell-center">
+                                                        <input type="checkbox" name="accountIds" value="${c.accountId}" class="cust-checkbox">
+                                                    </td>
+                                                    <td class="cell-user-bold">${c.fullName}</td>
+                                                    <td>${c.email}</td>
+                                                    <td>${c.phone}</td>
+                                                    <td>
+                                                        <span class="badge rank-badge-item">
+                                                            🏆 ${c.rankName}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <script>
+                function toggleSelectAllCust(master) {
+                    const checkboxes = document.querySelectorAll('.cust-checkbox');
+                    checkboxes.forEach(cb => cb.checked = master.checked);
+                }
+
+                function toggleTargetMode(mode) {
+                    const rankWrapper = document.getElementById('rankSelectWrapper');
+                    const custSection = document.getElementById('customerTableSection');
+                    if (mode === 'rank') {
+                        rankWrapper.style.display = 'block';
+                        custSection.style.opacity = '0.4';
+                        custSection.style.pointerEvents = 'none';
+                    } else if (mode === 'all') {
+                        rankWrapper.style.display = 'none';
+                        custSection.style.opacity = '0.4';
+                        custSection.style.pointerEvents = 'none';
+                    } else {
+                        rankWrapper.style.display = 'none';
+                        custSection.style.opacity = '1';
+                        custSection.style.pointerEvents = 'auto';
+                    }
+                }
+            </script>
+
+        </c:if><%-- end sendvoucher tab --%>
+
+
     </main>
 </div>
 
@@ -542,7 +742,7 @@
             <i class="fa-solid fa-xmark"></i>
         </button>
         <div class="modal-section-title">
-            <i class="fa-solid fa-bell" style="color:#3b82f6;"></i>
+            <i class="fa-solid fa-bell icon-blue"></i>
             Chi Tiết Thông Báo
         </div>
         <div class="modal-row">
@@ -561,11 +761,11 @@
         <hr class="modal-divider">
         <div class="modal-row">
             <span class="m-label">Tiêu đề:</span>
-            <span class="m-value" id="mdNotiTitle" style="font-weight:700;">—</span>
+            <span class="m-value bold" id="mdNotiTitle">—</span>
         </div>
-        <div class="modal-row" style="align-items:flex-start;">
+        <div class="modal-row align-top">
             <span class="m-label">Nội dung:</span>
-            <span class="m-value" id="mdNotiMsg" style="white-space:pre-wrap;line-height:1.6;">—</span>
+            <span class="m-value val-msg" id="mdNotiMsg">—</span>
         </div>
         <hr class="modal-divider">
         <div class="modal-row">
@@ -582,7 +782,7 @@
             <i class="fa-solid fa-xmark"></i>
         </button>
         <div class="modal-section-title">
-            <i class="fa-solid fa-clock-rotate-left" style="color:#8b5cf6;"></i>
+            <i class="fa-solid fa-clock-rotate-left icon-purple"></i>
             Chi Tiết Nhật Ký Hoạt Động
         </div>
         <div class="modal-row">
@@ -612,16 +812,15 @@
             <span class="m-value" id="mdLogTarget">—</span>
         </div>
         <hr class="modal-divider">
-        <div class="modal-row" style="align-items:flex-start;">
+        <div class="modal-row align-top">
             <span class="m-label">Giá trị cũ:</span>
-            <span class="m-value" id="mdLogOld"
-                  style="white-space:pre-wrap;background:#fef2f2;padding:6px 10px;border-radius:6px;font-size:12px;color:#dc2626;">—</span>
+            <span class="m-value val-old" id="mdLogOld">—</span>
         </div>
-        <div class="modal-row" style="align-items:flex-start;">
+        <div class="modal-row align-top">
             <span class="m-label">Giá trị mới:</span>
-            <span class="m-value" id="mdLogNew"
-                  style="white-space:pre-wrap;background:#ecfdf5;padding:6px 10px;border-radius:6px;font-size:12px;color:#059669;">—</span>
+            <span class="m-value val-new" id="mdLogNew">—</span>
         </div>
+
         <hr class="modal-divider">
         <div class="modal-row">
             <span class="m-label">Trạng thái:</span>

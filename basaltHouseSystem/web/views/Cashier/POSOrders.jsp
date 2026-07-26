@@ -328,7 +328,7 @@
         <div class="size-modal-overlay" id="sizeModal" onclick="closeSizeIfOverlay(event)">
             <div class="size-modal-box">
                 <div class="size-modal-title" id="sizeModalTitle">Chọn size</div>
-                <div class="size-modal-sub">Chọn kích cỡ cốc bạn muốn</div>
+                <div class="size-modal-sub">Chọn kích cỡ bạn muốn</div>
                 <div class="size-grid">
                     <div class="size-card" id="sz-S" onclick="pickSize('S')">
                         <div class="size-icon" style="font-size:22px">&#9749;</div>
@@ -471,6 +471,7 @@
                 StockService ss = new StockService();
                 HashMap<Product, HashMap<String, Integer>> stockMap = ss.calculateProduct();
                 for (Map.Entry<Product, HashMap<String, Integer>> entry : stockMap.entrySet()) {
+                    if (entry.getKey() == null || entry.getKey().getProductName() == null) continue;
                     String pName = entry.getKey().getProductName().replace("'", "\\'");
             %>
             PRODUCT_STOCK['<%= pName %>'] = {
@@ -601,14 +602,14 @@
                     } else {
                         cardEl.style.display = '';
                         if (cups > 0) {
-                            stockEl.textContent = 'Còn pha được: ' + cups + ' cốc';
+                            stockEl.textContent = 'Còn: ' + cups;
                             stockEl.style.color = '#16a34a';
                             cardEl.style.opacity = '1';
                             cardEl.style.pointerEvents = 'auto';
                             if (!firstAvailableSize)
                                 firstAvailableSize = s;
                         } else {
-                            stockEl.textContent = 'Hết nguyên liệu';
+                            stockEl.textContent = 'Hết hàng';
                             stockEl.style.color = '#dc2626';
                             cardEl.style.opacity = '0.5';
                             cardEl.style.pointerEvents = 'none';
@@ -617,7 +618,7 @@
                 });
 
                 if (!firstAvailableSize) {
-                    showToast('Món này đã hết nguyên liệu cho tất cả các size!');
+                    showToast('Món này đã hết hàng cho tất cả các size!');
                     console.warn("Item out of stock:", name, "PRODUCT_STOCK=", PRODUCT_STOCK[name]);
                     return;
                 }
@@ -650,7 +651,7 @@
                         if (cart[i].qty < maxCups) {
                             cart[i].qty++;
                         } else {
-                            showToast('Không đủ nguyên liệu! Tối đa ' + maxCups + ' cốc.');
+                            showToast('Không đủ số lượng! Tối đa ' + maxCups + '.');
                             closeSizeModal();
                             return;
                         }
@@ -662,7 +663,7 @@
                     if (1 <= maxCups) {
                         cart.push({name: pendingItem.name, price: unitPrice, size: pendingSize, qty: 1, key: key});
                     } else {
-                        showToast('Không đủ nguyên liệu!');
+                        showToast('Không đủ số lượng!');
                         closeSizeModal();
                         return;
                     }
@@ -686,7 +687,7 @@
                     if (cart[i].key === name || cart[i].name === name) {
                         var maxCups = (PRODUCT_STOCK[cart[i].name] && PRODUCT_STOCK[cart[i].name][cart[i].size]) ? PRODUCT_STOCK[cart[i].name][cart[i].size] : 0;
                         if (delta > 0 && cart[i].qty >= maxCups) {
-                            showToast('Không đủ nguyên liệu! Tối đa ' + maxCups + ' cốc.');
+                            showToast('Không đủ số lượng! Tối đa ' + maxCups + '.');
                             return;
                         }
                         cart[i].qty += delta;

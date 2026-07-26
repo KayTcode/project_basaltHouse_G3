@@ -394,4 +394,67 @@ public class AdminNotificationLogDAO extends DBContext {
         }
         return false;
     }
-}
+
+    /**
+     * Thêm thông báo mới cho khách hàng.
+     */
+    public boolean insertNotification(int accountId, String title, String message) {
+        String sql = """
+            INSERT INTO Notifications (AccountId, Title, Message, IsDeleted, CreatedAt)
+            VALUES (?, ?, ?, 0, GETDATE())
+            """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, accountId);
+            ps.setString(2, title);
+            ps.setString(3, message);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.err.println("[AdminNotificationLogDAO] insertNotification: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Lấy danh sách khách hàng để phục vụ việc chọn và tặng voucher trong tab Send Voucher.
+     */
+    public List<Map<String, Object>> getCustomersForVoucherSending(Integer rankId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT c.CustomerId, c.AccountId, c.FullName, c.Phone, a.Email,
+                   r.RankId, r.RankName
+            FROM Customers c
+            JOIN Accounts a ON c.AccountId = a.AccountId
+            LEFT JOIN CustomerMemberships cm ON c.CustomerId = cm.CustomerId
+            LEFT JOIN MembershipRanks r ON cm.RankId = r.RankId
+            WHERE c.IsDeleted = 0 AND a.IsActive = 1
+            """);
+
+        if (rankId != null && rankId > 0) {
+            sql.append(" AND r.RankId = ?");
+        }
+        sql.append(" ORDER BY c.FullName ASC");
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            if (rankId != null && rankId > 0) {
+                ps.setInt(1, rankId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("customerId", rs.getInt("CustomerId"));
+                    map.put("accountId", rs.getInt("AccountId"));
+                    map.put("fullName", rs.getString("FullName") != null ? rs.getString("FullName") : "—");
+                    map.put("phone", rs.getString("Phone") != null ? rs.getString("Phone") : "—");
+                    map.put("email", rs.getString("Email") != null ? rs.getString("Email") : "—");
+                    map.put("rankId", rs.getInt("RankId"));
+                    map.put("rankName", rs.getString("RankName") != null ? rs.getString("RankName") : "—");
+                    list.add(map);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[AdminNotificationLogDAO] getCustomersForVoucherSending: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return list;
+    }
+}

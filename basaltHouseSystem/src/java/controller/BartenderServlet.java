@@ -185,7 +185,7 @@ public class BartenderServlet extends HttpServlet {
             dao.OrderDAO oDao = new dao.OrderDAO();
             List<Order> allOrders = oDao.getCompletedOrdersByDate(historyDate, orderType);
             
-            paginateList(request, allOrders, 9, "page", "orderList", 
+            paginateList(request, allOrders, 6, "page", "orderList", 
                     "historyPage", "historyPages", "totalHistory");
 
             dao.ProductDAO pDao = new dao.ProductDAO();

@@ -24,10 +24,26 @@ public class CustomerCodeDAO extends DBContext {
         List<CustomerDiscountCode> list = new ArrayList<>();
         try {
             String sql = """
-                         select  cd.CustomerDiscountId,cd.AccountId,d.DiscountId,d.DiscountAmount,d.DiscountPercent,d.StartDate,d.EndDate,cd.IsUsed,cd.UsedDate,d.Description,DATEDIFF(DAY, StartDate, EndDate) AS DayTime from CustomerDiscountCodes cd 
-                           join DiscountCodes d on cd.DiscountId = d.DiscountId
-                           where d.IsActive = 1 and cd.AccountId = ?
-                           """;
+                         SELECT customerCode.CustomerDiscountId,
+                                customerCode.AccountId,
+                                discount.DiscountId,
+                                discount.DiscountAmount,
+                                discount.DiscountPercent,
+                                discount.StartDate,
+                                discount.EndDate,
+                                customerCode.IsUsed,
+                                customerCode.UsedDate,
+                                discount.Description,
+                                DATEDIFF(
+                                    DAY,
+                                    discount.StartDate,
+                                    discount.EndDate) AS DayTime
+                         FROM CustomerDiscountCodes customerCode
+                         JOIN DiscountCodes discount
+                           ON discount.DiscountId = customerCode.DiscountId
+                         WHERE discount.IsActive = 1
+                           AND customerCode.AccountId = ?
+                         """;
 
             st = connection.prepareStatement(sql);
             st.setObject(1, accountId);
@@ -51,12 +67,4 @@ public class CustomerCodeDAO extends DBContext {
         }
         return list;
     }
-    public static void main(String[] args) {
-        CustomerCodeDAO dao = new CustomerCodeDAO();
-        List<CustomerDiscountCode> list = dao.getCustomerCode(6);
-        for (CustomerDiscountCode customerDiscountCode : list) {
-            System.out.println(customerDiscountCode);
-        }
-    }
-   
 }

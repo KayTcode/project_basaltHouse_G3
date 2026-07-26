@@ -67,7 +67,7 @@
                                         int remaining2 = tb.getCapacity() - currentGuests2;
                                         if (remaining2 > 0) { // chỉ hiện bàn còn chỗ
                             %>
-                            <option value="<%= tb.getTableId() %>">
+                            <option value="<%= tb.getTableId() %>" data-table-id="<%= tb.getTableId() %>">
                                 <%= tb.getTableCode() %> — <%= tb.getArea() %>
                                 (<%= currentGuests2 > 0
                                         ? currentGuests2 + "/" + tb.getCapacity() + " khách — còn " + remaining2 + " chỗ"
@@ -98,7 +98,7 @@
 </div>
 
 <script>
-    function openMoveTableModal(event, sessionId, sessionCode) {
+    function openMoveTableModal(event, sessionId, sessionCode, currentTableId) {
         event.stopPropagation();
         document.getElementById('moveSessionId').value   = sessionId;
         document.getElementById('moveSessionCode').value = sessionCode;
@@ -108,6 +108,15 @@
         document.getElementById('newTableId').value = '';
         document.getElementById('btnMoveConfirm').disabled = true;
         document.getElementById('moveSelectError').classList.remove('visible');
+
+        const select = document.getElementById('newTableId');
+        Array.from(select.options).forEach(opt => {
+            if (opt.dataset.tableId && parseInt(opt.dataset.tableId) === parseInt(currentTableId)) {
+                opt.hidden = true;
+            } else {
+                opt.hidden = false;
+            }
+        });
 
         new bootstrap.Modal(document.getElementById('moveTableModal')).show();
     }

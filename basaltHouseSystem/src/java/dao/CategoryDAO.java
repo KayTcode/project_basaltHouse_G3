@@ -24,13 +24,7 @@ public class CategoryDAO extends DBContext {
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
-                Category c = new Category(
-                        rs.getInt("CategoryId"),
-                        rs.getString("CategoryName"),
-                        rs.getString("Description"),
-                        rs.getBoolean("IsDeleted")
-                );
-                list.add(c);
+                list.add(mapCategory(rs));
             }
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -48,13 +42,7 @@ public class CategoryDAO extends DBContext {
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
             while (rs.next()) {
-                Category c = new Category(
-                        rs.getInt("CategoryId"),
-                        rs.getString("CategoryName"),
-                        rs.getString("Description"),
-                        rs.getBoolean("IsDeleted")
-                );
-                list.add(c);
+                list.add(mapCategory(rs));
             }
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -80,5 +68,13 @@ public class CategoryDAO extends DBContext {
             System.err.println(e.getMessage());
         }
         return list;
+    }
+
+    private Category mapCategory(ResultSet result) throws SQLException {
+        return new Category(
+                result.getInt("CategoryId"),
+                result.getString("CategoryName"),
+                result.getString("Description"),
+                result.getBoolean("IsDeleted"));
     }
 }

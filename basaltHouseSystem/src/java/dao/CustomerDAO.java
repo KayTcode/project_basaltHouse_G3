@@ -6,7 +6,6 @@ package dao;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import model.Customer;
 
 /**
  *
@@ -20,16 +19,16 @@ public class CustomerDAO extends DBContext {
     public int getCustomerId(int accountId) {
         try {
             String sql = """
-                        select top 1 c.CustomerId from Customers c
-                        join Accounts a  on c.AccountId = a.AccountId
-                        where c.AccountId = ?
-                        """;
+                         SELECT CustomerId
+                         FROM Customers
+                         WHERE AccountId = ?
+                           AND IsDeleted = 0
+                         """;
             st = connection.prepareStatement(sql);
             st.setObject(1, accountId);
             rs = st.executeQuery();
-            if(rs.next()){
-            Customer p = new Customer(rs.getInt("CustomerId"));
-            return p.getAccountId();
+            if (rs.next()) {
+                return rs.getInt("CustomerId");
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());

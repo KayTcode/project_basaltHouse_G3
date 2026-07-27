@@ -509,10 +509,7 @@ function filterOrders(tabEl, filter) {
     const empty = document.getElementById('filterEmpty');
     let visible = 0;
     cards.forEach(card => {
-        const isCancelled = card.dataset.status === 'cancelled';
-        const show = filter === 'cancelled'
-            ? isCancelled
-            : (filter === 'all' ? !isCancelled : card.dataset.status === filter);
+        const show = filter === 'all' || card.dataset.status === filter;
         card.style.display = show ? '' : 'none';
         if (show) visible++;
     });

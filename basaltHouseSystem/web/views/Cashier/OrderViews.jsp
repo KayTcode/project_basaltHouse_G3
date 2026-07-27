@@ -232,7 +232,8 @@
                     pending_payment:'<span class="badge badge-pending-payment">Pending Payment</span>',
                     ready:'<span class="badge badge-ready">Ready</span>',
                     completed:'<span class="badge badge-completed">Completed</span>',
-                    paid:'<span class="badge badge-paid">Paid</span>' };
+                    paid:'<span class="badge badge-paid">Paid</span>',
+                    cancelled:'<span class="badge badge-cancelled">Cancelled</span>' };
             return m[s] || s;
             }
             function closeIfOverlay(e, id) { if (e.target.id === id) closeModal(id); }
@@ -370,7 +371,16 @@
                     '<div class="off-sec">Danh sách món</div>' +
                     '<div class="off-items">' + itemsHtml + '</div>' +
                     discSection + priceSection + paySection + noteSection + statusSection +
-                    '<div style="height:10px;"></div>';
+                    (function() {
+                        var stLower = (o.status || '').toLowerCase();
+                        var cancelBtn = '<button type="button" onclick="cancelOrder()" style="width:100%;padding:11px;margin-top:8px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background=\'#fee2e2\'" onmouseout="this.style.background=\'#fef2f2\'"><span class="material-symbols-outlined" style="font-size:18px;">cancel</span>Hủy đơn hàng</button>';
+                        if (stLower === 'cancelled') {
+                            return '<div style="padding:8px 20px 16px;"><button type="button" disabled style="width:100%;padding:13px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:12px;font-size:14px;font-weight:700;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;opacity:0.85;"><span class="material-symbols-outlined" style="font-size:18px;">cancel</span>Đơn hàng đã bị hủy</button></div>';
+                        } else if (stLower !== 'completed' && stLower !== 'paid') {
+                            return '<div style="padding:8px 20px 16px;">' + cancelBtn + '</div>';
+                        }
+                        return '<div style="height:10px;"></div>';
+                    })();
             }
 
             function toggleOrderStatus() {
@@ -481,6 +491,7 @@
 
             var stLower = (o.status || '').toLowerCase();
             var footerHtml = '';
+            var cancelBtn = '<button type="button" onclick="cancelOrder()" style="width:100%;padding:11px;margin-top:8px;background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background=\'#fee2e2\'" onmouseout="this.style.background=\'#fef2f2\'"><span class="material-symbols-outlined" style="font-size:18px;">cancel</span>Hủy đơn hàng</button>';
             if (stLower === 'cancelled') {
                 footerHtml =
                     '<div style="padding:8px 20px 16px;">' +
@@ -494,6 +505,7 @@
                     '<button type="button" onclick="confirmOnlineOrder()" style="width:100%;padding:13px;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
                     '<span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>Xác nhận đơn đặt' +
                     '</button>' +
+                    cancelBtn +
                     '</div>';
             } else if (stLower === 'completed' || stLower === 'paid') {
                 footerHtml =
@@ -517,6 +529,7 @@
                     '<div style="width:100%;padding:13px;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;">' +
                     '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Đã giao cho: ' + (o.shipperName || 'Shipper #' + o.shipperId) +
                     '</div>' +
+                    cancelBtn +
                     '</div>';
             } else {
                 if (stLower === 'waiting_shipper') {
@@ -525,6 +538,7 @@
                         '<button type="button" onclick="createDelivery()" style="width:100%;padding:13px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">' +
                         '<span class="material-symbols-outlined" style="font-size:18px;">local_shipping</span>Tạo đơn giao hàng' +
                         '</button>' +
+                        cancelBtn +
                         '</div>';
                 } else {
                     footerHtml =
@@ -532,6 +546,7 @@
                         '<button type="button" disabled style="width:100%;padding:13px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:8px;">' +
                         '<span class="material-symbols-outlined" style="font-size:18px;">hourglass_empty</span>Chờ pha chế hoàn thành' +
                         '</button>' +
+                        cancelBtn +
                         '</div>';
                 }
             }
@@ -612,6 +627,37 @@
             var o = ORDERS[currentId];
             if (!o) return;
             window.location.href = '${pageContext.request.contextPath}/cashier/shippers?orderId=' + o.id;
+            }
+
+            function cancelOrder() {
+            var o = ORDERS[currentId];
+            if (!o) return;
+            if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng #' + o.id + ' không?')) return;
+            var formData = new URLSearchParams();
+            formData.append("orderId", o.id);
+            formData.append("action", "cancel");
+            fetch('${pageContext.request.contextPath}/bartender/view', {
+            method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+            }).then(function(res) {
+            if (res.ok) {
+            o.status = 'cancelled';
+            var statusTd = document.getElementById('status-' + currentId);
+            if (statusTd) statusTd.innerHTML = badgeHtml('cancelled');
+            if (o.type === 'pos') {
+            buildOfflineModal(o);
+            } else {
+            buildOnlineModal(o);
+            }
+            showToast('Đã hủy đơn hàng #' + o.id + ' thành công!');
+            } else {
+            alert('Lỗi khi hủy đơn trên server!');
+            }
+            }).catch(function(err) {
+            console.error(err);
+            alert('Lỗi kết nối!');
+            });
             }
 
 

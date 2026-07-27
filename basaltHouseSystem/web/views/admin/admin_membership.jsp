@@ -228,19 +228,6 @@
                             <input id="membershipSearch" type="text" name="search" placeholder="Tìm tên, số điện thoại hoặc mã khách..." value="${fn:escapeXml(searchValue)}">
                         </label>
 
-                        <label class="filter-select">
-                            <span>Hạng</span>
-                            <select name="rankId">
-                                <option value="">Tất cả</option>
-                                <c:forEach var="rank" items="${rankList}">
-                                    <option value="${rank.rankId}" ${selectedRankId == rank.rankId ? 'selected' : ''}>${rank.rankName}</option>
-                                </c:forEach>
-                                <c:if test="${empty rankList}">
-                                    <option value="" disabled>Chưa có hạng</option>
-                                </c:if>
-                            </select>
-                        </label>
-
                         <button type="submit" name="submitAction" value="filterMemberships" class="btn-filter">
                             <i class="fa-solid fa-filter"></i>
                             Lọc
@@ -311,7 +298,6 @@
                             <div class="pagination-controls">
                                 <form action="${pageContext.request.contextPath}/admin/memberships" method="GET">
                                     <input type="hidden" name="search" value="${fn:escapeXml(searchValue)}">
-                                    <input type="hidden" name="rankId" value="${selectedRankId == 0 ? '' : selectedRankId}">
                                     <button type="submit" name="page" value="${currentPage - 1}" class="pagination-button" ${currentPage == 1 ? 'disabled' : ''} title="Trang trước">
                                         <i class="fa-solid fa-chevron-left"></i>
                                     </button>
@@ -320,14 +306,12 @@
                                 <c:forEach begin="1" end="${totalPages}" var="pageNumber">
                                     <form action="${pageContext.request.contextPath}/admin/memberships" method="GET">
                                         <input type="hidden" name="search" value="${fn:escapeXml(searchValue)}">
-                                        <input type="hidden" name="rankId" value="${selectedRankId == 0 ? '' : selectedRankId}">
                                         <button type="submit" name="page" value="${pageNumber}" class="pagination-button ${pageNumber == currentPage ? 'is-active' : ''}" ${pageNumber == currentPage ? 'aria-current="page"' : ''}>${pageNumber}</button>
                                     </form>
                                 </c:forEach>
 
                                 <form action="${pageContext.request.contextPath}/admin/memberships" method="GET">
                                     <input type="hidden" name="search" value="${fn:escapeXml(searchValue)}">
-                                    <input type="hidden" name="rankId" value="${selectedRankId == 0 ? '' : selectedRankId}">
                                     <button type="submit" name="page" value="${currentPage + 1}" class="pagination-button" ${currentPage == totalPages ? 'disabled' : ''} title="Trang sau">
                                         <i class="fa-solid fa-chevron-right"></i>
                                     </button>

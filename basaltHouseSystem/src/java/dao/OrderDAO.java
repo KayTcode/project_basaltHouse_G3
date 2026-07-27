@@ -804,7 +804,7 @@ public class OrderDAO extends DBContext {
                                 SET StockQuantity = StockQuantity + ?
                                 WHERE IngredientId = ? AND IsDeleted = 0
                                 """;
-            // Đánh dấu log cũ là đã hoàn (soft-delete) để deductStock
+
             String softDeleteLogSql = """
                                       UPDATE IngredientStockLogs
                                       SET IsDeleted = 1
@@ -1114,91 +1114,13 @@ public class OrderDAO extends DBContext {
     }
 
     public List<ProductSaleAuditDTO> getTodaySoldProductSizeRows() {
-        List<ProductSaleAuditDTO> rows = new ArrayList<>();
-        String sql = """
-                     SET NOCOUNT ON;
-
-                     DECLARE @Today DATE = CAST(GETDATE() AS DATE);
-                     DECLARE @AuditDate DATE = @Today;
-                     DECLARE @Start DATETIME2;
-                     DECLARE @End DATETIME2;
-
-                     IF NOT EXISTS (
-                         SELECT 1
-                         FROM Orders o
-                         LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
-                         OUTER APPLY (
-                             SELECT TOP 1 l.CreatedAt AS AppliedAt
-                             FROM IngredientStockLogs l
-                             WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
-                             ORDER BY l.CreatedAt ASC, l.LogId ASC
-                         ) stockLog
-                         WHERE o.IsDeleted = 0
-                           AND o.PaymentStatus = 'Paid'
-                           AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= CAST(@AuditDate AS DATETIME2)
-                           AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < DATEADD(DAY, 1, CAST(@AuditDate AS DATETIME2))
-                     )
-                     BEGIN
-                         SELECT TOP 1 @AuditDate = CAST(COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) AS DATE)
-                         FROM Orders o
-                         LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
-                         OUTER APPLY (
-                             SELECT TOP 1 l.CreatedAt AS AppliedAt
-                             FROM IngredientStockLogs l
-                             WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
-                             ORDER BY l.CreatedAt ASC, l.LogId ASC
-                         ) stockLog
-                         WHERE o.IsDeleted = 0
-                           AND o.PaymentStatus = 'Paid'
-                         ORDER BY COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) DESC;
-                     END
-
-                     SET @Start = CAST(@AuditDate AS DATETIME2);
-                     SET @End = DATEADD(DAY, 1, @Start);
-
-                     SELECT od.ProductId,
-                            od.SizeId,
-                            p.ProductName,
-                            s.SizeName,
-                            SUM(od.Quantity) AS SoldQuantity,
-                            MAX(od.UnitPrice) AS UnitPrice,
-                            SUM(od.Quantity * od.UnitPrice) AS Revenue,
-                            @AuditDate AS AuditDate
-                     FROM OrderDetails od
-                     JOIN Orders o ON o.OrderId = od.OrderId
-                     LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
-                     OUTER APPLY (
-                         SELECT TOP 1 l.CreatedAt AS AppliedAt
-                         FROM IngredientStockLogs l
-                         WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
-                         ORDER BY l.CreatedAt ASC, l.LogId ASC
-                     ) stockLog
-                     JOIN Products p ON p.ProductId = od.ProductId
-                     JOIN Sizes s ON s.SizeId = od.SizeId
-                     WHERE od.IsDeleted = 0
-                       AND o.IsDeleted = 0
-                       AND o.PaymentStatus = 'Paid'
-                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= @Start
-                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < @End
-                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
-                     ORDER BY p.ProductName ASC, s.SizeName ASC
-                     """;
-        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs2 = ps.executeQuery()) {
-            while (rs2.next()) {
-                rows.add(mapProductSaleAudit(rs2));
-            }
-        } catch (Exception e) {
-            System.err.println("getTodaySoldProductSizeRows Error: " + e.getMessage());
-        }
-        return rows;
+        return getSoldProductSizeRowsByDate(LocalDate.now());
     }
 
     public List<ProductSaleAuditDTO> getSoldProductSizeRowsByDate(LocalDate auditDate) {
         List<ProductSaleAuditDTO> rows = new ArrayList<>();
         String sql = """
                      DECLARE @AuditDate DATE = ?;
-                     DECLARE @Start DATETIME2 = CAST(@AuditDate AS DATETIME2);
-                     DECLARE @End DATETIME2 = DATEADD(DAY, 1, @Start);
 
                      SELECT od.ProductId,
                             od.SizeId,
@@ -1210,25 +1132,40 @@ public class OrderDAO extends DBContext {
                             @AuditDate AS AuditDate
                      FROM OrderDetails od
                      JOIN Orders o ON o.OrderId = od.OrderId
-                     LEFT JOIN OnlinePayments op ON op.OrderId = o.OrderId AND op.IsDeleted = 0
-                     OUTER APPLY (
-                         SELECT TOP 1 l.CreatedAt AS AppliedAt
-                         FROM IngredientStockLogs l
-                         WHERE l.RefType = 'Sale' AND l.RefId = o.OrderId AND l.IsDeleted = 0
-                         ORDER BY l.CreatedAt ASC, l.LogId ASC
-                     ) stockLog
+                     LEFT JOIN OnlinePayments payment
+                       ON payment.PaymentId = (
+                           SELECT TOP 1 op.PaymentId
+                           FROM OnlinePayments op
+                           WHERE op.OrderId = o.OrderId
+                             AND op.IsDeleted = 0
+                           ORDER BY op.PaidAt DESC,
+                                    op.CreatedAt DESC,
+                                    op.PaymentId DESC
+                       )
+                     LEFT JOIN IngredientStockLogs stockLog
+                       ON stockLog.LogId = (
+                           SELECT TOP 1 log.LogId
+                           FROM IngredientStockLogs log
+                           WHERE log.RefType = 'Sale'
+                             AND log.RefId = o.OrderId
+                             AND log.IsDeleted = 0
+                           ORDER BY log.CreatedAt, log.LogId
+                       )
                      JOIN Products p ON p.ProductId = od.ProductId
                      JOIN Sizes s ON s.SizeId = od.SizeId
                      WHERE od.IsDeleted = 0
                        AND o.IsDeleted = 0
                        AND o.PaymentStatus = 'Paid'
-                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) >= @Start
-                       AND COALESCE(op.PaidAt, stockLog.AppliedAt, o.CreatedAt) < @End
-                     GROUP BY od.ProductId, od.SizeId, p.ProductName, s.SizeName
+                       AND CAST(COALESCE(
+                               payment.PaidAt,
+                               stockLog.CreatedAt,
+                               o.CreatedAt) AS DATE) = @AuditDate
+                     GROUP BY od.ProductId, od.SizeId,
+                              p.ProductName, s.SizeName
                      ORDER BY p.ProductName ASC, s.SizeName ASC
                      """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(auditDate));
+            ps.setObject(1, auditDate);
             try (ResultSet rs2 = ps.executeQuery()) {
                 while (rs2.next()) {
                     rows.add(mapProductSaleAudit(rs2));
@@ -1261,61 +1198,48 @@ public class OrderDAO extends DBContext {
         stats.put("pendingOrders", 0);
         stats.put("newCustomers", 0);
 
+        String orderSql = """
+                          SELECT COALESCE(SUM(FinalAmount), 0) AS TodayRevenue,
+                                 COUNT(*) AS TodayOrders,
+                                 SUM(CASE
+                                         WHEN OrderStatus IN ('Pending', 'Preparing')
+                                         THEN 1 ELSE 0
+                                     END) AS PendingOrders
+                          FROM Orders
+                          WHERE CAST(CreatedAt AS DATE)
+                                = CAST(GETDATE() AS DATE)
+                            AND IsDeleted = 0
+                          """;
+        String customerSql = """
+                             SELECT COUNT(*) AS NewCustomers
+                             FROM Customers
+                             WHERE CAST(CreatedAt AS DATE)
+                                   = CAST(GETDATE() AS DATE)
+                               AND IsDeleted = 0
+                             """;
         try {
-            // Doanh thu hom nay
-            String sqlRevenue = """
-                    SELECT SUM(FinalAmount) AS Revenue 
-                    FROM Orders 
-                    WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
-                                """;
-            PreparedStatement st1 = connection.prepareStatement(sqlRevenue);
-            ResultSet rs1 = st1.executeQuery();
-            if (rs1.next()) {
-                BigDecimal rev = rs1.getBigDecimal("Revenue");
-                if (rev != null) {
-                    stats.put("todayRevenue", rev);
+            try (PreparedStatement statement
+                    = connection.prepareStatement(orderSql);
+                    ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    stats.put("todayRevenue",
+                            result.getBigDecimal("TodayRevenue"));
+                    stats.put("todayOrders", result.getInt("TodayOrders"));
+                    stats.put("pendingOrders",
+                            result.getInt("PendingOrders"));
                 }
             }
-
-            // Don hang hom nay
-            String sqlOrders = """
-                 SELECT COUNT(OrderId) AS OrdersCount 
-                 FROM Orders 
-                 WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
-                               """;
-            PreparedStatement st2 = connection.prepareStatement(sqlOrders);
-            ResultSet rs2 = st2.executeQuery();
-            if (rs2.next()) {
-                stats.put("todayOrders", rs2.getInt("OrdersCount"));
+            try (PreparedStatement customerStatement
+                    = connection.prepareStatement(customerSql);
+                    ResultSet customerResult
+                    = customerStatement.executeQuery()) {
+                if (customerResult.next()) {
+                    stats.put("newCustomers",
+                            customerResult.getInt("NewCustomers"));
+                }
             }
-
-            // Don cho xu ly (Pending / Preparing) hom nay
-            String sqlPending = """
-            SELECT COUNT(OrderId) AS PendingCount 
-            FROM Orders 
-            WHERE OrderStatus IN ('Pending', 'Preparing') 
-            AND CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
-                                """;
-            PreparedStatement st3 = connection.prepareStatement(sqlPending);
-            ResultSet rs3 = st3.executeQuery();
-            if (rs3.next()) {
-                stats.put("pendingOrders", rs3.getInt("PendingCount"));
-            }
-
-            // Khach hang moi hom nay
-            String sqlCust = """
-            SELECT COUNT(CustomerId) AS CustCount 
-            FROM Customers 
-            WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE) AND IsDeleted = 0
-                             """;
-            PreparedStatement st4 = connection.prepareStatement(sqlCust);
-            ResultSet rs4 = st4.executeQuery();
-            if (rs4.next()) {
-                stats.put("newCustomers", rs4.getInt("CustCount"));
-            }
-
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("getCashierDashboard Error: " + e.getMessage());
         }
         return stats;
     }

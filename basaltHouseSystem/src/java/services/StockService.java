@@ -67,43 +67,43 @@ public class StockService {
                 if (sizeName == null) {
                     continue;
                 }
-                int minCoc = Integer.MAX_VALUE;
-
-                Map<Integer, BigDecimal> neededByIngredient = new HashMap<>();
-                for (Recipe recipe : sizeEntry.getValue()) {
-                    BigDecimal needed = recipe.getQuantityNeeded();
-                    if (needed == null || needed.compareTo(BigDecimal.ZERO) <= 0) {
-                        minCoc = 0;
-                        break;
-                    }
-                    neededByIngredient.merge(recipe.getIngredientId(), needed, BigDecimal::add);
-                }
-
-                if (minCoc != 0) {
-                    for (Map.Entry<Integer, BigDecimal> requirement : neededByIngredient.entrySet()) {
-                        Ingredient ingredient = ingredientMap.get(requirement.getKey());
-                        if (ingredient == null) {
-                            minCoc = 0;
-                            break;
-                        }
-                        int cups = calculateAvailableCups(
-                                ingredient.getStockQuantity(), requirement.getValue());
-                        if (cups == 0) {
-                            minCoc = 0;
-                            break;
-                        }
-                        minCoc = Math.min(minCoc, cups);
-                    }
-                }
-                int availableCups = minCoc;
-                if (availableCups == Integer.MAX_VALUE) {
-                    availableCups = 0;
-                }
+                int availableCups = calculateAvailableCupsForRecipes(
+                        sizeEntry.getValue(), ingredientMap);
                 sizeResult.put(sizeName, availableCups);
             }
             result.put(product, sizeResult);
         }
         return result;
+    }
+
+    private int calculateAvailableCupsForRecipes(
+            List<Recipe> recipes,
+            Map<Integer, Ingredient> ingredientMap) {
+        Map<Integer, BigDecimal> requiredByIngredient = new HashMap<>();
+        for (Recipe recipe : recipes) {
+            BigDecimal required = recipe.getQuantityNeeded();
+            if (required == null || required.signum() <= 0) {
+                return 0;
+            }
+            requiredByIngredient.merge(
+                    recipe.getIngredientId(), required, BigDecimal::add);
+        }
+
+        int availableCups = Integer.MAX_VALUE;
+        for (Map.Entry<Integer, BigDecimal> requirement
+                : requiredByIngredient.entrySet()) {
+            Ingredient ingredient = ingredientMap.get(requirement.getKey());
+            if (ingredient == null) {
+                return 0;
+            }
+            int cups = calculateAvailableCups(
+                    ingredient.getStockQuantity(), requirement.getValue());
+            if (cups == 0) {
+                return 0;
+            }
+            availableCups = Math.min(availableCups, cups);
+        }
+        return availableCups == Integer.MAX_VALUE ? 0 : availableCups;
     }
 
     static int calculateAvailableCups(BigDecimal stockQuantity, BigDecimal quantityNeeded) {
@@ -127,38 +127,17 @@ public class StockService {
         int okCount = 0;
 
         for (IngredientStockDTO row : rows) {
-            BigDecimal stock = toBigDecimal(row.getStockQuantity());
-            BigDecimal minStock = toBigDecimal(row.getMinStockQuantity());
-            String status;
-            String statusLabel;
-            String statusIcon;
-
-            if (stock.compareTo(BigDecimal.ZERO) <= 0) {
-                status = "danger";
-                statusLabel = "Hết hàng";
-                statusIcon = "error";
+            StockStatus status = prepareDashboardStockRow(row);
+            if ("danger".equals(status.statusClass)) {
                 outCount++;
-            } else if (stock.compareTo(minStock.multiply(WARNING_RATE)) <= 0) {
-                status = "warning";
-                statusLabel = "Sắp hết";
-                statusIcon = "warning";
+            } else if ("warning".equals(status.statusClass)) {
                 warningCount++;
             } else {
-                status = "ok";
-                statusLabel = "Đủ hàng";
-                statusIcon = "task_alt";
                 okCount++;
             }
 
-            row.setStockText(formatDecimal(stock));
-            row.setMinStockText(formatDecimal(minStock));
-            row.setStatus(status);
-            row.setStatusLabel(statusLabel);
-            row.setStatusIcon(statusIcon);
-            row.setBarPercent(calculateBarPercent(stock, minStock));
-
             ingredients.add(row);
-            if (!"ok".equals(status)) {
+            if (!"ok".equals(status.statusClass)) {
                 warnings.add(row);
             }
         }
@@ -176,22 +155,37 @@ public class StockService {
         return data;
     }
 
+    private StockStatus prepareDashboardStockRow(IngredientStockDTO row) {
+        BigDecimal stock = toBigDecimal(row.getStockQuantity());
+        BigDecimal minStock = toBigDecimal(row.getMinStockQuantity());
+        StockStatus status;
+        if (stock.signum() <= 0) {
+            status = new StockStatus("danger", "error", "Hết hàng");
+        } else if (stock.compareTo(minStock.multiply(WARNING_RATE)) <= 0) {
+            status = new StockStatus("warning", "warning", "Sắp hết");
+        } else {
+            status = new StockStatus("ok", "task_alt", "Đủ hàng");
+        }
+
+        row.setStockText(formatDecimal(stock));
+        row.setMinStockText(formatDecimal(minStock));
+        row.setStatus(status.statusClass);
+        row.setStatusLabel(status.statusLabel);
+        row.setStatusIcon(status.statusIcon);
+        row.setBarPercent(calculateBarPercent(stock, minStock));
+        return status;
+    }
+
     
     public HashMap<String, Object> getSalesAuditData(LocalDate selectedDate) {
         SalesAuditContext context = new SalesAuditContext(
                 loadIngredientMap(),
                 loadRecipeMap()
         );
-        if (selectedDate == null) {
-            context.auditDate = LocalDate.now();
-        } else {
-            context.auditDate = selectedDate;
-        }
+        context.auditDate = selectedDate == null
+                ? LocalDate.now() : selectedDate;
 
-        List<ProductSaleAuditDTO> soldRows = loadSoldRows(context, selectedDate);
-        if (selectedDate == null) {
-            context.auditDate = resolveAuditDate(soldRows);
-        }
+        List<ProductSaleAuditDTO> soldRows = loadSoldRows(context);
         context.importedByIngredient = getImportedQuantityByIngredient(context.auditDate);
         context.stockSnapshotByIngredient = loadStockSnapshotByIngredient(context.auditDate);
 
@@ -241,14 +235,10 @@ public class StockService {
     }
 
     private List<ProductSaleAuditDTO> loadSoldRows(
-            SalesAuditContext context, LocalDate selectedDate) {
+            SalesAuditContext context) {
         OrderService orderService = new OrderService();
-        HashMap<String, Object> soldResult;
-        if (selectedDate == null) {
-            soldResult = orderService.getTodaySoldProductSizeRows();
-        } else {
-            soldResult = orderService.getSoldProductSizeRowsByDate(selectedDate);
-        }
+        HashMap<String, Object> soldResult =
+                orderService.getSoldProductSizeRowsByDate(context.auditDate);
         if (soldResult.containsKey("error")) {
             context.dataError = stringValue(soldResult.get("error"));
             return new ArrayList<>();
@@ -533,15 +523,6 @@ public class StockService {
     }
 
     
-    private LocalDate resolveAuditDate(List<ProductSaleAuditDTO> soldRows) {
-        if (soldRows == null || soldRows.isEmpty()) {
-            return LocalDate.now();
-        }
-        LocalDate auditDate = soldRows.get(0).getAuditDate();
-        return auditDate == null ? LocalDate.now() : auditDate;
-    }
-
-   
     private String formatDate(LocalDate date) {
         if (date == null) {
             return "";

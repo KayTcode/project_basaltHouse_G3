@@ -82,7 +82,7 @@
                                     <input type="text" name="street" id="street" placeholder="VD: Khu A FPT, Đường số 3..." autocomplete="street-address">
                                 </div>
                                 <div class="co-field full">
-                                    <label>Khu vực (Hòa Lạc) <span class="req">*</span></label>
+                                    <label>Khu vực <span class="req">*</span></label>
                                     <select name="district" id="district" class="co-select">
                                         <option value=""> Chọn khu vực </option>
                                         <c:forEach var="zone" items="${activeZones}">

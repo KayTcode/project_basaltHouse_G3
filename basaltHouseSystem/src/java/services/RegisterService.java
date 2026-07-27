@@ -67,12 +67,14 @@ public class RegisterService {
 
     public Map<String, Object> verifyOtp(String email, String inputOtp) {
         Map<String, Object> result = new HashMap<>();
+        result.put("success", false);
         try {
             Map<String, Object> pending = registerDao.getPendingByEmail(email);
             if (pending == null) {
                 result.put("success", false);
                 result.put("errorType", "NOT_FOUND");
                 result.put("error", "Không tìm thấy yêu cầu đăng kí. Vui lòng đăng kí lại");
+                return result;
             }
             String storedOtp = (String) pending.get("otpCode");
             LocalDateTime expiredAt = (LocalDateTime) pending.get("otpExpiredAt");

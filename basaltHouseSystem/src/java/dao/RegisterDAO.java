@@ -210,13 +210,13 @@ public class RegisterDAO extends DBContext {
                                           ,[RankId]
                                           ,[TotalSpent])
                                     VALUES
-                                          (?,1,0)
+                                          (?,?,0)
                                """;
         String sqlVoucher = """
                             INSERT INTO [dbo].[CustomerDiscountCodes]
                                        ([AccountId]
                                        ,[DiscountId]
-                                       ,[IsUsed]
+                                       ,[IsUsed])
                                  VALUES
                                        (?,1,0)
                             """;

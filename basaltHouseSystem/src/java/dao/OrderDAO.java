@@ -1164,7 +1164,7 @@ public class OrderDAO extends DBContext {
                      ORDER BY p.ProductName ASC, s.SizeName ASC
                      """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setDate(1, auditDate);
+            ps.setObject(1, auditDate);
             try (ResultSet rs2 = ps.executeQuery()) {
                 while (rs2.next()) {
                     rows.add(mapProductSaleAudit(rs2));

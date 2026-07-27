@@ -26,7 +26,7 @@ public final class CustomerCatalogDaoSmokeTest {
                 membershipDAO.getAllListMembershipRank();
         require(!memberships.isEmpty(), "customer membership list is empty");
         require(
-                !membershipDAO.searchByName("", 0).isEmpty(),
+                !membershipDAO.searchByName("").isEmpty(),
                 "customer membership search failed");
 
         CustomerMembership selected = memberships.stream()

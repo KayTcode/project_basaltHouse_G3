@@ -130,17 +130,16 @@ public class CustomerMembershipDAO extends DBContext {
     
     }
     public List<CustomerMembership> getAllListMembershipRank() {
-        return queryMemberships("", 0);
+        return queryMemberships("");
     }
     
-    public List<CustomerMembership> searchByName(String key, int rankId) {
-        return queryMemberships(key, rankId);
+    public List<CustomerMembership> searchByName(String key) {
+        return queryMemberships(key);
     }
 
-    private List<CustomerMembership> queryMemberships(String key, int rankId) {
+    private List<CustomerMembership> queryMemberships(String key) {
         List<CustomerMembership> list = new ArrayList<>();
-        String searchKey = key == null ? "" : key.trim();
-        String searchPattern = "%" + searchKey + "%";
+        String searchPattern = "%" + (key == null ? "" : key.trim()) + "%";
         try {
             String sql = """
                          SELECT customer.CustomerId,
@@ -158,22 +157,14 @@ public class CustomerMembershipDAO extends DBContext {
                          LEFT JOIN MembershipRanks rank
                            ON rank.RankId = membership.RankId
                          WHERE customer.IsDeleted = 0
-                           AND (? = ''
-                                OR customer.FullName LIKE ?
-                                OR customer.Phone LIKE ?
-                                OR CAST(customer.CustomerId AS NVARCHAR(20))
-                                    LIKE ?)
-                           AND (? = 0 OR membership.RankId = ?)
+                           AND CONCAT(customer.FullName, N' ',
+                                      customer.Phone, N' ',
+                                      customer.CustomerId) LIKE ?
                          ORDER BY ISNULL(membership.TotalSpent, 0) DESC,
                                   customer.FullName
                          """;
             st = connection.prepareStatement(sql);
-            st.setString(1, searchKey);
-            st.setString(2, searchPattern);
-            st.setString(3, searchPattern);
-            st.setString(4, searchPattern);
-            st.setInt(5, rankId);
-            st.setInt(6, rankId);
+            st.setString(1, searchPattern);
             rs = st.executeQuery();
             while (rs.next()) {
                 list.add(mapMembership(rs));

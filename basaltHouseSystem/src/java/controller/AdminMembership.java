@@ -75,35 +75,8 @@ public class AdminMembership extends HttpServlet {
             throws ServletException, IOException {
         String search = request.getParameter("search");
         String key = search == null ? "" : search.trim();
-        String rankIdParam = request.getParameter("rankId");
-        int rankId = 0;
-        if (rankIdParam != null && !rankIdParam.trim().isEmpty()) {
-            try {
-                rankId = Integer.parseInt(rankIdParam.trim());
-            } catch (NumberFormatException e) {
-                request.setAttribute("error", "Hang thanh vien khong hop le");
-            }
-        }
-        int requestedPage = 1;
-        String pageParam = request.getParameter("page");
-        if (pageParam != null && !pageParam.trim().isEmpty()) {
-            try {
-                requestedPage = Math.max(1, Integer.parseInt(pageParam.trim()));
-            } catch (NumberFormatException e) {
-                requestedPage = 1;
-            }
-        }
-        int requestedRankPage = 1;
-        String rankPageParam = request.getParameter("rankPage");
-        if (rankPageParam != null && !rankPageParam.trim().isEmpty()) {
-            try {
-                requestedRankPage = Math.max(1, Integer.parseInt(rankPageParam.trim()));
-            } catch (NumberFormatException e) {
-                requestedRankPage = 1;
-            }
-        }
         HashMap<String, Object> rankResult = membershipService.getRankName();
-        HashMap<String, Object> memberResult = membershipService.searchCustomer(key, rankId);
+        HashMap<String, Object> memberResult = membershipService.searchCustomer(key);
         List<CustomerMembership> memberList = new ArrayList<>();
         List<MembershipRank> rankList = new ArrayList<>();
         try {
@@ -153,30 +126,61 @@ public class AdminMembership extends HttpServlet {
             }
         }
 
+        request.setAttribute("rankList", activeRankList);
+        request.setAttribute("membershipRanks", activeRankList);
+        request.setAttribute("totalSpent", totalSpent);
+        request.setAttribute("topRank", topRank);
+        request.setAttribute("topDiscount", topDiscount);
+        request.setAttribute("searchValue", key);
+        setPaginationAttributes(request, memberList, rankList);
+        request.getRequestDispatcher("/views/admin/admin_membership.jsp").forward(request, response);
+    }
+
+    private void setPaginationAttributes(
+            HttpServletRequest request,
+            List<CustomerMembership> memberList,
+            List<MembershipRank> rankList) {
+        int requestedPage = 1;
+        String pageParam = request.getParameter("page");
+        if (pageParam != null && !pageParam.trim().isEmpty()) {
+            try {
+                requestedPage = Math.max(1, Integer.parseInt(pageParam.trim()));
+            } catch (NumberFormatException e) {
+                requestedPage = 1;
+            }
+        }
+        int requestedRankPage = 1;
+        String rankPageParam = request.getParameter("rankPage");
+        if (rankPageParam != null && !rankPageParam.trim().isEmpty()) {
+            try {
+                requestedRankPage = Math.max(1, Integer.parseInt(rankPageParam.trim()));
+            } catch (NumberFormatException e) {
+                requestedRankPage = 1;
+            }
+        }
+
         int totalMemberCount = memberList.size();
         int totalPages = (totalMemberCount + MEMBER_PAGE_SIZE - 1) / MEMBER_PAGE_SIZE;
         int currentPage = totalPages == 0 ? 1 : Math.min(requestedPage, totalPages);
         int fromIndex = totalMemberCount == 0 ? 0 : (currentPage - 1) * MEMBER_PAGE_SIZE;
         int toIndex = Math.min(fromIndex + MEMBER_PAGE_SIZE, totalMemberCount);
-        List<CustomerMembership> pagedMemberList = new ArrayList<>(memberList.subList(fromIndex, toIndex));
+        List<CustomerMembership> pagedMemberList
+                = new ArrayList<>(memberList.subList(fromIndex, toIndex));
 
         int totalRankCount = rankList.size();
         int totalRankPages = (totalRankCount + RANK_PAGE_SIZE - 1) / RANK_PAGE_SIZE;
-        int currentRankPage = totalRankPages == 0 ? 1 : Math.min(requestedRankPage, totalRankPages);
-        int rankFromIndex = totalRankCount == 0 ? 0 : (currentRankPage - 1) * RANK_PAGE_SIZE;
+        int currentRankPage = totalRankPages == 0
+                ? 1 : Math.min(requestedRankPage, totalRankPages);
+        int rankFromIndex = totalRankCount == 0
+                ? 0 : (currentRankPage - 1) * RANK_PAGE_SIZE;
         int rankToIndex = Math.min(rankFromIndex + RANK_PAGE_SIZE, totalRankCount);
         List<MembershipRank> pagedRankList
                 = new ArrayList<>(rankList.subList(rankFromIndex, rankToIndex));
 
-        request.setAttribute("rankList", activeRankList);
         request.setAttribute("pagedRankList", pagedRankList);
         request.setAttribute("memberList", pagedMemberList);
-        request.setAttribute("membershipRanks", activeRankList);
         request.setAttribute("membershipMembers", pagedMemberList);
         request.setAttribute("totalMembers", totalMemberCount);
-        request.setAttribute("totalSpent", totalSpent);
-        request.setAttribute("topRank", topRank);
-        request.setAttribute("topDiscount", topDiscount);
         request.setAttribute("currentPage", currentPage);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("pageStart", totalMemberCount == 0 ? 0 : fromIndex + 1);
@@ -184,11 +188,9 @@ public class AdminMembership extends HttpServlet {
         request.setAttribute("totalRanks", totalRankCount);
         request.setAttribute("currentRankPage", currentRankPage);
         request.setAttribute("totalRankPages", totalRankPages);
-        request.setAttribute("rankPageStart", totalRankCount == 0 ? 0 : rankFromIndex + 1);
+        request.setAttribute("rankPageStart",
+                totalRankCount == 0 ? 0 : rankFromIndex + 1);
         request.setAttribute("rankPageEnd", rankToIndex);
-        request.setAttribute("searchValue", key);
-        request.setAttribute("selectedRankId", rankId);
-        request.getRequestDispatcher("/views/admin/admin_membership.jsp").forward(request, response);
     }
 
     /**

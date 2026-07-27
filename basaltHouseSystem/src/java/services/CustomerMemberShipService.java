@@ -102,12 +102,12 @@ public class CustomerMemberShipService {
         return s;
 
     }
-    public HashMap<String, Object> searchCustomer(String key, int rankId) {
+    public HashMap<String, Object> searchCustomer(String key) {
         HashMap<String, Object> s = new HashMap<>();
         List<CustomerMembership> list = new ArrayList<>();
         try {
             String searchKey = key == null ? "" : key.trim();
-            list = dao.searchByName(searchKey, rankId);
+            list = dao.searchByName(searchKey);
             s.put("success", list);
         } catch (Exception e) {
             s.put("error", "Khong the tai danh sach hoi vien");

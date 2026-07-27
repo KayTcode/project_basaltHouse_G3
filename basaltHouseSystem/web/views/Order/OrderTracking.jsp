@@ -148,6 +148,8 @@
                         <c:set var="confirmedTime" value=""/>
                         <c:set var="deliveringTime" value=""/>
                         <c:set var="completedTime" value=""/>
+                        <c:set var="isDeliveryFailed" value="false"/>
+                        <c:set var="failReason" value=""/>
 
                         <c:if test="${not empty order.createdAt}">
                             <c:set var="dtStr" value="${order.createdAt.toString()}"/>
@@ -171,6 +173,10 @@
                                 <c:set var="dvStr" value="${log.customerConfirmedAt.toString()}"/>
                                 <c:set var="completedTime" value="${fn:substring(dvStr, 11, 16)} ${fn:substring(dvStr, 8, 10)}/${fn:substring(dvStr, 5, 7)}"/>
                             </c:if>
+                            <c:if test="${log.status == 'Failed'}">
+                                <c:set var="isDeliveryFailed" value="true"/>
+                                <c:set var="failReason" value="${log.failReason}"/>
+                            </c:if>
                         </c:forEach>
 
                         <%-- Map status → CSS class --%>
@@ -180,9 +186,10 @@
                             <c:when test="${order.orderStatus == 'Preparing'}">   <c:set var="sc" value="preparing"/></c:when>
                             <c:when test="${order.orderStatus == 'In_Progress'}"> <c:set var="sc" value="preparing"/></c:when>
                             <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}"> <c:set var="sc" value="preparing"/></c:when>
+                            <c:when test="${order.orderStatus == 'Waiting_Shipper_Accept'}">                         <c:set var="sc" value="shipping"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivering' || order.orderStatus == 'Delivered'}">  <c:set var="sc" value="shipping"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">   <c:set var="sc" value="completed"/></c:when>
-                            <c:when test="${order.orderStatus == 'Cancelled'}">   <c:set var="sc" value="cancelled"/></c:when>
+                            <c:when test="${order.orderStatus == 'Cancelled' || order.orderStatus == 'Failed'}">      <c:set var="sc" value="cancelled"/></c:when>
                         </c:choose>
 
                         <%-- Status badge class --%>
@@ -198,9 +205,12 @@
                             <c:when test="${order.orderStatus == 'Preparing'}">   <c:set var="sl" value="Đang pha chế"/></c:when>
                             <c:when test="${order.orderStatus == 'In_Progress'}"> <c:set var="sl" value="Đang pha chế"/></c:when>
                             <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}">       <c:set var="sl" value="Sẵn sàng giao"/></c:when>
+                            <c:when test="${order.orderStatus == 'Waiting_Shipper_Accept'}">                               <c:set var="sl" value="Chờ shipper xác nhận"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivering'}">  <c:set var="sl" value="Đang giao hàng"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivered'}">   <c:set var="sl" value="Đã giao - Chờ xác nhận"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">   <c:set var="sl" value="Hoàn thành"/></c:when>
+                            <c:when test="${order.orderStatus == 'Failed'}">       <c:set var="sl" value="Giao thất bại"/></c:when>
+                            <c:when test="${order.orderStatus == 'Cancelled' && isDeliveryFailed == 'true'}">  <c:set var="sl" value="Giao thất bại"/></c:when>
                             <c:when test="${order.orderStatus == 'Cancelled'}">   <c:set var="sl" value="Đã hủy"/></c:when>
                         </c:choose>
 
@@ -210,9 +220,12 @@
                             <c:when test="${order.orderStatus == 'Pending'}">                                        <c:set var="si" value="hourglass_empty"/></c:when>
                             <c:when test="${order.orderStatus == 'Preparing' || order.orderStatus == 'In_Progress'}"><c:set var="si" value="coffee_maker"/></c:when>
                             <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper'}">                                      <c:set var="si" value="inventory_2"/></c:when>
+                            <c:when test="${order.orderStatus == 'Waiting_Shipper_Accept'}">                                                              <c:set var="si" value="delivery_truck_speed"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivering'}">                                     <c:set var="si" value="local_shipping"/></c:when>
                             <c:when test="${order.orderStatus == 'Delivered'}">                                      <c:set var="si" value="done_all"/></c:when>
                             <c:when test="${order.orderStatus == 'Completed'}">                                      <c:set var="si" value="task_alt"/></c:when>
+                            <c:when test="${order.orderStatus == 'Failed'}">                                         <c:set var="si" value="local_shipping"/></c:when>
+                            <c:when test="${order.orderStatus == 'Cancelled' && isDeliveryFailed == 'true'}">        <c:set var="si" value="local_shipping"/></c:when>
                             <c:when test="${order.orderStatus == 'Cancelled'}">                                      <c:set var="si" value="cancel"/></c:when>
                         </c:choose>
 
@@ -257,7 +270,7 @@
                             </div>
 
                             <%-- Timeline --%>
-                            <c:if test="${order.orderStatus != 'Cancelled'}">
+                            <c:if test="${order.orderStatus != 'Cancelled' && order.orderStatus != 'Failed'}">
                                 <div class="ot-timeline-wrap">
                                     <div class="ot-timeline">
 
@@ -293,7 +306,7 @@
                                         <%-- Step 3: Giao hàng --%>
                                         <c:set var="s3" value=""/>
                                         <c:choose>
-                                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper' || order.orderStatus == 'Delivering'}">
+                                            <c:when test="${order.orderStatus == 'Ready' || order.orderStatus == 'Waiting_Shipper' || order.orderStatus == 'Waiting_Shipper_Accept' || order.orderStatus == 'Delivering'}">
                                                 <c:set var="s3" value="active"/>
                                             </c:when>
                                             <c:when test="${order.orderStatus == 'Delivered' || order.orderStatus == 'Completed'}">
@@ -323,12 +336,27 @@
                                 </div>
                             </c:if>
 
-                            <%-- Cancelled banner --%>
-                            <c:if test="${order.orderStatus == 'Cancelled'}">
-                                <div class="ot-cancelled-banner">
-                                    <span class="material-symbols-outlined">cancel</span>
-                                    Đơn hàng này đã bị hủy
-                                </div>
+                            <%-- Cancelled / Delivery-Failed banner --%>
+                            <c:if test="${order.orderStatus == 'Cancelled' || order.orderStatus == 'Failed'}">
+                                <c:choose>
+                                    <c:when test="${order.orderStatus == 'Failed' || isDeliveryFailed == 'true'}">
+                                        <div class="ot-cancelled-banner ot-delivery-failed-banner">
+                                            <span class="material-symbols-outlined">local_shipping</span>
+                                            <div>
+                                                <strong>Giao hàng thất bại</strong>
+                                                <c:if test="${not empty failReason}">
+                                                    <div style="font-size:13px;margin-top:4px;opacity:.85;">Lý do: ${failReason}</div>
+                                                </c:if>
+                                            </div>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="ot-cancelled-banner">
+                                            <span class="material-symbols-outlined">cancel</span>
+                                            Đơn hàng này đã bị hủy
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </c:if>
 
                             <%-- Toggle detail button --%>

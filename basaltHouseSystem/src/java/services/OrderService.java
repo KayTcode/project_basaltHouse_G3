@@ -266,6 +266,13 @@ public class OrderService {
             } else {
                 orderDAO.updateOrderStatus(orderId, "Completed");
             }
+        } else if (action.equals("cancel")) {
+            orderDAO.updateOrderStatus(orderId, "Cancelled");
+            try {
+                orderDAO.restoreStockForOrder(orderId);
+            } catch (Exception ex) {
+                System.err.println("[OrderService] restoreStock failed for order " + orderId + ": " + ex.getMessage());
+            }
         } else {
             throw new IllegalArgumentException("Invalid action: " + action);
         }
